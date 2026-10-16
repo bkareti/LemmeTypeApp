@@ -43,10 +43,16 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         }
     }
 
+    public var playsFeedbackSounds: Bool {
+        get { defaults.bool(forKey: Key.playsFeedbackSounds) }
+        set { defaults.set(newValue, forKey: Key.playsFeedbackSounds) }
+    }
+
     private enum Key {
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let dictationShortcut = "dictationShortcut"
         static let activationMode = "activationMode"
         static let audioInput = "audioInput"
+        static let playsFeedbackSounds = "playsFeedbackSounds"
     }
 }

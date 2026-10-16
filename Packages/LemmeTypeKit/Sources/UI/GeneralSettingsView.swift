@@ -33,6 +33,13 @@ struct GeneralSettingsView: View {
                 }
             }
             Section {
+                Toggle(
+                    String(localized: "Play sounds when recording starts and stops", bundle: .module),
+                    isOn: Binding(get: { model.playsFeedbackSounds }, set: { model.setPlaysFeedbackSounds($0) })
+                )
+                .accessibilityIdentifier("settings.feedbackSounds")
+            }
+            Section {
                 LabeledContent(String(localized: "Version", bundle: .module)) {
                     Text(model.buildInfo.displayString)
                         .accessibilityIdentifier("build.version")

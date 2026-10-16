@@ -5,4 +5,6 @@ public protocol AppPreferences: AnyObject, Sendable {
     var dictationShortcut: KeyboardShortcut? { get set }
     var activationMode: ActivationMode { get set }
     var audioInput: AudioInputSelection { get set }
+    /// Start/stop sounds; off by default.
+    var playsFeedbackSounds: Bool { get set }
 }

@@ -66,6 +66,11 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   in tests and UI tests) → `AudioCaptureService` actor (permission check,
   resample to 16 kHz mono Float32, level meter, 0600 temp CAF, typed failures)
   → `AsyncStream<AudioCaptureEvent>`. Session files are purged at launch.
+- Recording: `RecordingCoordinator` (UI, the only `AudioCapturing` caller)
+  serialises commands through `RecorderStateMachine` (Domain, pure transition
+  table) and hands finished audio to a `RecordingConsumer` (Epic 1:
+  `DiscardingRecordingConsumer`; Epic 2: transcription). The overlay is a
+  non-activating `NSPanel` that cannot become key.
 - Debug-only launch arguments: `-LemmeTypeUITesting` swaps in `TestSupport`
   fakes; `-LemmeTypeFreshInstall` (with it) starts with onboarding pending and
   nothing granted; `-LemmeTypeShowSettings` opens Settings at launch. XCUITest cannot
@@ -77,7 +82,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay).
 
 ## Planning documents
 

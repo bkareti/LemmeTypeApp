@@ -37,13 +37,11 @@ final class LaunchUITests: XCTestCase {
         XCTAssertTrue(statusItem.waitForExistence(timeout: 10))
         statusItem.click()
 
-        for title in ["Finish Setup…", "Settings…", "About LemmeType", "Quit LemmeType"] {
+        for title in ["Start Test Recording", "Finish Setup…", "Settings…", "About LemmeType", "Quit LemmeType"] {
             let item = statusItem.menuItems[title]
             XCTAssertTrue(item.waitForExistence(timeout: 5), "\(title) is missing")
             XCTAssertTrue(item.isEnabled, "\(title) is disabled")
         }
-        // Enabled by E1-S6 once recording exists.
-        XCTAssertFalse(statusItem.menuItems["Start Test Recording"].isEnabled)
         statusItem.typeKey(.escape, modifierFlags: [])
     }
 

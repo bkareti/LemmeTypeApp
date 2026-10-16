@@ -113,6 +113,73 @@ struct AppControllerTests {
         window.close()
     }
 
+    @Test func shortcutStartAndStopDriveTheRecorder() async {
+        var composition = AppComposition.uiTesting(buildInfo: .init(version: "1", build: "1"))
+        let registrar = FakeHotKeyRegistrar()
+        composition.hotKeyRegistrar = registrar
+        let controller = composition.makeAppController()
+        controller.activation.change(to: .toggle)
+        controller.launchFinished()
+
+        registrar.send(.pressed, .defaultDictation, at: 0)
+        await controller.recorder.settle()
+        #expect(controller.recorder.state == .recording)
+        #expect(controller.overlay.isVisible)
+
+        registrar.send(.released, .defaultDictation, at: 0.1)
+        registrar.send(.pressed, .defaultDictation, at: 1)
+        await controller.recorder.settle()
+        #expect(controller.recorder.state == .completed)
+        #expect(!controller.activation.isSessionActive)
+        controller.overlay.currentPanel?.orderOut(nil)
+    }
+
+    @Test func cancellingFromTheOverlayRearmsTheShortcut() async {
+        var composition = AppComposition.uiTesting(buildInfo: .init(version: "1", build: "1"))
+        let registrar = FakeHotKeyRegistrar()
+        composition.hotKeyRegistrar = registrar
+        let controller = composition.makeAppController()
+        controller.activation.change(to: .toggle)
+        controller.launchFinished()
+
+        registrar.send(.pressed, .defaultDictation, at: 0)
+        await controller.recorder.settle()
+        controller.recorder.requestCancel()
+        await controller.recorder.settle()
+
+        #expect(controller.recorder.state == .cancelled)
+        #expect(!controller.activation.isSessionActive)
+        #expect(!registrar.registeredShortcuts.contains(.cancel))
+        controller.overlay.currentPanel?.orderOut(nil)
+    }
+
+    @Test func overlayPanelNeverTakesFocus() async throws {
+        let controller = makeController()
+        controller.overlay.start()
+
+        controller.recorder.requestStart(target: nil)
+        await controller.recorder.settle()
+
+        let panel = try #require(controller.overlay.currentPanel)
+        #expect(panel.isVisible)
+        #expect(!panel.canBecomeKey)
+        #expect(!panel.canBecomeMain)
+        #expect(panel.styleMask.contains(.nonactivatingPanel))
+        await controller.prepareToTerminate()
+        panel.orderOut(nil)
+    }
+
+    @Test func terminationCancelsAnActiveRecording() async {
+        let controller = makeController()
+        controller.recorder.requestStart(target: nil)
+        await controller.recorder.settle()
+        #expect(controller.recorder.state == .recording)
+
+        await controller.prepareToTerminate()
+
+        #expect(controller.recorder.state == .cancelled)
+    }
+
     @Test func finishSetupMenuActionReopensOnboardingFromTheStart() throws {
         let controller = makeController()
         controller.onboardingModel.next()

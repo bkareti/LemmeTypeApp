@@ -21,6 +21,7 @@ struct AppCompositionTests {
         #expect(composition.preferences is UserDefaultsPreferences)
         #expect(composition.audioDeviceLister is CaptureDeviceLister)
         #expect(composition.audioCapture is AudioCaptureService)
+        #expect(composition.recordingConsumer is DiscardingRecordingConsumer)
         #expect(composition.loginItems is SystemLoginItemManager)
         #expect(composition.hotKeyRegistrar is CarbonHotKeyRegistrar)
         #expect(composition.targetCapturer is AccessibilityTargetCapturer)
