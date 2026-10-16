@@ -47,20 +47,25 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   Build settings live in `Config/*.xcconfig`; version only in `Config/Version.xcconfig`.
 - Feature code lives in the local package `Packages/LemmeTypeKit`, one target per
   module: `Domain` (models, protocols, state, no OS frameworks), `Support`
-  (`Log`, `BuildInfo`), platform modules `Audio` / `Permissions` / `Shortcuts`
-  (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
+  (`Log`, `BuildInfo`), platform modules `Audio` / `Permissions` / `Shortcuts` /
+  `Lifecycle` (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
   and `TestSupport` (fakes).
 - The app target (`App/LemmeType`) holds only `LemmeTypeApp` and
   `AppComposition`, the single composition root where concrete OS services are
-  created. In Debug, the `-LemmeTypeUITesting` launch argument swaps in
-  `TestSupport` fakes; UI tests rely on this.
+  created, plus `AppDelegate` (single instance) and `AppController` (menu
+  actions). The app is an agent (`LSUIElement`) whose only scene is a
+  `MenuBarExtra`; Settings is an AppKit window owned by `SettingsWindowController`.
+- Debug-only launch arguments: `-LemmeTypeUITesting` swaps in `TestSupport`
+  fakes; `-LemmeTypeShowSettings` opens Settings at launch. XCUITest cannot
+  click status-menu items, so UI tests check menu contents only and use these.
 - `LemmeTypeTests` is hosted in the app and must not link package products
   (duplicate type copies break `is` checks); Debug disables dead-code stripping
   so the host app exports those symbols.
 - Swift 6 language mode, complete strict concurrency, warnings are errors in
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
-  no App Sandbox because Accessibility insertion needs it; 0002 structure).
+  no App Sandbox because Accessibility insertion needs it; 0002 structure;
+  0003 menu-bar lifecycle).
 
 ## Planning documents
 

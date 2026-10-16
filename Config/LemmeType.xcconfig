@@ -9,3 +9,4 @@ INFOPLIST_KEY_CFBundleDisplayName = LemmeType
 INFOPLIST_KEY_LSApplicationCategoryType = public.app-category.productivity
 INFOPLIST_KEY_NSHumanReadableCopyright = © 2026 LemmeType. All rights reserved.
 INFOPLIST_KEY_NSMicrophoneUsageDescription = LemmeType records your voice only while you hold or toggle the dictation shortcut, and processes it on this Mac.
+INFOPLIST_KEY_LSUIElement = YES

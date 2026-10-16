@@ -10,7 +10,7 @@
   file is gitignored. Build settings live in `Config/*.xcconfig`.
 - Feature code lives in the local Swift package `Packages/LemmeTypeKit`, one
   target per module: `Domain`, `Support`, `Audio`, `Permissions`, `Shortcuts`,
-  `UI`, plus `TestSupport` for fakes. The app target `LemmeType` holds only the
+  `Lifecycle` (added in ADR 0003), `UI`, plus `TestSupport` for fakes. The app target `LemmeType` holds only the
   entry point and `AppComposition`, the single composition root.
 - Dependency rules: `Domain` and `Support` depend on nothing internal; platform
   modules depend on `Domain` + `Support`; `UI` depends on `Domain` + `Support`

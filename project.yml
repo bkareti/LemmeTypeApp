@@ -24,7 +24,7 @@ targets:
       - App/LemmeType
     dependencies:
       - package: LemmeTypeKit
-        products: [Domain, Support, Audio, Permissions, Shortcuts, UI, TestSupport]
+        products: [Domain, Support, Audio, Permissions, Shortcuts, Lifecycle, UI, TestSupport]
   LemmeTypeTests:
     type: bundle.unit-test
     platform: macOS
@@ -67,6 +67,7 @@ schemes:
         - package: LemmeTypeKit/SupportTests
         - package: LemmeTypeKit/AudioTests
         - package: LemmeTypeKit/PermissionsTests
+        - package: LemmeTypeKit/LifecycleTests
         - package: LemmeTypeKit/UIModuleTests
     archive:
       config: Release
