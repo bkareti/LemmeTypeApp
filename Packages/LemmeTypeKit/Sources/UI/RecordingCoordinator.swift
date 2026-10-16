@@ -32,6 +32,7 @@ public final class RecordingCoordinator {
     private let preferences: any AppPreferences
     private let finishedDisplay: Duration
     private let failureDisplay: Duration
+    private let diagnostics: any DiagnosticsRecording
 
     private var queue: Task<Void, Never>?
     private var eventsTask: Task<Void, Never>?
@@ -44,8 +45,10 @@ public final class RecordingCoordinator {
         feedback: any RecordingFeedback,
         preferences: any AppPreferences,
         finishedDisplay: Duration = .seconds(1.5),
-        failureDisplay: Duration = .seconds(8)
+        failureDisplay: Duration = .seconds(8),
+        diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
     ) {
+        self.diagnostics = diagnostics
         self.capture = capture
         self.consumer = consumer
         self.feedback = feedback
@@ -215,6 +218,21 @@ public final class RecordingCoordinator {
     }
 
     private func sync() {
+        guard state != machine.state else { return }
         state = machine.state
+        diagnostics.record(.recorder, "recorder.state", ["state": .id(Self.diagnosticName(for: state))])
+    }
+
+    static func diagnosticName(for state: RecorderState) -> String {
+        switch state {
+        case .idle: "idle"
+        case .preparing: "preparing"
+        case .recording: "recording"
+        case .stopping: "stopping"
+        case .processing: "processing"
+        case .completed: "completed"
+        case .cancelled: "cancelled"
+        case .failed(let error): "failed.\(error.identifier)"
+        }
     }
 }

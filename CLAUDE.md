@@ -71,6 +71,10 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   table) and hands finished audio to a `RecordingConsumer` (Epic 1:
   `DiscardingRecordingConsumer`; Epic 2: transcription). The overlay is a
   non-activating `NSPanel` that cannot become key.
+- Diagnostics: components take `any DiagnosticsRecording` (default
+  `DiscardingDiagnostics`); the app shares one `DiagnosticsBuffer`. Event names
+  and keys must be literals and values typed (`.id(...)` redacts anything that
+  isn't a lowercase identifier) — never pass device/app names or text.
 - Debug-only launch arguments: `-LemmeTypeUITesting` swaps in `TestSupport`
   fakes; `-LemmeTypeFreshInstall` (with it) starts with onboarding pending and
   nothing granted; `-LemmeTypeShowSettings` opens Settings at launch. XCUITest cannot
@@ -82,7 +86,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics).
 
 ## Planning documents
 

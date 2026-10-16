@@ -9,6 +9,7 @@ public final class SettingsNavigation {
         case shortcut
         case audio
         case permissions
+        case diagnostics
     }
 
     public var selectedPane: Pane = .general
