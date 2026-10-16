@@ -7,6 +7,7 @@ public final class SettingsNavigation {
     public enum Pane: String, Hashable, Sendable {
         case general
         case shortcut
+        case audio
         case permissions
     }
 

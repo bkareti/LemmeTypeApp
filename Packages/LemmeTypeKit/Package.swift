@@ -41,11 +41,11 @@ let package = Package(
 
         .testTarget(name: "DomainTests", dependencies: ["Domain", "TestSupport"]),
         .testTarget(name: "SupportTests", dependencies: ["Support", "Domain"]),
-        .testTarget(name: "AudioTests", dependencies: ["Audio", "Domain"]),
+        .testTarget(name: "AudioTests", dependencies: ["Audio", "Domain", "TestSupport"]),
         .testTarget(name: "PermissionsTests", dependencies: ["Permissions", "Domain"]),
         .testTarget(name: "LifecycleTests", dependencies: ["Lifecycle", "Domain"]),
         .testTarget(name: "ShortcutsTests", dependencies: ["Shortcuts", "Domain", "TestSupport"]),
-        .testTarget(name: "UIModuleTests", dependencies: ["UI", "Domain", "Support", "TestSupport"]),
+        .testTarget(name: "UIModuleTests", dependencies: ["UI", "Domain", "Support", "TestSupport", "Audio"]),
     ],
     swiftLanguageModes: [.v6]
 )

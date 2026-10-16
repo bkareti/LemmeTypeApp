@@ -84,3 +84,23 @@ first: `tccutil reset Microphone com.lemmetype.LemmeType`,
 1. In another app that can register global shortcuts (e.g. Raycast or Alfred), bind ⌥Space.
 2. Relaunch LemmeType. The menu shows "Shortcut Unavailable — Choose Another…", which
    opens the Shortcut pane with an error; choosing another shortcut clears it.
+
+## E1-S5 — Audio capture
+
+Requires Microphone permission (team-signed build).
+
+**MA-11 Real microphone and device selection**
+1. Settings › Audio lists System Default plus every connected input.
+2. **Test Microphone** — the meter moves when you speak and falls when silent. Stop the test.
+3. `ls -la $TMPDIR/LemmeType/Sessions` is empty (the test kept nothing).
+4. Choose a USB or Bluetooth input, test again — the meter follows that device.
+
+**MA-12 Device loss and fallback**
+1. Start a test on a USB/Bluetooth input, then unplug or disconnect it — the test
+   stops with "The microphone was disconnected…" and the Sessions folder is empty.
+2. With that device still disconnected, the pane says the selected microphone isn't
+   connected; **Test Microphone** works and reports it is using the system default.
+
+**MA-13 Sleep**
+1. Start a test and put the Mac to sleep (Apple menu › Sleep). After waking, the
+   test has stopped with "Recording was interrupted" and no recording remains.

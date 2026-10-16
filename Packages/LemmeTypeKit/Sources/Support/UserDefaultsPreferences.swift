@@ -32,9 +32,21 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         set { defaults.set(newValue.rawValue, forKey: Key.activationMode) }
     }
 
+    public var audioInput: AudioInputSelection {
+        get {
+            defaults.data(forKey: Key.audioInput).flatMap {
+                try? JSONDecoder().decode(AudioInputSelection.self, from: $0)
+            } ?? .systemDefault
+        }
+        set {
+            defaults.set(try? JSONEncoder().encode(newValue), forKey: Key.audioInput)
+        }
+    }
+
     private enum Key {
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let dictationShortcut = "dictationShortcut"
         static let activationMode = "activationMode"
+        static let audioInput = "audioInput"
     }
 }
