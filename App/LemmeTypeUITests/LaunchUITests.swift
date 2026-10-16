@@ -37,7 +37,7 @@ final class LaunchUITests: XCTestCase {
         XCTAssertTrue(statusItem.waitForExistence(timeout: 10))
         statusItem.click()
 
-        for title in ["Settings…", "About LemmeType", "Quit LemmeType"] {
+        for title in ["Finish Setup…", "Settings…", "About LemmeType", "Quit LemmeType"] {
             let item = statusItem.menuItems[title]
             XCTAssertTrue(item.waitForExistence(timeout: 5), "\(title) is missing")
             XCTAssertTrue(item.isEnabled, "\(title) is disabled")
@@ -51,13 +51,15 @@ final class LaunchUITests: XCTestCase {
     func testPermissionsPaneShowsInjectedState() {
         launch(showingSettings: true)
         XCTAssertTrue(settingsWindow.waitForExistence(timeout: 10))
-        settingsWindow.tabs["Permissions"].click()
+        selectTab("Permissions")
 
         let microphone = settingsWindow.staticTexts["permission.microphone.status"]
-        XCTAssertTrue(microphone.waitForExistence(timeout: 5))
+        XCTAssertTrue(microphone.waitForExistence(timeout: 10))
         XCTAssertEqual(text(of: microphone), "Granted")
         XCTAssertEqual(text(of: settingsWindow.staticTexts["permission.accessibility.status"]), "Not granted")
-        XCTAssertEqual(text(of: settingsWindow.staticTexts["audio.inputDeviceCount"]), "2")
+        XCTAssertEqual(text(of: settingsWindow.staticTexts["capability.recording"]), "Available")
+        XCTAssertEqual(text(of: settingsWindow.staticTexts["capability.textInsertion"]), "Unavailable")
+        XCTAssertTrue(settingsWindow.buttons["permission.accessibility.action"].exists)
     }
 
     @MainActor
@@ -99,6 +101,18 @@ final class LaunchUITests: XCTestCase {
     @MainActor
     private var settingsWindow: XCUIElement {
         app.windows["settings"]
+    }
+
+    @MainActor
+    private func selectTab(_ title: String) {
+        let tab = settingsWindow.tabs[title]
+        XCTAssertTrue(tab.waitForExistence(timeout: 5))
+        tab.click()
+        let selected = NSPredicate(format: "value == 1")
+        let expectation = XCTNSPredicateExpectation(predicate: selected, object: tab)
+        if XCTWaiter().wait(for: [expectation], timeout: 3) != .completed {
+            tab.click()
+        }
     }
 
     @MainActor

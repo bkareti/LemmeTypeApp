@@ -41,3 +41,30 @@ results in the PR description as `MA-N: pass/fail — notes`.
 3. Quit and relaunch LemmeType — the toggle matches System Settings › Login Items.
 4. Log out and back in — LemmeType is in the menu bar.
 5. Turn it off, relaunch — the toggle is off and the login item is gone.
+
+## E1-S3 — Permission onboarding
+
+Use a team-signed build so macOS keeps grants across rebuilds. Reset state
+first: `tccutil reset Microphone com.lemmetype.LemmeType`,
+`tccutil reset Accessibility com.lemmetype.LemmeType`, and
+`defaults delete com.lemmetype.LemmeType hasCompletedOnboarding`.
+
+**MA-6 Clean-install onboarding**
+1. Launch. The onboarding window opens on Welcome; no system prompt is visible.
+2. Continue to Microphone. No prompt until **Allow Microphone Access…** is pressed.
+3. Allow in the system prompt — the status changes to Granted without relaunching.
+4. Continue to Accessibility, press **Allow Accessibility Access…** — the
+   system alert appears; open System Settings and enable LemmeType.
+5. Return to the onboarding window — Accessibility shows Granted within ~1 s.
+6. Continue, then **Done**. No Screen Recording or Input Monitoring prompt appeared at any point.
+
+**MA-7 Denied microphone**
+1. Reset Microphone, run onboarding, choose **Don't Allow** in the prompt.
+2. Status shows Denied with guidance; the button reads **Open System Settings…**
+   and opens Privacy & Security › Microphone. Pressing it again never shows the prompt.
+
+**MA-8 Accessibility revoked while running**
+1. With everything granted, open Settings › Permissions.
+2. In System Settings, turn LemmeType off under Accessibility.
+3. Switch back to LemmeType — Accessibility shows Not granted and Text insertion shows Unavailable.
+4. The status menu shows **Finish Setup…**.

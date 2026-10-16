@@ -1,6 +1,7 @@
 import Audio
 import Lifecycle
 import Permissions
+import Support
 import TestSupport
 import Testing
 
@@ -15,6 +16,8 @@ struct AppCompositionTests {
 
         #expect(composition.mode == .live)
         #expect(composition.permissionChecker is SystemPermissionChecker)
+        #expect(composition.permissionRequester is SystemPermissionRequester)
+        #expect(composition.preferences is UserDefaultsPreferences)
         #expect(composition.audioDeviceLister is CaptureDeviceLister)
         #expect(composition.loginItems is SystemLoginItemManager)
     }
@@ -26,9 +29,22 @@ struct AppCompositionTests {
         )
 
         #expect(composition.mode == .uiTesting)
-        #expect(composition.permissionChecker is FakePermissionChecker)
+        #expect(composition.permissionChecker is FakePermissions)
+        #expect(composition.permissionRequester is FakePermissions)
+        #expect(composition.preferences is FakePreferences)
         #expect(composition.audioDeviceLister is FakeAudioDeviceLister)
         #expect(composition.loginItems is FakeLoginItemManager)
+        #expect(composition.preferences.hasCompletedOnboarding)
+    }
+
+    @Test func freshInstallArgumentStartsWithOnboardingPending() {
+        let composition = AppComposition.make(
+            arguments: [AppComposition.uiTestingArgument, AppComposition.freshInstallArgument],
+            infoDictionary: info
+        )
+
+        #expect(!composition.preferences.hasCompletedOnboarding)
+        #expect(composition.permissionChecker.status(for: .microphone) == .notRequested)
     }
 
     @Test func showSettingsArgumentIsHonouredInDebug() {
@@ -45,10 +61,10 @@ struct AppCompositionTests {
         #expect(composition.buildInfo.displayString == "9.9.9 (99)")
     }
 
-    @Test func statusViewModelReceivesInjectedServices() {
-        let model = AppComposition.uiTesting(buildInfo: .init(version: "1", build: "1")).makeStatusViewModel()
+    @Test func controllerSharesOnePermissionsModel() {
+        let controller = AppComposition.uiTesting(buildInfo: .init(version: "1", build: "1")).makeAppController()
 
-        #expect(model.inputDeviceCount == 2)
-        #expect(model.permissionRows.first { $0.permission == .microphone }?.status == .granted)
+        #expect(controller.onboardingModel.permissions === controller.permissions)
+        #expect(controller.permissions.status(for: .microphone) == .granted)
     }
 }

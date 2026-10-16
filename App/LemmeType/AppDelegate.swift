@@ -27,9 +27,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        controller.launchFinished()
         if composition.showsSettingsOnLaunch {
             controller.showSettings()
         }
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        controller.applicationBecameActive()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
