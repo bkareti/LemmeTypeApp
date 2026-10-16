@@ -1,5 +1,6 @@
 import Domain
 import Foundation
+import Synchronization
 import TestSupport
 import Testing
 
@@ -10,7 +11,7 @@ import Testing
 struct RecordingCoordinatorTests {
     private let source = FakeAudioSource()
     private let feedback = FakeFeedback()
-    private let consumer = RecordingSpy()
+    private let processor = RecordingSpy()
     private let storage = AudioSessionStorage(
         directory: FileManager.default.temporaryDirectory
             .appendingPathComponent("LemmeTypeTests-RecordingCoordinatorTests-\(UUID().uuidString)", isDirectory: true))
@@ -22,7 +23,7 @@ struct RecordingCoordinatorTests {
         RecordingCoordinator(
             capture: AudioCaptureService(
                 source: source, storage: storage, permissions: FakePermissions(statuses: [.microphone: microphone])),
-            consumer: consumer,
+            processor: processor,
             feedback: feedback,
             preferences: preferences,
             finishedDisplay: .milliseconds(50),
@@ -49,11 +50,12 @@ struct RecordingCoordinatorTests {
         await coordinator.settle()
 
         #expect(coordinator.state == .completed)
-        #expect(consumer.consumed.count == 1)
-        #expect(consumer.targets == ["TextEdit"])
+        #expect(processor.consumed.count == 1)
+        #expect(processor.targets == ["TextEdit"])
         #expect(ended == 1)
         #expect(leftoverFiles.isEmpty)
-        #expect(feedback.announcements == ["Recording started", "Recording stopped"])
+        #expect(feedback.announcements == ["Recording started", "Recording stopped", "Text inserted."])
+        #expect(coordinator.lastDelivery == .accessibility)
 
         try await Task.sleep(for: .milliseconds(150))
         #expect(coordinator.state == .idle)
@@ -71,7 +73,7 @@ struct RecordingCoordinatorTests {
         #expect(coordinator.state == .cancelled)
         #expect(!source.isRunning)
         #expect(leftoverFiles.isEmpty)
-        #expect(consumer.consumed.isEmpty)
+        #expect(processor.consumed.isEmpty)
         #expect(feedback.announcements.last == "Recording cancelled")
     }
 
@@ -103,7 +105,7 @@ struct RecordingCoordinatorTests {
 
         #expect(coordinator.state == .failed(.microphonePermissionMissing))
         #expect(coordinator.recoveryAction == .openPermissions)
-        coordinator.perform(.openPermissions)
+        coordinator.perform(RecordingCoordinator.RecoveryAction.openPermissions)
         #expect(opened == [.permissions])
         #expect(coordinator.state == .idle)
     }
@@ -194,15 +196,59 @@ final class FakeFeedback: RecordingFeedback {
     func play(_ sound: FeedbackSound) { sounds.append(sound) }
 }
 
-/// Records what it was given, then deletes the file like a real consumer.
-final class RecordingSpy: RecordingConsumer, @unchecked Sendable {
-    // Only mutated from the coordinator's main-actor session.
-    private(set) var consumed: [RecordedAudio] = []
-    private(set) var targets: [String?] = []
+/// Records each session and returns a scripted outcome; deletes the audio on
+/// delivery like the real pipeline.
+final class RecordingSpy: DictationProcessing {
+    private struct State {
+        var consumed: [RecordedAudio] = []
+        var targets: [String?] = []
+        var engines: [RecognitionEngineID?] = []
+        var modes: [WritingMode] = []
+        var outcomes: [DictationOutcome] = []
+        var deliveries: [String] = []
+        var delay: Duration = .zero
+    }
 
-    func consume(_ recording: RecordedAudio, target: ActivationTarget?) async throws(AudioCaptureError) {
-        consumed.append(recording)
-        targets.append(target?.applicationName)
-        try? FileManager.default.removeItem(at: recording.fileURL)
+    private let state = Mutex(State())
+
+    var consumed: [RecordedAudio] { state.withLock { $0.consumed } }
+    var targets: [String?] { state.withLock { $0.targets } }
+    var engines: [RecognitionEngineID?] { state.withLock { $0.engines } }
+    var modes: [WritingMode] { state.withLock { $0.modes } }
+    var deliveries: [String] { state.withLock { $0.deliveries } }
+
+    /// Outcomes for successive calls; delivered once they run out.
+    func script(_ outcomes: [DictationOutcome], delay: Duration = .zero) {
+        state.withLock {
+            $0.outcomes = outcomes
+            $0.delay = delay
+        }
+    }
+
+    func process(
+        _ session: DictationSession, updates: @escaping @Sendable (ProcessingUpdate) -> Void
+    ) async -> DictationOutcome {
+        let (outcome, delay) = state.withLock { state in
+            state.consumed.append(session.audio)
+            state.targets.append(session.target?.applicationName)
+            state.engines.append(session.engine)
+            state.modes.append(session.mode)
+            let next =
+                state.outcomes.isEmpty ? DictationOutcome.delivered(.accessibility) : state.outcomes.removeFirst()
+            return (next, state.delay)
+        }
+        updates(.phase(.recognizing))
+        if delay > .zero {
+            try? await Task.sleep(for: delay)
+            if Task.isCancelled { return .cancelled }
+        }
+        if case .delivered = outcome { session.discardAudio() }
+        return outcome
+    }
+
+    func deliver(_ transcript: String, for session: DictationSession) async -> DictationOutcome {
+        state.withLock { $0.deliveries.append(transcript) }
+        session.discardAudio()
+        return .delivered(.paste)
     }
 }

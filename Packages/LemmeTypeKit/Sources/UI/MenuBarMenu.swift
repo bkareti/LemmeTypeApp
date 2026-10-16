@@ -53,6 +53,7 @@ public struct MenuBarMenu: View {
         } else {
             Text(String(localized: "Dictate: \(shortcut.shortcut.displayString)", bundle: .module))
         }
+        Text(String(localized: "Writing Mode: \(recorder.writingMode.displayName)", bundle: .module))
         Divider()
         if recorder.state.isCapturing {
             Button(String(localized: "Stop Recording", bundle: .module)) { recorder.requestStop() }

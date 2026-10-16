@@ -10,6 +10,8 @@ public final class FakePreferences: AppPreferences {
         var audioInput: AudioInputSelection
         var playsFeedbackSounds: Bool
         var dictationLanguage: String
+        var writingMode: WritingMode
+        var selectedEngine: RecognitionEngineID?
     }
 
     private let values: Mutex<Values>
@@ -20,7 +22,9 @@ public final class FakePreferences: AppPreferences {
         activationMode: ActivationMode = .pushToTalk,
         audioInput: AudioInputSelection = .systemDefault,
         playsFeedbackSounds: Bool = false,
-        dictationLanguage: String = "en-US"
+        dictationLanguage: String = "en-US",
+        writingMode: WritingMode = .exact,
+        selectedEngine: RecognitionEngineID? = nil
     ) {
         values = Mutex(
             Values(
@@ -29,7 +33,9 @@ public final class FakePreferences: AppPreferences {
                 activationMode: activationMode,
                 audioInput: audioInput,
                 playsFeedbackSounds: playsFeedbackSounds,
-                dictationLanguage: dictationLanguage
+                dictationLanguage: dictationLanguage,
+                writingMode: writingMode,
+                selectedEngine: selectedEngine
             ))
     }
 
@@ -61,5 +67,15 @@ public final class FakePreferences: AppPreferences {
     public var dictationLanguage: String {
         get { values.withLock { $0.dictationLanguage } }
         set { values.withLock { $0.dictationLanguage = newValue } }
+    }
+
+    public var writingMode: WritingMode {
+        get { values.withLock { $0.writingMode } }
+        set { values.withLock { $0.writingMode = newValue } }
+    }
+
+    public var selectedEngine: RecognitionEngineID? {
+        get { values.withLock { $0.selectedEngine } }
+        set { values.withLock { $0.selectedEngine = newValue } }
     }
 }

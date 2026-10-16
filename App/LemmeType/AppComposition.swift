@@ -1,4 +1,5 @@
 import Audio
+import Delivery
 import Domain
 import Foundation
 import Lifecycle
@@ -40,11 +41,12 @@ struct AppComposition {
     var preferences: any AppPreferences
     var audioDeviceLister: any AudioDeviceListing
     var audioCapture: any AudioCapturing
-    var recordingConsumer: any RecordingConsumer = DiscardingRecordingConsumer()
     var speechAuthorizer: any SpeechRecognitionAuthorizing
     /// Every installed recognition engine, in recommendation order.
     var recognitionEngines: [any SpeechRecognitionEngine]
     var modelAssets: any ModelAssetManaging
+    var textDelivery: any TextDelivering
+    var textCopier: any TextCopying
     var diagnostics: DiagnosticsBuffer
     var loginItems: any LoginItemManaging
     var hotKeyRegistrar: any HotKeyRegistering
@@ -90,6 +92,8 @@ struct AppComposition {
                 WhisperEngine(assets: modelAssets),
             ],
             modelAssets: modelAssets,
+            textDelivery: CopyingTextDelivery(copier: PasteboardTextCopier()),
+            textCopier: PasteboardTextCopier(),
             diagnostics: diagnostics,
             loginItems: SystemLoginItemManager(),
             hotKeyRegistrar: CarbonHotKeyRegistrar(),
@@ -106,6 +110,8 @@ struct AppComposition {
         /// the activation target is fake so no other app is inspected.
         static func uiTesting(buildInfo: BuildInfo, freshInstall: Bool = false) -> AppComposition {
             let diagnostics = DiagnosticsBuffer()
+            // Records text instead of touching other apps or the clipboard.
+            let delivery = FakeTextDelivery()
             let permissions = FakePermissions(
                 statuses: freshInstall ? [:] : [.microphone: .granted],
                 microphoneAnswer: .granted,
@@ -136,6 +142,8 @@ struct AppComposition {
                         assets: .downloadable(.whisperBaseEnglish)),
                 ],
                 modelAssets: FakeModelAssetManager(),
+                textDelivery: delivery,
+                textCopier: delivery,
                 diagnostics: diagnostics,
                 loginItems: FakeLoginItemManager(status: .disabled),
                 hotKeyRegistrar: CarbonHotKeyRegistrar(),
@@ -144,6 +152,17 @@ struct AppComposition {
             )
         }
     #endif
+
+    /// Recognition, writing mode, and delivery for each finished recording.
+    func makeDictationProcessor() -> any DictationProcessing {
+        TranscriptionPipeline(
+            engines: recognitionEngines,
+            preferredEngine: { [preferences] in preferences.selectedEngine },
+            write: TextCleaner.write,
+            delivery: textDelivery,
+            diagnostics: diagnostics
+        )
+    }
 
     func makeAppController() -> AppController {
         let permissions = PermissionsModel(
@@ -162,9 +181,11 @@ struct AppComposition {
         let navigation = SettingsNavigation()
         let recorder = RecordingCoordinator(
             capture: audioCapture,
-            consumer: recordingConsumer,
+            processor: makeDictationProcessor(),
             feedback: SystemRecordingFeedback(preferences: preferences),
             preferences: preferences,
+            speechAuthorizer: speechAuthorizer,
+            textCopier: textCopier,
             diagnostics: diagnostics
         )
         let diagnosticsModel = DiagnosticsModel(

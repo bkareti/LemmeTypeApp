@@ -23,6 +23,7 @@ let package = Package(
         .library(name: "Lifecycle", targets: ["Lifecycle"]),
         .library(name: "Recognition", targets: ["Recognition"]),
         .library(name: "ModelAssets", targets: ["ModelAssets"]),
+        .library(name: "Delivery", targets: ["Delivery"]),
         .library(name: "UI", targets: ["UI"]),
         .library(name: "TestSupport", targets: ["TestSupport"]),
     ],
@@ -42,6 +43,7 @@ let package = Package(
             checksum: "af74fed13ea7f2d5ca2a39d9f58ec177713fafd7cab63aef4e27b79f3ceca80b"
         ),
         .target(name: "ModelAssets", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
+        .target(name: "Delivery", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
         .target(
             name: "UI",
             dependencies: ["Domain", "Support"],

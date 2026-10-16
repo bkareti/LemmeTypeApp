@@ -44,4 +44,21 @@ struct DictationPreferencesTests {
         UserDefaultsPreferences(defaults: defaults).dictationLanguage = "en-GB"
         #expect(UserDefaultsPreferences(defaults: defaults).dictationLanguage == "en-GB")
     }
+
+    @Test func writingModeAndEngineDefaultToExactAndAutomatic() throws {
+        let suite = "DictationPreferencesTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let preferences = UserDefaultsPreferences(defaults: defaults)
+        #expect(preferences.writingMode == .exact)
+        #expect(preferences.selectedEngine == nil)
+        preferences.writingMode = .clean
+        preferences.selectedEngine = .whisper
+        let reloaded = UserDefaultsPreferences(defaults: defaults)
+        #expect(reloaded.writingMode == .clean)
+        #expect(reloaded.selectedEngine == .whisper)
+        reloaded.selectedEngine = nil
+        #expect(UserDefaultsPreferences(defaults: defaults).selectedEngine == nil)
+    }
 }

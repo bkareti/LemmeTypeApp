@@ -50,7 +50,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
 - Feature code lives in the local package `Packages/LemmeTypeKit`, one target per
   module: `Domain` (models, protocols, state, no OS frameworks), `Support`
   (`Log`, `BuildInfo`, `UserDefaultsPreferences`; depends on Domain), platform modules `Audio` / `Permissions` / `Shortcuts` /
-  `Lifecycle` / `Recognition` / `ModelAssets` (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
+  `Lifecycle` / `Recognition` / `ModelAssets` / `Delivery` (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
   and `TestSupport` (fakes).
 - The app target (`App/LemmeType`) holds only `LemmeTypeApp` and
   `AppComposition`, the single composition root where concrete OS services are
@@ -70,8 +70,12 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   → `AsyncStream<AudioCaptureEvent>`. Session files are purged at launch.
 - Recording: `RecordingCoordinator` (UI, the only `AudioCapturing` caller)
   serialises commands through `RecorderStateMachine` (Domain, pure transition
-  table) and hands finished audio to a `RecordingConsumer` (Epic 1:
-  `DiscardingRecordingConsumer`; Epic 2: transcription). The overlay is a
+  table). Each finished recording becomes a `DictationSession` processed by a
+  `DictationProcessing` (`TranscriptionPipeline`, Domain: engine selection →
+  recognition → writing mode → `TextDelivering`) in its own task; stale
+  results are ignored. Failures that need a decision put the recorder in
+  `needsAttention(DictationIssue)` with actions (retry, other engine, copy,
+  save audio, discard) and keep the audio until then. The overlay is a
   non-activating `NSPanel` that cannot become key.
 - Recognition: engines implement `SpeechRecognitionEngine` (Domain) and are
   always called through `RecognitionRunner`, which guarantees that a not-ready
@@ -89,6 +93,11 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   and SHA-256. `ModelAssetStore` (ModelAssets) stages, verifies, activates,
   and removes them; `URLSessionModelDownloader` is the only network code in
   the app (lint exception in that file only) and needs a `ModelDownloadConsent`.
+- Writing modes: `TextCleaner` (Domain) is the pipeline's `write` step. Exact
+  only normalises whitespace; Clean runs `CleanupRule`s in a fixed order and
+  never rewrites protected tokens (numbers, URLs, emails, identifiers,
+  quotes). Every change is a `CleanupTransformation` naming its rule; the
+  corpus in `TextCleanerTests` is the spec.
 - Diagnostics: components take `any DiagnosticsRecording` (default
   `DiscardingDiagnostics`); the app shares one `DiagnosticsBuffer`. Event names
   and keys must be literals and values typed (`.id(...)` redacts anything that
@@ -104,7 +113,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes).
 
 ## Planning documents
 

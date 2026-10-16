@@ -15,7 +15,7 @@ results in the PR description as `MA-N: pass/fail — notes`.
    defaults delete com.lemmetype.LemmeType
    rm -rf "$TMPDIR/LemmeType"
    ```
-3. Run MA-1 to MA-25 in order: clean-install onboarding (MA-6) must come
+3. Run MA-1 to MA-26 in order: clean-install onboarding (MA-6) must come
    before anything that assumes permissions; real-microphone checks are MA-11
    to MA-13 and MA-14 to MA-17.
 4. Finish with `make privacy-check` and confirm `$TMPDIR/LemmeType/Sessions` is empty.
@@ -229,3 +229,35 @@ Requires Microphone permission (team-signed build).
 1. `scripts/run-recognition-benchmark.sh` with the model installed.
 2. Copy the metrics from `build/benchmarks/` into
    `docs/testing/performance-thresholds.md` with the Mac model and date.
+
+## E2-S5 — Dictation sessions
+
+**MA-26 One recording, one result, clean-up**
+1. Dictate into TextEdit. The overlay shows *Transcribing…* then *Done* with
+   how the text was delivered; `$TMPDIR/LemmeType/Sessions` is empty afterwards.
+2. Dictate a long sentence and press **Cancel** while *Transcribing…*: nothing
+   is delivered, the overlay shows *Cancelled*, and the Sessions folder is empty.
+3. Select Whisper without installing it and dictate: the overlay explains the
+   engine isn't ready and offers **Use Apple Speech**, **Choose Engine…**,
+   **Save Audio…**, **Discard**. **Use Apple Speech** transcribes the same
+   recording. Repeat and choose **Discard**: the recording is deleted.
+4. Repeat step 3, press the shortcut again instead of choosing: the old
+   recording is deleted and a new session starts.
+5. Repeat step 3 and quit LemmeType: the Sessions folder is empty.
+
+## E2-S6 — Writing modes
+
+**MA-27 Exact Dictation and Clean Writing**
+1. With default settings, open the status menu: it shows *Writing Mode: Exact
+   Dictation*. Start a recording: the overlay shows *Exact Dictation* under
+   *Recording*.
+2. Dictate "um can you send me the the slides comma thanks": the delivered
+   text keeps every word as recognised (no fillers or repeats removed).
+3. Quit LemmeType, run `defaults write com.lemmetype.LemmeType writingMode
+   clean`, and relaunch (the Settings control arrives in E2-S9). The menu and
+   overlay show *Clean Writing*.
+4. Dictate the same sentence: the result is "Can you send me the slides,
+   thanks." Dictate "meet on Tuesday sorry Wednesday": it becomes "Meet on
+   Wednesday." Dictate "send it to ana@example.com by 5": the address and
+   number are delivered exactly as recognised.
+5. Run `defaults delete com.lemmetype.LemmeType writingMode` to restore Exact.
