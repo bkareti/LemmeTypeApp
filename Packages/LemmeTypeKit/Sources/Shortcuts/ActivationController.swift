@@ -21,15 +21,18 @@ public final class ActivationController: DictationShortcutControlling {
     private var interpreter: ActivationInterpreter
     private var registration: (any HotKeyRegistration)?
     private var cancelRegistration: (any HotKeyRegistration)?
+    private let diagnostics: any DiagnosticsRecording
 
     public init(
         registrar: any HotKeyRegistering,
         targetCapturer: any TargetCapturing,
         shortcut: KeyboardShortcut,
-        mode: ActivationMode
+        mode: ActivationMode,
+        diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
     ) {
         self.registrar = registrar
         self.targetCapturer = targetCapturer
+        self.diagnostics = diagnostics
         self.shortcut = shortcut
         self.mode = mode
         self.interpreter = ActivationInterpreter(mode: mode)
@@ -45,8 +48,10 @@ public final class ActivationController: DictationShortcutControlling {
             }
             registrationError = nil
             Log.shortcuts.info("Dictation shortcut registered")
+            diagnostics.record(.shortcut, "shortcut.registered")
         } catch {
             registrationError = error
+            diagnostics.record(.shortcut, "shortcut.registration-failed", ["error": .id(error.identifier)])
         }
     }
 
@@ -78,6 +83,7 @@ public final class ActivationController: DictationShortcutControlling {
         cancelSession()
         mode = newMode
         interpreter.mode = newMode
+        diagnostics.record(.shortcut, "shortcut.mode", ["mode": .id(newMode.rawValue)])
     }
 
     /// Cancels the active session, if any (Escape, menu, or overlay).
@@ -85,6 +91,7 @@ public final class ActivationController: DictationShortcutControlling {
         guard interpreter.isSessionActive else { return }
         endSession()
         Log.shortcuts.info("Dictation cancelled")
+        diagnostics.record(.shortcut, "activation.cancel")
         onCommand(.cancel)
     }
 
@@ -99,10 +106,14 @@ public final class ActivationController: DictationShortcutControlling {
             let target = targetCapturer.captureTarget()
             armCancel()
             Log.shortcuts.info("Dictation start (\(self.mode.rawValue, privacy: .public))")
+            diagnostics.record(
+                .shortcut, "activation.start",
+                ["mode": .id(mode.rawValue), "hasFocusedElement": .flag(target?.focusedElement != nil)])
             onCommand(.start(target))
         case .stop:
             disarmCancel()
             Log.shortcuts.info("Dictation stop")
+            diagnostics.record(.shortcut, "activation.stop")
             onCommand(.stop)
         case .ignore:
             break

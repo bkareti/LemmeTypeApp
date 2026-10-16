@@ -14,6 +14,7 @@ final class AppController {
     let overlay: RecordingOverlayController
     let shortcut: ShortcutSettingsModel
     let navigation: SettingsNavigation
+    let diagnostics: any DiagnosticsRecording
     let settings: ManagedWindowController
     private let preferences: any AppPreferences
 
@@ -39,8 +40,10 @@ final class AppController {
         recorder: RecordingCoordinator,
         shortcut: ShortcutSettingsModel,
         navigation: SettingsNavigation,
+        diagnostics: any DiagnosticsRecording,
         settings: ManagedWindowController
     ) {
+        self.diagnostics = diagnostics
         self.permissions = permissions
         self.preferences = preferences
         self.activation = activation
@@ -69,6 +72,8 @@ final class AppController {
     func launchFinished() {
         Task { [audioCapture = recorder.capture] in await audioCapture.purgeLeftovers() }
         overlay.start()
+        diagnostics.record(
+            .lifecycle, "app.launched", ["onboardingComplete": .flag(preferences.hasCompletedOnboarding)])
         activation.activate()
         shortcut.refreshState()
         if !preferences.hasCompletedOnboarding {
@@ -114,6 +119,7 @@ final class AppController {
     /// Quitting cancels an active recording first (see `prepareToTerminate`).
     func quit() {
         Log.lifecycle.info("Quit requested")
+        diagnostics.record(.lifecycle, "app.quit-requested")
         NSApp.terminate(nil)
     }
 }

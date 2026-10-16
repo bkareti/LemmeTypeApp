@@ -18,18 +18,30 @@ public actor AudioCaptureService: AudioCapturing {
     private let source: any AudioSource
     private let storage: AudioSessionStorage
     private let permissions: any PermissionChecking
+    private let diagnostics: any DiagnosticsRecording
     private var session: Session?
     private var failure: AudioCaptureError?
 
-    public init(source: any AudioSource, storage: AudioSessionStorage, permissions: any PermissionChecking) {
+    public init(
+        source: any AudioSource,
+        storage: AudioSessionStorage,
+        permissions: any PermissionChecking,
+        diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
+    ) {
         self.source = source
         self.storage = storage
         self.permissions = permissions
+        self.diagnostics = diagnostics
     }
 
     public func start(input: AudioInputSelection) throws(AudioCaptureError) -> AsyncStream<AudioCaptureEvent> {
         guard session == nil else { throw .alreadyCapturing }
-        guard permissions.status(for: .microphone) == .granted else { throw .microphonePermissionMissing }
+        guard permissions.status(for: .microphone) == .granted else {
+            diagnostics.record(
+                .audio, "capture.start-failed", ["error": .id(AudioCaptureError.microphonePermissionMissing.identifier)]
+            )
+            throw .microphonePermissionMissing
+        }
 
         let writer = try storage.makeWriter()
         let (events, eventContinuation) = AsyncStream.makeStream(of: AudioCaptureEvent.self)
@@ -43,6 +55,7 @@ public actor AudioCaptureService: AudioCapturing {
             sourceContinuation.finish()
             eventContinuation.finish()
             Log.audio.error("Capture failed to start: \(error.identifier, privacy: .public)")
+            diagnostics.record(.audio, "capture.start-failed", ["error": .id(error.identifier)])
             throw error
         }
 
@@ -57,6 +70,12 @@ public actor AudioCaptureService: AudioCapturing {
             eventContinuation.yield(.fellBackToSystemDefault)
         }
         Log.audio.info("Capture started; fallback=\(started.usedSystemDefaultFallback, privacy: .public)")
+        diagnostics.record(
+            .audio, "capture.started",
+            [
+                "input": .id(input == .systemDefault ? "system-default" : "specific-device"),
+                "fallback": .flag(started.usedSystemDefaultFallback),
+            ])
         return events
     }
 
@@ -82,6 +101,7 @@ public actor AudioCaptureService: AudioCapturing {
         let recording = finished.writer.finish()
         finished.events.finish()
         Log.audio.info("Capture stopped after \(recording.duration, format: .fixed(precision: 1), privacy: .public)s")
+        diagnostics.record(.audio, "capture.stopped", ["seconds": .seconds(recording.duration)])
         return recording
     }
 
@@ -95,6 +115,7 @@ public actor AudioCaptureService: AudioCapturing {
         current.writer.discard()
         current.events.finish()
         Log.audio.info("Capture cancelled; recording deleted")
+        diagnostics.record(.audio, "capture.cancelled")
     }
 
     public func purgeLeftovers() {
@@ -140,5 +161,6 @@ public actor AudioCaptureService: AudioCapturing {
         current.events.yield(.failed(error))
         current.events.finish()
         Log.audio.error("Capture failed: \(error.identifier, privacy: .public)")
+        diagnostics.record(.audio, "capture.failed", ["error": .id(error.identifier)])
     }
 }

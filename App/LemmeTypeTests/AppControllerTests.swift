@@ -180,6 +180,27 @@ struct AppControllerTests {
         #expect(controller.recorder.state == .cancelled)
     }
 
+    @Test func launchAndActivityAreRecordedInDiagnostics() async {
+        var composition = AppComposition.uiTesting(buildInfo: .init(version: "1", build: "1"))
+        let registrar = FakeHotKeyRegistrar()
+        composition.hotKeyRegistrar = registrar
+        let controller = composition.makeAppController()
+        controller.activation.change(to: .toggle)
+
+        controller.launchFinished()
+        registrar.send(.pressed, .defaultDictation, at: 0)
+        await controller.recorder.settle()
+        await controller.prepareToTerminate()
+
+        let names = composition.diagnostics.snapshot().map(\.name)
+        #expect(names.contains("app.launched"))
+        #expect(names.contains("shortcut.registered"))
+        #expect(names.contains("activation.start"))
+        #expect(names.contains("capture.started"))
+        #expect(names.contains("recorder.state"))
+        controller.overlay.currentPanel?.orderOut(nil)
+    }
+
     @Test func finishSetupMenuActionReopensOnboardingFromTheStart() throws {
         let controller = makeController()
         controller.onboardingModel.next()

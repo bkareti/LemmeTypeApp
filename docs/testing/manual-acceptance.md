@@ -129,3 +129,14 @@ Requires Microphone permission (team-signed build).
 1. Start recording, choose **Quit LemmeType** — the app exits, the microphone
    indicator in the menu bar turns off, and no session file remains.
 2. Start recording, sleep the Mac, wake it — the overlay shows the interruption; no file remains.
+
+## E1-S7 — Diagnostics
+
+**MA-18 Export is explicit and content-safe**
+1. Dictate a few times (including one cancel), then open Settings › Diagnostics.
+2. **Preview Report…** shows JSON with app version, macOS version, Mac model,
+   permission states, and events; nothing is saved yet.
+3. Search the preview for your microphone's name, the app you dictated into, and any
+   word you spoke — none appear.
+4. **Save…** writes the same JSON to the chosen file. With Little Snitch or
+   `nettop -p LemmeType` running, no network connection is made at any point.

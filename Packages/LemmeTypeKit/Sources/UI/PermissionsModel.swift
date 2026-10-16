@@ -22,10 +22,16 @@ public final class PermissionsModel {
 
     private let checker: any PermissionChecking
     private let requester: any PermissionRequesting
+    private let diagnostics: any DiagnosticsRecording
 
-    public init(checker: any PermissionChecking, requester: any PermissionRequesting) {
+    public init(
+        checker: any PermissionChecking,
+        requester: any PermissionRequesting,
+        diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
+    ) {
         self.checker = checker
         self.requester = requester
+        self.diagnostics = diagnostics
         refresh()
     }
 
@@ -57,6 +63,11 @@ public final class PermissionsModel {
     public func refresh() {
         for permission in PermissionKind.allCases {
             let new = checker.status(for: permission)
+            if statuses[permission] != new {
+                diagnostics.record(
+                    .permissions, "permission.status",
+                    ["permission": .id(permission.rawValue), "status": .id(new.rawValue)])
+            }
             if let old = statuses[permission], old != new {
                 Log.permissions.info(
                     "\(permission.rawValue, privacy: .public) changed \(old.rawValue, privacy: .public) → \(new.rawValue, privacy: .public)"

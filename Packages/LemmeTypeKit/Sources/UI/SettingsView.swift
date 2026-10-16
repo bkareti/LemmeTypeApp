@@ -1,11 +1,12 @@
 import SwiftUI
 
-/// Root of the settings window. E1-S7 adds the Diagnostics pane.
+/// Root of the settings window.
 public struct SettingsView: View {
     private let general: GeneralSettingsModel
     private let shortcut: ShortcutSettingsModel
     private let audio: AudioSettingsModel
     private let permissions: PermissionsModel
+    private let diagnostics: DiagnosticsModel
     @Bindable private var navigation: SettingsNavigation
 
     public init(
@@ -13,12 +14,14 @@ public struct SettingsView: View {
         shortcut: ShortcutSettingsModel,
         audio: AudioSettingsModel,
         permissions: PermissionsModel,
+        diagnostics: DiagnosticsModel,
         navigation: SettingsNavigation
     ) {
         self.general = general
         self.shortcut = shortcut
         self.audio = audio
         self.permissions = permissions
+        self.diagnostics = diagnostics
         self.navigation = navigation
     }
 
@@ -40,8 +43,15 @@ public struct SettingsView: View {
             ) {
                 PermissionsSettingsView(model: permissions)
             }
+            Tab(
+                String(localized: "Diagnostics", bundle: .module),
+                systemImage: "stethoscope",
+                value: SettingsNavigation.Pane.diagnostics
+            ) {
+                DiagnosticsSettingsView(model: diagnostics)
+            }
         }
-        .frame(width: 520, height: 440)
+        .frame(width: 560, height: 460)
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             general.refresh()
             permissions.refresh()

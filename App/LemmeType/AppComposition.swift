@@ -39,6 +39,7 @@ struct AppComposition {
     var audioDeviceLister: any AudioDeviceListing
     var audioCapture: any AudioCapturing
     var recordingConsumer: any RecordingConsumer = DiscardingRecordingConsumer()
+    var diagnostics: DiagnosticsBuffer
     var loginItems: any LoginItemManaging
     var hotKeyRegistrar: any HotKeyRegistering
     var targetCapturer: any TargetCapturing
@@ -61,6 +62,7 @@ struct AppComposition {
 
     static func live(buildInfo: BuildInfo) -> AppComposition {
         let permissionChecker = SystemPermissionChecker()
+        let diagnostics = DiagnosticsBuffer()
         return AppComposition(
             mode: .live,
             permissionChecker: permissionChecker,
@@ -70,8 +72,10 @@ struct AppComposition {
             audioCapture: AudioCaptureService(
                 source: AVAudioEngineSource(),
                 storage: .makeDefault(),
-                permissions: permissionChecker
+                permissions: permissionChecker,
+                diagnostics: diagnostics
             ),
+            diagnostics: diagnostics,
             loginItems: SystemLoginItemManager(),
             hotKeyRegistrar: CarbonHotKeyRegistrar(),
             targetCapturer: AccessibilityTargetCapturer(),
@@ -86,6 +90,7 @@ struct AppComposition {
         /// Hot keys are real (they need no permission) so UI tests can press them;
         /// the activation target is fake so no other app is inspected.
         static func uiTesting(buildInfo: BuildInfo, freshInstall: Bool = false) -> AppComposition {
+            let diagnostics = DiagnosticsBuffer()
             let permissions = FakePermissions(
                 statuses: freshInstall ? [:] : [.microphone: .granted],
                 microphoneAnswer: .granted,
@@ -105,8 +110,10 @@ struct AppComposition {
                     storage: AudioSessionStorage(
                         directory: FileManager.default.temporaryDirectory
                             .appendingPathComponent("LemmeTypeUITesting", isDirectory: true)),
-                    permissions: permissions
+                    permissions: permissions,
+                    diagnostics: diagnostics
                 ),
+                diagnostics: diagnostics,
                 loginItems: FakeLoginItemManager(status: .disabled),
                 hotKeyRegistrar: CarbonHotKeyRegistrar(),
                 targetCapturer: FakeTargetCapturer(),
@@ -116,13 +123,15 @@ struct AppComposition {
     #endif
 
     func makeAppController() -> AppController {
-        let permissions = PermissionsModel(checker: permissionChecker, requester: permissionRequester)
+        let permissions = PermissionsModel(
+            checker: permissionChecker, requester: permissionRequester, diagnostics: diagnostics)
         let general = GeneralSettingsModel(loginItems: loginItems, preferences: preferences, buildInfo: buildInfo)
         let activation = ActivationController(
             registrar: hotKeyRegistrar,
             targetCapturer: targetCapturer,
             shortcut: preferences.dictationShortcut ?? .defaultDictation,
-            mode: preferences.activationMode
+            mode: preferences.activationMode,
+            diagnostics: diagnostics
         )
         let shortcut = ShortcutSettingsModel(controller: activation, preferences: preferences)
         let audio = AudioSettingsModel(
@@ -132,8 +141,11 @@ struct AppComposition {
             capture: audioCapture,
             consumer: recordingConsumer,
             feedback: SystemRecordingFeedback(preferences: preferences),
-            preferences: preferences
+            preferences: preferences,
+            diagnostics: diagnostics
         )
+        let diagnosticsModel = DiagnosticsModel(
+            buffer: diagnostics, permissions: permissions, shortcut: shortcut, buildInfo: buildInfo)
         let settings = ManagedWindowController(
             identifier: "settings",
             title: String(localized: "LemmeType Settings")
@@ -144,6 +156,7 @@ struct AppComposition {
                     shortcut: shortcut,
                     audio: audio,
                     permissions: permissions,
+                    diagnostics: diagnosticsModel,
                     navigation: navigation
                 ))
         }
@@ -154,6 +167,7 @@ struct AppComposition {
             recorder: recorder,
             shortcut: shortcut,
             navigation: navigation,
+            diagnostics: diagnostics,
             settings: settings
         )
     }
