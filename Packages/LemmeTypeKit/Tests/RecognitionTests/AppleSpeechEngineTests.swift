@@ -155,7 +155,7 @@ struct AppleSpeechEngineTests {
         try await Task.sleep(for: .milliseconds(100))
         task.cancel()
 
-        #expect(throws: RecognitionError.cancelled) { try await task.value }
+        await #expect(throws: RecognitionError.cancelled) { try await task.value }
         #expect(ContinuousClock.now - start < .seconds(5))
     }
 
