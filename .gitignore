@@ -40,3 +40,9 @@ __pycache__/
 *.py[cod]
 *.log
 coverage/
+
+# Generated Xcode project (source of truth is project.yml)
+*.xcodeproj/
+
+# Per-developer signing overrides
+Config/Signing.local.xcconfig

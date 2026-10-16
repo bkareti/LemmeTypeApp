@@ -1,0 +1,6 @@
+// Copy to Config/Signing.local.xcconfig (gitignored) to sign with your team.
+// Team signing keeps a stable code identity, so macOS keeps Microphone and
+// Accessibility grants across rebuilds.
+CODE_SIGN_STYLE = Automatic
+CODE_SIGN_IDENTITY = Apple Development
+DEVELOPMENT_TEAM = YOURTEAMID

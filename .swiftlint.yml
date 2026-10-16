@@ -1,0 +1,49 @@
+# Complements swift-format (which owns layout). Rules here cover correctness
+# and the privacy rules in the macos-coding-standards skill.
+included:
+  - App
+  - Packages/LemmeTypeKit/Sources
+  - Packages/LemmeTypeKit/Tests
+excluded:
+  - Packages/LemmeTypeKit/.build
+
+disabled_rules:
+  # Layout is owned by swift-format.
+  - trailing_comma
+  - opening_brace
+  - line_length
+  - vertical_whitespace
+
+opt_in_rules:
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - fatal_error_message
+  - discouraged_optional_boolean
+  - empty_count
+  - first_where
+  - contains_over_filter_count
+  - sorted_first_last
+  - unowned_variable_capture
+  - private_swiftui_state
+
+identifier_name:
+  excluded: [id, x, y, i]
+
+custom_rules:
+  no_print_logging:
+    name: "No print/NSLog"
+    regex: '\b(print|debugPrint|NSLog)\s*\('
+    match_kinds: [identifier]
+    message: "Log through Support.Log (os.Logger) with .private interpolation."
+    severity: error
+  no_shared_singletons:
+    name: "No shared singletons"
+    regex: 'static\s+(let|var)\s+shared\b'
+    message: "Construct services in AppComposition and inject them."
+    severity: error
+  no_network_apis:
+    name: "No network APIs"
+    regex: '\b(URLSession|NWConnection|URLRequest)\b'
+    match_kinds: [identifier, typeidentifier]
+    message: "Local mode must stay network-silent; network access needs an ADR."
+    severity: error

@@ -18,9 +18,31 @@ continuous internet connection.
 
 ## Repository status
 
-This repository currently contains the product brief, roadmap, GitHub issue
-templates, and development-ready scope for the first two epics. Application
-source code will be introduced by Epic 1.
+Epic 1 is in progress. The native macOS project scaffold (E1-S1) is in place;
+the menu-bar experience, permissions onboarding, shortcut, and audio capture
+follow in E1-S2 to E1-S8.
+
+## Building and testing
+
+Requirements: an Apple Silicon Mac on macOS 26 or later, Xcode 27.0, and
+Homebrew `xcodegen` and `swiftlint` (`brew install xcodegen swiftlint`).
+
+```bash
+make bootstrap   # check the toolchain
+make build       # generate LemmeType.xcodeproj and build the Debug app
+make test        # package unit tests, app unit tests, and UI tests
+make test-unit   # fast package-only unit tests
+make lint        # swift-format + SwiftLint
+make run         # build and launch
+```
+
+`LemmeType.xcodeproj` is generated from `project.yml` and is not committed;
+open it after `make generate`. To keep macOS permission grants across rebuilds,
+copy `Config/Signing.local.xcconfig.example` to `Config/Signing.local.xcconfig`
+and set your team.
+
+Platform and structure decisions: [ADR 0001](docs/decisions/0001-platform-baseline.md),
+[ADR 0002](docs/decisions/0002-project-structure.md).
 
 ## Planning documents
 

@@ -1,0 +1,72 @@
+# XcodeGen spec — the source of truth for LemmeType.xcodeproj (which is not
+# committed). Regenerate with `make generate`. Build settings belong in Config/.
+name: LemmeType
+options:
+  bundleIdPrefix: com.lemmetype
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+configFiles:
+  Debug: Config/Debug.xcconfig
+  Release: Config/Release.xcconfig
+packages:
+  LemmeTypeKit:
+    path: Packages/LemmeTypeKit
+targets:
+  LemmeType:
+    type: application
+    platform: macOS
+    configFiles:
+      Debug: Config/LemmeType.xcconfig
+      Release: Config/LemmeType.xcconfig
+    sources:
+      - App/LemmeType
+    dependencies:
+      - package: LemmeTypeKit
+        products: [Domain, Support, Audio, Permissions, Shortcuts, UI, TestSupport]
+  LemmeTypeTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - App/LemmeTypeTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lemmetype.LemmeTypeTests
+        GENERATE_INFOPLIST_FILE: YES
+    # Package modules come from the host app (TEST_HOST). Linking them here too
+    # would create a second copy of each type and break `is` checks.
+    dependencies:
+      - target: LemmeType
+  LemmeTypeUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - App/LemmeTypeUITests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lemmetype.LemmeTypeUITests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: LemmeType
+    dependencies:
+      - target: LemmeType
+schemes:
+  LemmeType:
+    build:
+      targets:
+        LemmeType: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      targets:
+        - LemmeTypeTests
+        - LemmeTypeUITests
+        - package: LemmeTypeKit/DomainTests
+        - package: LemmeTypeKit/SupportTests
+        - package: LemmeTypeKit/AudioTests
+        - package: LemmeTypeKit/PermissionsTests
+        - package: LemmeTypeKit/UIModuleTests
+    archive:
+      config: Release
