@@ -1,25 +1,41 @@
 import SwiftUI
 
-/// Root of the settings window. Later stories add Shortcut, Audio, and Diagnostics panes.
+/// Root of the settings window. Later stories add Audio and Diagnostics panes.
 public struct SettingsView: View {
     private let general: GeneralSettingsModel
+    private let shortcut: ShortcutSettingsModel
     private let permissions: PermissionsModel
+    @Bindable private var navigation: SettingsNavigation
 
-    public init(general: GeneralSettingsModel, permissions: PermissionsModel) {
+    public init(
+        general: GeneralSettingsModel,
+        shortcut: ShortcutSettingsModel,
+        permissions: PermissionsModel,
+        navigation: SettingsNavigation
+    ) {
         self.general = general
+        self.shortcut = shortcut
         self.permissions = permissions
+        self.navigation = navigation
     }
 
     public var body: some View {
-        TabView {
-            Tab(String(localized: "General", bundle: .module), systemImage: "gearshape") {
+        TabView(selection: $navigation.selectedPane) {
+            Tab(String(localized: "General", bundle: .module), systemImage: "gearshape", value: .general) {
                 GeneralSettingsView(model: general)
             }
-            Tab(String(localized: "Permissions", bundle: .module), systemImage: "lock.shield") {
+            Tab(String(localized: "Shortcut", bundle: .module), systemImage: "keyboard", value: .shortcut) {
+                ShortcutSettingsView(model: shortcut)
+            }
+            Tab(
+                String(localized: "Permissions", bundle: .module),
+                systemImage: "lock.shield",
+                value: SettingsNavigation.Pane.permissions
+            ) {
                 PermissionsSettingsView(model: permissions)
             }
         }
-        .frame(width: 480, height: 420)
+        .frame(width: 520, height: 440)
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             general.refresh()
             permissions.refresh()

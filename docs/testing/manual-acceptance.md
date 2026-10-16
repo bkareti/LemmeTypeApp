@@ -68,3 +68,19 @@ first: `tccutil reset Microphone com.lemmetype.LemmeType`,
 2. In System Settings, turn LemmeType off under Accessibility.
 3. Switch back to LemmeType — Accessibility shows Not granted and Text insertion shows Unavailable.
 4. The status menu shows **Finish Setup…**.
+
+## E1-S4 — Global shortcut
+
+**MA-9 Activation from another app without stealing focus**
+1. Open TextEdit with a document and click in the text. Open LemmeType Settings › Shortcut
+   in a second window position so it is visible, then click back into TextEdit.
+2. Press ⌥Space briefly (Push to Talk). TextEdit keeps focus (its caret still blinks,
+   its title bar stays active) and the Shortcut pane's "Try it" shows "Stopped".
+3. Switch the mode to Toggle, click into TextEdit, press ⌥Space — "Started in TextEdit";
+   press ⌥Space again — "Stopped". No characters were typed into TextEdit.
+4. Press ⌥Space, then Esc — "Cancelled"; press Esc again — TextEdit receives it normally.
+
+**MA-10 Conflicting shortcut**
+1. In another app that can register global shortcuts (e.g. Raycast or Alfred), bind ⌥Space.
+2. Relaunch LemmeType. The menu shows "Shortcut Unavailable — Choose Another…", which
+   opens the Shortcut pane with an error; choosing another shortcut clears it.

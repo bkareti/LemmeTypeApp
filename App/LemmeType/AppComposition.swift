@@ -2,6 +2,7 @@ import Audio
 import Domain
 import Lifecycle
 import Permissions
+import Shortcuts
 import Support
 import SwiftUI
 import UI
@@ -30,13 +31,15 @@ struct AppComposition {
     /// (onboarding not completed, no permissions granted).
     static let freshInstallArgument = "-LemmeTypeFreshInstall"
 
-    let mode: Mode
-    let permissionChecker: any PermissionChecking
-    let permissionRequester: any PermissionRequesting
-    let preferences: any AppPreferences
-    let audioDeviceLister: any AudioDeviceListing
-    let loginItems: any LoginItemManaging
-    let buildInfo: BuildInfo
+    var mode: Mode
+    var permissionChecker: any PermissionChecking
+    var permissionRequester: any PermissionRequesting
+    var preferences: any AppPreferences
+    var audioDeviceLister: any AudioDeviceListing
+    var loginItems: any LoginItemManaging
+    var hotKeyRegistrar: any HotKeyRegistering
+    var targetCapturer: any TargetCapturing
+    var buildInfo: BuildInfo
     var showsSettingsOnLaunch = false
 
     static func make(arguments: [String], infoDictionary: [String: Any]?) -> AppComposition {
@@ -61,6 +64,8 @@ struct AppComposition {
             preferences: UserDefaultsPreferences(),
             audioDeviceLister: CaptureDeviceLister(),
             loginItems: SystemLoginItemManager(),
+            hotKeyRegistrar: CarbonHotKeyRegistrar(),
+            targetCapturer: AccessibilityTargetCapturer(),
             buildInfo: buildInfo
         )
     }
@@ -69,6 +74,8 @@ struct AppComposition {
         /// Fake services. A fresh install starts with nothing granted and
         /// onboarding pending; otherwise Microphone is granted, Accessibility is
         /// not, and onboarding is complete. Requests succeed immediately.
+        /// Hot keys are real (they need no permission) so UI tests can press them;
+        /// the activation target is fake so no other app is inspected.
         static func uiTesting(buildInfo: BuildInfo, freshInstall: Bool = false) -> AppComposition {
             let permissions = FakePermissions(
                 statuses: freshInstall ? [:] : [.microphone: .granted],
@@ -85,6 +92,8 @@ struct AppComposition {
                     AudioInputDevice(id: "ui-test-usb", name: "UI Test USB Microphone", isSystemDefault: false),
                 ]),
                 loginItems: FakeLoginItemManager(status: .disabled),
+                hotKeyRegistrar: CarbonHotKeyRegistrar(),
+                targetCapturer: FakeTargetCapturer(),
                 buildInfo: buildInfo
             )
         }
@@ -93,12 +102,28 @@ struct AppComposition {
     func makeAppController() -> AppController {
         let permissions = PermissionsModel(checker: permissionChecker, requester: permissionRequester)
         let general = GeneralSettingsModel(loginItems: loginItems, buildInfo: buildInfo)
+        let activation = ActivationController(
+            registrar: hotKeyRegistrar,
+            targetCapturer: targetCapturer,
+            shortcut: preferences.dictationShortcut ?? .defaultDictation,
+            mode: preferences.activationMode
+        )
+        let shortcut = ShortcutSettingsModel(controller: activation, preferences: preferences)
+        let navigation = SettingsNavigation()
         let settings = ManagedWindowController(
             identifier: "settings",
             title: String(localized: "LemmeType Settings")
         ) {
-            AnyView(SettingsView(general: general, permissions: permissions))
+            AnyView(
+                SettingsView(general: general, shortcut: shortcut, permissions: permissions, navigation: navigation))
         }
-        return AppController(permissions: permissions, preferences: preferences, settings: settings)
+        return AppController(
+            permissions: permissions,
+            preferences: preferences,
+            activation: activation,
+            shortcut: shortcut,
+            navigation: navigation,
+            settings: settings
+        )
     }
 }

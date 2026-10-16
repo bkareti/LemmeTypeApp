@@ -57,6 +57,11 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   `MenuBarExtra`; Settings is an AppKit window owned by `SettingsWindowController`.
 - One `PermissionsModel` (UI module) is shared by onboarding, Settings, and the
   menu; it polls while visible because Accessibility has no change notification.
+- Dictation activation: `CarbonHotKeyRegistrar` → `ActivationController`
+  (Shortcuts) → `ActivationInterpreter` (Domain, pure: repeats/bounce/modes) →
+  `ActivationCommand` (start with captured target / stop / cancel) delivered to
+  `AppController.handle(_:)`. UI talks to it via `DictationShortcutControlling`.
+  Escape is a hot key only during a session.
 - Debug-only launch arguments: `-LemmeTypeUITesting` swaps in `TestSupport`
   fakes; `-LemmeTypeFreshInstall` (with it) starts with onboarding pending and
   nothing granted; `-LemmeTypeShowSettings` opens Settings at launch. XCUITest cannot
@@ -68,7 +73,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut).
 
 ## Planning documents
 

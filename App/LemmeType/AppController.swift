@@ -1,5 +1,6 @@
 import AppKit
 import Domain
+import Shortcuts
 import Support
 import SwiftUI
 import UI
@@ -8,6 +9,9 @@ import UI
 @MainActor
 final class AppController {
     let permissions: PermissionsModel
+    let activation: ActivationController
+    let shortcut: ShortcutSettingsModel
+    let navigation: SettingsNavigation
     let settings: ManagedWindowController
     private let preferences: any AppPreferences
 
@@ -26,23 +30,38 @@ final class AppController {
         return AnyView(OnboardingView(model: self.onboardingModel))
     }
 
-    init(permissions: PermissionsModel, preferences: any AppPreferences, settings: ManagedWindowController) {
+    init(
+        permissions: PermissionsModel,
+        preferences: any AppPreferences,
+        activation: ActivationController,
+        shortcut: ShortcutSettingsModel,
+        navigation: SettingsNavigation,
+        settings: ManagedWindowController
+    ) {
         self.permissions = permissions
         self.preferences = preferences
+        self.activation = activation
+        self.shortcut = shortcut
+        self.navigation = navigation
         self.settings = settings
+        activation.onCommand = { [weak self] command in self?.handle(command) }
     }
 
     var menuActions: MenuBarActions {
         MenuBarActions(
             finishSetup: { [weak self] in self?.showOnboarding() },
+            chooseShortcut: { [weak self] in self?.showSettings(pane: .shortcut) },
             openSettings: { [weak self] in self?.showSettings() },
             showAbout: { [weak self] in self?.showAbout() },
             quit: { [weak self] in self?.quit() }
         )
     }
 
-    /// First launch (or a launch after an unfinished setup) opens onboarding.
+    /// Registers the dictation shortcut; first launch (or a launch after an
+    /// unfinished setup) also opens onboarding.
     func launchFinished() {
+        activation.activate()
+        shortcut.refreshState()
         if !preferences.hasCompletedOnboarding {
             showOnboarding()
         }
@@ -59,8 +78,17 @@ final class AppController {
         onboarding.show()
     }
 
-    func showSettings() {
+    func showSettings(pane: SettingsNavigation.Pane? = nil) {
+        if let pane {
+            navigation.selectedPane = pane
+        }
         settings.show()
+    }
+
+    /// Recording arrives in E1-S5/E1-S6; until then activations only drive the
+    /// Shortcut pane's test feedback.
+    private func handle(_ command: ActivationCommand) {
+        shortcut.record(command)
     }
 
     func showAbout() {

@@ -1,6 +1,7 @@
 import Audio
 import Lifecycle
 import Permissions
+import Shortcuts
 import Support
 import TestSupport
 import Testing
@@ -20,6 +21,8 @@ struct AppCompositionTests {
         #expect(composition.preferences is UserDefaultsPreferences)
         #expect(composition.audioDeviceLister is CaptureDeviceLister)
         #expect(composition.loginItems is SystemLoginItemManager)
+        #expect(composition.hotKeyRegistrar is CarbonHotKeyRegistrar)
+        #expect(composition.targetCapturer is AccessibilityTargetCapturer)
     }
 
     @Test func uiTestingArgumentReplacesOperatingSystemServices() {
@@ -34,6 +37,7 @@ struct AppCompositionTests {
         #expect(composition.preferences is FakePreferences)
         #expect(composition.audioDeviceLister is FakeAudioDeviceLister)
         #expect(composition.loginItems is FakeLoginItemManager)
+        #expect(composition.targetCapturer is FakeTargetCapturer)
         #expect(composition.preferences.hasCompletedOnboarding)
     }
 
