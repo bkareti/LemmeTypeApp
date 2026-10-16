@@ -69,6 +69,14 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   for acceptance criteria). Readiness reviews go in `docs/backlog/reviews/`.
 - `docs/testing/manual-acceptance.md` — checks that cannot run on CI.
 
+### CI
+
+`.github/workflows/ci.yml` runs `make lint`, `make build`, `make test-unit`, and
+`make test-app` on every PR and on pushes to `main`. It uses the `xcode-27`
+runner image (public preview), because `macos-26`/`macos-latest` only have Xcode
+26. UI tests are not in CI yet (E1-S8). Never add artifact uploads that could
+capture logs or test results containing user data.
+
 ### Backlog sync to GitHub
 
 `python3 .github/scripts/sync_backlog.py` creates labels, epic issues, and story
