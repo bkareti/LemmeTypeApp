@@ -1,0 +1,11 @@
+// App target settings (layered on top of the project Debug/Release config).
+
+PRODUCT_NAME = LemmeType
+PRODUCT_BUNDLE_IDENTIFIER = com.lemmetype.LemmeType
+CODE_SIGN_ENTITLEMENTS = App/LemmeType/LemmeType.entitlements
+
+GENERATE_INFOPLIST_FILE = YES
+INFOPLIST_KEY_CFBundleDisplayName = LemmeType
+INFOPLIST_KEY_LSApplicationCategoryType = public.app-category.productivity
+INFOPLIST_KEY_NSHumanReadableCopyright = © 2026 LemmeType. All rights reserved.
+INFOPLIST_KEY_NSMicrophoneUsageDescription = LemmeType records your voice only while you hold or toggle the dictation shortcut, and processes it on this Mac.

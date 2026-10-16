@@ -1,0 +1,11 @@
+#include "Base.xcconfig"
+
+SWIFT_OPTIMIZATION_LEVEL = -Onone
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG
+GCC_PREPROCESSOR_DEFINITIONS = DEBUG=1
+ONLY_ACTIVE_ARCH = YES
+ENABLE_TESTABILITY = YES
+// Keep package symbols in the app so hosted unit tests can link against them.
+DEAD_CODE_STRIPPING = NO
+// Off in Debug so hosted unit tests can be injected into an ad-hoc-signed app.
+ENABLE_HARDENED_RUNTIME = NO

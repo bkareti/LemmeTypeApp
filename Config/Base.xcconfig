@@ -1,0 +1,24 @@
+// Shared build settings for every target and configuration.
+// Platform baseline: docs/decisions/0001-platform-baseline.md
+
+MACOSX_DEPLOYMENT_TARGET = 26.0
+ARCHS = arm64
+SDKROOT = macosx
+
+SWIFT_VERSION = 6.0
+SWIFT_STRICT_CONCURRENCY = complete
+SWIFT_TREAT_WARNINGS_AS_ERRORS = YES
+GCC_TREAT_WARNINGS_AS_ERRORS = YES
+
+ENABLE_USER_SCRIPT_SANDBOXING = YES
+DEAD_CODE_STRIPPING = YES
+LOCALIZATION_PREFERS_STRING_CATALOGS = YES
+
+// Development builds are ad-hoc signed so a clean checkout builds without an
+// Apple team. Override in Config/Signing.local.xcconfig (gitignored).
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = -
+DEVELOPMENT_TEAM =
+
+#include "Version.xcconfig"
+#include? "Signing.local.xcconfig"
