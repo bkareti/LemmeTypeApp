@@ -43,14 +43,6 @@ jobs:
           xcodebuild -version
           xcrun --show-sdk-version --sdk macosx
 
-      - name: TEMPORARY model digest (removed before merge)
-        continue-on-error: true
-        run: |
-          curl -fsSL -o "$RUNNER_TEMP/model.bin" https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
-          shasum -a 256 "$RUNNER_TEMP/model.bin"
-          stat -f %z "$RUNNER_TEMP/model.bin"
-          rm "$RUNNER_TEMP/model.bin"
-
       - name: Install xcodegen and swiftlint
         run: |
           brew install xcodegen swiftlint
