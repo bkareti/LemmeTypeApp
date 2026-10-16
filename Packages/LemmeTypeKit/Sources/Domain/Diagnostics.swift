@@ -13,6 +13,9 @@ public enum DiagnosticCategory: String, Codable, CaseIterable, Sendable {
     case shortcut
     case audio
     case recorder
+    case recognition
+    case models
+    case delivery
 }
 
 public enum DiagnosticValue: Codable, Equatable, Sendable {

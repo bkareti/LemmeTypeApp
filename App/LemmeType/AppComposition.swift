@@ -2,6 +2,7 @@ import Audio
 import Domain
 import Foundation
 import Lifecycle
+import ModelAssets
 import Permissions
 import Recognition
 import Shortcuts
@@ -43,6 +44,7 @@ struct AppComposition {
     var speechAuthorizer: any SpeechRecognitionAuthorizing
     /// Every installed recognition engine, in recommendation order.
     var recognitionEngines: [any SpeechRecognitionEngine]
+    var modelAssets: any ModelAssetManaging
     var diagnostics: DiagnosticsBuffer
     var loginItems: any LoginItemManaging
     var hotKeyRegistrar: any HotKeyRegistering
@@ -85,6 +87,7 @@ struct AppComposition {
             recognitionEngines: [
                 AppleSpeechEngine(authorizer: speechAuthorizer, language: { preferences.dictationLanguage })
             ],
+            modelAssets: ModelAssetStore.makeDefault(diagnostics: diagnostics),
             diagnostics: diagnostics,
             loginItems: SystemLoginItemManager(),
             hotKeyRegistrar: CarbonHotKeyRegistrar(),
@@ -127,6 +130,7 @@ struct AppComposition {
                 recognitionEngines: [
                     FakeRecognitionEngine(id: .appleSpeech, script: .init(text: "hello from lemmetype"))
                 ],
+                modelAssets: FakeModelAssetManager(),
                 diagnostics: diagnostics,
                 loginItems: FakeLoginItemManager(status: .disabled),
                 hotKeyRegistrar: CarbonHotKeyRegistrar(),
@@ -175,6 +179,7 @@ struct AppComposition {
                 ))
         }
         return AppController(
+            modelAssets: modelAssets,
             permissions: permissions,
             preferences: preferences,
             activation: activation,

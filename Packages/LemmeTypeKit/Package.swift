@@ -22,6 +22,7 @@ let package = Package(
         .library(name: "Shortcuts", targets: ["Shortcuts"]),
         .library(name: "Lifecycle", targets: ["Lifecycle"]),
         .library(name: "Recognition", targets: ["Recognition"]),
+        .library(name: "ModelAssets", targets: ["ModelAssets"]),
         .library(name: "UI", targets: ["UI"]),
         .library(name: "TestSupport", targets: ["TestSupport"]),
     ],
@@ -33,6 +34,7 @@ let package = Package(
         .target(name: "Shortcuts", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
         .target(name: "Lifecycle", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
         .target(name: "Recognition", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
+        .target(name: "ModelAssets", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
         .target(
             name: "UI",
             dependencies: ["Domain", "Support"],
@@ -47,6 +49,7 @@ let package = Package(
         .testTarget(name: "PermissionsTests", dependencies: ["Permissions", "Domain"]),
         .testTarget(name: "LifecycleTests", dependencies: ["Lifecycle", "Domain"]),
         .testTarget(name: "RecognitionTests", dependencies: ["Recognition", "Domain", "TestSupport"]),
+        .testTarget(name: "ModelAssetsTests", dependencies: ["ModelAssets", "Domain"]),
         .testTarget(name: "ShortcutsTests", dependencies: ["Shortcuts", "Domain", "TestSupport"]),
         .testTarget(
             name: "UIModuleTests", dependencies: ["UI", "Domain", "Support", "TestSupport", "Audio", "Shortcuts"]),

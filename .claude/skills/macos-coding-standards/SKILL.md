@@ -35,6 +35,7 @@ Code lives in the local package `Packages/LemmeTypeKit` plus a thin app target:
 | `Shortcuts` | Global shortcut registration and target capture | Domain, Support |
 | `Lifecycle` | Login item, single instance, app-lifecycle OS integration | Domain, Support |
 | `Recognition` | Speech-recognition engines (Speech framework, local models) | Domain, Support |
+| `ModelAssets` | Model download, verification, removal — the only network code (ADR 0011) | Domain, Support |
 | `UI` | SwiftUI views and view models | Domain, Support |
 | App target `LemmeType` | `@main`, `AppComposition` (the only composition root) | everything |
 
