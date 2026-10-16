@@ -28,6 +28,8 @@ make build       # Debug build
 make test        # everything: package tests, LemmeTypeTests, LemmeTypeUITests
 make test-unit   # fast: swift test on Packages/LemmeTypeKit
 make lint        # swift-format lint --strict + swiftlint --strict
+make ci          # what the required CI job runs
+make privacy-check  # fail if captured audio was left behind
 make format      # apply swift-format
 make run         # build and launch
 ```
@@ -97,11 +99,19 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
 
 ### CI
 
-`.github/workflows/ci.yml` runs `make lint`, `make build`, `make test-unit`, and
-`make test-app` on every PR and on pushes to `main`. It uses the `xcode-27`
-runner image (public preview), because `macos-26`/`macos-latest` only have Xcode
-26. UI tests are not in CI yet (E1-S8). Never add artifact uploads that could
-capture logs or test results containing user data.
+`.github/workflows/ci.yml` runs `make ci` steps (lint, build, `test-unit`,
+`test-app`, `privacy-check`) as the required job on every PR and push to
+`main`, plus a non-blocking `ui-tests` job (`make test-ui`). It uses the
+`xcode-27` runner image (public preview), because `macos-26`/`macos-latest` only
+have Xcode 26. `make privacy-check` fails if any `.caf/.wav/.m4a` is left under
+`$TMPDIR/LemmeType*` or the repo — test temp directories must use the
+`LemmeTypeTests-` prefix. Never add artifact uploads that could capture logs or
+test results containing user data.
+
+UI tests need macOS UI Automation Mode. Locally it can require authentication
+(`automationmodetool`); if XCUITest reports "Timed out while enabling automation
+mode", re-enable it yourself. A failing UI assertion can stall for minutes while
+XCTest symbolicates (it reads object files in `build/DerivedData`).
 
 ### Backlog sync to GitHub
 

@@ -8,7 +8,7 @@ DESTINATION := platform=macOS,arch=arm64
 XCODEBUILD  := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED)
 SWIFT_DIRS  := App Packages/LemmeTypeKit/Sources Packages/LemmeTypeKit/Tests Packages/LemmeTypeKit/Package.swift
 
-.PHONY: bootstrap generate build test test-unit test-app test-ui lint format run clean
+.PHONY: bootstrap generate build test test-unit test-app test-ui lint format privacy-check ci run clean
 
 bootstrap: ## Verify required tools are installed
 	@command -v xcodegen >/dev/null || { echo "Missing xcodegen: brew install xcodegen"; exit 1; }
@@ -37,6 +37,11 @@ test-ui: generate ## UI tests (needs an unlocked GUI session)
 lint: ## swift-format lint and SwiftLint, warnings fail
 	xcrun swift-format lint --strict --recursive $(SWIFT_DIRS)
 	swiftlint lint --strict --quiet
+
+privacy-check: ## Fail if captured audio was left behind
+	scripts/check-no-captured-audio.sh
+
+ci: lint build test-unit test-app privacy-check ## What CI runs on every pull request
 
 format: ## Apply swift-format
 	xcrun swift-format format --in-place --recursive $(SWIFT_DIRS)

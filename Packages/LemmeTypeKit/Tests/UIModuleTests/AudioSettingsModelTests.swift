@@ -12,7 +12,7 @@ struct AudioSettingsModelTests {
     private let builtIn = AudioInputDevice(id: "built-in", name: "MacBook Microphone", isSystemDefault: true)
     private let storage = AudioSessionStorage(
         directory: FileManager.default.temporaryDirectory
-            .appendingPathComponent("AudioSettingsModelTests-\(UUID().uuidString)", isDirectory: true))
+            .appendingPathComponent("LemmeTypeTests-AudioSettingsModelTests-\(UUID().uuidString)", isDirectory: true))
 
     private func makeModel(
         source: FakeAudioSource = FakeAudioSource(),

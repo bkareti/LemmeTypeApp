@@ -13,7 +13,7 @@ struct RecordingCoordinatorTests {
     private let consumer = RecordingSpy()
     private let storage = AudioSessionStorage(
         directory: FileManager.default.temporaryDirectory
-            .appendingPathComponent("RecordingCoordinatorTests-\(UUID().uuidString)", isDirectory: true))
+            .appendingPathComponent("LemmeTypeTests-RecordingCoordinatorTests-\(UUID().uuidString)", isDirectory: true))
 
     private func makeCoordinator(
         microphone: PermissionStatus = .granted,

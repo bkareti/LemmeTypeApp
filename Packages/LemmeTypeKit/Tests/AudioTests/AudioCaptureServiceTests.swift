@@ -10,7 +10,7 @@ struct AudioCaptureServiceTests {
     private let source = FakeAudioSource()
     private let storage = AudioSessionStorage(
         directory: FileManager.default.temporaryDirectory
-            .appendingPathComponent("AudioCaptureServiceTests-\(UUID().uuidString)", isDirectory: true))
+            .appendingPathComponent("LemmeTypeTests-AudioCaptureServiceTests-\(UUID().uuidString)", isDirectory: true))
 
     private func makeService(microphone: PermissionStatus = .granted) -> AudioCaptureService {
         AudioCaptureService(
