@@ -1,4 +1,5 @@
 import Audio
+import Lifecycle
 import Permissions
 import TestSupport
 import Testing
@@ -15,6 +16,7 @@ struct AppCompositionTests {
         #expect(composition.mode == .live)
         #expect(composition.permissionChecker is SystemPermissionChecker)
         #expect(composition.audioDeviceLister is CaptureDeviceLister)
+        #expect(composition.loginItems is SystemLoginItemManager)
     }
 
     @Test func uiTestingArgumentReplacesOperatingSystemServices() {
@@ -26,6 +28,15 @@ struct AppCompositionTests {
         #expect(composition.mode == .uiTesting)
         #expect(composition.permissionChecker is FakePermissionChecker)
         #expect(composition.audioDeviceLister is FakeAudioDeviceLister)
+        #expect(composition.loginItems is FakeLoginItemManager)
+    }
+
+    @Test func showSettingsArgumentIsHonouredInDebug() {
+        let plain = AppComposition.make(arguments: [], infoDictionary: info)
+        let showing = AppComposition.make(arguments: [AppComposition.showSettingsArgument], infoDictionary: info)
+
+        #expect(!plain.showsSettingsOnLaunch)
+        #expect(showing.showsSettingsOnLaunch)
     }
 
     @Test func buildInfoComesFromTheBundle() {

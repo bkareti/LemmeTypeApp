@@ -1,7 +1,9 @@
 import Audio
 import Domain
+import Lifecycle
 import Permissions
 import Support
+import SwiftUI
 import UI
 
 #if DEBUG
@@ -21,20 +23,27 @@ struct AppComposition {
 
     /// Launch argument that switches a Debug build to fake services.
     static let uiTestingArgument = "-LemmeTypeUITesting"
+    /// Debug-only launch argument that opens Settings at launch. XCUITest cannot
+    /// reliably click items in a status-bar menu, so UI tests use this instead.
+    static let showSettingsArgument = "-LemmeTypeShowSettings"
 
     let mode: Mode
     let permissionChecker: any PermissionChecking
     let audioDeviceLister: any AudioDeviceListing
+    let loginItems: any LoginItemManaging
     let buildInfo: BuildInfo
+    var showsSettingsOnLaunch = false
 
     static func make(arguments: [String], infoDictionary: [String: Any]?) -> AppComposition {
         let buildInfo = BuildInfo(infoDictionary: infoDictionary)
         #if DEBUG
-            if arguments.contains(uiTestingArgument) {
-                return uiTesting(buildInfo: buildInfo)
-            }
+            var composition =
+                arguments.contains(uiTestingArgument) ? uiTesting(buildInfo: buildInfo) : live(buildInfo: buildInfo)
+            composition.showsSettingsOnLaunch = arguments.contains(showSettingsArgument)
+            return composition
+        #else
+            return live(buildInfo: buildInfo)
         #endif
-        return live(buildInfo: buildInfo)
     }
 
     static func live(buildInfo: BuildInfo) -> AppComposition {
@@ -42,6 +51,7 @@ struct AppComposition {
             mode: .live,
             permissionChecker: SystemPermissionChecker(),
             audioDeviceLister: CaptureDeviceLister(),
+            loginItems: SystemLoginItemManager(),
             buildInfo: buildInfo
         )
     }
@@ -58,6 +68,7 @@ struct AppComposition {
                     AudioInputDevice(id: "ui-test-default", name: "UI Test Microphone", isSystemDefault: true),
                     AudioInputDevice(id: "ui-test-usb", name: "UI Test USB Microphone", isSystemDefault: false),
                 ]),
+                loginItems: FakeLoginItemManager(status: .disabled),
                 buildInfo: buildInfo
             )
         }
@@ -69,5 +80,14 @@ struct AppComposition {
             audioDeviceLister: audioDeviceLister,
             buildInfo: buildInfo
         )
+    }
+
+    func makeAppController() -> AppController {
+        let general = GeneralSettingsModel(loginItems: loginItems, buildInfo: buildInfo)
+        let status = makeStatusViewModel()
+        let settings = SettingsWindowController {
+            AnyView(SettingsView(general: general, status: status))
+        }
+        return AppController(settings: settings)
     }
 }

@@ -33,6 +33,7 @@ Code lives in the local package `Packages/LemmeTypeKit` plus a thin app target:
 | `Audio` | AVFoundation/Core Audio implementations of Domain protocols | Domain, Support |
 | `Permissions` | TCC/AX permission implementations | Domain, Support |
 | `Shortcuts` | Global shortcut registration and target capture | Domain, Support |
+| `Lifecycle` | Login item, single instance, app-lifecycle OS integration | Domain, Support |
 | `UI` | SwiftUI views and view models | Domain, Support |
 | App target `LemmeType` | `@main`, `AppComposition` (the only composition root) | everything |
 
@@ -41,7 +42,7 @@ Rules:
   framework. Every OS capability is a protocol in `Domain` with a concrete
   implementation in a platform module and a fake in tests.
 - `UI` depends on protocols and view models, never on `Audio`, `Permissions`,
-  or `Shortcuts` directly.
+  `Shortcuts`, or `Lifecycle` directly.
 - Concrete services are constructed only in `AppComposition`. No singletons, no
   `static let shared`, no service locators. Pass dependencies through
   initializers.
