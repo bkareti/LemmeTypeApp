@@ -1,4 +1,6 @@
 import AppKit
+import Domain
+import TestSupport
 import Testing
 import UI
 
@@ -72,6 +74,43 @@ struct AppControllerTests {
         controller.onboardingModel.finish()
 
         #expect(!window.isVisible)
+    }
+
+    @Test func launchRegistersTheDictationShortcut() {
+        // The test host already owns ⌥Space through its own live composition.
+        var composition = AppComposition.uiTesting(buildInfo: .init(version: "1", build: "1"))
+        let registrar = FakeHotKeyRegistrar()
+        composition.hotKeyRegistrar = registrar
+        let controller = composition.makeAppController()
+
+        controller.launchFinished()
+
+        #expect(registrar.registeredShortcuts == [.defaultDictation])
+        #expect(!controller.shortcut.isShortcutUnavailable)
+    }
+
+    @Test func unavailableShortcutAtLaunchIsSurfaced() {
+        var composition = AppComposition.uiTesting(buildInfo: .init(version: "1", build: "1"))
+        let registrar = FakeHotKeyRegistrar()
+        registrar.failures[.defaultDictation] = .unavailable
+        composition.hotKeyRegistrar = registrar
+        let controller = composition.makeAppController()
+
+        controller.launchFinished()
+
+        #expect(controller.shortcut.isShortcutUnavailable)
+        #expect(controller.shortcut.errorMessage != nil)
+    }
+
+    @Test func chooseShortcutOpensTheShortcutPane() throws {
+        let controller = makeController()
+
+        controller.menuActions.chooseShortcut()
+
+        #expect(controller.navigation.selectedPane == .shortcut)
+        let window = try #require(controller.settings.currentWindow)
+        #expect(window.isVisible)
+        window.close()
     }
 
     @Test func finishSetupMenuActionReopensOnboardingFromTheStart() throws {

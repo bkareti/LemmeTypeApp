@@ -44,6 +44,7 @@ let package = Package(
         .testTarget(name: "AudioTests", dependencies: ["Audio", "Domain"]),
         .testTarget(name: "PermissionsTests", dependencies: ["Permissions", "Domain"]),
         .testTarget(name: "LifecycleTests", dependencies: ["Lifecycle", "Domain"]),
+        .testTarget(name: "ShortcutsTests", dependencies: ["Shortcuts", "Domain", "TestSupport"]),
         .testTarget(name: "UIModuleTests", dependencies: ["UI", "Domain", "Support", "TestSupport"]),
     ],
     swiftLanguageModes: [.v6]
