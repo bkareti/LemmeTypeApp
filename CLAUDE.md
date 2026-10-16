@@ -62,6 +62,10 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   `ActivationCommand` (start with captured target / stop / cancel) delivered to
   `AppController.handle(_:)`. UI talks to it via `DictationShortcutControlling`.
   Escape is a hot key only during a session.
+- Audio: `AudioSource` (Domain; `AVAudioEngineSource` real, `FakeAudioSource`
+  in tests and UI tests) → `AudioCaptureService` actor (permission check,
+  resample to 16 kHz mono Float32, level meter, 0600 temp CAF, typed failures)
+  → `AsyncStream<AudioCaptureEvent>`. Session files are purged at launch.
 - Debug-only launch arguments: `-LemmeTypeUITesting` swaps in `TestSupport`
   fakes; `-LemmeTypeFreshInstall` (with it) starts with onboarding pending and
   nothing granted; `-LemmeTypeShowSettings` opens Settings at launch. XCUITest cannot
@@ -73,7 +77,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture).
 
 ## Planning documents
 

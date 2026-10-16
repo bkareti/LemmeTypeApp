@@ -10,6 +10,7 @@ import UI
 final class AppController {
     let permissions: PermissionsModel
     let activation: ActivationController
+    let audioCapture: any AudioCapturing
     let shortcut: ShortcutSettingsModel
     let navigation: SettingsNavigation
     let settings: ManagedWindowController
@@ -34,6 +35,7 @@ final class AppController {
         permissions: PermissionsModel,
         preferences: any AppPreferences,
         activation: ActivationController,
+        audioCapture: any AudioCapturing,
         shortcut: ShortcutSettingsModel,
         navigation: SettingsNavigation,
         settings: ManagedWindowController
@@ -41,6 +43,7 @@ final class AppController {
         self.permissions = permissions
         self.preferences = preferences
         self.activation = activation
+        self.audioCapture = audioCapture
         self.shortcut = shortcut
         self.navigation = navigation
         self.settings = settings
@@ -57,9 +60,10 @@ final class AppController {
         )
     }
 
-    /// Registers the dictation shortcut; first launch (or a launch after an
-    /// unfinished setup) also opens onboarding.
+    /// Deletes recordings left by a crash, registers the dictation shortcut,
+    /// and opens onboarding on first launch (or after an unfinished setup).
     func launchFinished() {
+        Task { [audioCapture] in await audioCapture.purgeLeftovers() }
         activation.activate()
         shortcut.refreshState()
         if !preferences.hasCompletedOnboarding {

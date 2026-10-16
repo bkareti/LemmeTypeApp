@@ -1,5 +1,6 @@
 import Audio
 import Domain
+import Foundation
 import Lifecycle
 import Permissions
 import Shortcuts
@@ -36,6 +37,7 @@ struct AppComposition {
     var permissionRequester: any PermissionRequesting
     var preferences: any AppPreferences
     var audioDeviceLister: any AudioDeviceListing
+    var audioCapture: any AudioCapturing
     var loginItems: any LoginItemManaging
     var hotKeyRegistrar: any HotKeyRegistering
     var targetCapturer: any TargetCapturing
@@ -57,12 +59,18 @@ struct AppComposition {
     }
 
     static func live(buildInfo: BuildInfo) -> AppComposition {
-        AppComposition(
+        let permissionChecker = SystemPermissionChecker()
+        return AppComposition(
             mode: .live,
-            permissionChecker: SystemPermissionChecker(),
+            permissionChecker: permissionChecker,
             permissionRequester: SystemPermissionRequester(),
             preferences: UserDefaultsPreferences(),
             audioDeviceLister: CaptureDeviceLister(),
+            audioCapture: AudioCaptureService(
+                source: AVAudioEngineSource(),
+                storage: .makeDefault(),
+                permissions: permissionChecker
+            ),
             loginItems: SystemLoginItemManager(),
             hotKeyRegistrar: CarbonHotKeyRegistrar(),
             targetCapturer: AccessibilityTargetCapturer(),
@@ -91,6 +99,13 @@ struct AppComposition {
                     AudioInputDevice(id: "ui-test-default", name: "UI Test Microphone", isSystemDefault: true),
                     AudioInputDevice(id: "ui-test-usb", name: "UI Test USB Microphone", isSystemDefault: false),
                 ]),
+                audioCapture: AudioCaptureService(
+                    source: FakeAudioSource(liveTone: true),
+                    storage: AudioSessionStorage(
+                        directory: FileManager.default.temporaryDirectory
+                            .appendingPathComponent("LemmeTypeUITesting", isDirectory: true)),
+                    permissions: permissions
+                ),
                 loginItems: FakeLoginItemManager(status: .disabled),
                 hotKeyRegistrar: CarbonHotKeyRegistrar(),
                 targetCapturer: FakeTargetCapturer(),
@@ -109,18 +124,27 @@ struct AppComposition {
             mode: preferences.activationMode
         )
         let shortcut = ShortcutSettingsModel(controller: activation, preferences: preferences)
+        let audio = AudioSettingsModel(
+            capture: audioCapture, deviceLister: audioDeviceLister, preferences: preferences)
         let navigation = SettingsNavigation()
         let settings = ManagedWindowController(
             identifier: "settings",
             title: String(localized: "LemmeType Settings")
         ) {
             AnyView(
-                SettingsView(general: general, shortcut: shortcut, permissions: permissions, navigation: navigation))
+                SettingsView(
+                    general: general,
+                    shortcut: shortcut,
+                    audio: audio,
+                    permissions: permissions,
+                    navigation: navigation
+                ))
         }
         return AppController(
             permissions: permissions,
             preferences: preferences,
             activation: activation,
+            audioCapture: audioCapture,
             shortcut: shortcut,
             navigation: navigation,
             settings: settings

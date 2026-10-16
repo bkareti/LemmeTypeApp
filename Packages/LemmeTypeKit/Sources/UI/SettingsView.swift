@@ -1,20 +1,23 @@
 import SwiftUI
 
-/// Root of the settings window. Later stories add Audio and Diagnostics panes.
+/// Root of the settings window. E1-S7 adds the Diagnostics pane.
 public struct SettingsView: View {
     private let general: GeneralSettingsModel
     private let shortcut: ShortcutSettingsModel
+    private let audio: AudioSettingsModel
     private let permissions: PermissionsModel
     @Bindable private var navigation: SettingsNavigation
 
     public init(
         general: GeneralSettingsModel,
         shortcut: ShortcutSettingsModel,
+        audio: AudioSettingsModel,
         permissions: PermissionsModel,
         navigation: SettingsNavigation
     ) {
         self.general = general
         self.shortcut = shortcut
+        self.audio = audio
         self.permissions = permissions
         self.navigation = navigation
     }
@@ -26,6 +29,9 @@ public struct SettingsView: View {
             }
             Tab(String(localized: "Shortcut", bundle: .module), systemImage: "keyboard", value: .shortcut) {
                 ShortcutSettingsView(model: shortcut)
+            }
+            Tab(String(localized: "Audio", bundle: .module), systemImage: "mic", value: .audio) {
+                AudioSettingsView(model: audio)
             }
             Tab(
                 String(localized: "Permissions", bundle: .module),
