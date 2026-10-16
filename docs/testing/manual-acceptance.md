@@ -15,7 +15,7 @@ results in the PR description as `MA-N: pass/fail — notes`.
    defaults delete com.lemmetype.LemmeType
    rm -rf "$TMPDIR/LemmeType"
    ```
-3. Run MA-1 to MA-21 in order: clean-install onboarding (MA-6) must come
+3. Run MA-1 to MA-23 in order: clean-install onboarding (MA-6) must come
    before anything that assumes permissions; real-microphone checks are MA-11
    to MA-13 and MA-14 to MA-17.
 4. Finish with `make privacy-check` and confirm `$TMPDIR/LemmeType/Sessions` is empty.
@@ -190,3 +190,23 @@ Requires Microphone permission (team-signed build).
    without on-device support).
 2. Apple Speech shows *Not available on this Mac* and is never used; no network
    recognition happens (monitor as in MA-19).
+
+## E2-S4 — Model downloads
+
+**MA-22 Download confirmation, progress, and verification**
+1. Settings › Dictation › Whisper Base (English) › **Download…**. The
+   confirmation shows download size, storage use, licence, and free space.
+2. Confirm. Progress advances; **Pause** stops it; **Resume** continues from
+   the same point (not from zero).
+3. Quit during download and relaunch: the model shows *Paused* and resumes or
+   restarts; it is never shown as installed before verification.
+4. When finished, `~/Library/Application Support/LemmeType/Models/whisper-base-en/`
+   contains the model and `.verified`; `Models/Staging` is empty.
+
+**MA-23 Insufficient storage and removal**
+1. Fill the disk (or use a small disk image as the home volume) so less than
+   the shown requirement is free. **Download…** explains the required space and
+   does not start.
+2. With the model installed, **Remove**: the folder is deleted, Whisper shows
+   *Download required*, and dictation falls back to Apple Speech (Automatic) or
+   asks before changing engine.

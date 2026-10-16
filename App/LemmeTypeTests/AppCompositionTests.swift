@@ -1,5 +1,6 @@
 import Audio
 import Lifecycle
+import ModelAssets
 import Permissions
 import Recognition
 import Shortcuts
@@ -29,6 +30,7 @@ struct AppCompositionTests {
         #expect(composition.speechAuthorizer is SystemSpeechAuthorizer)
         #expect(composition.recognitionEngines.first is AppleSpeechEngine)
         #expect(composition.recognitionEngines.allSatisfy { $0.descriptor.location == .onDevice })
+        #expect(composition.modelAssets is ModelAssetStore)
     }
 
     @Test func uiTestingArgumentReplacesOperatingSystemServices() {
@@ -46,6 +48,7 @@ struct AppCompositionTests {
         #expect(composition.targetCapturer is FakeTargetCapturer)
         #expect(composition.speechAuthorizer is FakeSpeechAuthorizer)
         #expect(composition.recognitionEngines.allSatisfy { $0 is FakeRecognitionEngine })
+        #expect(composition.modelAssets is FakeModelAssetManager)
         #expect(composition.preferences.hasCompletedOnboarding)
     }
 

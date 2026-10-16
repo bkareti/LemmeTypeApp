@@ -17,6 +17,7 @@ final class AppController {
     let diagnostics: any DiagnosticsRecording
     let settings: ManagedWindowController
     private let preferences: any AppPreferences
+    private let modelAssets: any ModelAssetManaging
 
     private(set) lazy var onboardingModel: OnboardingModel = OnboardingModel(
         permissions: permissions,
@@ -34,6 +35,7 @@ final class AppController {
     }
 
     init(
+        modelAssets: any ModelAssetManaging,
         permissions: PermissionsModel,
         preferences: any AppPreferences,
         activation: ActivationController,
@@ -44,6 +46,7 @@ final class AppController {
         settings: ManagedWindowController
     ) {
         self.diagnostics = diagnostics
+        self.modelAssets = modelAssets
         self.permissions = permissions
         self.preferences = preferences
         self.activation = activation
@@ -71,6 +74,7 @@ final class AppController {
     /// and opens onboarding on first launch (or after an unfinished setup).
     func launchFinished() {
         Task { [audioCapture = recorder.capture] in await audioCapture.purgeLeftovers() }
+        Task { [modelAssets] in await modelAssets.removeUnusableFiles() }
         overlay.start()
         diagnostics.record(
             .lifecycle, "app.launched", ["onboardingComplete": .flag(preferences.hasCompletedOnboarding)])

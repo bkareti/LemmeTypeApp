@@ -13,4 +13,5 @@ public enum Log {
     public static let audio = Logger(subsystem: subsystem, category: "audio")
     public static let shortcuts = Logger(subsystem: subsystem, category: "shortcuts")
     public static let recognition = Logger(subsystem: subsystem, category: "recognition")
+    public static let models = Logger(subsystem: subsystem, category: "models")
 }
