@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 LemmeType is a privacy-first macOS menu-bar voice-writing app (global shortcut →
 record → local transcription → optional cleanup → insert text at the cursor of
-the previously focused app). Epic 1 (foundation) is in progress; E1-S1, the
-project scaffold, is implemented.
+the previously focused app). Epic 1 (foundation) is complete; Epic 2 (local
+transcription and delivery) is in progress.
 
 ## Project skills — use them
 
@@ -73,6 +73,11 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   table) and hands finished audio to a `RecordingConsumer` (Epic 1:
   `DiscardingRecordingConsumer`; Epic 2: transcription). The overlay is a
   non-activating `NSPanel` that cannot become key.
+- Recognition: engines implement `SpeechRecognitionEngine` (Domain) and are
+  always called through `RecognitionRunner`, which guarantees that a not-ready
+  engine is never called and a cancelled session never succeeds.
+  `FakeRecognitionEngine` and `RecognitionEngineContract` (TestSupport) are the
+  fake and the reusable contract check every engine's tests must run.
 - Diagnostics: components take `any DiagnosticsRecording` (default
   `DiscardingDiagnostics`); the app shares one `DiagnosticsBuffer`. Event names
   and keys must be literals and values typed (`.id(...)` redacts anything that
@@ -88,7 +93,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract).
 
 ## Planning documents
 
