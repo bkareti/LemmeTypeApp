@@ -6,8 +6,9 @@ import UI
 
 @MainActor
 struct AppControllerTests {
-    private func makeController() -> AppController {
-        AppComposition.uiTesting(buildInfo: .init(version: "1", build: "1")).makeAppController()
+    private func makeController(freshInstall: Bool = false) -> AppController {
+        AppComposition.uiTesting(buildInfo: .init(version: "1", build: "1"), freshInstall: freshInstall)
+            .makeAppController()
     }
 
     @Test func settingsWindowIsCreatedOnceAndReused() throws {
@@ -20,7 +21,7 @@ struct AppControllerTests {
 
         #expect(controller.settings.currentWindow === first)
         #expect(first.isVisible)
-        #expect(first.identifier == SettingsWindowController.windowIdentifier)
+        #expect(first.identifier?.rawValue == "settings")
         first.close()
     }
 
@@ -43,5 +44,45 @@ struct AppControllerTests {
 
         #expect(!window.isReleasedWhenClosed)
         #expect(controller.settings.currentWindow === window)
+    }
+
+    @Test func firstLaunchOpensOnboarding() throws {
+        let controller = makeController(freshInstall: true)
+
+        controller.launchFinished()
+
+        let window = try #require(controller.onboarding.currentWindow)
+        #expect(window.isVisible)
+        window.close()
+    }
+
+    @Test func completedOnboardingIsNotShownAgain() {
+        let controller = makeController(freshInstall: false)
+
+        controller.launchFinished()
+
+        #expect(controller.onboarding.currentWindow == nil)
+    }
+
+    @Test func finishingOnboardingClosesItsWindow() throws {
+        let controller = makeController(freshInstall: true)
+        controller.launchFinished()
+        let window = try #require(controller.onboarding.currentWindow)
+
+        controller.onboardingModel.finish()
+
+        #expect(!window.isVisible)
+    }
+
+    @Test func finishSetupMenuActionReopensOnboardingFromTheStart() throws {
+        let controller = makeController()
+        controller.onboardingModel.next()
+
+        controller.menuActions.finishSetup()
+
+        #expect(controller.onboardingModel.step == .welcome)
+        let window = try #require(controller.onboarding.currentWindow)
+        #expect(window.isVisible)
+        window.close()
     }
 }

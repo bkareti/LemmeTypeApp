@@ -17,17 +17,17 @@ public struct SystemPermissionChecker: PermissionChecking {
 
     static func status(from authorization: AVAuthorizationStatus) -> PermissionStatus {
         switch authorization {
-        case .notDetermined: .notDetermined
+        case .notDetermined: .notRequested
         case .authorized: .granted
         case .denied: .denied
         case .restricted: .restricted
-        @unknown default: .notDetermined
+        @unknown default: .notGranted
         }
     }
 
     /// macOS only reports whether the process is trusted, so an untrusted
-    /// process cannot be told apart from one that was never asked.
+    /// process cannot be told apart from one that was never asked or was denied.
     static func accessibilityStatus(isTrusted: Bool) -> PermissionStatus {
-        isTrusted ? .granted : .notDetermined
+        isTrusted ? .granted : .notGranted
     }
 }

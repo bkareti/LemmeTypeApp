@@ -29,7 +29,7 @@ Code lives in the local package `Packages/LemmeTypeKit` plus a thin app target:
 | Module | Contains | May import |
 |---|---|---|
 | `Domain` | Pure models, state machines, service protocols, typed errors | Foundation only |
-| `Support` | Logging, redaction, clocks, small utilities | Foundation, `os` |
+| `Support` | Logging, redaction, preferences storage, small utilities | Domain, Foundation, `os` |
 | `Audio` | AVFoundation/Core Audio implementations of Domain protocols | Domain, Support |
 | `Permissions` | TCC/AX permission implementations | Domain, Support |
 | `Shortcuts` | Global shortcut registration and target capture | Domain, Support |

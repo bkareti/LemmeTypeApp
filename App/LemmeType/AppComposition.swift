@@ -26,9 +26,14 @@ struct AppComposition {
     /// Debug-only launch argument that opens Settings at launch. XCUITest cannot
     /// reliably click items in a status-bar menu, so UI tests use this instead.
     static let showSettingsArgument = "-LemmeTypeShowSettings"
+    /// Debug-only launch argument for UI tests: start as a fresh install
+    /// (onboarding not completed, no permissions granted).
+    static let freshInstallArgument = "-LemmeTypeFreshInstall"
 
     let mode: Mode
     let permissionChecker: any PermissionChecking
+    let permissionRequester: any PermissionRequesting
+    let preferences: any AppPreferences
     let audioDeviceLister: any AudioDeviceListing
     let loginItems: any LoginItemManaging
     let buildInfo: BuildInfo
@@ -38,7 +43,9 @@ struct AppComposition {
         let buildInfo = BuildInfo(infoDictionary: infoDictionary)
         #if DEBUG
             var composition =
-                arguments.contains(uiTestingArgument) ? uiTesting(buildInfo: buildInfo) : live(buildInfo: buildInfo)
+                arguments.contains(uiTestingArgument)
+                ? uiTesting(buildInfo: buildInfo, freshInstall: arguments.contains(freshInstallArgument))
+                : live(buildInfo: buildInfo)
             composition.showsSettingsOnLaunch = arguments.contains(showSettingsArgument)
             return composition
         #else
@@ -50,6 +57,8 @@ struct AppComposition {
         AppComposition(
             mode: .live,
             permissionChecker: SystemPermissionChecker(),
+            permissionRequester: SystemPermissionRequester(),
+            preferences: UserDefaultsPreferences(),
             audioDeviceLister: CaptureDeviceLister(),
             loginItems: SystemLoginItemManager(),
             buildInfo: buildInfo
@@ -57,13 +66,20 @@ struct AppComposition {
     }
 
     #if DEBUG
-        static func uiTesting(buildInfo: BuildInfo) -> AppComposition {
-            AppComposition(
+        /// Fake services. A fresh install starts with nothing granted and
+        /// onboarding pending; otherwise Microphone is granted, Accessibility is
+        /// not, and onboarding is complete. Requests succeed immediately.
+        static func uiTesting(buildInfo: BuildInfo, freshInstall: Bool = false) -> AppComposition {
+            let permissions = FakePermissions(
+                statuses: freshInstall ? [:] : [.microphone: .granted],
+                microphoneAnswer: .granted,
+                grantsAccessibilityOnRequest: true
+            )
+            return AppComposition(
                 mode: .uiTesting,
-                permissionChecker: FakePermissionChecker(statuses: [
-                    .microphone: .granted,
-                    .accessibility: .notDetermined,
-                ]),
+                permissionChecker: permissions,
+                permissionRequester: permissions,
+                preferences: FakePreferences(hasCompletedOnboarding: !freshInstall),
                 audioDeviceLister: FakeAudioDeviceLister(devices: [
                     AudioInputDevice(id: "ui-test-default", name: "UI Test Microphone", isSystemDefault: true),
                     AudioInputDevice(id: "ui-test-usb", name: "UI Test USB Microphone", isSystemDefault: false),
@@ -74,20 +90,15 @@ struct AppComposition {
         }
     #endif
 
-    func makeStatusViewModel() -> StatusViewModel {
-        StatusViewModel(
-            permissionChecker: permissionChecker,
-            audioDeviceLister: audioDeviceLister,
-            buildInfo: buildInfo
-        )
-    }
-
     func makeAppController() -> AppController {
+        let permissions = PermissionsModel(checker: permissionChecker, requester: permissionRequester)
         let general = GeneralSettingsModel(loginItems: loginItems, buildInfo: buildInfo)
-        let status = makeStatusViewModel()
-        let settings = SettingsWindowController {
-            AnyView(SettingsView(general: general, status: status))
+        let settings = ManagedWindowController(
+            identifier: "settings",
+            title: String(localized: "LemmeType Settings")
+        ) {
+            AnyView(SettingsView(general: general, permissions: permissions))
         }
-        return AppController(settings: settings)
+        return AppController(permissions: permissions, preferences: preferences, settings: settings)
     }
 }

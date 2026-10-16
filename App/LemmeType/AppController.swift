@@ -1,22 +1,62 @@
 import AppKit
+import Domain
 import Support
+import SwiftUI
 import UI
 
-/// Handles the app-level commands from the status menu and from other launches.
+/// Handles app-level commands from the status menu, launch, and other launches.
 @MainActor
 final class AppController {
-    let settings: SettingsWindowController
+    let permissions: PermissionsModel
+    let settings: ManagedWindowController
+    private let preferences: any AppPreferences
 
-    init(settings: SettingsWindowController) {
+    private(set) lazy var onboardingModel: OnboardingModel = OnboardingModel(
+        permissions: permissions,
+        preferences: preferences
+    ) { [weak self] in
+        self?.onboarding.close()
+    }
+
+    private(set) lazy var onboarding: ManagedWindowController = ManagedWindowController(
+        identifier: "onboarding",
+        title: String(localized: "Set Up LemmeType")
+    ) { [weak self] in
+        guard let self else { return AnyView(EmptyView()) }
+        return AnyView(OnboardingView(model: self.onboardingModel))
+    }
+
+    init(permissions: PermissionsModel, preferences: any AppPreferences, settings: ManagedWindowController) {
+        self.permissions = permissions
+        self.preferences = preferences
         self.settings = settings
     }
 
     var menuActions: MenuBarActions {
         MenuBarActions(
+            finishSetup: { [weak self] in self?.showOnboarding() },
             openSettings: { [weak self] in self?.showSettings() },
             showAbout: { [weak self] in self?.showAbout() },
             quit: { [weak self] in self?.quit() }
         )
+    }
+
+    /// First launch (or a launch after an unfinished setup) opens onboarding.
+    func launchFinished() {
+        if !preferences.hasCompletedOnboarding {
+            showOnboarding()
+        }
+    }
+
+    func applicationBecameActive() {
+        permissions.refresh()
+    }
+
+    func showOnboarding() {
+        if !onboarding.isVisible {
+            onboardingModel.restart()
+        }
+        onboarding.show()
     }
 
     func showSettings() {

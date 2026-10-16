@@ -7,7 +7,7 @@ struct LemmeTypeApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            MenuBarMenu(actions: appDelegate.controller.menuActions)
+            MenuBarMenu(actions: appDelegate.controller.menuActions, permissions: appDelegate.controller.permissions)
         } label: {
             Image(systemName: "waveform")
                 .accessibilityLabel(Text("LemmeType"))

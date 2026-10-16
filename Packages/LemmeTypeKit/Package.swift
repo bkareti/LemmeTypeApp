@@ -26,7 +26,7 @@ let package = Package(
     ],
     targets: [
         .target(name: "Domain", swiftSettings: strictSettings),
-        .target(name: "Support", swiftSettings: strictSettings),
+        .target(name: "Support", dependencies: ["Domain"], swiftSettings: strictSettings),
         .target(name: "Audio", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
         .target(name: "Permissions", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
         .target(name: "Shortcuts", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
@@ -40,7 +40,7 @@ let package = Package(
         .target(name: "TestSupport", dependencies: ["Domain"], swiftSettings: strictSettings),
 
         .testTarget(name: "DomainTests", dependencies: ["Domain", "TestSupport"]),
-        .testTarget(name: "SupportTests", dependencies: ["Support"]),
+        .testTarget(name: "SupportTests", dependencies: ["Support", "Domain"]),
         .testTarget(name: "AudioTests", dependencies: ["Audio", "Domain"]),
         .testTarget(name: "PermissionsTests", dependencies: ["Permissions", "Domain"]),
         .testTarget(name: "LifecycleTests", dependencies: ["Lifecycle", "Domain"]),

@@ -2,14 +2,22 @@ import Domain
 import TestSupport
 import Testing
 
-/// The fakes are the replacement seam required by E1-S1; they must behave
-/// predictably so other tests can rely on them.
+/// The fakes are the replacement seam for OS services; they must behave like
+/// macOS where it matters (no re-prompting after a decision).
 struct FakeServiceTests {
-    @Test func fakePermissionCheckerReturnsConfiguredStatus() {
-        let checker: any PermissionChecking = FakePermissionChecker(statuses: [.microphone: .granted])
+    @Test func defaultsMatchAFreshInstall() {
+        let permissions = FakePermissions()
 
-        #expect(checker.status(for: .microphone) == .granted)
-        #expect(checker.status(for: .accessibility) == .notDetermined)
+        #expect(permissions.status(for: .microphone) == .notRequested)
+        #expect(permissions.status(for: .accessibility) == .notGranted)
+    }
+
+    @Test func microphoneIsPromptedOnlyOnce() async {
+        let permissions = FakePermissions(microphoneAnswer: .denied)
+
+        #expect(await permissions.requestMicrophoneAccess() == .denied)
+        #expect(await permissions.requestMicrophoneAccess() == .denied)
+        #expect(permissions.microphoneRequestCount == 1)
     }
 
     @Test func fakeAudioDeviceListerReturnsConfiguredDevices() {
