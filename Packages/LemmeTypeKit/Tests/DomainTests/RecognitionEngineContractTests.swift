@@ -9,10 +9,11 @@ struct RecognitionEngineContractTests {
         .appendingPathComponent("LemmeTypeTests-Recognition-\(UUID().uuidString)", isDirectory: true)
 
     /// The fake engine never reads the file, but the contract checks it is
-    /// not deleted, so it must exist.
+    /// not deleted, so it must exist. It holds no audio, so it does not use an
+    /// audio extension (which `make privacy-check` would flag).
     static func makeRequest(seconds: TimeInterval = 2, language: String = "en-US") throws -> RecognitionRequest {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let url = directory.appendingPathComponent("\(UUID().uuidString).caf")
+        let url = directory.appendingPathComponent("\(UUID().uuidString).placeholder")
         try Data().write(to: url)
         return RecognitionRequest(
             audio: RecordedAudio(fileURL: url, duration: seconds, format: .speech), language: language)
