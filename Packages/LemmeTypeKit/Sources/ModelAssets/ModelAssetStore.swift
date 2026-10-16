@@ -191,18 +191,21 @@ public actor ModelAssetStore: ModelAssetManaging {
                     from: file.url, resumeData: resumeData, to: layout.stagedFile(asset, file), progress: report)
                 layout.removeResumeData(for: asset, file)
                 return nil
-            } catch .cancelled(let data) {
-                layout.saveResumeData(data, for: asset, file)
-                return completedBytes + (data == nil ? 0 : lastReceived.value)
-            } catch .failed(let code, let data) {
-                if data == nil && resumeData != nil {
-                    layout.removeResumeData(for: asset, file)
-                    resumeData = nil
-                    continue
+            } catch {
+                switch error {
+                case .cancelled(let data):
+                    layout.saveResumeData(data, for: asset, file)
+                    return completedBytes + (data == nil ? 0 : lastReceived.value)
+                case .failed(let code, let data):
+                    if data == nil && resumeData != nil {
+                        layout.removeResumeData(for: asset, file)
+                        resumeData = nil
+                        continue
+                    }
+                    layout.saveResumeData(data, for: asset, file)
+                    if data == nil { layout.removeResumeData(for: asset, file) }
+                    throw .downloadFailed(code: code)
                 }
-                layout.saveResumeData(data, for: asset, file)
-                if data == nil { layout.removeResumeData(for: asset, file) }
-                throw .downloadFailed(code: code)
             }
         }
     }
