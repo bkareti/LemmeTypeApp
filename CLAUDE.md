@@ -80,7 +80,11 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   fake and the reusable contract check every engine's tests must run.
   Concrete engines live in the `Recognition` module (`AppleSpeechEngine`:
   `SFSpeechRecognizer`, on-device only; Speech Recognition authorization via
-  `SpeechRecognitionAuthorizing`, separate from `PermissionKind`).
+  `SpeechRecognitionAuthorizing`, separate from `PermissionKind`;
+  `WhisperEngine`: whisper.cpp v1.9.2 binary XCFramework + downloadable
+  `base.en`, Apple silicon with ≥ 8 GB only). Third-party notices live in
+  `THIRD_PARTY_NOTICES.md` and `App/LemmeType/Credits.rtf` — update both.
+  `scripts/run-recognition-benchmark.sh` runs the opt-in benchmark.
 - Models: `ModelCatalog` (Domain) pins every downloadable file by URL, size,
   and SHA-256. `ModelAssetStore` (ModelAssets) stages, verifies, activates,
   and removes them; `URLSessionModelDownloader` is the only network code in
@@ -100,7 +104,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model).
 
 ## Planning documents
 

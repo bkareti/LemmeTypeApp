@@ -33,7 +33,14 @@ let package = Package(
         .target(name: "Permissions", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
         .target(name: "Shortcuts", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
         .target(name: "Lifecycle", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
-        .target(name: "Recognition", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
+        .target(name: "Recognition", dependencies: ["Domain", "Support", "whisper"], swiftSettings: strictSettings),
+        // whisper.cpp (MIT), pinned by version and checksum. See
+        // docs/decisions/0012-local-whisper-model.md and THIRD_PARTY_NOTICES.md.
+        .binaryTarget(
+            name: "whisper",
+            url: "https://github.com/ggml-org/whisper.cpp/releases/download/v1.9.2/whisper-v1.9.2-xcframework.zip",
+            checksum: "af74fed13ea7f2d5ca2a39d9f58ec177713fafd7cab63aef4e27b79f3ceca80b"
+        ),
         .target(name: "ModelAssets", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
         .target(
             name: "UI",

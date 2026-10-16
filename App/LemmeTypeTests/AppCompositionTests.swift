@@ -29,6 +29,7 @@ struct AppCompositionTests {
         #expect(composition.targetCapturer is AccessibilityTargetCapturer)
         #expect(composition.speechAuthorizer is SystemSpeechAuthorizer)
         #expect(composition.recognitionEngines.first is AppleSpeechEngine)
+        #expect(composition.recognitionEngines.contains { $0 is WhisperEngine })
         #expect(composition.recognitionEngines.allSatisfy { $0.descriptor.location == .onDevice })
         #expect(composition.modelAssets is ModelAssetStore)
     }

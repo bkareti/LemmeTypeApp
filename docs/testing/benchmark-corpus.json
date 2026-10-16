@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "notes": "Versioned, licence-free reference sentences. Audio is synthesised on the benchmark Mac with `say` (voices listed below) so runs are reproducible; real-speech runs use the same sentences read aloud. Never add dictated user content.",
+  "voices": ["Samantha", "Daniel", "Karen", "Rishi"],
+  "utterances": [
+    { "id": "conv-01", "category": "conversational", "text": "Hey, are we still on for lunch tomorrow at noon?" },
+    { "id": "conv-02", "category": "conversational", "text": "Thanks for the update, I will take a look this afternoon and get back to you." },
+    { "id": "conv-03", "category": "conversational", "text": "Can you send me the slides from yesterday's meeting when you get a chance?" },
+    { "id": "conv-04", "category": "conversational", "text": "I'm running about ten minutes late, so please start without me." },
+    { "id": "conv-05", "category": "conversational", "text": "That sounds great, let's plan for next Tuesday instead." },
+    { "id": "tech-01", "category": "technical", "text": "The build fails because the package resolver cannot find the binary target." },
+    { "id": "tech-02", "category": "technical", "text": "Please rebase the feature branch onto main before you open the pull request." },
+    { "id": "tech-03", "category": "technical", "text": "The API returns a JSON payload with an access token and a refresh token." },
+    { "id": "tech-04", "category": "technical", "text": "We should cache the response and invalidate it when the configuration changes." },
+    { "id": "tech-05", "category": "technical", "text": "Run the unit tests locally and attach the coverage report to the ticket." },
+    { "id": "num-01", "category": "numeric", "text": "The invoice total is four hundred and twenty dollars and fifty cents." },
+    { "id": "num-02", "category": "numeric", "text": "Our flight leaves at seven forty five on March twelfth from gate twenty three." },
+    { "id": "num-03", "category": "numeric", "text": "Revenue grew by eighteen percent to three point two million in the second quarter." },
+    { "id": "num-04", "category": "numeric", "text": "Call me back at five five five, one two three, four five six seven." },
+    { "id": "num-05", "category": "numeric", "text": "The meeting room on the fourth floor seats twelve people." },
+    { "id": "long-01", "category": "long", "text": "I wanted to follow up on our conversation from last week about the onboarding flow. We agreed that the permission screens should explain why each permission is needed, and that the app should keep working in a limited mode if the user declines. Could you share the latest designs so I can review them before Friday?" }
+  ]
+}
