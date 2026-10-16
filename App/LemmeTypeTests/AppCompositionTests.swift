@@ -1,6 +1,7 @@
 import Audio
 import Lifecycle
 import Permissions
+import Recognition
 import Shortcuts
 import Support
 import TestSupport
@@ -25,6 +26,9 @@ struct AppCompositionTests {
         #expect(composition.loginItems is SystemLoginItemManager)
         #expect(composition.hotKeyRegistrar is CarbonHotKeyRegistrar)
         #expect(composition.targetCapturer is AccessibilityTargetCapturer)
+        #expect(composition.speechAuthorizer is SystemSpeechAuthorizer)
+        #expect(composition.recognitionEngines.first is AppleSpeechEngine)
+        #expect(composition.recognitionEngines.allSatisfy { $0.descriptor.location == .onDevice })
     }
 
     @Test func uiTestingArgumentReplacesOperatingSystemServices() {
@@ -40,6 +44,8 @@ struct AppCompositionTests {
         #expect(composition.audioDeviceLister is FakeAudioDeviceLister)
         #expect(composition.loginItems is FakeLoginItemManager)
         #expect(composition.targetCapturer is FakeTargetCapturer)
+        #expect(composition.speechAuthorizer is FakeSpeechAuthorizer)
+        #expect(composition.recognitionEngines.allSatisfy { $0 is FakeRecognitionEngine })
         #expect(composition.preferences.hasCompletedOnboarding)
     }
 

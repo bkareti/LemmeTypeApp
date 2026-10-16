@@ -12,4 +12,5 @@ public enum Log {
     public static let permissions = Logger(subsystem: subsystem, category: "permissions")
     public static let audio = Logger(subsystem: subsystem, category: "audio")
     public static let shortcuts = Logger(subsystem: subsystem, category: "shortcuts")
+    public static let recognition = Logger(subsystem: subsystem, category: "recognition")
 }

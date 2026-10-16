@@ -15,7 +15,7 @@ results in the PR description as `MA-N: pass/fail — notes`.
    defaults delete com.lemmetype.LemmeType
    rm -rf "$TMPDIR/LemmeType"
    ```
-3. Run MA-1 to MA-18 in order: clean-install onboarding (MA-6) must come
+3. Run MA-1 to MA-21 in order: clean-install onboarding (MA-6) must come
    before anything that assumes permissions; real-microphone checks are MA-11
    to MA-13 and MA-14 to MA-17.
 4. Finish with `make privacy-check` and confirm `$TMPDIR/LemmeType/Sessions` is empty.
@@ -165,3 +165,28 @@ Requires Microphone permission (team-signed build).
    word you spoke — none appear.
 4. **Save…** writes the same JSON to the chosen file. With Little Snitch or
    `nettop -p LemmeType` running, no network connection is made at any point.
+
+## E2-S2 — Apple Speech engine
+
+**MA-19 On-device recognition with no network** (team-signed build)
+1. In System Settings › Keyboard › Dictation, make sure the English (US)
+   dictation language is downloaded.
+2. Turn Wi-Fi off and unplug Ethernet. Start a network monitor (Little Snitch,
+   LuLu, or `sudo nettop -p LemmeType`).
+3. With Apple Speech selected, dictate a sentence into TextEdit.
+4. A transcript is produced and the monitor shows **no connection attempt** by LemmeType.
+
+**MA-20 Speech Recognition authorization**
+1. `tccutil reset SpeechRecognition com.lemmetype.LemmeType`.
+2. Dictate with Apple Speech selected. The overlay explains that Speech
+   Recognition is needed and offers **Allow Speech Recognition**; the recording
+   is kept.
+3. Allow it in the system prompt and choose **Retry**: the same recording is
+   transcribed. Repeat with **Don’t Allow**: the overlay offers System Settings
+   and Discard, and Discard deletes the recording (`$TMPDIR/LemmeType/Sessions` empty).
+
+**MA-21 On-device recognition unavailable**
+1. Remove the English dictation language download (or pick a Mac/locale
+   without on-device support).
+2. Apple Speech shows *Not available on this Mac* and is never used; no network
+   recognition happens (monitor as in MA-19).
