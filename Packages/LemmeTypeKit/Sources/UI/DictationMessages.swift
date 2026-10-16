@@ -1,5 +1,14 @@
 import Domain
 
+extension WritingMode {
+    var displayName: String {
+        switch self {
+        case .exact: String(localized: "Exact Dictation", bundle: .module)
+        case .clean: String(localized: "Clean Writing", bundle: .module)
+        }
+    }
+}
+
 extension DictationIssue {
     /// Concise, actionable text for the overlay. Never includes dictated text.
     var userMessage: String {

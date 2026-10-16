@@ -12,6 +12,7 @@ struct RecordingSessionTests {
     private let source = FakeAudioSource()
     private let feedback = FakeFeedback()
     private let processor = RecordingSpy()
+    private let preferences = FakePreferences(writingMode: .clean)
     private let storage = AudioSessionStorage(
         directory: FileManager.default.temporaryDirectory
             .appendingPathComponent("LemmeTypeTests-RecordingSessionTests-\(UUID().uuidString)", isDirectory: true))
@@ -28,7 +29,7 @@ struct RecordingSessionTests {
                 source: source, storage: storage, permissions: FakePermissions(statuses: [.microphone: .granted])),
             processor: processor,
             feedback: feedback,
-            preferences: FakePreferences(writingMode: .clean),
+            preferences: preferences,
             speechAuthorizer: authorizer,
             textCopier: copier,
             finishedDisplay: .milliseconds(50),
@@ -202,5 +203,17 @@ struct RecordingSessionTests {
         await record(coordinator)
         #expect(processor.modes == [.clean])
         #expect(coordinator.state == .completed)
+    }
+
+    @Test func theActiveWritingModeIsShownAndStoredWithTheNextSession() async {
+        let coordinator = makeCoordinator(copier: FakeTextDelivery())
+        #expect(coordinator.writingMode == .clean)
+        #expect(coordinator.writingMode.displayName == "Clean Writing")
+
+        coordinator.writingMode = .exact
+        await record(coordinator)
+
+        #expect(preferences.writingMode == .exact)
+        #expect(processor.modes == [.exact])
     }
 }

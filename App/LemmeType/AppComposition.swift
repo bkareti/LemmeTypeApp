@@ -158,6 +158,7 @@ struct AppComposition {
         TranscriptionPipeline(
             engines: recognitionEngines,
             preferredEngine: { [preferences] in preferences.selectedEngine },
+            write: TextCleaner.write,
             delivery: textDelivery,
             diagnostics: diagnostics
         )

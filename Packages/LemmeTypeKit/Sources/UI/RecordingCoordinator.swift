@@ -31,6 +31,11 @@ public final class RecordingCoordinator {
     public internal(set) var lastDelivery: DeliveryMethod?
     /// Choices for the current ``attention`` issue.
     public internal(set) var attentionActions: [DictationAction] = []
+    /// The mode the next session will use, shown before and during recording.
+    /// Stored in preferences; each session copies it when the recording ends.
+    public var writingMode: WritingMode {
+        didSet { preferences.writingMode = writingMode }
+    }
 
     /// Called when a session ends for any reason, so the shortcut can re-arm.
     public var onSessionEnded: @MainActor () -> Void = {}
@@ -79,6 +84,7 @@ public final class RecordingCoordinator {
         self.processor = processor
         self.feedback = feedback
         self.preferences = preferences
+        self.writingMode = preferences.writingMode
         self.speechAuthorizer = speechAuthorizer
         self.textCopier = textCopier
         self.finishedDisplay = finishedDisplay
@@ -221,7 +227,7 @@ public final class RecordingCoordinator {
             feedback.play(.stop)
             feedback.announce(String(localized: "Recording stopped", bundle: .module))
             let session = DictationSession(
-                audio: recording, target: target, mode: preferences.writingMode,
+                audio: recording, target: target, mode: writingMode,
                 language: preferences.dictationLanguage)
             self.session = session
             startProcessing(session)

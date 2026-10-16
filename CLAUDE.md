@@ -93,6 +93,11 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   and SHA-256. `ModelAssetStore` (ModelAssets) stages, verifies, activates,
   and removes them; `URLSessionModelDownloader` is the only network code in
   the app (lint exception in that file only) and needs a `ModelDownloadConsent`.
+- Writing modes: `TextCleaner` (Domain) is the pipeline's `write` step. Exact
+  only normalises whitespace; Clean runs `CleanupRule`s in a fixed order and
+  never rewrites protected tokens (numbers, URLs, emails, identifiers,
+  quotes). Every change is a `CleanupTransformation` naming its rule; the
+  corpus in `TextCleanerTests` is the spec.
 - Diagnostics: components take `any DiagnosticsRecording` (default
   `DiscardingDiagnostics`); the app shares one `DiagnosticsBuffer`. Event names
   and keys must be literals and values typed (`.id(...)` redacts anything that
@@ -108,7 +113,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes).
 
 ## Planning documents
 

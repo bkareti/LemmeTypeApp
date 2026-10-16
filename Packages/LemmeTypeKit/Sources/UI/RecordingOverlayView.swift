@@ -20,6 +20,12 @@ struct RecordingOverlayView: View {
                     Text(appearance.title)
                         .font(.headline)
                         .accessibilityIdentifier("overlay.state")
+                    if coordinator.state == .preparing || coordinator.state == .recording {
+                        Text(coordinator.writingMode.displayName)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .accessibilityIdentifier("overlay.mode")
+                    }
                     if let startedAt = coordinator.recordingStartedAt, coordinator.state == .recording {
                         TimelineView(.periodic(from: startedAt, by: 1)) { context in
                             Text(

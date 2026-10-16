@@ -16,7 +16,7 @@ public actor TranscriptionPipeline: DictationProcessing {
     public init(
         engines: [any SpeechRecognitionEngine],
         preferredEngine: @escaping @Sendable () -> RecognitionEngineID?,
-        write: @escaping @Sendable (String, WritingMode) -> String = TranscriptionPipeline.normalizeWhitespace,
+        write: @escaping @Sendable (String, WritingMode) -> String = TextCleaner.write,
         delivery: any TextDelivering,
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
     ) {
@@ -25,11 +25,6 @@ public actor TranscriptionPipeline: DictationProcessing {
         self.write = write
         self.delivery = delivery
         self.diagnostics = diagnostics
-    }
-
-    /// Exact-mode normalisation: trims and collapses whitespace runs.
-    public static let normalizeWhitespace: @Sendable (String, WritingMode) -> String = { text, _ in
-        text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
     }
 
     public func process(

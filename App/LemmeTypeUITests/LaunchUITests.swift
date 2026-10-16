@@ -42,6 +42,7 @@ final class LaunchUITests: XCTestCase {
             XCTAssertTrue(item.waitForExistence(timeout: 5), "\(title) is missing")
             XCTAssertTrue(item.isEnabled, "\(title) is disabled")
         }
+        XCTAssertTrue(statusItem.menuItems["Writing Mode: Exact Dictation"].waitForExistence(timeout: 5))
         statusItem.typeKey(.escape, modifierFlags: [])
     }
 

@@ -244,3 +244,20 @@ Requires Microphone permission (team-signed build).
 4. Repeat step 3, press the shortcut again instead of choosing: the old
    recording is deleted and a new session starts.
 5. Repeat step 3 and quit LemmeType: the Sessions folder is empty.
+
+## E2-S6 — Writing modes
+
+**MA-27 Exact Dictation and Clean Writing**
+1. With default settings, open the status menu: it shows *Writing Mode: Exact
+   Dictation*. Start a recording: the overlay shows *Exact Dictation* under
+   *Recording*.
+2. Dictate "um can you send me the the slides comma thanks": the delivered
+   text keeps every word as recognised (no fillers or repeats removed).
+3. Quit LemmeType, run `defaults write com.lemmetype.LemmeType writingMode
+   clean`, and relaunch (the Settings control arrives in E2-S9). The menu and
+   overlay show *Clean Writing*.
+4. Dictate the same sentence: the result is "Can you send me the slides,
+   thanks." Dictate "meet on Tuesday sorry Wednesday": it becomes "Meet on
+   Wednesday." Dictate "send it to ana@example.com by 5": the address and
+   number are delivered exactly as recognised.
+5. Run `defaults delete com.lemmetype.LemmeType writingMode` to restore Exact.
