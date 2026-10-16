@@ -8,6 +8,7 @@ public final class FakePreferences: AppPreferences {
         var dictationShortcut: KeyboardShortcut?
         var activationMode: ActivationMode
         var audioInput: AudioInputSelection
+        var playsFeedbackSounds: Bool
     }
 
     private let values: Mutex<Values>
@@ -16,14 +17,16 @@ public final class FakePreferences: AppPreferences {
         hasCompletedOnboarding: Bool = false,
         dictationShortcut: KeyboardShortcut? = nil,
         activationMode: ActivationMode = .pushToTalk,
-        audioInput: AudioInputSelection = .systemDefault
+        audioInput: AudioInputSelection = .systemDefault,
+        playsFeedbackSounds: Bool = false
     ) {
         values = Mutex(
             Values(
                 hasCompletedOnboarding: hasCompletedOnboarding,
                 dictationShortcut: dictationShortcut,
                 activationMode: activationMode,
-                audioInput: audioInput
+                audioInput: audioInput,
+                playsFeedbackSounds: playsFeedbackSounds
             ))
     }
 
@@ -45,5 +48,10 @@ public final class FakePreferences: AppPreferences {
     public var audioInput: AudioInputSelection {
         get { values.withLock { $0.audioInput } }
         set { values.withLock { $0.audioInput = newValue } }
+    }
+
+    public var playsFeedbackSounds: Bool {
+        get { values.withLock { $0.playsFeedbackSounds } }
+        set { values.withLock { $0.playsFeedbackSounds = newValue } }
     }
 }

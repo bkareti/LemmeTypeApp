@@ -10,7 +10,8 @@ struct LemmeTypeApp: App {
             MenuBarMenu(
                 actions: appDelegate.controller.menuActions,
                 permissions: appDelegate.controller.permissions,
-                shortcut: appDelegate.controller.shortcut
+                shortcut: appDelegate.controller.shortcut,
+                recorder: appDelegate.controller.recorder
             )
         } label: {
             Image(systemName: "waveform")

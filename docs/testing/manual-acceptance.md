@@ -104,3 +104,28 @@ Requires Microphone permission (team-signed build).
 **MA-13 Sleep**
 1. Start a test and put the Mac to sleep (Apple menu › Sleep). After waking, the
    test has stopped with "Recording was interrupted" and no recording remains.
+
+## E1-S6 — Recorder and overlay
+
+**MA-14 Overlay never takes focus** (team-signed build, permissions granted)
+1. Click into a TextEdit document so the caret blinks. Press the dictation shortcut.
+2. The overlay appears at the top of the screen; TextEdit's title bar stays active
+   and the caret keeps blinking. Typing still goes into TextEdit.
+3. Stop (release or press again) — the overlay shows Done and disappears.
+4. Repeat in a full-screen app and on a second Space — the overlay appears there too.
+
+**MA-15 Cancel and failure from the overlay**
+1. Start recording, click **Cancel** on the overlay — Cancelled; TextEdit keeps focus;
+   `$TMPDIR/LemmeType/Sessions` is empty.
+2. Revoke Microphone in System Settings, press the shortcut — "Couldn't record" with
+   **Open Permissions**, which opens Settings › Permissions.
+
+**MA-16 Reduce Motion and VoiceOver**
+1. Turn on Reduce Motion — states remain distinguishable by text, symbol, and colour; no pulsing.
+2. Turn on VoiceOver — it announces "Recording started", "Recording stopped",
+   "Recording cancelled", and failures, and does not read levels while recording.
+
+**MA-17 Quit and sleep while recording**
+1. Start recording, choose **Quit LemmeType** — the app exits, the microphone
+   indicator in the menu bar turns off, and no session file remains.
+2. Start recording, sleep the Mac, wake it — the overlay shows the interruption; no file remains.

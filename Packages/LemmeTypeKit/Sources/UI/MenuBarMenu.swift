@@ -28,11 +28,18 @@ public struct MenuBarMenu: View {
     private let actions: MenuBarActions
     private let permissions: PermissionsModel
     private let shortcut: ShortcutSettingsModel
+    private let recorder: RecordingCoordinator
 
-    public init(actions: MenuBarActions, permissions: PermissionsModel, shortcut: ShortcutSettingsModel) {
+    public init(
+        actions: MenuBarActions,
+        permissions: PermissionsModel,
+        shortcut: ShortcutSettingsModel,
+        recorder: RecordingCoordinator
+    ) {
         self.actions = actions
         self.permissions = permissions
         self.shortcut = shortcut
+        self.recorder = recorder
     }
 
     public var body: some View {
@@ -47,9 +54,13 @@ public struct MenuBarMenu: View {
             Text(String(localized: "Dictate: \(shortcut.shortcut.displayString)", bundle: .module))
         }
         Divider()
-        // Enabled once recording exists (E1-S6).
-        Button(String(localized: "Start Test Recording", bundle: .module)) {}
-            .disabled(true)
+        if recorder.state.isCapturing {
+            Button(String(localized: "Stop Recording", bundle: .module)) { recorder.requestStop() }
+            Button(String(localized: "Cancel Recording", bundle: .module)) { recorder.requestCancel() }
+        } else {
+            Button(String(localized: "Start Test Recording", bundle: .module)) { recorder.requestStart(target: nil) }
+                .disabled(recorder.state == .processing)
+        }
         Divider()
         Button(String(localized: "Settings…", bundle: .module)) { actions.openSettings() }
             .keyboardShortcut(",")

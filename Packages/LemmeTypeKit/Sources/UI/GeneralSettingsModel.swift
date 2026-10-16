@@ -11,12 +11,22 @@ public final class GeneralSettingsModel {
     public private(set) var errorMessage: String?
     public let buildInfo: BuildInfo
 
-    private let loginItems: any LoginItemManaging
+    public private(set) var playsFeedbackSounds: Bool
 
-    public init(loginItems: any LoginItemManaging, buildInfo: BuildInfo) {
+    private let loginItems: any LoginItemManaging
+    private let preferences: any AppPreferences
+
+    public init(loginItems: any LoginItemManaging, preferences: any AppPreferences, buildInfo: BuildInfo) {
         self.loginItems = loginItems
+        self.preferences = preferences
         self.buildInfo = buildInfo
         self.loginItemStatus = loginItems.status()
+        self.playsFeedbackSounds = preferences.playsFeedbackSounds
+    }
+
+    public func setPlaysFeedbackSounds(_ enabled: Bool) {
+        preferences.playsFeedbackSounds = enabled
+        playsFeedbackSounds = enabled
     }
 
     /// Toggle value. `requiresApproval` counts as on: the user asked for it and

@@ -10,7 +10,8 @@ import UI
 final class AppController {
     let permissions: PermissionsModel
     let activation: ActivationController
-    let audioCapture: any AudioCapturing
+    let recorder: RecordingCoordinator
+    let overlay: RecordingOverlayController
     let shortcut: ShortcutSettingsModel
     let navigation: SettingsNavigation
     let settings: ManagedWindowController
@@ -35,7 +36,7 @@ final class AppController {
         permissions: PermissionsModel,
         preferences: any AppPreferences,
         activation: ActivationController,
-        audioCapture: any AudioCapturing,
+        recorder: RecordingCoordinator,
         shortcut: ShortcutSettingsModel,
         navigation: SettingsNavigation,
         settings: ManagedWindowController
@@ -43,11 +44,14 @@ final class AppController {
         self.permissions = permissions
         self.preferences = preferences
         self.activation = activation
-        self.audioCapture = audioCapture
+        self.recorder = recorder
+        self.overlay = RecordingOverlayController(coordinator: recorder)
         self.shortcut = shortcut
         self.navigation = navigation
         self.settings = settings
         activation.onCommand = { [weak self] command in self?.handle(command) }
+        recorder.onSessionEnded = { [weak activation] in activation?.sessionEnded() }
+        recorder.onOpenSettings = { [weak self] pane in self?.showSettings(pane: pane) }
     }
 
     var menuActions: MenuBarActions {
@@ -63,7 +67,8 @@ final class AppController {
     /// Deletes recordings left by a crash, registers the dictation shortcut,
     /// and opens onboarding on first launch (or after an unfinished setup).
     func launchFinished() {
-        Task { [audioCapture] in await audioCapture.purgeLeftovers() }
+        Task { [audioCapture = recorder.capture] in await audioCapture.purgeLeftovers() }
+        overlay.start()
         activation.activate()
         shortcut.refreshState()
         if !preferences.hasCompletedOnboarding {
@@ -89,10 +94,16 @@ final class AppController {
         settings.show()
     }
 
-    /// Recording arrives in E1-S5/E1-S6; until then activations only drive the
-    /// Shortcut pane's test feedback.
     private func handle(_ command: ActivationCommand) {
         shortcut.record(command)
+        recorder.handle(command)
+    }
+
+    /// Stops any recording before the app exits so the microphone is released
+    /// and partial audio is deleted.
+    func prepareToTerminate() async {
+        recorder.requestCancel()
+        await recorder.settle()
     }
 
     func showAbout() {
@@ -100,7 +111,7 @@ final class AppController {
         NSApp.orderFrontStandardAboutPanel(nil)
     }
 
-    /// Recording does not exist yet; E1-S6 makes quit stop an active recording first.
+    /// Quitting cancels an active recording first (see `prepareToTerminate`).
     func quit() {
         Log.lifecycle.info("Quit requested")
         NSApp.terminate(nil)

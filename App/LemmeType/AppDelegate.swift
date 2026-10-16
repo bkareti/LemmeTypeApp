@@ -37,6 +37,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controller.applicationBecameActive()
     }
 
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard controller.recorder.state.isCapturing || controller.recorder.state == .processing else {
+            return .terminateNow
+        }
+        Task {
+            await controller.prepareToTerminate()
+            NSApp.reply(toApplicationShouldTerminate: true)
+        }
+        return .terminateLater
+    }
+
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         controller.showSettings()
         return false

@@ -38,6 +38,7 @@ struct AppComposition {
     var preferences: any AppPreferences
     var audioDeviceLister: any AudioDeviceListing
     var audioCapture: any AudioCapturing
+    var recordingConsumer: any RecordingConsumer = DiscardingRecordingConsumer()
     var loginItems: any LoginItemManaging
     var hotKeyRegistrar: any HotKeyRegistering
     var targetCapturer: any TargetCapturing
@@ -116,7 +117,7 @@ struct AppComposition {
 
     func makeAppController() -> AppController {
         let permissions = PermissionsModel(checker: permissionChecker, requester: permissionRequester)
-        let general = GeneralSettingsModel(loginItems: loginItems, buildInfo: buildInfo)
+        let general = GeneralSettingsModel(loginItems: loginItems, preferences: preferences, buildInfo: buildInfo)
         let activation = ActivationController(
             registrar: hotKeyRegistrar,
             targetCapturer: targetCapturer,
@@ -127,6 +128,12 @@ struct AppComposition {
         let audio = AudioSettingsModel(
             capture: audioCapture, deviceLister: audioDeviceLister, preferences: preferences)
         let navigation = SettingsNavigation()
+        let recorder = RecordingCoordinator(
+            capture: audioCapture,
+            consumer: recordingConsumer,
+            feedback: SystemRecordingFeedback(preferences: preferences),
+            preferences: preferences
+        )
         let settings = ManagedWindowController(
             identifier: "settings",
             title: String(localized: "LemmeType Settings")
@@ -144,7 +151,7 @@ struct AppComposition {
             permissions: permissions,
             preferences: preferences,
             activation: activation,
-            audioCapture: audioCapture,
+            recorder: recorder,
             shortcut: shortcut,
             navigation: navigation,
             settings: settings
