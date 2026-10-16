@@ -71,6 +71,7 @@ struct AppComposition {
         let diagnostics = DiagnosticsBuffer()
         let preferences = UserDefaultsPreferences()
         let speechAuthorizer = SystemSpeechAuthorizer()
+        let modelAssets = ModelAssetStore.makeDefault(diagnostics: diagnostics)
         return AppComposition(
             mode: .live,
             permissionChecker: permissionChecker,
@@ -85,9 +86,10 @@ struct AppComposition {
             ),
             speechAuthorizer: speechAuthorizer,
             recognitionEngines: [
-                AppleSpeechEngine(authorizer: speechAuthorizer, language: { preferences.dictationLanguage })
+                AppleSpeechEngine(authorizer: speechAuthorizer, language: { preferences.dictationLanguage }),
+                WhisperEngine(assets: modelAssets),
             ],
-            modelAssets: ModelAssetStore.makeDefault(diagnostics: diagnostics),
+            modelAssets: modelAssets,
             diagnostics: diagnostics,
             loginItems: SystemLoginItemManager(),
             hotKeyRegistrar: CarbonHotKeyRegistrar(),
@@ -128,7 +130,10 @@ struct AppComposition {
                 ),
                 speechAuthorizer: FakeSpeechAuthorizer(status: .granted),
                 recognitionEngines: [
-                    FakeRecognitionEngine(id: .appleSpeech, script: .init(text: "hello from lemmetype"))
+                    FakeRecognitionEngine(id: .appleSpeech, script: .init(text: "hello from lemmetype")),
+                    FakeRecognitionEngine(
+                        id: .whisper, availability: .assetsMissing,
+                        assets: .downloadable(.whisperBaseEnglish)),
                 ],
                 modelAssets: FakeModelAssetManager(),
                 diagnostics: diagnostics,

@@ -15,7 +15,7 @@ results in the PR description as `MA-N: pass/fail — notes`.
    defaults delete com.lemmetype.LemmeType
    rm -rf "$TMPDIR/LemmeType"
    ```
-3. Run MA-1 to MA-23 in order: clean-install onboarding (MA-6) must come
+3. Run MA-1 to MA-25 in order: clean-install onboarding (MA-6) must come
    before anything that assumes permissions; real-microphone checks are MA-11
    to MA-13 and MA-14 to MA-17.
 4. Finish with `make privacy-check` and confirm `$TMPDIR/LemmeType/Sessions` is empty.
@@ -210,3 +210,22 @@ Requires Microphone permission (team-signed build).
 2. With the model installed, **Remove**: the folder is deleted, Whisper shows
    *Download required*, and dictation falls back to Apple Speech (Automatic) or
    asks before changing engine.
+
+## E2-S3 — Whisper model
+
+**MA-24 Offline Whisper transcription and unload**
+1. Install the Whisper model (MA-22), select **Whisper Base (English)**, and
+   turn off networking (as MA-19).
+2. Dictate an English sentence into TextEdit: a transcript is produced; the
+   network monitor shows no connection.
+3. Start a long dictation and cancel during *Processing…*: processing stops
+   within a second and Activity Monitor shows LemmeType's memory dropping back
+   after **Settings › Dictation › Unload model** (or quitting).
+4. On an Intel Mac or a Mac with less than 8 GB memory, Whisper is not offered
+   and the reason is shown.
+5. About LemmeType › Credits lists whisper.cpp and OpenAI Whisper (MIT).
+
+**MA-25 Benchmark run** (minimum and recommended hardware)
+1. `scripts/run-recognition-benchmark.sh` with the model installed.
+2. Copy the metrics from `build/benchmarks/` into
+   `docs/testing/performance-thresholds.md` with the Mac model and date.
