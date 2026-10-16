@@ -1,4 +1,6 @@
 import Audio
+import Delivery
+import Domain
 import Lifecycle
 import ModelAssets
 import Permissions
@@ -23,7 +25,9 @@ struct AppCompositionTests {
         #expect(composition.preferences is UserDefaultsPreferences)
         #expect(composition.audioDeviceLister is CaptureDeviceLister)
         #expect(composition.audioCapture is AudioCaptureService)
-        #expect(composition.recordingConsumer is DiscardingRecordingConsumer)
+        #expect(composition.textDelivery is CopyingTextDelivery)
+        #expect(composition.textCopier is PasteboardTextCopier)
+        #expect(composition.makeDictationProcessor() is TranscriptionPipeline)
         #expect(composition.loginItems is SystemLoginItemManager)
         #expect(composition.hotKeyRegistrar is CarbonHotKeyRegistrar)
         #expect(composition.targetCapturer is AccessibilityTargetCapturer)
@@ -50,6 +54,7 @@ struct AppCompositionTests {
         #expect(composition.speechAuthorizer is FakeSpeechAuthorizer)
         #expect(composition.recognitionEngines.allSatisfy { $0 is FakeRecognitionEngine })
         #expect(composition.modelAssets is FakeModelAssetManager)
+        #expect(composition.textDelivery is FakeTextDelivery)
         #expect(composition.preferences.hasCompletedOnboarding)
     }
 

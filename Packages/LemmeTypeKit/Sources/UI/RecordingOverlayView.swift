@@ -41,11 +41,19 @@ struct RecordingOverlayView: View {
                     .tint(.red)
                     .accessibilityHidden(true)
             }
-            if let failure = coordinator.failure {
-                Text(failure.userMessage)
+            if coordinator.state == .processing, let progress = coordinator.processingProgress {
+                ProgressView(value: progress)
+                    .progressViewStyle(.linear)
+                    .accessibilityHidden(true)
+            }
+            if let message {
+                Text(message)
                     .font(.callout)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("overlay.message")
+            }
+            if coordinator.attention != nil {
+                attentionButtons
             }
         }
         .padding(14)
@@ -72,9 +80,37 @@ struct RecordingOverlayView: View {
             }
             Button(String(localized: "Dismiss", bundle: .module)) { coordinator.dismiss() }
                 .accessibilityIdentifier("overlay.dismiss")
-        case .idle, .stopping, .processing, .completed, .cancelled:
+        case .processing:
+            Button(String(localized: "Cancel", bundle: .module)) { coordinator.requestCancel() }
+                .accessibilityIdentifier("overlay.cancel")
+        case .idle, .stopping, .completed, .cancelled, .needsAttention:
             EmptyView()
         }
+    }
+
+    private var message: String? {
+        if let failure = coordinator.failure { return failure.userMessage }
+        if let issue = coordinator.attention { return issue.userMessage }
+        if coordinator.state == .completed { return coordinator.lastDelivery?.announcement }
+        return nil
+    }
+
+    /// Up to three choices plus Discard, which is always last.
+    private var attentionButtons: some View {
+        let actions = coordinator.attentionActions
+        let primary = Array(actions.filter { $0 != .discard }.prefix(3))
+        return HStack {
+            ForEach(primary, id: \.identifier) { action in
+                Button(action.title(engineName: \.displayName)) { coordinator.perform(action) }
+                    .accessibilityIdentifier("overlay.action.\(action.identifier)")
+            }
+            Spacer(minLength: 0)
+            if actions.contains(.discard) {
+                Button(DictationAction.discard.title(engineName: \.displayName)) { coordinator.perform(.discard) }
+                    .accessibilityIdentifier("overlay.action.discard")
+            }
+        }
+        .controlSize(.small)
     }
 
     private var appearance: Appearance {
@@ -86,13 +122,18 @@ struct RecordingOverlayView: View {
         case .stopping:
             Appearance("stop.circle", .orange, String(localized: "Finishing…", bundle: .module))
         case .processing:
-            Appearance("hourglass", .blue, String(localized: "Processing…", bundle: .module))
+            Appearance(
+                "hourglass", .blue,
+                coordinator.processingPhase?.title ?? String(localized: "Processing…", bundle: .module))
         case .completed:
             Appearance("checkmark.circle.fill", .green, String(localized: "Done", bundle: .module))
         case .cancelled:
             Appearance("xmark.circle", .secondary, String(localized: "Cancelled", bundle: .module))
         case .failed:
             Appearance("exclamationmark.triangle.fill", .yellow, String(localized: "Couldn’t record", bundle: .module))
+        case .needsAttention:
+            Appearance(
+                "exclamationmark.bubble.fill", .orange, String(localized: "Needs your decision", bundle: .module))
         }
     }
 }

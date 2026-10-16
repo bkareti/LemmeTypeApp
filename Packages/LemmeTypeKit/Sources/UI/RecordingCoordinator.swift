@@ -4,8 +4,12 @@ import Observation
 import Support
 
 /// Runs dictation sessions: turns shortcut, menu, and overlay commands into
-/// recorder transitions and capture calls, one at a time and in order. The
-/// overlay and menu observe ``state``.
+/// recorder transitions, capture calls, and processing, one at a time and in
+/// order. The overlay and menu observe ``state``.
+///
+/// Each finished recording becomes one ``DictationSession`` that this
+/// coordinator owns until it is delivered, cancelled, or discarded; results
+/// from any other session are ignored (see `RecordingCoordinator+Processing`).
 @MainActor
 @Observable
 public final class RecordingCoordinator {
@@ -15,51 +19,87 @@ public final class RecordingCoordinator {
         case tryAgain
     }
 
-    public private(set) var state: RecorderState = .idle
+    public internal(set) var state: RecorderState = .idle
     /// Current meter value while recording; 0 otherwise.
     public private(set) var level: Float = 0
     public private(set) var recordingStartedAt: Date?
+    /// What processing is doing, while ``state`` is `.processing`.
+    public internal(set) var processingPhase: ProcessingPhase?
+    /// Recognition progress (0...1) when the engine reports it.
+    public internal(set) var processingProgress: Double?
+    /// How the last completed session's text was delivered.
+    public internal(set) var lastDelivery: DeliveryMethod?
+    /// Choices for the current ``attention`` issue.
+    public internal(set) var attentionActions: [DictationAction] = []
 
     /// Called when a session ends for any reason, so the shortcut can re-arm.
     public var onSessionEnded: @MainActor () -> Void = {}
     /// Opens a settings pane for a recovery action.
     public var onOpenSettings: @MainActor (SettingsNavigation.Pane) -> Void = { _ in }
+    /// Saves a copy of a kept recording where the user chooses (Save Audio…).
+    public var onSaveAudio: @MainActor (URL) async -> Void = { _ in }
 
-    private var machine = RecorderStateMachine()
+    var machine = RecorderStateMachine()
     public let capture: any AudioCapturing
-    private let consumer: any RecordingConsumer
-    private let feedback: any RecordingFeedback
-    private let preferences: any AppPreferences
-    private let finishedDisplay: Duration
-    private let failureDisplay: Duration
-    private let diagnostics: any DiagnosticsRecording
+    let processor: any DictationProcessing
+    let feedback: any RecordingFeedback
+    let preferences: any AppPreferences
+    let speechAuthorizer: (any SpeechRecognitionAuthorizing)?
+    let textCopier: (any TextCopying)?
+    let finishedDisplay: Duration
+    let failureDisplay: Duration
+    let attentionDisplay: Duration
+    let diagnostics: any DiagnosticsRecording
 
-    private var queue: Task<Void, Never>?
+    var queue: Task<Void, Never>?
+    var processingTask: Task<Void, Never>?
+    var updatesTask: Task<Void, Never>?
     private var eventsTask: Task<Void, Never>?
     private var dismissTask: Task<Void, Never>?
     private var target: ActivationTarget?
+    /// The session being processed or waiting for a decision.
+    var session: DictationSession?
+    /// Text kept in memory for Copy / Retry Delivery; never logged.
+    var pendingTranscript: String?
 
     public init(
         capture: any AudioCapturing,
-        consumer: any RecordingConsumer,
+        processor: any DictationProcessing,
         feedback: any RecordingFeedback,
         preferences: any AppPreferences,
+        speechAuthorizer: (any SpeechRecognitionAuthorizing)? = nil,
+        textCopier: (any TextCopying)? = nil,
         finishedDisplay: Duration = .seconds(1.5),
         failureDisplay: Duration = .seconds(8),
+        attentionDisplay: Duration = .seconds(120),
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
     ) {
         self.diagnostics = diagnostics
         self.capture = capture
-        self.consumer = consumer
+        self.processor = processor
         self.feedback = feedback
         self.preferences = preferences
+        self.speechAuthorizer = speechAuthorizer
+        self.textCopier = textCopier
         self.finishedDisplay = finishedDisplay
         self.failureDisplay = failureDisplay
+        self.attentionDisplay = attentionDisplay
     }
 
     public var failure: AudioCaptureError? {
         if case .failed(let error) = state { return error }
         return nil
+    }
+
+    /// The processing issue waiting for the user's decision, if any.
+    public var attention: DictationIssue? {
+        if case .needsAttention(let issue) = state { return issue }
+        return nil
+    }
+
+    /// Recording, processing, or holding a recording for a decision.
+    public var hasActiveSession: Bool {
+        state.isCapturing || state == .processing || attention != nil
     }
 
     public var recoveryAction: RecoveryAction? {
@@ -93,10 +133,11 @@ public final class RecordingCoordinator {
         enqueue { await $0.cancel() }
     }
 
-    /// Hides a finished session's overlay.
+    /// Hides a finished session's overlay. A kept recording is deleted.
     public func dismiss() {
         dismissTask?.cancel()
         if machine.handle(.reset) {
+            discardSession()
             sync()
         }
     }
@@ -110,17 +151,20 @@ public final class RecordingCoordinator {
         }
     }
 
-    /// Waits for every queued command. For tests and app termination.
+    /// Waits for every queued command and any processing. For tests and app termination.
     public func settle() async {
-        while let current = queue {
-            await current.value
-            if queue == current { break }
+        while true {
+            let queued = queue
+            let processing = processingTask
+            await queued?.value
+            await processing?.value
+            if queue == queued && processingTask == processing { return }
         }
     }
 
     // MARK: Transitions
 
-    private func enqueue(_ operation: @escaping @MainActor (RecordingCoordinator) async -> Void) {
+    func enqueue(_ operation: @escaping @MainActor (RecordingCoordinator) async -> Void) {
         let previous = queue
         queue = Task { [weak self] in
             await previous?.value
@@ -132,6 +176,7 @@ public final class RecordingCoordinator {
     private func start(target: ActivationTarget?) async {
         guard machine.handle(.activate) else { return }
         dismissTask?.cancel()
+        discardSession()  // a recording kept for a decision is replaced by the new one
         sync()
         self.target = target
         do {
@@ -175,10 +220,11 @@ public final class RecordingCoordinator {
             sync()
             feedback.play(.stop)
             feedback.announce(String(localized: "Recording stopped", bundle: .module))
-            try await consumer.consume(recording, target: target)
-            guard machine.handle(.processingFinished) else { return }
-            sync()
-            finishSession(displayFor: finishedDisplay)
+            let session = DictationSession(
+                audio: recording, target: target, mode: preferences.writingMode,
+                language: preferences.dictationLanguage)
+            self.session = session
+            startProcessing(session)
         } catch {
             await fail(error)
         }
@@ -186,7 +232,9 @@ public final class RecordingCoordinator {
 
     private func cancel() async {
         guard machine.handle(.cancel) else { return }
+        stopProcessing()
         await capture.cancel()
+        discardSession()
         level = 0
         sync()
         feedback.announce(String(localized: "Recording cancelled", bundle: .module))
@@ -195,7 +243,9 @@ public final class RecordingCoordinator {
 
     private func fail(_ error: AudioCaptureError) async {
         guard machine.handle(.fail(error)) else { return }
+        stopProcessing()
         await capture.cancel()  // releases the microphone and deletes partial audio
+        discardSession()
         level = 0
         sync()
         feedback.announce(String(localized: "Recording failed. \(error.userMessage)", bundle: .module))
@@ -203,7 +253,9 @@ public final class RecordingCoordinator {
         finishSession(displayFor: failureDisplay)
     }
 
-    private func finishSession(displayFor duration: Duration) {
+    /// Ends the visible session. A session waiting for a decision keeps its
+    /// recording until it is dismissed.
+    func finishSession(displayFor duration: Duration) {
         target = nil
         recordingStartedAt = nil
         eventsTask?.cancel()
@@ -217,7 +269,11 @@ public final class RecordingCoordinator {
         }
     }
 
-    private func sync() {
+    func cancelPendingDismiss() {
+        dismissTask?.cancel()
+    }
+
+    func sync() {
         guard state != machine.state else { return }
         state = machine.state
         diagnostics.record(.recorder, "recorder.state", ["state": .id(Self.diagnosticName(for: state))])
@@ -233,6 +289,7 @@ public final class RecordingCoordinator {
         case .completed: "completed"
         case .cancelled: "cancelled"
         case .failed(let error): "failed.\(error.identifier)"
+        case .needsAttention(let issue): "needs-attention.\(issue.identifier)"
         }
     }
 }

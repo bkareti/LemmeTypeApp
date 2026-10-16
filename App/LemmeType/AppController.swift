@@ -58,6 +58,7 @@ final class AppController {
         activation.onCommand = { [weak self] command in self?.handle(command) }
         recorder.onSessionEnded = { [weak activation] in activation?.sessionEnded() }
         recorder.onOpenSettings = { [weak self] pane in self?.showSettings(pane: pane) }
+        recorder.onSaveAudio = { url in AppController.saveCopy(of: url) }
     }
 
     var menuActions: MenuBarActions {
@@ -106,6 +107,24 @@ final class AppController {
     private func handle(_ command: ActivationCommand) {
         shortcut.record(command)
         recorder.handle(command)
+    }
+
+    /// Lets the user keep a copy of a recording that could not be processed.
+    /// The copy is theirs; LemmeType still deletes its own file.
+    private static func saveCopy(of recording: URL) {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "LemmeType Recording.caf"
+        panel.canCreateDirectories = true
+        NSApp.activate()
+        guard panel.runModal() == .OK, let destination = panel.url else { return }
+        do {
+            if FileManager.default.fileExists(atPath: destination.path) {
+                try FileManager.default.removeItem(at: destination)
+            }
+            try FileManager.default.copyItem(at: recording, to: destination)
+        } catch {
+            Log.audio.error("Saving a recording copy failed")
+        }
     }
 
     /// Stops any recording before the app exits so the microphone is released

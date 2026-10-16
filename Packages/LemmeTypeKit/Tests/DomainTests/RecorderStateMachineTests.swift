@@ -4,10 +4,11 @@ import Testing
 struct RecorderStateMachineTests {
     private static let allStates: [RecorderState] = [
         .idle, .preparing, .recording, .stopping, .processing, .completed, .cancelled, .failed(.interrupted),
+        .needsAttention(.noEngineAvailable),
     ]
     private static let allEvents: [RecorderEvent] = [
         .activate, .captureStarted, .stopRequested, .captureFinished, .processingFinished, .cancel,
-        .fail(.deviceDisconnected), .reset,
+        .fail(.deviceDisconnected), .processingNeedsAttention(.noEngineAvailable), .retry, .reset,
     ]
 
     struct Transition: Sendable, CustomTestStringConvertible {
@@ -37,6 +38,12 @@ struct RecorderStateMachineTests {
         Transition(.processing, .processingFinished, .completed),
         Transition(.processing, .cancel, .cancelled),
         Transition(.processing, .fail(.deviceDisconnected), .failed(.deviceDisconnected)),
+        Transition(.processing, .processingNeedsAttention(.noEngineAvailable), .needsAttention(.noEngineAvailable)),
+        Transition(.needsAttention(.noEngineAvailable), .retry, .processing),
+        Transition(.needsAttention(.noEngineAvailable), .processingFinished, .completed),
+        Transition(.needsAttention(.noEngineAvailable), .cancel, .cancelled),
+        Transition(.needsAttention(.noEngineAvailable), .reset, .idle),
+        Transition(.needsAttention(.noEngineAvailable), .activate, .preparing),
         Transition(.completed, .reset, .idle),
         Transition(.cancelled, .reset, .idle),
         Transition(.failed(.interrupted), .reset, .idle),
@@ -85,6 +92,9 @@ struct RecorderStateMachineTests {
 
     @Test func capturingStatesAreTheOnesThatMayUseTheMicrophone() {
         #expect(Self.allStates.filter(\.isCapturing) == [.preparing, .recording, .stopping])
-        #expect(Self.allStates.filter(\.isFinished) == [.completed, .cancelled, .failed(.interrupted)])
+        #expect(
+            Self.allStates.filter(\.isFinished) == [
+                .completed, .cancelled, .failed(.interrupted), .needsAttention(.noEngineAvailable),
+            ])
     }
 }

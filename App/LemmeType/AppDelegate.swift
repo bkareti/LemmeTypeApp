@@ -38,7 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard controller.recorder.state.isCapturing || controller.recorder.state == .processing else {
+        guard controller.recorder.hasActiveSession else {
             return .terminateNow
         }
         Task {

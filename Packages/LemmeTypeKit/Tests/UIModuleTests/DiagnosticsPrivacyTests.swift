@@ -33,7 +33,7 @@ struct DiagnosticsPrivacyTests {
             source: source, storage: storage, permissions: permissions, diagnostics: buffer)
         let coordinator = RecordingCoordinator(
             capture: capture,
-            consumer: DiscardingRecordingConsumer(),
+            processor: RecordingSpy(),
             feedback: SilentFeedback(),
             preferences: preferences,
             diagnostics: buffer
@@ -158,7 +158,7 @@ struct RecoveryGuidanceTests {
                     directory: FileManager.default.temporaryDirectory
                         .appendingPathComponent("LemmeTypeTests-RecoveryGuidance-\(UUID().uuidString)")),
                 permissions: FakePermissions(statuses: [.microphone: .granted])),
-            consumer: DiscardingRecordingConsumer(),
+            processor: RecordingSpy(),
             feedback: SilentFeedback(),
             preferences: FakePreferences()
         )

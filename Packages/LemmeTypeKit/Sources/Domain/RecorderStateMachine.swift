@@ -6,11 +6,14 @@ public enum RecorderState: Equatable, Sendable {
     case recording
     /// Finalising the recording.
     case stopping
-    /// Handing the recording on (transcription arrives in Epic 2).
+    /// Recognising, writing, and delivering the text.
     case processing
     case completed
     case cancelled
     case failed(AudioCaptureError)
+    /// Processing stopped and the user must choose what to do (retry, copy,
+    /// discard, …). The recording is kept until they decide.
+    case needsAttention(DictationIssue)
 
     /// The microphone may be in use.
     public var isCapturing: Bool {
@@ -20,7 +23,7 @@ public enum RecorderState: Equatable, Sendable {
     /// Finished; the next activation starts a new session.
     public var isFinished: Bool {
         switch self {
-        case .completed, .cancelled, .failed: true
+        case .completed, .cancelled, .failed, .needsAttention: true
         default: false
         }
     }
@@ -34,6 +37,10 @@ public enum RecorderEvent: Equatable, Sendable {
     case processingFinished
     case cancel
     case fail(AudioCaptureError)
+    /// Processing needs a decision from the user.
+    case processingNeedsAttention(DictationIssue)
+    /// The user chose to process the kept recording again.
+    case retry
     /// The finished state has been dismissed.
     case reset
 }
@@ -55,6 +62,9 @@ public struct RecorderStateMachine: Sendable {
         return true
     }
 
+    // One case per allowed transition: the table is the specification, so it
+    // stays in one place rather than being split to lower its complexity.
+    // swiftlint:disable:next cyclomatic_complexity
     public static func transition(from state: RecorderState, on event: RecorderEvent) -> RecorderState? {
         switch (state, event) {
         case (.idle, .activate): .preparing
@@ -62,7 +72,12 @@ public struct RecorderStateMachine: Sendable {
         case (.recording, .stopRequested): .stopping
         case (.stopping, .captureFinished): .processing
         case (.processing, .processingFinished): .completed
-        case (.preparing, .cancel), (.recording, .cancel), (.processing, .cancel): .cancelled
+        // The user resolved an issue themselves (for example Copy Text).
+        case (.needsAttention, .processingFinished): .completed
+        case (.processing, .processingNeedsAttention(let issue)): .needsAttention(issue)
+        case (.needsAttention, .retry): .processing
+        case (.preparing, .cancel), (.recording, .cancel), (.processing, .cancel), (.needsAttention, .cancel):
+            .cancelled
         case (.preparing, .fail(let error)), (.recording, .fail(let error)),
             (.stopping, .fail(let error)), (.processing, .fail(let error)):
             .failed(error)
@@ -71,10 +86,4 @@ public struct RecorderStateMachine: Sendable {
         default: nil
         }
     }
-}
-
-/// Receives each finished recording. Epic 1 discards it; Epic 2 transcribes
-/// and delivers text to `target`. Implementations must delete the file.
-public protocol RecordingConsumer: Sendable {
-    func consume(_ recording: RecordedAudio, target: ActivationTarget?) async throws(AudioCaptureError)
 }

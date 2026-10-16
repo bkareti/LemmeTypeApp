@@ -53,6 +53,16 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         set { defaults.set(newValue, forKey: Key.dictationLanguage) }
     }
 
+    public var writingMode: WritingMode {
+        get { defaults.string(forKey: Key.writingMode).flatMap(WritingMode.init(rawValue:)) ?? .exact }
+        set { defaults.set(newValue.rawValue, forKey: Key.writingMode) }
+    }
+
+    public var selectedEngine: RecognitionEngineID? {
+        get { defaults.string(forKey: Key.selectedEngine).map(RecognitionEngineID.init(rawValue:)) }
+        set { defaults.set(newValue?.rawValue, forKey: Key.selectedEngine) }
+    }
+
     private enum Key {
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let dictationShortcut = "dictationShortcut"
@@ -60,5 +70,7 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         static let audioInput = "audioInput"
         static let playsFeedbackSounds = "playsFeedbackSounds"
         static let dictationLanguage = "dictationLanguage"
+        static let writingMode = "writingMode"
+        static let selectedEngine = "selectedEngine"
     }
 }
