@@ -33,3 +33,15 @@ struct ShortcutPreferencesTests {
         #expect(reloaded.activationMode == .toggle)
     }
 }
+
+struct DictationPreferencesTests {
+    @Test func dictationLanguageDefaultsToUSEnglishAndPersists() throws {
+        let suite = "DictationPreferencesTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        #expect(UserDefaultsPreferences(defaults: defaults).dictationLanguage == "en-US")
+        UserDefaultsPreferences(defaults: defaults).dictationLanguage = "en-GB"
+        #expect(UserDefaultsPreferences(defaults: defaults).dictationLanguage == "en-GB")
+    }
+}

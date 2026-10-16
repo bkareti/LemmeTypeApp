@@ -48,11 +48,17 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         set { defaults.set(newValue, forKey: Key.playsFeedbackSounds) }
     }
 
+    public var dictationLanguage: String {
+        get { defaults.string(forKey: Key.dictationLanguage) ?? Self.defaultDictationLanguage }
+        set { defaults.set(newValue, forKey: Key.dictationLanguage) }
+    }
+
     private enum Key {
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let dictationShortcut = "dictationShortcut"
         static let activationMode = "activationMode"
         static let audioInput = "audioInput"
         static let playsFeedbackSounds = "playsFeedbackSounds"
+        static let dictationLanguage = "dictationLanguage"
     }
 }

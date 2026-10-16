@@ -50,7 +50,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
 - Feature code lives in the local package `Packages/LemmeTypeKit`, one target per
   module: `Domain` (models, protocols, state, no OS frameworks), `Support`
   (`Log`, `BuildInfo`, `UserDefaultsPreferences`; depends on Domain), platform modules `Audio` / `Permissions` / `Shortcuts` /
-  `Lifecycle` (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
+  `Lifecycle` / `Recognition` (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
   and `TestSupport` (fakes).
 - The app target (`App/LemmeType`) holds only `LemmeTypeApp` and
   `AppComposition`, the single composition root where concrete OS services are
@@ -78,6 +78,9 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   engine is never called and a cancelled session never succeeds.
   `FakeRecognitionEngine` and `RecognitionEngineContract` (TestSupport) are the
   fake and the reusable contract check every engine's tests must run.
+  Concrete engines live in the `Recognition` module (`AppleSpeechEngine`:
+  `SFSpeechRecognizer`, on-device only; Speech Recognition authorization via
+  `SpeechRecognitionAuthorizing`, separate from `PermissionKind`).
 - Diagnostics: components take `any DiagnosticsRecording` (default
   `DiscardingDiagnostics`); the app shares one `DiagnosticsBuffer`. Event names
   and keys must be literals and values typed (`.id(...)` redacts anything that
@@ -93,7 +96,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech).
 
 ## Planning documents
 

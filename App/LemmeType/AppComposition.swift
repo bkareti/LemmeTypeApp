@@ -3,6 +3,7 @@ import Domain
 import Foundation
 import Lifecycle
 import Permissions
+import Recognition
 import Shortcuts
 import Support
 import SwiftUI
@@ -39,6 +40,9 @@ struct AppComposition {
     var audioDeviceLister: any AudioDeviceListing
     var audioCapture: any AudioCapturing
     var recordingConsumer: any RecordingConsumer = DiscardingRecordingConsumer()
+    var speechAuthorizer: any SpeechRecognitionAuthorizing
+    /// Every installed recognition engine, in recommendation order.
+    var recognitionEngines: [any SpeechRecognitionEngine]
     var diagnostics: DiagnosticsBuffer
     var loginItems: any LoginItemManaging
     var hotKeyRegistrar: any HotKeyRegistering
@@ -63,11 +67,13 @@ struct AppComposition {
     static func live(buildInfo: BuildInfo) -> AppComposition {
         let permissionChecker = SystemPermissionChecker()
         let diagnostics = DiagnosticsBuffer()
+        let preferences = UserDefaultsPreferences()
+        let speechAuthorizer = SystemSpeechAuthorizer()
         return AppComposition(
             mode: .live,
             permissionChecker: permissionChecker,
             permissionRequester: SystemPermissionRequester(),
-            preferences: UserDefaultsPreferences(),
+            preferences: preferences,
             audioDeviceLister: CaptureDeviceLister(),
             audioCapture: AudioCaptureService(
                 source: AVAudioEngineSource(),
@@ -75,6 +81,10 @@ struct AppComposition {
                 permissions: permissionChecker,
                 diagnostics: diagnostics
             ),
+            speechAuthorizer: speechAuthorizer,
+            recognitionEngines: [
+                AppleSpeechEngine(authorizer: speechAuthorizer, language: { preferences.dictationLanguage })
+            ],
             diagnostics: diagnostics,
             loginItems: SystemLoginItemManager(),
             hotKeyRegistrar: CarbonHotKeyRegistrar(),
@@ -113,6 +123,10 @@ struct AppComposition {
                     permissions: permissions,
                     diagnostics: diagnostics
                 ),
+                speechAuthorizer: FakeSpeechAuthorizer(status: .granted),
+                recognitionEngines: [
+                    FakeRecognitionEngine(id: .appleSpeech, script: .init(text: "hello from lemmetype"))
+                ],
                 diagnostics: diagnostics,
                 loginItems: FakeLoginItemManager(status: .disabled),
                 hotKeyRegistrar: CarbonHotKeyRegistrar(),

@@ -7,4 +7,10 @@ public protocol AppPreferences: AnyObject, Sendable {
     var audioInput: AudioInputSelection { get set }
     /// Start/stop sounds; off by default.
     var playsFeedbackSounds: Bool { get set }
+    /// BCP 47 dictation language; English only in the MVP.
+    var dictationLanguage: String { get set }
+}
+
+extension AppPreferences {
+    public static var defaultDictationLanguage: String { "en-US" }
 }
