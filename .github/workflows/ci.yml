@@ -1,0 +1,100 @@
+# CI for every PR and push to main (E1-S8):
+# - build-and-test (required): lint, Debug build, package + hosted unit tests,
+#   and a check that no captured audio was left behind.
+# - ui-tests (non-blocking until proven stable on the hosted runner): XCUITest
+#   smoke tests against fake services.
+# Manual checks that CI cannot do live in docs/testing/manual-acceptance.md.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build-and-test:
+    name: Lint, build, unit tests
+    # `macos-26` / `macos-latest` only ship Xcode 26.x and the macOS 26.x SDKs.
+    # Xcode 27 is only on the `xcode-27` image (arm64, public preview, see
+    # actions/runner-images#14404). Move to a GA label once one ships Xcode 27.
+    runs-on: xcode-27
+    timeout-minutes: 30
+    env:
+      # Must match docs/decisions/0001-platform-baseline.md.
+      XCODE_APP: /Applications/Xcode_27.0.app
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+      HOMEBREW_NO_ANALYTICS: "1"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Select Xcode 27
+        run: |
+          sudo xcode-select --switch "$XCODE_APP"
+          xcodebuild -version
+          xcrun --show-sdk-version --sdk macosx
+
+      - name: Install xcodegen and swiftlint
+        run: |
+          brew install xcodegen swiftlint
+          xcodegen --version
+          swiftlint version
+
+      - name: Check toolchain
+        run: make bootstrap
+
+      - name: Lint
+        run: make lint
+
+      - name: Build
+        run: make build
+
+      - name: Package unit tests
+        run: make test-unit
+
+      - name: App unit tests (hosted)
+        run: make test-app
+
+      - name: No captured audio left behind
+        run: make privacy-check
+
+      # Deliberately no artifact upload: build logs and .xcresult bundles can
+      # carry environment and test details we do not want to retain.
+
+  ui-tests:
+    name: UI smoke tests
+    runs-on: xcode-27
+    timeout-minutes: 40
+    # Hosted macOS runners allow UI automation, but these tests have not yet
+    # run there. Make this job required once it has been green for a week.
+    continue-on-error: true
+    env:
+      XCODE_APP: /Applications/Xcode_27.0.app
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+      HOMEBREW_NO_ANALYTICS: "1"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Select Xcode 27
+        run: sudo xcode-select --switch "$XCODE_APP"
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: UI tests (fake services, no microphone or permissions)
+        run: make test-ui
+
+      - name: No captured audio left behind
+        run: make privacy-check

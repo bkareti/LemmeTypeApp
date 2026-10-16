@@ -27,7 +27,8 @@ struct DiagnosticsPrivacyTests {
         let source = FakeAudioSource(fallsBack: true)
         let storage = AudioSessionStorage(
             directory: FileManager.default.temporaryDirectory
-                .appendingPathComponent("DiagnosticsPrivacyTests-\(UUID().uuidString)", isDirectory: true))
+                .appendingPathComponent(
+                    "LemmeTypeTests-DiagnosticsPrivacyTests-\(UUID().uuidString)", isDirectory: true))
         let capture = AudioCaptureService(
             source: source, storage: storage, permissions: permissions, diagnostics: buffer)
         let coordinator = RecordingCoordinator(
@@ -155,7 +156,7 @@ struct RecoveryGuidanceTests {
                 source: source,
                 storage: AudioSessionStorage(
                     directory: FileManager.default.temporaryDirectory
-                        .appendingPathComponent("RecoveryGuidance-\(UUID().uuidString)")),
+                        .appendingPathComponent("LemmeTypeTests-RecoveryGuidance-\(UUID().uuidString)")),
                 permissions: FakePermissions(statuses: [.microphone: .granted])),
             consumer: DiscardingRecordingConsumer(),
             feedback: SilentFeedback(),

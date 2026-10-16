@@ -4,6 +4,31 @@ Steps that cannot be automated on CI (clean installs, real permission prompts,
 real hardware, other applications). Each story adds its steps here. Record
 results in the PR description as `MA-N: pass/fail — notes`.
 
+## Running the full checklist (release candidates and Epic sign-off)
+
+1. Use a **team-signed** build (`Config/Signing.local.xcconfig`) so macOS keeps
+   permission grants, on a Mac at the minimum supported macOS (26.0) if possible.
+2. Start from a clean install:
+   ```bash
+   tccutil reset Microphone com.lemmetype.LemmeType
+   tccutil reset Accessibility com.lemmetype.LemmeType
+   defaults delete com.lemmetype.LemmeType
+   rm -rf "$TMPDIR/LemmeType"
+   ```
+3. Run MA-1 to MA-18 in order: clean-install onboarding (MA-6) must come
+   before anything that assumes permissions; real-microphone checks are MA-11
+   to MA-13 and MA-14 to MA-17.
+4. Finish with `make privacy-check` and confirm `$TMPDIR/LemmeType/Sessions` is empty.
+
+Results template:
+
+```markdown
+Build: <version (build)> · macOS <version> · <Mac model> · tester <initials> · <date>
+| Check | Result | Notes |
+|---|---|---|
+| MA-1 | pass | |
+```
+
 ## E1-S1 — Project scaffold
 
 **MA-1 Clean checkout builds and tests**
