@@ -36,5 +36,7 @@ recordings/
 # Tooling
 .idea/
 .vscode/
+__pycache__/
+*.py[cod]
 *.log
 coverage/
