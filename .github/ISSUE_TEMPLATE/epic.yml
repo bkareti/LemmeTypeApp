@@ -1,0 +1,47 @@
+name: Epic
+description: Define a product outcome that contains development stories.
+title: "[Epic] "
+labels:
+  - epic
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: Describe the user or business outcome, not a list of implementation tasks.
+    validations:
+      required: true
+  - type: textarea
+    id: value
+    attributes:
+      label: Business value
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: In scope
+    validations:
+      required: true
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Out of scope
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Epic acceptance criteria
+      description: State the observable conditions required to close the epic.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and risks
+  - type: textarea
+    id: children
+    attributes:
+      label: Child stories
+      description: Use GitHub sub-issues; this section may summarize their delivery order.

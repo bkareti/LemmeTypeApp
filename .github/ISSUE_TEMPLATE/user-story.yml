@@ -1,0 +1,69 @@
+name: Development-ready user story
+description: A refined story that can be implemented and accepted independently.
+title: "[Story] "
+labels:
+  - user-story
+  - ready-for-development
+body:
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      value: "As a ..., I want ..., so that ..."
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context and value
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Prefer observable Given/When/Then statements.
+    validations:
+      required: true
+  - type: textarea
+    id: technical_notes
+    attributes:
+      label: Technical notes
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+  - type: input
+    id: dependencies
+    attributes:
+      label: Dependencies
+  - type: dropdown
+    id: estimate
+    attributes:
+      label: Estimate
+      options:
+        - 1 point
+        - 2 points
+        - 3 points
+        - 5 points
+        - 8 points
+        - 13 points
+    validations:
+      required: true
+  - type: checkboxes
+    id: ready
+    attributes:
+      label: Definition of ready
+      options:
+        - label: Acceptance criteria are testable.
+          required: true
+        - label: Dependencies and out-of-scope behavior are understood.
+          required: true
+        - label: Required UX or architecture decisions are linked or included.
+          required: true
