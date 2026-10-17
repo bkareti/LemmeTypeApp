@@ -1,6 +1,6 @@
 import XCTest
 
-/// Settings › Personalize (E4-S4) against the in-memory store.
+/// Settings › Dictation › Replacements (E4-S4) against the in-memory store.
 final class PersonalizationUITests: XCTestCase {
     // swiftlint:disable:next implicitly_unwrapped_optional
     private var app: XCUIApplication!
@@ -20,7 +20,7 @@ final class PersonalizationUITests: XCTestCase {
     func testAddsAndDeletesAReplacement() {
         let window = app.windows["settings"]
         XCTAssertTrue(window.waitForExistence(timeout: 10))
-        let tab = window.tabs["Personalize"]
+        let tab = window.tabs["Dictation"]
         XCTAssertTrue(tab.waitForExistence(timeout: 5))
         tab.click()
 

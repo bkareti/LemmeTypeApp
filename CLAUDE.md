@@ -144,8 +144,8 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   `FilePersonalizationStore` (Support; versioned JSON in Application Support,
   0600, unreadable files moved aside) and held by `PersonalizationModel` (UI).
   The recorder snapshots it into `DictationSession.personalization` at start.
-  Settings › Personalize (`PersonalizeSettingsView`) manages it; the window
-  width is fixed, so Epic 4 settings share that one tab.
+  Settings › Dictation (`DictationTabView`) manages it in segmented sections;
+  the window width is fixed and a ninth tab doesn't fit the CI screen.
   Pipeline order: hints → `SnippetMatcher` (whole utterance) → writing mode →
   `Personalizer` (whole words, longest first, one pass) → `ContextFormatter`.
 - Engine/mode selection (ADR 0016): `DictationSettingsModel` (UI) backs

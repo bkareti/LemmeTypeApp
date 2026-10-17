@@ -40,19 +40,13 @@ public struct SettingsView: View {
                 GeneralSettingsView(model: general)
             }
             Tab(String(localized: "Dictation", bundle: .module), systemImage: "waveform", value: .dictation) {
-                DictationSettingsView(model: dictation)
+                DictationTabView(dictation: dictation, personalization: personalization)
             }
             Tab(String(localized: "Shortcut", bundle: .module), systemImage: "keyboard", value: .shortcut) {
                 ShortcutSettingsView(model: shortcut)
             }
             Tab(String(localized: "Context", bundle: .module), systemImage: "text.cursor", value: .context) {
                 ContextSettingsView(model: context, shortcut: shortcut)
-            }
-            Tab(
-                String(localized: "Personalize", bundle: .module), systemImage: "person.text.rectangle",
-                value: .personalize
-            ) {
-                PersonalizeSettingsView(personalization: personalization)
             }
             Tab(String(localized: "Audio", bundle: .module), systemImage: "mic", value: .audio) {
                 AudioSettingsView(model: audio)
