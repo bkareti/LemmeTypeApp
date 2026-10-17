@@ -10,10 +10,13 @@ public enum EngineSelector {
 
     /// - Parameters:
     ///   - preferred: The user's engine, or `nil` for Automatic.
+    ///   - fallsBackAutomatically: The user approved using another ready
+    ///     engine when theirs isn't ready, instead of being asked.
     ///   - candidates: Every engine in recommendation order with its availability.
     /// - Returns: The engine to use, or why none can be used.
     public static func choose(
         preferred: RecognitionEngineID?,
+        fallsBackAutomatically: Bool = false,
         candidates: [(id: RecognitionEngineID, availability: EngineAvailability)]
     ) -> Choice {
         let ready = candidates.filter { $0.availability.isReady }.map(\.id)
@@ -26,6 +29,7 @@ public enum EngineSelector {
             return choose(preferred: nil, candidates: candidates)
         }
         if chosen.availability.isReady { return .engine(preferred) }
+        if fallsBackAutomatically, let alternative = ready.first { return .engine(alternative) }
         return .unavailable(preferred, chosen.availability, alternatives: ready)
     }
 }

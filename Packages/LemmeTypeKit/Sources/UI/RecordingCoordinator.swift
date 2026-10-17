@@ -39,6 +39,8 @@ public final class RecordingCoordinator {
     /// The writing mode captured when the current recording started; shown
     /// in the overlay and stored with the session.
     public private(set) var activeMode: WritingMode?
+    private var activeLanguage: String?
+    private var activeEnginePreference: EnginePreference?
 
     /// Called when a session ends for any reason, so the shortcut can re-arm.
     public var onSessionEnded: @MainActor () -> Void = {}
@@ -190,6 +192,8 @@ public final class RecordingCoordinator {
         self.target = target
         writingMode = preferences.writingMode  // Settings may have changed it
         activeMode = writingMode
+        activeLanguage = preferences.dictationLanguage
+        activeEnginePreference = preferences.enginePreference
         do {
             let events = try await capture.start(input: preferences.audioInput)
             guard machine.handle(.captureStarted) else {
@@ -233,7 +237,8 @@ public final class RecordingCoordinator {
             feedback.announce(String(localized: "Recording stopped", bundle: .module))
             let session = DictationSession(
                 audio: recording, target: target, mode: activeMode ?? writingMode,
-                language: preferences.dictationLanguage)
+                language: activeLanguage ?? preferences.dictationLanguage,
+                enginePreference: activeEnginePreference ?? preferences.enginePreference)
             self.session = session
             startProcessing(session)
         } catch {
@@ -269,6 +274,8 @@ public final class RecordingCoordinator {
     func finishSession(displayFor duration: Duration) {
         target = nil
         activeMode = nil
+        activeLanguage = nil
+        activeEnginePreference = nil
         recordingStartedAt = nil
         eventsTask?.cancel()
         eventsTask = nil

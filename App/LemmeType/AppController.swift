@@ -11,6 +11,7 @@ final class AppController {
     let permissions: PermissionsModel
     let activation: ActivationController
     let recorder: RecordingCoordinator
+    let dictation: DictationSettingsModel
     let overlay: RecordingOverlayController
     let shortcut: ShortcutSettingsModel
     let navigation: SettingsNavigation
@@ -40,6 +41,7 @@ final class AppController {
         preferences: any AppPreferences,
         activation: ActivationController,
         recorder: RecordingCoordinator,
+        dictation: DictationSettingsModel,
         shortcut: ShortcutSettingsModel,
         navigation: SettingsNavigation,
         diagnostics: any DiagnosticsRecording,
@@ -51,12 +53,16 @@ final class AppController {
         self.preferences = preferences
         self.activation = activation
         self.recorder = recorder
+        self.dictation = dictation
         self.overlay = RecordingOverlayController(coordinator: recorder)
         self.shortcut = shortcut
         self.navigation = navigation
         self.settings = settings
         activation.onCommand = { [weak self] command in self?.handle(command) }
-        recorder.onSessionEnded = { [weak activation] in activation?.sessionEnded() }
+        recorder.onSessionEnded = { [weak activation, weak dictation] in
+            activation?.sessionEnded()
+            dictation?.refreshInBackground()
+        }
         recorder.onOpenSettings = { [weak self] pane in self?.showSettings(pane: pane) }
         recorder.onSaveAudio = { url in AppController.saveCopy(of: url) }
     }
@@ -66,6 +72,7 @@ final class AppController {
             finishSetup: { [weak self] in self?.showOnboarding() },
             chooseShortcut: { [weak self] in self?.showSettings(pane: .shortcut) },
             openSettings: { [weak self] in self?.showSettings() },
+            openDictationSettings: { [weak self] in self?.showSettings(pane: .dictation) },
             showAbout: { [weak self] in self?.showAbout() },
             quit: { [weak self] in self?.quit() }
         )
@@ -77,6 +84,7 @@ final class AppController {
         Task { [audioCapture = recorder.capture] in await audioCapture.purgeLeftovers() }
         Task { [modelAssets] in await modelAssets.removeUnusableFiles() }
         overlay.start()
+        dictation.refreshInBackground()
         diagnostics.record(
             .lifecycle, "app.launched", ["onboardingComplete": .flag(preferences.hasCompletedOnboarding)])
         activation.activate()
@@ -88,6 +96,7 @@ final class AppController {
 
     func applicationBecameActive() {
         permissions.refresh()
+        dictation.refreshInBackground()
     }
 
     func showOnboarding() {

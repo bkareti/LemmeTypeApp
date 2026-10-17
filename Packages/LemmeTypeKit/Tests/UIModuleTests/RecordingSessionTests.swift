@@ -67,7 +67,7 @@ struct RecordingSessionTests {
         #expect(leftoverFiles.isEmpty)
     }
 
-    @Test func writingModeIsCapturedWhenRecordingStarts() async {
+    @Test func settingsAreCapturedWhenRecordingStarts() async {
         let preferences = FakePreferences(writingMode: .clean)
         let coordinator = makeCoordinator(copier: FakeTextDelivery(), preferences: preferences)
         coordinator.handle(.start(FakeTargetCapturer.textEdit))
@@ -75,11 +75,15 @@ struct RecordingSessionTests {
         #expect(coordinator.activeMode == .clean)
 
         preferences.writingMode = .exact  // changed in Settings mid-recording
+        preferences.selectedEngine = .whisper
+        preferences.dictationLanguage = "en-GB"
         source.emitTone(seconds: 0.3)
         coordinator.handle(.stop)
         await coordinator.settle()
 
         #expect(processor.modes == [.clean])
+        #expect(processor.preferences == [.automatic])
+        #expect(processor.languages == ["en-US"])
         #expect(coordinator.activeMode == nil)
     }
 

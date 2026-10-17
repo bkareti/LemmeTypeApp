@@ -8,7 +8,8 @@
 
 - **Session**: each finished recording becomes one `DictationSession` (Domain)
   with its own ID, the activation target, the audio file, the writing mode and
-  language read at that moment, and the engine (fixed when processing first
+  language read at that moment (since E2-S9: when recording *starts*, with the
+  engine preference — ADR 0016), and the engine (fixed when processing first
   picks it). Settings changes therefore only affect later sessions.
 - **Owner**: `RecordingCoordinator` (UI) owns the current session. Processing
   runs in its own task, outside the serial command queue, so Cancel works
@@ -43,4 +44,5 @@
   processing durations — never audio or text.
 - **Interim delivery**: until E2-S7/E2-S8, the new `Delivery` module copies the
   final text to the clipboard (`CopyingTextDelivery`) and reports `.copied`.
+  *Replaced by `DictationTextDelivery` — see ADR 0015.*
 - **Default writing mode** is Exact; the user switches to Clean in Settings (E2-S9).

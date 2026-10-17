@@ -1,3 +1,4 @@
+import Domain
 import SwiftUI
 
 /// Actions the status menu can trigger; supplied by the app's coordinator.
@@ -5,6 +6,7 @@ public struct MenuBarActions {
     public var finishSetup: @MainActor () -> Void
     public var chooseShortcut: @MainActor () -> Void
     public var openSettings: @MainActor () -> Void
+    public var openDictationSettings: @MainActor () -> Void
     public var showAbout: @MainActor () -> Void
     public var quit: @MainActor () -> Void
 
@@ -12,12 +14,14 @@ public struct MenuBarActions {
         finishSetup: @escaping @MainActor () -> Void,
         chooseShortcut: @escaping @MainActor () -> Void,
         openSettings: @escaping @MainActor () -> Void,
+        openDictationSettings: @escaping @MainActor () -> Void,
         showAbout: @escaping @MainActor () -> Void,
         quit: @escaping @MainActor () -> Void
     ) {
         self.finishSetup = finishSetup
         self.chooseShortcut = chooseShortcut
         self.openSettings = openSettings
+        self.openDictationSettings = openDictationSettings
         self.showAbout = showAbout
         self.quit = quit
     }
@@ -29,17 +33,20 @@ public struct MenuBarMenu: View {
     private let permissions: PermissionsModel
     private let shortcut: ShortcutSettingsModel
     private let recorder: RecordingCoordinator
+    private let dictation: DictationSettingsModel
 
     public init(
         actions: MenuBarActions,
         permissions: PermissionsModel,
         shortcut: ShortcutSettingsModel,
-        recorder: RecordingCoordinator
+        recorder: RecordingCoordinator,
+        dictation: DictationSettingsModel
     ) {
         self.actions = actions
         self.permissions = permissions
         self.shortcut = shortcut
         self.recorder = recorder
+        self.dictation = dictation
     }
 
     public var body: some View {
@@ -53,7 +60,22 @@ public struct MenuBarMenu: View {
         } else {
             Text(String(localized: "Dictate: \(shortcut.shortcut.displayString)", bundle: .module))
         }
-        Text(String(localized: "Writing Mode: \(recorder.writingMode.displayName)", bundle: .module))
+        Divider()
+        Picker(
+            String(localized: "Writing Mode: \(dictation.writingMode.displayName)", bundle: .module),
+            selection: Binding(get: { dictation.writingMode }, set: { dictation.setWritingMode($0) })
+        ) {
+            ForEach(WritingMode.allCases, id: \.self) { mode in
+                Text(mode.displayName).tag(mode)
+            }
+        }
+        if dictation.effectiveEngine == nil {
+            Button(String(localized: "No On-Device Engine Ready — Set Up…", bundle: .module)) {
+                actions.openDictationSettings()
+            }
+        } else {
+            Text(dictation.menuEngineSummary)
+        }
         Divider()
         if recorder.state.isCapturing {
             Button(String(localized: "Stop Recording", bundle: .module)) { recorder.requestStop() }

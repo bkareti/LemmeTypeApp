@@ -297,3 +297,21 @@ Record results per app in `docs/testing/insertion-matrix.md`.
    overlay offers **Copy Text** and **Discard**.
 5. With a clipboard manager (Maccy, Raycast) running, repeat step 2: the
    dictated text does not appear in its history (transient marker).
+
+## E2-S9 — Engine and mode selection
+
+**MA-30 Choosing engines and modes**
+1. Settings › Dictation lists Automatic, Apple Speech, and Whisper. Each row
+   shows its status (*Ready*, *Download required*, *Needs Speech Recognition
+   access*, or *Not available on this Mac*), *On this Mac*, its languages, and
+   what it needs installed. Automatic explains which engine it uses.
+2. The status menu shows *Writing Mode: …* and *Engine: Automatic (Apple Speech) ·
+   On this Mac*. Switch the writing mode from the menu; Settings follows.
+3. Select Whisper without installing the model: the pane explains it isn't
+   ready; dictating asks before using Apple Speech. Turn on *use another
+   on-device engine without asking* and dictate again: Apple Speech is used
+   without a prompt.
+4. Start a long dictation, switch the engine in Settings during *Transcribing…*:
+   the current session finishes with the engine it started with.
+5. Revoke Speech Recognition and choose Apple Speech: the pane shows *Needs
+   Speech Recognition access* with **Allow Speech Recognition**.

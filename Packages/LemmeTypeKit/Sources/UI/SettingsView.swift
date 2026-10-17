@@ -3,6 +3,7 @@ import SwiftUI
 /// Root of the settings window.
 public struct SettingsView: View {
     private let general: GeneralSettingsModel
+    private let dictation: DictationSettingsModel
     private let shortcut: ShortcutSettingsModel
     private let audio: AudioSettingsModel
     private let permissions: PermissionsModel
@@ -11,6 +12,7 @@ public struct SettingsView: View {
 
     public init(
         general: GeneralSettingsModel,
+        dictation: DictationSettingsModel,
         shortcut: ShortcutSettingsModel,
         audio: AudioSettingsModel,
         permissions: PermissionsModel,
@@ -18,6 +20,7 @@ public struct SettingsView: View {
         navigation: SettingsNavigation
     ) {
         self.general = general
+        self.dictation = dictation
         self.shortcut = shortcut
         self.audio = audio
         self.permissions = permissions
@@ -29,6 +32,9 @@ public struct SettingsView: View {
         TabView(selection: $navigation.selectedPane) {
             Tab(String(localized: "General", bundle: .module), systemImage: "gearshape", value: .general) {
                 GeneralSettingsView(model: general)
+            }
+            Tab(String(localized: "Dictation", bundle: .module), systemImage: "waveform", value: .dictation) {
+                DictationSettingsView(model: dictation)
             }
             Tab(String(localized: "Shortcut", bundle: .module), systemImage: "keyboard", value: .shortcut) {
                 ShortcutSettingsView(model: shortcut)
@@ -55,6 +61,7 @@ public struct SettingsView: View {
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             general.refresh()
             permissions.refresh()
+            dictation.refreshInBackground()
         }
     }
 }

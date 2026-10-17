@@ -13,10 +13,18 @@ public protocol AppPreferences: AnyObject, Sendable {
     var writingMode: WritingMode { get set }
     /// The user's recognition engine; `nil` means Automatic.
     var selectedEngine: RecognitionEngineID? { get set }
+    /// Use another ready engine, without asking, when the selected one isn't
+    /// ready. Off by default.
+    var fallsBackToReadyEngine: Bool { get set }
     /// What happens when direct insertion is unsupported.
     var clipboardFallback: ClipboardFallbackPolicy { get set }
 }
 
 extension AppPreferences {
+    /// The engine choice to store with a new session.
+    public var enginePreference: EnginePreference {
+        EnginePreference(selected: selectedEngine, fallsBackAutomatically: fallsBackToReadyEngine)
+    }
+
     public static var defaultDictationLanguage: String { "en-US" }
 }
