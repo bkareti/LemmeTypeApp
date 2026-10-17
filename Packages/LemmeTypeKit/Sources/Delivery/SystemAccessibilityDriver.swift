@@ -3,8 +3,9 @@ import ApplicationServices
 import Carbon.HIToolbox
 import Domain
 
-/// `AccessibilityDriving` backed by the macOS Accessibility API. Reads only
-/// role, subrole, character count, and selection range — never a value.
+/// `AccessibilityDriving` backed by the macOS Accessibility API. Delivery reads
+/// only role, subrole, character count, and selection range; bounded text is
+/// read only through `text(in:of:)` for cursor context (ADR 0017).
 public struct SystemAccessibilityDriver: AccessibilityDriving {
     /// An `AXUIElement`: an immutable CF reference that the Accessibility API
     /// allows using from any thread, so sharing it across tasks is safe.
@@ -88,6 +89,16 @@ public struct SystemAccessibilityDriver: AccessibilityDriving {
 
     public func setSelectedText(_ text: String, on handle: Element) -> Bool {
         AXUIElementSetAttributeValue(handle.element, kAXSelectedTextAttribute as CFString, text as CFString) == .success
+    }
+
+    public func text(in range: TextSelection, of handle: Element) -> String? {
+        var cfRange = CFRange(location: range.location, length: range.length)
+        guard let parameter = AXValueCreate(.cfRange, &cfRange) else { return nil }
+        var value: CFTypeRef?
+        let error = AXUIElementCopyParameterizedAttributeValue(
+            handle.element, kAXStringForRangeParameterizedAttribute as CFString, parameter, &value)
+        guard error == .success else { return nil }
+        return value as? String
     }
 
     private func copy(_ attribute: String, of element: AXUIElement) -> CFTypeRef? {

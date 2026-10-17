@@ -14,6 +14,9 @@ public final class FakePreferences: AppPreferences {
         var selectedEngine: RecognitionEngineID?
         var clipboardFallback: ClipboardFallbackPolicy
         var fallsBackToReadyEngine: Bool
+        var usesFormattingContext: Bool
+        var allowsVoiceEditing: Bool
+        var contextExcludedApplications: [String]
     }
 
     private let values: Mutex<Values>
@@ -28,7 +31,10 @@ public final class FakePreferences: AppPreferences {
         writingMode: WritingMode = .exact,
         selectedEngine: RecognitionEngineID? = nil,
         clipboardFallback: ClipboardFallbackPolicy = .default,
-        fallsBackToReadyEngine: Bool = false
+        fallsBackToReadyEngine: Bool = false,
+        usesFormattingContext: Bool = false,
+        allowsVoiceEditing: Bool = true,
+        contextExcludedApplications: [String] = []
     ) {
         values = Mutex(
             Values(
@@ -41,7 +47,10 @@ public final class FakePreferences: AppPreferences {
                 writingMode: writingMode,
                 selectedEngine: selectedEngine,
                 clipboardFallback: clipboardFallback,
-                fallsBackToReadyEngine: fallsBackToReadyEngine
+                fallsBackToReadyEngine: fallsBackToReadyEngine,
+                usesFormattingContext: usesFormattingContext,
+                allowsVoiceEditing: allowsVoiceEditing,
+                contextExcludedApplications: contextExcludedApplications
             ))
     }
 
@@ -93,5 +102,20 @@ public final class FakePreferences: AppPreferences {
     public var fallsBackToReadyEngine: Bool {
         get { values.withLock { $0.fallsBackToReadyEngine } }
         set { values.withLock { $0.fallsBackToReadyEngine = newValue } }
+    }
+
+    public var usesFormattingContext: Bool {
+        get { values.withLock { $0.usesFormattingContext } }
+        set { values.withLock { $0.usesFormattingContext = newValue } }
+    }
+
+    public var allowsVoiceEditing: Bool {
+        get { values.withLock { $0.allowsVoiceEditing } }
+        set { values.withLock { $0.allowsVoiceEditing = newValue } }
+    }
+
+    public var contextExcludedApplications: [String] {
+        get { values.withLock { $0.contextExcludedApplications } }
+        set { values.withLock { $0.contextExcludedApplications = newValue } }
     }
 }

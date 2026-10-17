@@ -112,6 +112,15 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   `ClipboardFallbackPolicy` (paste with change-count-guarded restore via
   `PasteboardAccessing`/`PasteKeystrokePosting`, copy only, or off).
   Changed targets, password fields, and secure input never receive text.
+- Cursor context (ADR 0017): `CursorContextReader` (Domain, generic over
+  `AccessibilityDriving`) reads ≤240 UTF-16 units before / ≤40 after the
+  caret (and, for voice editing, the selection ≤4,000) only inside the
+  shortcut handler via `TargetCapturing.captureTarget(purpose:)`. Checks run
+  policy → trust → element → password field → secure input first.
+  `ContextPolicy`: formatting context off by default, voice editing on,
+  user exclusions, built-in sensitive apps. Result rides on
+  `ActivationTarget.context` (redacted description); diagnostics get the
+  outcome identifier only.
 - Engine/mode selection (ADR 0016): `DictationSettingsModel` (UI) backs
   Settings › Dictation and the status menu. Mode, language, and
   `EnginePreference` are captured when recording starts and stored in the
@@ -134,7 +143,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context).
 
 ## Planning documents
 

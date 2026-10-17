@@ -103,9 +103,15 @@ struct AppComposition {
             diagnostics: diagnostics,
             loginItems: SystemLoginItemManager(),
             hotKeyRegistrar: CarbonHotKeyRegistrar(),
-            targetCapturer: AccessibilityTargetCapturer(),
+            targetCapturer: makeTargetCapturer(preferences: preferences),
             buildInfo: buildInfo
         )
+    }
+
+    /// Reads cursor context at activation only, under the current policy (ADR 0017).
+    private static func makeTargetCapturer(preferences: any AppPreferences) -> AccessibilityTargetCapturer {
+        let reader = CursorContextReader(driver: SystemAccessibilityDriver(), policy: { preferences.contextPolicy })
+        return AccessibilityTargetCapturer(readContext: { reader.read(for: $0, purpose: $1) })
     }
 
     #if DEBUG

@@ -42,9 +42,10 @@ struct DiagnosticsPrivacyTests {
         let target = ActivationTarget(
             processIdentifier: 1, bundleIdentifier: "com.example.\(canaries[3])", applicationName: canaries[3],
             focusedElement: nil)
+        let capturer = try capturerWithContext(target: target)
         let activation = ActivationController(
             registrar: registrar,
-            targetCapturer: FakeTargetCapturer(target: target),
+            targetCapturer: capturer,
             shortcut: .defaultDictation,
             mode: .toggle,
             diagnostics: buffer
@@ -73,6 +74,18 @@ struct DiagnosticsPrivacyTests {
         #expect(text.contains("\"recorder.state\""))
         #expect(text.contains("audio.device-disconnected"))
         #expect(text.contains("activation.start"))
+        #expect(text.contains("\"captured\""))
+    }
+
+    /// E3-S2: surrounding text captured at activation carries a canary too.
+    private func capturerWithContext(target: ActivationTarget) throws -> FakeTargetCapturer {
+        let capturer = FakeTargetCapturer(target: target)
+        let context = try #require(
+            CursorContext(
+                precedingText: canaries[1], followingText: canaries[1],
+                selection: TextSelection(location: 22, length: 0)))
+        capturer.contexts[.formatting] = .captured(context, purpose: .formatting)
+        return capturer
     }
 
     /// One completed session and one that fails on device loss.

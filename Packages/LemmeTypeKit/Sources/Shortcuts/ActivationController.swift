@@ -103,12 +103,16 @@ public final class ActivationController: DictationShortcutControlling {
     private func handle(_ event: ShortcutEvent) {
         switch interpreter.handle(event) {
         case .start:
-            let target = targetCapturer.captureTarget()
+            // The only moment context is read (ADR 0017).
+            let target = targetCapturer.captureTarget(purpose: .formatting)
             armCancel()
             Log.shortcuts.info("Dictation start (\(self.mode.rawValue, privacy: .public))")
             diagnostics.record(
                 .shortcut, "activation.start",
-                ["mode": .id(mode.rawValue), "hasFocusedElement": .flag(target?.focusedElement != nil)])
+                [
+                    "mode": .id(mode.rawValue), "hasFocusedElement": .flag(target?.focusedElement != nil),
+                    "context": .id(target?.context.identifier ?? ContextCapture.notRequested.identifier),
+                ])
             onCommand(.start(target))
         case .stop:
             disarmCancel()

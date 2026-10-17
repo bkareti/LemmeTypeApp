@@ -1,8 +1,8 @@
 import Domain
 import Synchronization
 
-/// A text field in an imaginary app. Holds only a character count and a
-/// selection, like the metadata the real driver may read.
+/// A text field in an imaginary app. Exposes a character count, a selection,
+/// and (unless `exposesText` is off) bounded text ranges, like the real driver.
 public final class FakeTextElement: FocusedElementReference, Sendable {
     public struct Behavior: Sendable {
         public var isSecure = false
@@ -15,6 +15,10 @@ public final class FakeTextElement: FocusedElementReference, Sendable {
         public var exposesCount = true
         /// The change becomes visible only after this many reads.
         public var readsBeforeChangeIsVisible = 0
+        /// Text ranges are readable (`AXStringForRange`).
+        public var exposesText = true
+        /// Returns this many extra characters for every range (a misbehaving app).
+        public var overreadsBy = 0
 
         public init() {}
     }
@@ -24,6 +28,7 @@ public final class FakeTextElement: FocusedElementReference, Sendable {
         var selection: TextSelection
         var behavior: Behavior
         var writes: [String] = []
+        var textReads: [TextSelection] = []
         var pastes: [String] = []
         var pendingReads = 0
         var visibleCount: Int?
@@ -53,6 +58,14 @@ public final class FakeTextElement: FocusedElementReference, Sendable {
     /// Text received through ⌘V.
     public var pastes: [String] { state.withLock { $0.pastes } }
 
+    /// Ranges read through `text(in:of:)`, in order.
+    public var textReads: [TextSelection] { state.withLock { $0.textReads } }
+
+    /// Moves the selection, as the user would.
+    public func select(_ selection: TextSelection) {
+        state.withLock { $0.selection = selection }
+    }
+
     public func setText(_ text: String) {
         state.withLock {
             $0.text = text
@@ -75,6 +88,17 @@ public final class FakeTextElement: FocusedElementReference, Sendable {
 
     var selection: TextSelection? {
         state.withLock { $0.behavior.exposesCount ? $0.selection : nil }
+    }
+
+    func text(in range: TextSelection) -> String? {
+        state.withLock { state in
+            state.textReads.append(range)
+            guard state.behavior.exposesText else { return nil }
+            let units = Array(state.text.utf16)
+            guard range.location >= 0, range.location + range.length <= units.count else { return nil }
+            let end = min(units.count, range.location + range.length + state.behavior.overreadsBy)
+            return String(decoding: units[range.location..<end], as: UTF16.self)
+        }
     }
 
     func write(_ inserted: String) -> Bool {
@@ -146,9 +170,11 @@ public final class FakeAccessibilityDriver: AccessibilityDriving {
     public var readSecureField: Bool { state.withLock { $0.readSecureField } }
 
     /// A target captured with `element` focused, as the shortcut would capture it.
-    public static func target(for element: FakeTextElement?, processIdentifier: Int32 = 4242) -> ActivationTarget {
+    public static func target(
+        for element: FakeTextElement?, processIdentifier: Int32 = 4242, bundleIdentifier: String = "com.example.Editor"
+    ) -> ActivationTarget {
         ActivationTarget(
-            processIdentifier: element?.processIdentifier ?? processIdentifier, bundleIdentifier: "com.example.Editor",
+            processIdentifier: element?.processIdentifier ?? processIdentifier, bundleIdentifier: bundleIdentifier,
             applicationName: "Editor", focusedElement: element)
     }
 
@@ -188,6 +214,11 @@ public final class FakeAccessibilityDriver: AccessibilityDriving {
     public func setSelectedText(_ text: String, on element: FakeTextElement) -> Bool {
         noteRead(element)
         return element.write(text)
+    }
+
+    public func text(in range: TextSelection, of element: FakeTextElement) -> String? {
+        noteRead(element)
+        return element.text(in: range)
     }
 
     private func noteRead(_ element: FakeTextElement) {
