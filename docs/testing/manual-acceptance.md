@@ -15,7 +15,7 @@ results in the PR description as `MA-N: pass/fail — notes`.
    defaults delete com.lemmetype.LemmeType
    rm -rf "$TMPDIR/LemmeType"
    ```
-3. Run MA-1 to MA-42 in order: clean-install onboarding (MA-6) must come
+3. Run MA-1 to MA-44 in order: clean-install onboarding (MA-6) must come
    before anything that assumes permissions; real-microphone checks are MA-11
    to MA-13 and MA-14 to MA-17.
 4. Finish with `make privacy-check` and confirm `$TMPDIR/LemmeType/Sessions` is empty.
@@ -473,4 +473,31 @@ Record results per app in `docs/testing/insertion-matrix.md`.
 4. Import a text file renamed `.json`: "This isn’t a LemmeType personalization
    file." and nothing changes.
 5. Diagnostics › Copy: only `personalization.*` events with counts appear.
+
+## E5-S1/S2/S3 — Model catalog, Models pane, verification
+
+**MA-43 Choosing and downloading models**
+1. Settings › Dictation › Models lists Whisper Tiny, Base, and Small with tier,
+   download size, memory, English, the Apple silicon/8 GB requirement, and the
+   fit for this Mac (Small says more memory is recommended below 16 GB).
+2. *Download…* Tiny: the confirmation names Hugging Face, the sizes, the
+   licence, and the fit. Download; the row shows progress, then *Installed and
+   verified*. Disk used and free space update.
+3. Whisper model › *Whisper Small* while Small isn't installed: Settings ›
+   Dictation › Engine shows Whisper needs a download; dictation with Whisper
+   asks to choose another engine instead of silently using Tiny.
+4. Remove Tiny: the row returns to *Not downloaded* and the engine state
+   updates without reopening Settings.
+
+**MA-44 Integrity and interrupted downloads**
+1. With Base installed, quit LemmeType and change one byte of
+   `~/Library/Application Support/LemmeType/Models/whisper-base-en/ggml-base.en/ggml-base.en.bin`
+   (`printf 'x' | dd of=<file> bs=1 seek=100 conv=notrunc`). Relaunch and
+   dictate with Whisper: it is not used; Models shows Base as failed
+   verification and offers *Download…*. Diagnostics show `model.integrity-failed`.
+2. Start downloading Small, quit with ⌘Q mid-way: quitting waits a moment.
+   Relaunch: Small shows *Paused at …*; *Resume* continues from there.
+3. Start a download and turn Wi-Fi off for 3 seconds, then on: the download
+   continues (automatic retry). Turn Wi-Fi off for a minute: the row shows the
+   failure with *Resume*; with Wi-Fi back, *Resume* finishes it.
 

@@ -114,6 +114,31 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         set { defaults.set(newValue, forKey: Key.contextExcludedApplications) }
     }
 
+    public var whisperModel: WhisperModelChoice {
+        get {
+            guard let raw = defaults.string(forKey: Key.whisperModel), raw != "automatic" else { return .automatic }
+            return .specific(ModelAssetID(rawValue: raw))
+        }
+        set {
+            switch newValue {
+            case .automatic: defaults.set("automatic", forKey: Key.whisperModel)
+            case .specific(let id): defaults.set(id.rawValue, forKey: Key.whisperModel)
+            }
+        }
+    }
+
+    public var performanceProfile: PerformanceProfile {
+        get {
+            defaults.string(forKey: Key.performanceProfile).flatMap(PerformanceProfile.init(rawValue:)) ?? .automatic
+        }
+        set { defaults.set(newValue.rawValue, forKey: Key.performanceProfile) }
+    }
+
+    public var modelIdleUnload: IdleUnloadPolicy {
+        get { defaults.string(forKey: Key.modelIdleUnload).flatMap(IdleUnloadPolicy.init(identifier:)) ?? .default }
+        set { defaults.set(newValue.identifier, forKey: Key.modelIdleUnload) }
+    }
+
     private enum Key {
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let dictationShortcut = "dictationShortcut"
@@ -130,5 +155,8 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         static let allowsVoiceEditing = "allowsVoiceEditing"
         static let voiceEditShortcut = "voiceEditShortcut"
         static let contextExcludedApplications = "contextExcludedApplications"
+        static let whisperModel = "whisperModel"
+        static let performanceProfile = "performanceProfile"
+        static let modelIdleUnload = "modelIdleUnload"
     }
 }

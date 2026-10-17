@@ -5,18 +5,25 @@ import whisper
 
 /// Loads Whisper models. The whisper.cpp edge, replaceable in tests.
 protocol WhisperRuntime: Sendable {
-    func loadModel(at url: URL) throws(RecognitionError) -> any WhisperModel
+    func loadModel(at url: URL, usesGPU: Bool) throws(RecognitionError) -> any WhisperModel
+}
+
+/// Per-call inference settings.
+struct WhisperInference: Equatable, Sendable {
+    var language: String
+    /// Primes the decoder with expected words (vocabulary, E4-S2).
+    var prompt: String?
+    /// From the performance plan (E5-S5).
+    var threads: Int
 }
 
 /// A loaded model. Memory is released when the last reference goes away.
 protocol WhisperModel: AnyObject, Sendable {
     /// Blocking inference over 16 kHz mono samples. Returns
     /// `RecognitionError.cancelled` soon after `shouldAbort` returns true.
-    /// `prompt` primes the decoder with expected words (vocabulary, E4-S2).
     func transcribe(
         _ samples: [Float],
-        language: String,
-        prompt: String?,
+        _ inference: WhisperInference,
         shouldAbort: @escaping @Sendable () -> Bool,
         progress: @escaping @Sendable (Double) -> Void
     ) throws(RecognitionError) -> [TranscriptSegment]
@@ -34,11 +41,11 @@ final class AbortFlag: Sendable {
 }
 
 struct WhisperCppRuntime: WhisperRuntime {
-    func loadModel(at url: URL) throws(RecognitionError) -> any WhisperModel {
+    func loadModel(at url: URL, usesGPU: Bool) throws(RecognitionError) -> any WhisperModel {
         // Silence whisper.cpp's own logging (it would go to stderr).
         whisper_log_set({ _, _, _ in }, nil)
         var parameters = whisper_context_default_params()
-        parameters.use_gpu = true
+        parameters.use_gpu = usesGPU
         guard let context = url.path.withCString({ whisper_init_from_file_with_params($0, parameters) }) else {
             throw .modelLoadFailed
         }
@@ -63,11 +70,11 @@ final class WhisperCppModel: WhisperModel, @unchecked Sendable {
 
     func transcribe(
         _ samples: [Float],
-        language: String,
-        prompt: String?,
+        _ inference: WhisperInference,
         shouldAbort: @escaping @Sendable () -> Bool,
         progress: @escaping @Sendable (Double) -> Void
     ) throws(RecognitionError) -> [TranscriptSegment] {
+        let prompt = inference.prompt
         lock.lock()
         defer { lock.unlock() }
         let callbacks = Callbacks(shouldAbort: shouldAbort, progress: progress)
@@ -80,7 +87,7 @@ final class WhisperCppModel: WhisperModel, @unchecked Sendable {
         parameters.print_special = false
         parameters.translate = false
         parameters.no_context = true
-        parameters.n_threads = Int32(max(1, min(8, ProcessInfo.processInfo.activeProcessorCount - 2)))
+        parameters.n_threads = Int32(max(1, inference.threads))
         parameters.abort_callback = { data in
             guard let data else { return false }
             return Unmanaged<Callbacks>.fromOpaque(data).takeUnretainedValue().shouldAbort()
@@ -94,7 +101,7 @@ final class WhisperCppModel: WhisperModel, @unchecked Sendable {
 
         // C strings live only for the call; whisper.cpp copies what it keeps.
         let status = withExtendedLifetime(callbacks) {
-            language.withCString { languageCode in
+            inference.language.withCString { languageCode in
                 (prompt ?? "").withCString { promptText in
                     parameters.language = languageCode
                     parameters.initial_prompt = prompt == nil ? nil : promptText

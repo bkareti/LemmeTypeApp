@@ -5,6 +5,8 @@ import SwiftUI
 /// happens when text can't be inserted (E2-S9).
 struct DictationSettingsView: View {
     @Bindable var model: DictationSettingsModel
+    /// Opens Settings › Dictation › Models, which manages downloads (E5-S2).
+    var showModels: () -> Void = {}
 
     var body: some View {
         Form {
@@ -116,24 +118,26 @@ struct DictationSettingsView: View {
 
     // MARK: Models
 
-    @ViewBuilder
     private var modelSection: some View {
-        let downloadable = model.rows.compactMap { row -> (EngineRow, ModelAsset)? in
-            guard case .downloadable(let id) = row.assets, let asset = ModelCatalog.asset(id) else { return nil }
-            return (row, asset)
-        }
-        if !downloadable.isEmpty {
-            Section(String(localized: "Downloadable models", bundle: .module)) {
-                ForEach(downloadable, id: \.1.id) { row, asset in
-                    ModelRow(model: model, row: row, asset: asset)
-                }
-                if let error = model.modelError {
-                    Text(error.userMessage)
-                        .foregroundStyle(.red)
-                        .accessibilityIdentifier("dictation.model.error")
-                }
+        Section(String(localized: "Downloadable models", bundle: .module)) {
+            HStack {
+                Text(modelSummary)
+                    .accessibilityIdentifier("dictation.model.summary")
+                Spacer()
+                Button(String(localized: "Manage Models…", bundle: .module), action: showModels)
+                    .accessibilityIdentifier("dictation.models.manage")
             }
         }
+    }
+
+    private var modelSummary: String {
+        let missing = model.rows.filter { row in
+            if case .downloadable = row.assets { return !row.isReady }
+            return false
+        }
+        return missing.isEmpty
+            ? String(localized: "Whisper models are downloaded and verified in Models.", bundle: .module)
+            : String(localized: "Whisper needs a model download. Choose one in Models.", bundle: .module)
     }
 
     // MARK: Delivery
@@ -224,84 +228,5 @@ private struct BlockedEngineNotice: View {
                 Button(String(localized: "Use Automatic", bundle: .module)) { model.selectEngine(nil) }
             }
         }
-    }
-}
-
-/// Download, progress, pause/resume, and removal for one catalog model.
-private struct ModelRow: View {
-    let model: DictationSettingsModel
-    let row: EngineRow
-    let asset: ModelAsset
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(asset.displayName)
-                    Text(
-                        String(
-                            localized:
-                                "\(asset.downloadBytes.formatted(.byteCount(style: .file))) · \(asset.license) licence · used by \(row.id.displayName)",
-                            bundle: .module)
-                    )
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                }
-                Spacer()
-                buttons
-            }
-            if let fraction = row.model?.fractionCompleted {
-                ProgressView(value: fraction)
-                    .accessibilityLabel(Text(String(localized: "Download progress", bundle: .module)))
-            }
-            Text(row.model.map(\.statusTitle) ?? row.availability.statusTitle)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .accessibilityIdentifier("dictation.model.\(asset.id.rawValue).status")
-            if case .unsupported(let reason) = row.availability {
-                Text(reason.explanation)
-                    .font(.caption)
-                    .foregroundStyle(.orange)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var buttons: some View {
-        switch row.model ?? .notInstalled {
-        case .notInstalled, .failed:
-            Button(String(localized: "Download…", bundle: .module)) {
-                Task { await model.offerDownload(of: asset.id) }
-            }
-            .disabled(isUnsupported)
-            .accessibilityIdentifier("dictation.model.\(asset.id.rawValue).download")
-        case .downloading:
-            Button(String(localized: "Pause", bundle: .module)) { Task { await model.pauseDownload(of: asset.id) } }
-                .accessibilityIdentifier("dictation.model.\(asset.id.rawValue).pause")
-        case .paused:
-            Button(String(localized: "Resume", bundle: .module)) { model.resumeDownload(of: asset.id) }
-                .accessibilityIdentifier("dictation.model.\(asset.id.rawValue).resume")
-            removeButton
-        case .verifying:
-            ProgressView().controlSize(.small)
-        case .installed:
-            Button(String(localized: "Free Memory", bundle: .module)) {
-                Task { await model.unloadEngine(using: asset.id) }
-            }
-            .help(String(localized: "Unloads the model until the next dictation that uses it.", bundle: .module))
-            removeButton
-        }
-    }
-
-    private var removeButton: some View {
-        Button(String(localized: "Remove", bundle: .module), role: .destructive) {
-            Task { await model.removeModel(asset.id) }
-        }
-        .accessibilityIdentifier("dictation.model.\(asset.id.rawValue).remove")
-    }
-
-    private var isUnsupported: Bool {
-        if case .unsupported = row.availability { return true }
-        return false
     }
 }

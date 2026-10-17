@@ -99,6 +99,13 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   and SHA-256. `ModelAssetStore` (ModelAssets) stages, verifies, activates,
   and removes them; `URLSessionModelDownloader` is the only network code in
   the app (lint exception in that file only) and needs a `ModelDownloadConsent`.
+  Model management (ADR 0022): the catalog has Whisper Tiny/Base/Small
+  (English) with tier, memory, and `ModelFit` per Mac. `WhisperEngine` runs
+  the `WhisperModelChoice` (Automatic = first installed in the
+  `PerformancePlan` order) with the plan's threads/GPU, and loads only
+  `verifiedFile` (SHA-256 once per launch; a modified file is deleted).
+  Transient download failures retry twice; quitting pauses downloads.
+  `ModelsSettingsModel` backs Settings › Dictation › Models.
 - Writing modes (ADR 0014): `TextCleaner` (Domain, pure) is the pipeline's
   `write` step. Exact only
   normalises whitespace; Clean runs ordered, individually switchable
@@ -180,7 +187,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management).
 
 ## Planning documents
 

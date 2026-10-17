@@ -8,6 +8,7 @@ public struct SettingsView: View {
     private let context: ContextSettingsModel
     private let personalization: PersonalizationModel
     private let modes: ModesSettingsModel
+    private let models: ModelsSettingsModel
     private let audio: AudioSettingsModel
     private let permissions: PermissionsModel
     private let diagnostics: DiagnosticsModel
@@ -20,6 +21,7 @@ public struct SettingsView: View {
         context: ContextSettingsModel,
         personalization: PersonalizationModel,
         modes: ModesSettingsModel,
+        models: ModelsSettingsModel,
         audio: AudioSettingsModel,
         permissions: PermissionsModel,
         diagnostics: DiagnosticsModel,
@@ -31,6 +33,7 @@ public struct SettingsView: View {
         self.context = context
         self.personalization = personalization
         self.modes = modes
+        self.models = models
         self.audio = audio
         self.permissions = permissions
         self.diagnostics = diagnostics
@@ -43,7 +46,7 @@ public struct SettingsView: View {
                 GeneralSettingsView(model: general)
             }
             Tab(String(localized: "Dictation", bundle: .module), systemImage: "waveform", value: .dictation) {
-                DictationTabView(dictation: dictation, personalization: personalization, modes: modes)
+                DictationTabView(dictation: dictation, personalization: personalization, modes: modes, models: models)
             }
             Tab(String(localized: "Shortcut", bundle: .module), systemImage: "keyboard", value: .shortcut) {
                 ShortcutSettingsView(model: shortcut)
