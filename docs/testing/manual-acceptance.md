@@ -15,7 +15,7 @@ results in the PR description as `MA-N: pass/fail — notes`.
    defaults delete com.lemmetype.LemmeType
    rm -rf "$TMPDIR/LemmeType"
    ```
-3. Run MA-1 to MA-42 in order: clean-install onboarding (MA-6) must come
+3. Run MA-1 to MA-46 in order: clean-install onboarding (MA-6) must come
    before anything that assumes permissions; real-microphone checks are MA-11
    to MA-13 and MA-14 to MA-17.
 4. Finish with `make privacy-check` and confirm `$TMPDIR/LemmeType/Sessions` is empty.
@@ -473,4 +473,63 @@ Record results per app in `docs/testing/insertion-matrix.md`.
 4. Import a text file renamed `.json`: "This isn’t a LemmeType personalization
    file." and nothing changes.
 5. Diagnostics › Copy: only `personalization.*` events with counts appear.
+
+## E5-S1/S2/S3 — Model catalog, Models pane, verification
+
+**MA-43 Choosing and downloading models**
+1. Settings › Dictation › Models lists Whisper Tiny, Base, and Small with tier,
+   download size, memory, English, the Apple silicon/8 GB requirement, and the
+   fit for this Mac (Small says more memory is recommended below 16 GB).
+2. *Download…* Tiny: the confirmation names Hugging Face, the sizes, the
+   licence, and the fit. Download; the row shows progress, then *Installed and
+   verified*. Disk used and free space update.
+3. Whisper model › *Whisper Small* while Small isn't installed: Settings ›
+   Dictation › Engine shows Whisper needs a download; dictation with Whisper
+   asks to choose another engine instead of silently using Tiny.
+4. Remove Tiny: the row returns to *Not downloaded* and the engine state
+   updates without reopening Settings.
+
+**MA-44 Integrity and interrupted downloads**
+1. With Base installed, quit LemmeType and change one byte of
+   `~/Library/Application Support/LemmeType/Models/whisper-base-en/ggml-base.en/ggml-base.en.bin`
+   (`printf 'x' | dd of=<file> bs=1 seek=100 conv=notrunc`). Relaunch and
+   dictate with Whisper: it is not used; Models shows Base as failed
+   verification and offers *Download…*. Diagnostics show `model.integrity-failed`.
+2. Start downloading Small, quit with ⌘Q mid-way: quitting waits a moment.
+   Relaunch: Small shows *Paused at …*; *Resume* continues from there.
+3. Start a download and turn Wi-Fi off for 3 seconds, then on: the download
+   continues (automatic retry). Turn Wi-Fi off for a minute: the row shows the
+   failure with *Resume*; with Wi-Fi back, *Resume* finishes it.
+
+## E5-S4/S5/S6 — Residency, profiles, and system conditions
+
+**MA-45 Memory, heat, power, and disk**
+1. Activity Monitor › Memory: after launch LemmeType holds no model (well under
+   the model's size). Dictate with Whisper: memory rises while recording
+   (warm-up) and the text arrives without an extra load pause.
+2. With Settings › Models › *Unload models after* = 1 minute, wait a minute
+   after dictating: memory drops; Diagnostics show `model.unloaded` with
+   `reason: idle`. Dictate again: it loads again.
+3. Memory pressure: run `sudo memory_pressure -S -l warn` (or `-l critical`)
+   right after dictating: `model.unloaded` with `reason: memory-pressure`
+   follows within a second. Start a long dictation, trigger pressure while it
+   is processing: the text is still delivered, then the model is unloaded.
+4. Turn on Low Power Mode (Battery settings): Settings › Models says *Using
+   Low Power because Low Power Mode is on*; with Tiny installed, Automatic uses
+   Tiny. Turn it off: Balanced again.
+5. Heat (if a sustained load can raise the thermal state to serious, e.g. a
+   long video export): the Models pane says performance is reduced to keep the
+   Mac cool and new sessions use Low Power. Not reproducible on demand; record
+   when observed.
+6. Fill the disk until less than 100 MB is free (a disk image works:
+   `hdiutil create -size 150m -fs APFS -volname Tiny tiny.dmg`, then point
+   `TMPDIR` at it when launching from Terminal): pressing the shortcut shows
+   *Not enough disk space to record* and nothing is recorded.
+
+**MA-46 Profiles and measured performance**
+1. Settings › Models › Profile: each choice shows its plain-language summary.
+   Best Accuracy with Small installed uses Small; Low Power never warms up.
+2. `scripts/run-recognition-benchmark.sh` with Tiny, Base, and Small installed
+   writes three reports; record load time, memory, real-time factor, and WER
+   per model in `performance-thresholds.md` › Recorded runs.
 

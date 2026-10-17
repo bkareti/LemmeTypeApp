@@ -11,6 +11,15 @@ public struct ModelAssetID: RawRepresentable, Hashable, Codable, Sendable, Custo
     public var description: String { rawValue }
 
     public static let whisperBaseEnglish = ModelAssetID(rawValue: "whisper-base-en")
+    public static let whisperTinyEnglish = ModelAssetID(rawValue: "whisper-tiny-en")
+    public static let whisperSmallEnglish = ModelAssetID(rawValue: "whisper-small-en")
+}
+
+/// Where a model sits between speed and accuracy (E5-S1). Raw values are stable.
+public enum ModelTier: String, CaseIterable, Codable, Sendable {
+    case fastest
+    case balanced
+    case mostAccurate = "most-accurate"
 }
 
 /// One file of a model, pinned by size and SHA-256 digest.
@@ -44,6 +53,9 @@ public struct ModelAsset: Equatable, Sendable, Identifiable {
     public let license: String
     public let licenseURL: URL
     public let hardware: HardwareRequirement
+    public let tier: ModelTier
+    /// Approximate memory in use while loaded (whisper.cpp's published figures).
+    public let runtimeMemoryBytes: UInt64
 
     public init(
         id: ModelAssetID,
@@ -54,8 +66,12 @@ public struct ModelAsset: Equatable, Sendable, Identifiable {
         languages: [String],
         license: String,
         licenseURL: URL,
-        hardware: HardwareRequirement
+        hardware: HardwareRequirement,
+        tier: ModelTier = .balanced,
+        runtimeMemoryBytes: UInt64 = 0
     ) {
+        self.tier = tier
+        self.runtimeMemoryBytes = runtimeMemoryBytes
         self.id = id
         self.displayName = displayName
         self.version = version
@@ -79,10 +95,13 @@ public struct ModelAsset: Equatable, Sendable, Identifiable {
 public struct HardwareRequirement: Equatable, Sendable {
     public let requiresAppleSilicon: Bool
     public let minimumMemoryBytes: UInt64
+    /// Below this the model runs but competes with other apps for memory.
+    public let recommendedMemoryBytes: UInt64
 
-    public init(requiresAppleSilicon: Bool, minimumMemoryBytes: UInt64) {
+    public init(requiresAppleSilicon: Bool, minimumMemoryBytes: UInt64, recommendedMemoryBytes: UInt64? = nil) {
         self.requiresAppleSilicon = requiresAppleSilicon
         self.minimumMemoryBytes = minimumMemoryBytes
+        self.recommendedMemoryBytes = max(minimumMemoryBytes, recommendedMemoryBytes ?? minimumMemoryBytes)
     }
 
     /// The reason this Mac cannot run the model, if any.
@@ -90,6 +109,35 @@ public struct HardwareRequirement: Equatable, Sendable {
         if requiresAppleSilicon && !hardware.isAppleSilicon { return .hardware }
         if hardware.physicalMemoryBytes < minimumMemoryBytes { return .insufficientMemory }
         return nil
+    }
+
+    /// How well this Mac suits the model (E5-S1).
+    public func fit(for hardware: HardwareProfile) -> ModelFit {
+        if let reason = unsupportedReason(for: hardware) { return .unsupported(reason) }
+        return hardware.physicalMemoryBytes < recommendedMemoryBytes ? .supported : .recommended
+    }
+}
+
+/// Whether a model suits this Mac.
+public enum ModelFit: Equatable, Sendable {
+    /// Meets the recommended memory.
+    case recommended
+    /// Runs, but below the recommended memory.
+    case supported
+    case unsupported(UnsupportedReason)
+
+    public var canRun: Bool {
+        if case .unsupported = self { return false }
+        return true
+    }
+
+    /// Stable lowercase name for diagnostics.
+    public var identifier: String {
+        switch self {
+        case .recommended: "recommended"
+        case .supported: "supported"
+        case .unsupported(let reason): "unsupported.\(reason.rawValue)"
+        }
     }
 }
 
@@ -196,8 +244,13 @@ public enum ModelAssetError: LemmeTypeError, Equatable {
 /// Downloads, verifies, and removes catalog models.
 public protocol ModelAssetManaging: Sendable {
     func state(of asset: ModelAssetID) async -> ModelInstallState
-    /// The verified, active file for `asset`, or `nil` when not installed.
+    /// The active file for `asset`, or `nil` when not installed. Cheap; for
+    /// availability checks.
     func installedFile(for asset: ModelAssetID, named name: String) async -> URL?
+    /// The active file after checking its size and SHA-256 against the
+    /// catalog — once per launch unless the file changes (E5-S3). A mismatch
+    /// deletes the active copy and returns `nil`. Use before loading a model.
+    func verifiedFile(for asset: ModelAssetID, named name: String) async -> URL?
     /// Free space on the models volume.
     func availableBytes() async -> Int64
     /// Downloads (resuming a paused download when possible), verifies every

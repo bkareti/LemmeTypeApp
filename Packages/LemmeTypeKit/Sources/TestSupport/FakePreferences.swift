@@ -19,6 +19,9 @@ public final class FakePreferences: AppPreferences {
         var allowsVoiceEditing: Bool
         var voiceEditShortcut: KeyboardShortcut?
         var contextExcludedApplications: [String]
+        var whisperModel: WhisperModelChoice = .automatic
+        var performanceProfile: PerformanceProfile = .automatic
+        var modelIdleUnload: IdleUnloadPolicy = .default
     }
 
     private let values: Mutex<Values>
@@ -126,6 +129,21 @@ public final class FakePreferences: AppPreferences {
     public var voiceEditShortcut: KeyboardShortcut? {
         get { values.withLock { $0.voiceEditShortcut } }
         set { values.withLock { $0.voiceEditShortcut = newValue } }
+    }
+
+    public var whisperModel: WhisperModelChoice {
+        get { values.withLock { $0.whisperModel } }
+        set { values.withLock { $0.whisperModel = newValue } }
+    }
+
+    public var performanceProfile: PerformanceProfile {
+        get { values.withLock { $0.performanceProfile } }
+        set { values.withLock { $0.performanceProfile = newValue } }
+    }
+
+    public var modelIdleUnload: IdleUnloadPolicy {
+        get { values.withLock { $0.modelIdleUnload } }
+        set { values.withLock { $0.modelIdleUnload = newValue } }
     }
 
     public var contextExcludedApplications: [String] {

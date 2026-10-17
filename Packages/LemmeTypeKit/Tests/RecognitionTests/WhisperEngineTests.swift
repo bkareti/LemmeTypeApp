@@ -30,7 +30,15 @@ final class FakeWhisperRuntime: WhisperRuntime {
     var loadCount: Int { state.withLock { $0.loads } }
     var liveModels: Int { state.withLock { $0.live } }
 
-    func loadModel(at url: URL) throws(RecognitionError) -> any WhisperModel {
+    private let loads = Mutex<[(url: URL, usesGPU: Bool)]>([])
+    /// The file and GPU setting of every load, in order.
+    var loadedFiles: [String] { loads.withLock { $0.map(\.url.lastPathComponent) } }
+    var loadedWithGPU: [Bool] { loads.withLock { $0.map(\.usesGPU) } }
+    fileprivate let threads = Mutex<[Int]>([])
+    var inferenceThreads: [Int] { threads.withLock { $0 } }
+
+    func loadModel(at url: URL, usesGPU: Bool) throws(RecognitionError) -> any WhisperModel {
+        loads.withLock { $0.append((url, usesGPU)) }
         if loadDelay > .zero {
             Thread.sleep(
                 forTimeInterval: Double(loadDelay.components.seconds)
@@ -67,12 +75,12 @@ final class FakeWhisperRuntime: WhisperRuntime {
 
         func transcribe(
             _ samples: [Float],
-            language: String,
-            prompt: String?,
+            _ inference: WhisperInference,
             shouldAbort: @escaping @Sendable () -> Bool,
             progress: @escaping @Sendable (Double) -> Void
         ) throws(RecognitionError) -> [TranscriptSegment] {
-            runtime.recordPrompt(prompt)
+            runtime.recordPrompt(inference.prompt)
+            runtime.threads.withLock { $0.append(inference.threads) }
             progress(0.5)
             if runtime.inferenceBlocksUntilAborted {
                 while !shouldAbort() {
@@ -133,6 +141,92 @@ struct WhisperEngineTests {
         let prompt = try #require(WhisperEngine.prompt(for: many))
         #expect(prompt.count <= WhisperEngine.maximumPromptLength + "Glossary: .".count)
         #expect(WhisperEngine.prompt(for: []) == nil)
+    }
+
+    // MARK: E5-S1, E5-S3, E5-S5 — model choice, verification, plan
+
+    private func makeEngine(
+        installed: Set<ModelAssetID>, settings: WhisperRunSettings, runtime: FakeWhisperRuntime = FakeWhisperRuntime(),
+        assets: FakeModelAssetManager? = nil
+    ) -> WhisperEngine {
+        let box = SettingsBox(settings)
+        return WhisperEngine(
+            assets: assets ?? FakeModelAssetManager(installed: installed), hardware: Self.appleSilicon16GB,
+            runtime: runtime, settings: { box.value })
+    }
+
+    @Test func existingBaseInstallKeepsWorkingWithDefaults() async throws {
+        defer { fixtures.removeAll() }
+        let runtime = FakeWhisperRuntime()
+        let engine = makeEngine(installed: [.whisperBaseEnglish], settings: WhisperRunSettings(), runtime: runtime)
+        #expect(await engine.availability() == .ready)
+        _ = try await engine.recognize(try fixtures.make(.tone(seconds: 1.5))) { _ in }
+        #expect(runtime.loadedFiles == ["ggml-base.en.bin"])
+    }
+
+    @Test func automaticRunsTheFirstInstalledModelInThePlanOrder() async throws {
+        let runtime = FakeWhisperRuntime()
+        let order: [ModelAssetID] = [.whisperSmallEnglish, .whisperBaseEnglish, .whisperTinyEnglish]
+        let engine = makeEngine(
+            installed: [.whisperTinyEnglish, .whisperBaseEnglish],
+            settings: WhisperRunSettings(choice: .automatic, order: order), runtime: runtime)
+        try await engine.prepare()
+        #expect(runtime.loadedFiles == ["ggml-base.en.bin"])
+    }
+
+    @Test func aChosenModelThatIsNotInstalledIsNeverReplaced() async throws {
+        let runtime = FakeWhisperRuntime()
+        let engine = makeEngine(
+            installed: [.whisperBaseEnglish], settings: WhisperRunSettings(choice: .specific(.whisperSmallEnglish)),
+            runtime: runtime)
+        #expect(await engine.availability() == .assetsMissing)
+        await #expect(throws: RecognitionError.assetsMissing) { try await engine.prepare() }
+        #expect(runtime.loadCount == 0)
+    }
+
+    @Test func aModifiedModelIsNeverLoaded() async throws {
+        let runtime = FakeWhisperRuntime()
+        let assets = FakeModelAssetManager(installed: [.whisperBaseEnglish])
+        assets.tamper(with: .whisperBaseEnglish)
+        let engine = makeEngine(installed: [], settings: WhisperRunSettings(), runtime: runtime, assets: assets)
+        await #expect(throws: RecognitionError.assetsMissing) { try await engine.prepare() }
+        #expect(runtime.loadCount == 0)
+        #expect(await engine.availability() == .assetsMissing)
+    }
+
+    @Test func verificationRunsOnlyWhenLoading() async throws {
+        let assets = FakeModelAssetManager(installed: [.whisperBaseEnglish])
+        let engine = makeEngine(installed: [], settings: WhisperRunSettings(), assets: assets)
+        _ = await engine.availability()
+        #expect(assets.verifyCount == 0)
+        try await engine.prepare()
+        try await engine.prepare()  // already loaded: no second check
+        #expect(assets.verifyCount == 1)
+    }
+
+    @Test func planThreadsAndGPUReachTheRuntimeAndAGPUChangeReloads() async throws {
+        defer { fixtures.removeAll() }
+        let runtime = FakeWhisperRuntime()
+        let box = SettingsBox(WhisperRunSettings(threads: 2, usesGPU: false))
+        let engine = WhisperEngine(
+            assets: FakeModelAssetManager(installed: [.whisperBaseEnglish]), hardware: Self.appleSilicon16GB,
+            runtime: runtime, settings: { box.value })
+        _ = try await engine.recognize(try fixtures.make(.tone(seconds: 1.5))) { _ in }
+        #expect(runtime.inferenceThreads == [2])
+        #expect(runtime.loadedWithGPU == [false])
+
+        box.value = WhisperRunSettings(threads: 6, usesGPU: true)
+        _ = try await engine.recognize(try fixtures.make(.tone(seconds: 1.5))) { _ in }
+        #expect(runtime.loadedWithGPU == [false, true])
+        #expect(runtime.inferenceThreads == [2, 6])
+    }
+
+    @Test func modelsThisMacCantRunAreUnsupported() async {
+        let engine = WhisperEngine(
+            assets: FakeModelAssetManager(),
+            hardware: HardwareProfile(isAppleSilicon: true, physicalMemoryBytes: 4 << 30),
+            runtime: FakeWhisperRuntime())
+        #expect(await engine.availability() == .unsupported(.insufficientMemory))
     }
 
     @Test func missingModelIsAssetsMissing() async throws {
@@ -225,7 +319,22 @@ struct WhisperEngineTests {
 
     @Test func realRuntimeRejectsAMissingModelFile() {
         #expect(throws: RecognitionError.modelLoadFailed) {
-            _ = try WhisperCppRuntime().loadModel(at: URL(fileURLWithPath: "/nonexistent/ggml-base.en.bin"))
+            _ = try WhisperCppRuntime().loadModel(
+                at: URL(fileURLWithPath: "/nonexistent/ggml-base.en.bin"), usesGPU: false)
         }
+    }
+}
+
+/// Settings the test can change between sessions.
+final class SettingsBox: Sendable {
+    private let storage: Mutex<WhisperRunSettings>
+
+    init(_ value: WhisperRunSettings) {
+        storage = Mutex(value)
+    }
+
+    var value: WhisperRunSettings {
+        get { storage.withLock { $0 } }
+        set { storage.withLock { $0 = newValue } }
     }
 }

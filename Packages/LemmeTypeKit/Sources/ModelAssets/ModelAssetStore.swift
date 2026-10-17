@@ -15,19 +15,31 @@ public actor ModelAssetStore: ModelAssetManaging {
     private let catalog: [ModelAsset]
     private let freeSpace: @Sendable (URL) -> Int64
     private let diagnostics: any DiagnosticsRecording
+    private let retryDelays: [Duration]
+    private let sleep: @Sendable (Duration) async -> Void
     private var transient: [ModelAssetID: ModelInstallState] = [:]
+    /// Files verified in this launch, by path, with the size and date seen (E5-S3).
+    private var verified: [String: FileStamp] = [:]
+    /// Models whose active file failed verification; shown until reinstalled.
+    private var corrupted: Set<ModelAssetID> = []
 
+    /// `retryDelays` are the waits before each automatic retry of a transient
+    /// network failure (E5-S3); `sleep` is injectable for tests.
     public init(
         root: URL,
         downloader: any ModelDownloading,
         catalog: [ModelAsset] = ModelCatalog.all,
         freeSpace: @escaping @Sendable (URL) -> Int64 = ModelAssetStore.volumeFreeSpace,
+        retryDelays: [Duration] = [.seconds(2), .seconds(5)],
+        sleep: @escaping @Sendable (Duration) async -> Void = { try? await Task.sleep(for: $0) },
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
     ) {
         self.layout = ModelStorageLayout(root: root)
         self.downloader = downloader
         self.catalog = catalog
         self.freeSpace = freeSpace
+        self.retryDelays = retryDelays
+        self.sleep = sleep
         self.diagnostics = diagnostics
     }
 
@@ -54,6 +66,7 @@ public actor ModelAssetStore: ModelAssetManaging {
         if let state = transient[id] { return state }
         guard let asset = asset(id) else { return .notInstalled }
         if layout.isActive(asset) { return .installed }
+        if corrupted.contains(id) { return .failed(.digestMismatch) }
         let staged = layout.stagedBytes(asset)
         return staged > 0 || layout.hasResumeData(asset)
             ? .paused(receivedBytes: staged, totalBytes: asset.downloadBytes) : .notInstalled
@@ -63,6 +76,29 @@ public actor ModelAssetStore: ModelAssetManaging {
         guard let asset = asset(id), layout.isActive(asset), asset.files.contains(where: { $0.name == name })
         else { return nil }
         return layout.activeDirectory(asset).appendingPathComponent(name)
+    }
+
+    public func verifiedFile(for id: ModelAssetID, named name: String) -> URL? {
+        guard let asset = asset(id), let file = asset.files.first(where: { $0.name == name }),
+            let url = installedFile(for: id, named: name)
+        else { return nil }
+        let stamp = FileStamp(url)
+        if let stamp, verified[url.path] == stamp { return url }
+        if layout.size(of: url) == file.bytes, (try? FileDigest.sha256(of: url)) == file.sha256.lowercased() {
+            verified[url.path] = stamp
+            diagnostics.record(.models, "model.verified", ["asset": .id(id.rawValue)])
+            return url
+        }
+        // Never hand a modified file to the runtime: delete it so the model
+        // shows as needing a fresh download.
+        verified[url.path] = nil
+        try? layout.remove(asset)
+        corrupted.insert(id)
+        diagnostics.record(
+            .models, "model.integrity-failed",
+            ["asset": .id(id.rawValue), "error": .id(ModelAssetError.digestMismatch.identifier)])
+        Log.models.error("Installed model failed verification: \(id.rawValue, privacy: .public)")
+        return nil
     }
 
     public func availableBytes() -> Int64 {
@@ -96,6 +132,7 @@ public actor ModelAssetStore: ModelAssetManaging {
             throw error
         }
         transient[asset.id] = nil
+        corrupted.remove(asset.id)
         diagnostics.record(.models, "model.installed", ["asset": .id(asset.id.rawValue)])
         Log.models.info("Model installed: \(asset.id.rawValue, privacy: .public)")
         progress(.installed)
@@ -118,6 +155,7 @@ public actor ModelAssetStore: ModelAssetManaging {
         }
         try layout.remove(asset)
         transient[id] = nil
+        corrupted.remove(id)
         diagnostics.record(.models, "model.removed", ["asset": .id(asset.id.rawValue)])
         Log.models.info("Model removed: \(asset.id.rawValue, privacy: .public)")
     }
@@ -185,6 +223,7 @@ public actor ModelAssetStore: ModelAssetManaging {
             lastReceived.set(received)
             progress(.downloading(receivedBytes: completedBytes + received, totalBytes: total))
         }
+        var retries = retryDelays[...]
         while true {
             do {
                 try await downloader.download(
@@ -197,6 +236,15 @@ public actor ModelAssetStore: ModelAssetManaging {
                     layout.saveResumeData(data, for: asset, file)
                     return completedBytes + (data == nil ? 0 : lastReceived.value)
                 case .failed(let code, let data):
+                    // A dropped connection is retried from where it stopped.
+                    if Self.isTransient(code), let delay = retries.popFirst(), !Task.isCancelled {
+                        diagnostics.record(.models, "model.download-retry", ["asset": .id(asset.id.rawValue)])
+                        layout.saveResumeData(data, for: asset, file)
+                        await sleep(delay)
+                        if Task.isCancelled { return completedBytes + lastReceived.value }
+                        resumeData = data ?? resumeData
+                        continue
+                    }
                     if data == nil && resumeData != nil {
                         layout.removeResumeData(for: asset, file)
                         resumeData = nil
@@ -225,6 +273,27 @@ public actor ModelAssetStore: ModelAssetManaging {
             .models, "model.install-failed", ["asset": .id(asset.id.rawValue), "error": .id(error.identifier)])
         Log.models.error("Model install failed: \(error.identifier, privacy: .public)")
         progress(.failed(error))
+    }
+}
+
+extension ModelAssetStore {
+    /// Timed out, connection lost, not connected, DNS lookup failed.
+    static func isTransient(_ code: Int) -> Bool {
+        [-1001, -1005, -1009, -1003].contains(code)
+    }
+}
+
+/// Size and modification date of a verified file; a change means verify again.
+private struct FileStamp: Equatable {
+    let bytes: Int64
+    let modified: Date
+
+    init?(_ url: URL) {
+        guard let values = try? url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey]),
+            let bytes = values.fileSize, let modified = values.contentModificationDate
+        else { return nil }
+        self.bytes = Int64(bytes)
+        self.modified = modified
     }
 }
 

@@ -52,6 +52,8 @@ struct AppComposition {
     var textRewriter: any TextRewriting
     /// Vocabulary, replacements, and snippets on disk (ADR 0020).
     var personalizationStore: any PersonalizationStoring
+    /// Memory pressure, heat, and Low Power Mode (E5-S6).
+    var systemConditions: any SystemConditionsMonitoring
     var diagnostics: DiagnosticsBuffer
     var loginItems: any LoginItemManaging
     var hotKeyRegistrar: any HotKeyRegistering
@@ -79,6 +81,7 @@ struct AppComposition {
         let preferences = UserDefaultsPreferences()
         let speechAuthorizer = SystemSpeechAuthorizer()
         let modelAssets = ModelAssetStore.makeDefault(diagnostics: diagnostics)
+        let conditions = SystemConditionsMonitor()
         return AppComposition(
             mode: .live,
             permissionChecker: permissionChecker,
@@ -94,7 +97,9 @@ struct AppComposition {
             speechAuthorizer: speechAuthorizer,
             recognitionEngines: [
                 AppleSpeechEngine(authorizer: speechAuthorizer, language: { preferences.dictationLanguage }),
-                WhisperEngine(assets: modelAssets),
+                WhisperEngine(
+                    assets: modelAssets,
+                    settings: { whisperSettings(preferences: preferences, conditions: conditions.current) }),
             ],
             modelAssets: modelAssets,
             textDelivery: DictationTextDelivery(
@@ -107,6 +112,7 @@ struct AppComposition {
             textCopier: PasteboardTextCopier(),
             textRewriter: FoundationModelsRewriter(),
             personalizationStore: FilePersonalizationStore.makeDefault(diagnostics: diagnostics),
+            systemConditions: conditions,
             diagnostics: diagnostics,
             loginItems: SystemLoginItemManager(),
             hotKeyRegistrar: CarbonHotKeyRegistrar(),
@@ -165,6 +171,7 @@ struct AppComposition {
                 textCopier: delivery,
                 textRewriter: FakeTextRewriter(),
                 personalizationStore: FakePersonalizationStore(),
+                systemConditions: FakeSystemConditions(),
                 diagnostics: diagnostics,
                 loginItems: FakeLoginItemManager(status: .disabled),
                 hotKeyRegistrar: CarbonHotKeyRegistrar(),
@@ -189,7 +196,6 @@ struct AppComposition {
     func makeAppController() -> AppController {
         let permissions = PermissionsModel(
             checker: permissionChecker, requester: permissionRequester, diagnostics: diagnostics)
-        let general = GeneralSettingsModel(loginItems: loginItems, preferences: preferences, buildInfo: buildInfo)
         let activation = makeActivationController()
         let shortcut = ShortcutSettingsModel(controller: activation, preferences: preferences)
         let context = makeContextSettings(shortcut: shortcut)
@@ -197,25 +203,24 @@ struct AppComposition {
             capture: audioCapture, deviceLister: audioDeviceLister, preferences: preferences)
         let navigation = SettingsNavigation()
         let personalization = PersonalizationModel(store: personalizationStore, diagnostics: diagnostics)
-        let recorder = makeRecorder(personalization: personalization)
+        let residency = makeResidency()
+        let recorder = makeRecorder(personalization: personalization, residency: residency)
         let dictation = DictationSettingsModel(
             engines: recognitionEngines, modelAssets: modelAssets, preferences: preferences,
             speechAuthorizer: speechAuthorizer, diagnostics: diagnostics)
-        let modes = ModesSettingsModel(
-            personalization: personalization, preferences: preferences,
-            engines: recognitionEngines.map(\.descriptor.id), languages: dictation.languages,
-            runningApplications: Self.runningApplications, applicationName: Self.applicationName,
-            diagnostics: diagnostics)
+        let modes = makeModes(personalization: personalization, languages: dictation.languages)
+        let models = makeModels(dictation: dictation)
         let diagnosticsModel = DiagnosticsModel(
             buffer: diagnostics, permissions: permissions, shortcut: shortcut, buildInfo: buildInfo)
         let settings = Self.makeSettingsWindow(
             SettingsView(
-                general: general,
+                general: GeneralSettingsModel(loginItems: loginItems, preferences: preferences, buildInfo: buildInfo),
                 dictation: dictation,
                 shortcut: shortcut,
                 context: context,
                 personalization: personalization,
                 modes: modes,
+                models: models,
                 audio: audio,
                 permissions: permissions,
                 diagnostics: diagnosticsModel,
@@ -232,6 +237,9 @@ struct AppComposition {
             context: context,
             personalization: personalization,
             modes: modes,
+            models: models,
+            residency: residency,
+            systemConditions: systemConditions,
             navigation: navigation,
             diagnostics: diagnostics,
             settings: settings
@@ -250,7 +258,9 @@ struct AppComposition {
         )
     }
 
-    private func makeRecorder(personalization: PersonalizationModel) -> RecordingCoordinator {
+    private func makeRecorder(
+        personalization: PersonalizationModel, residency: ModelResidencyController
+    ) -> RecordingCoordinator {
         RecordingCoordinator(
             capture: audioCapture,
             processor: makeDictationProcessor(),
@@ -259,30 +269,9 @@ struct AppComposition {
             speechAuthorizer: speechAuthorizer,
             textCopier: textCopier,
             personalization: { [weak personalization] in personalization?.library ?? .empty },
+            residency: residency,
             diagnostics: diagnostics
         )
-    }
-
-    private func makeContextSettings(shortcut: ShortcutSettingsModel) -> ContextSettingsModel {
-        ContextSettingsModel(
-            preferences: preferences, shortcut: shortcut, rewriter: textRewriter,
-            runningApplications: Self.runningApplications, applicationName: Self.applicationName,
-            diagnostics: diagnostics)
-    }
-
-    /// Regular apps that are running, for Settings › Context's exclusion list.
-    private static func runningApplications() -> [ApplicationIdentity] {
-        NSWorkspace.shared.runningApplications.compactMap { app in
-            guard app.activationPolicy == .regular, let id = app.bundleIdentifier, id != Bundle.main.bundleIdentifier
-            else { return nil }
-            return ApplicationIdentity(bundleIdentifier: id, name: app.localizedName ?? id)
-        }
-    }
-
-    private static func applicationName(_ bundleIdentifier: String) -> String? {
-        NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier).map {
-            FileManager.default.displayName(atPath: $0.path).replacingOccurrences(of: ".app", with: "")
-        }
     }
 
     private static func makeSettingsWindow(_ view: SettingsView) -> ManagedWindowController {

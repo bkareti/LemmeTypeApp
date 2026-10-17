@@ -11,6 +11,8 @@ public final class FakeModelAssetManager: ModelAssetManaging {
         var availableBytes: Int64
         var installCount = 0
         var removeCount = 0
+        var verifyCount = 0
+        var tampered: Set<ModelAssetID> = []
     }
 
     private let state: Mutex<State>
@@ -33,6 +35,12 @@ public final class FakeModelAssetManager: ModelAssetManaging {
 
     public var installCount: Int { state.withLock { $0.installCount } }
     public var removeCount: Int { state.withLock { $0.removeCount } }
+    public var verifyCount: Int { state.withLock { $0.verifyCount } }
+
+    /// The next verification of `asset` fails, as if its file had been modified (E5-S3).
+    public func tamper(with asset: ModelAssetID) {
+        state.withLock { _ = $0.tampered.insert(asset) }
+    }
 
     public func state(of asset: ModelAssetID) async -> ModelInstallState {
         state.withLock { $0.states[asset] ?? .notInstalled }
@@ -41,6 +49,20 @@ public final class FakeModelAssetManager: ModelAssetManaging {
     public func installedFile(for asset: ModelAssetID, named name: String) async -> URL? {
         let installed = state.withLock { $0.states[asset] == .installed }
         return installed ? installedDirectory.appendingPathComponent(name) : nil
+    }
+
+    /// Fails for a tampered model, which then needs a new download.
+    public func verifiedFile(for asset: ModelAssetID, named name: String) async -> URL? {
+        let passed = state.withLock { state -> Bool in
+            guard state.states[asset] == .installed else { return false }
+            state.verifyCount += 1
+            if state.tampered.remove(asset) != nil {
+                state.states[asset] = .failed(.digestMismatch)
+                return false
+            }
+            return true
+        }
+        return passed ? installedDirectory.appendingPathComponent(name) : nil
     }
 
     public func availableBytes() async -> Int64 {

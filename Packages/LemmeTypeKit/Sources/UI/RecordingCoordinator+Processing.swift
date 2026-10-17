@@ -27,6 +27,7 @@ extension RecordingCoordinator {
             DictationOutcome
     ) {
         stopProcessing()
+        markResidencyBusy(warmingUp: false)
         processingPhase = .preparingEngine
         processingProgress = nil
         let (updates, continuation) = AsyncStream.makeStream(of: ProcessingUpdate.self)
