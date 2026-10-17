@@ -1,6 +1,6 @@
 # Product roadmap and epics
 
-The roadmap is organized as GitHub epics. Epics 1–3 are fully refined and
+The roadmap is organized as GitHub epics. Epics 1–5 are fully refined and
 ready for development. Later epics remain outcome-level until the technical
 prototype validates the core workflow.
 
@@ -65,6 +65,8 @@ and recurring writing patterns.
 - Modes can be activated manually or by application.
 - Personalization data remains local and is exportable and deletable.
 
+Detailed stories: [Epic 4 backlog](backlog/epic-04-personalization.md)
+
 ## Epic 5 — model management and performance
 
 Make local models understandable, safe to download, and efficient across
@@ -77,6 +79,8 @@ supported Apple Silicon hardware.
 - Models load lazily and unload after a configurable idle period.
 - Low-power and best-accuracy profiles are available.
 - Memory pressure, thermal pressure, and insufficient storage are handled safely.
+
+Detailed stories: [Epic 5 backlog](backlog/epic-05-model-management.md)
 
 ## Epic 6 — privacy, security, and data controls
 
