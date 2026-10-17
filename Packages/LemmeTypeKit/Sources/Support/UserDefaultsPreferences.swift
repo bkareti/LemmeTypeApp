@@ -63,6 +63,11 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         set { defaults.set(newValue?.rawValue, forKey: Key.selectedEngine) }
     }
 
+    public var fallsBackToReadyEngine: Bool {
+        get { defaults.bool(forKey: Key.fallsBackToReadyEngine) }
+        set { defaults.set(newValue, forKey: Key.fallsBackToReadyEngine) }
+    }
+
     public var clipboardFallback: ClipboardFallbackPolicy {
         get {
             defaults.data(forKey: Key.clipboardFallback).flatMap {
@@ -84,5 +89,6 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         static let writingMode = "writingMode"
         static let selectedEngine = "selectedEngine"
         static let clipboardFallback = "clipboardFallback"
+        static let fallsBackToReadyEngine = "fallsBackToReadyEngine"
     }
 }

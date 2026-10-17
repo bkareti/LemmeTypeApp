@@ -204,6 +204,8 @@ final class RecordingSpy: DictationProcessing {
         var targets: [String?] = []
         var engines: [RecognitionEngineID?] = []
         var modes: [WritingMode] = []
+        var preferences: [EnginePreference] = []
+        var languages: [String] = []
         var outcomes: [DictationOutcome] = []
         var deliveries: [String] = []
         var delay: Duration = .zero
@@ -215,6 +217,8 @@ final class RecordingSpy: DictationProcessing {
     var targets: [String?] { state.withLock { $0.targets } }
     var engines: [RecognitionEngineID?] { state.withLock { $0.engines } }
     var modes: [WritingMode] { state.withLock { $0.modes } }
+    var preferences: [EnginePreference] { state.withLock { $0.preferences } }
+    var languages: [String] { state.withLock { $0.languages } }
     var deliveries: [String] { state.withLock { $0.deliveries } }
 
     /// Outcomes for successive calls; delivered once they run out.
@@ -233,6 +237,8 @@ final class RecordingSpy: DictationProcessing {
             state.targets.append(session.target?.applicationName)
             state.engines.append(session.engine)
             state.modes.append(session.mode)
+            state.preferences.append(session.enginePreference)
+            state.languages.append(session.language)
             let next =
                 state.outcomes.isEmpty ? DictationOutcome.delivered(.accessibility) : state.outcomes.removeFirst()
             return (next, state.delay)

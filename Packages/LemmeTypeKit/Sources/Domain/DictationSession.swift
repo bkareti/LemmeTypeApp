@@ -8,15 +8,33 @@ public enum WritingMode: String, CaseIterable, Codable, Sendable {
     case clean
 }
 
+/// The user's engine choice, read when a recording starts.
+public struct EnginePreference: Equatable, Sendable {
+    /// `nil` means Automatic.
+    public var selected: RecognitionEngineID?
+    /// Use another ready engine instead of asking when `selected` isn't ready.
+    public var fallsBackAutomatically: Bool
+
+    public init(selected: RecognitionEngineID? = nil, fallsBackAutomatically: Bool = false) {
+        self.selected = selected
+        self.fallsBackAutomatically = fallsBackAutomatically
+    }
+
+    public static let automatic = EnginePreference()
+}
+
 /// One recording on its way to text. Owns the target, the audio file, the
 /// engine (fixed when processing first starts), and the mode for its whole
-/// life, so settings changes only affect later sessions.
+/// life, so settings changes only affect later sessions. Mode, language, and
+/// engine preference are read when the recording starts.
 public struct DictationSession: Identifiable, Sendable {
     public let id: UUID
     public let audio: RecordedAudio
     public let target: ActivationTarget?
     public let mode: WritingMode
     public let language: String
+    /// The engine choice in Settings when recording started.
+    public let enginePreference: EnginePreference
     /// `nil` until the pipeline picks one; retries reuse it.
     public var engine: RecognitionEngineID?
     public let createdAt: Date
@@ -27,6 +45,7 @@ public struct DictationSession: Identifiable, Sendable {
         target: ActivationTarget?,
         mode: WritingMode,
         language: String,
+        enginePreference: EnginePreference = .automatic,
         engine: RecognitionEngineID? = nil,
         createdAt: Date = Date()
     ) {
@@ -35,6 +54,7 @@ public struct DictationSession: Identifiable, Sendable {
         self.target = target
         self.mode = mode
         self.language = language
+        self.enginePreference = enginePreference
         self.engine = engine
         self.createdAt = createdAt
     }

@@ -163,7 +163,6 @@ struct AppComposition {
     func makeDictationProcessor() -> any DictationProcessing {
         TranscriptionPipeline(
             engines: recognitionEngines,
-            preferredEngine: { [preferences] in preferences.selectedEngine },
             write: TextCleaner.write,
             delivery: textDelivery,
             diagnostics: diagnostics
@@ -185,6 +184,9 @@ struct AppComposition {
         let audio = AudioSettingsModel(
             capture: audioCapture, deviceLister: audioDeviceLister, preferences: preferences)
         let navigation = SettingsNavigation()
+        let dictation = DictationSettingsModel(
+            engines: recognitionEngines, modelAssets: modelAssets, preferences: preferences,
+            speechAuthorizer: speechAuthorizer, diagnostics: diagnostics)
         let recorder = RecordingCoordinator(
             capture: audioCapture,
             processor: makeDictationProcessor(),
@@ -196,30 +198,33 @@ struct AppComposition {
         )
         let diagnosticsModel = DiagnosticsModel(
             buffer: diagnostics, permissions: permissions, shortcut: shortcut, buildInfo: buildInfo)
-        let settings = ManagedWindowController(
-            identifier: "settings",
-            title: String(localized: "LemmeType Settings")
-        ) {
-            AnyView(
-                SettingsView(
-                    general: general,
-                    shortcut: shortcut,
-                    audio: audio,
-                    permissions: permissions,
-                    diagnostics: diagnosticsModel,
-                    navigation: navigation
-                ))
-        }
+        let settings = Self.makeSettingsWindow(
+            SettingsView(
+                general: general,
+                dictation: dictation,
+                shortcut: shortcut,
+                audio: audio,
+                permissions: permissions,
+                diagnostics: diagnosticsModel,
+                navigation: navigation
+            ))
         return AppController(
             modelAssets: modelAssets,
             permissions: permissions,
             preferences: preferences,
             activation: activation,
             recorder: recorder,
+            dictation: dictation,
             shortcut: shortcut,
             navigation: navigation,
             diagnostics: diagnostics,
             settings: settings
         )
+    }
+
+    private static func makeSettingsWindow(_ view: SettingsView) -> ManagedWindowController {
+        ManagedWindowController(identifier: "settings", title: String(localized: "LemmeType Settings")) {
+            AnyView(view)
+        }
     }
 }

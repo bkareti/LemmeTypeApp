@@ -8,7 +8,10 @@ struct TranscriptionPipelineTests {
     static let directory = FileManager.default.temporaryDirectory
         .appendingPathComponent("LemmeTypeTests-Pipeline-\(UUID().uuidString)", isDirectory: true)
 
-    static func makeSession(engine: RecognitionEngineID? = nil, mode: WritingMode = .exact) throws -> DictationSession {
+    static func makeSession(
+        engine: RecognitionEngineID? = nil, mode: WritingMode = .exact,
+        preference: EnginePreference = .automatic
+    ) throws -> DictationSession {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let url = directory.appendingPathComponent("\(UUID().uuidString).placeholder")
         try Data("not audio".utf8).write(to: url)
@@ -17,7 +20,7 @@ struct TranscriptionPipelineTests {
             target: ActivationTarget(
                 processIdentifier: 42, bundleIdentifier: "com.apple.TextEdit", applicationName: "TextEdit",
                 focusedElement: nil),
-            mode: mode, language: "en-US", engine: engine)
+            mode: mode, language: "en-US", enginePreference: preference, engine: engine)
     }
 
     static func exists(_ session: DictationSession) -> Bool {
@@ -26,12 +29,11 @@ struct TranscriptionPipelineTests {
 
     func makePipeline(
         engines: [FakeRecognitionEngine],
-        preferred: RecognitionEngineID? = nil,
         delivery: FakeTextDelivery = FakeTextDelivery(),
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
     ) -> TranscriptionPipeline {
         TranscriptionPipeline(
-            engines: engines, preferredEngine: { preferred }, delivery: delivery, diagnostics: diagnostics)
+            engines: engines, delivery: delivery, diagnostics: diagnostics)
     }
 
     @Test func oneSessionProducesOneDeliveryAndDeletesTheAudio() async throws {
@@ -68,8 +70,8 @@ struct TranscriptionPipelineTests {
     @Test func unavailableChosenEngineAsksInsteadOfSwitching() async throws {
         let apple = FakeRecognitionEngine(id: .appleSpeech)
         let whisper = FakeRecognitionEngine(id: .whisper, availability: .assetsMissing)
-        let session = try Self.makeSession()
-        let outcome = await makePipeline(engines: [apple, whisper], preferred: .whisper).process(session) { _ in }
+        let session = try Self.makeSession(preference: EnginePreference(selected: .whisper))
+        let outcome = await makePipeline(engines: [apple, whisper]).process(session) { _ in }
 
         #expect(
             outcome
@@ -107,8 +109,8 @@ struct TranscriptionPipelineTests {
     @Test func retryUsesTheSessionsEngineEvenIfThePreferenceChanged() async throws {
         let apple = FakeRecognitionEngine(id: .appleSpeech)
         let whisper = FakeRecognitionEngine(id: .whisper)
-        let session = try Self.makeSession(engine: .appleSpeech)
-        _ = await makePipeline(engines: [apple, whisper], preferred: .whisper).process(session) { _ in }
+        let session = try Self.makeSession(engine: .appleSpeech, preference: EnginePreference(selected: .whisper))
+        _ = await makePipeline(engines: [apple, whisper]).process(session) { _ in }
 
         #expect(apple.recognizeCount == 1)
         #expect(whisper.recognizeCount == 0)
@@ -149,7 +151,7 @@ struct TranscriptionPipelineTests {
     @Test func writingModeIsAppliedFromTheSession() async throws {
         let delivery = FakeTextDelivery()
         let pipeline = TranscriptionPipeline(
-            engines: [FakeRecognitionEngine(script: .init(text: "um hello"))], preferredEngine: { nil },
+            engines: [FakeRecognitionEngine(script: .init(text: "um hello"))],
             write: { text, mode in mode == .clean ? "Hello." : text }, delivery: delivery)
         _ = await pipeline.process(try Self.makeSession(mode: .clean)) { _ in }
         #expect(delivery.delivered == ["Hello."])
@@ -158,7 +160,7 @@ struct TranscriptionPipelineTests {
     @Test func textThatCleansToNothingIsNeverDelivered() async throws {
         let delivery = FakeTextDelivery()
         let pipeline = TranscriptionPipeline(
-            engines: [FakeRecognitionEngine(script: .init(text: "um"))], preferredEngine: { nil },
+            engines: [FakeRecognitionEngine(script: .init(text: "um"))],
             write: TextCleaner.write, delivery: delivery)
         let session = try Self.makeSession(mode: .clean)
         let outcome = await pipeline.process(session) { _ in }
@@ -174,7 +176,7 @@ struct TranscriptionPipelineTests {
         for (mode, expected) in [(WritingMode.exact, "um the the plan"), (.clean, "The plan.")] {
             let delivery = FakeTextDelivery()
             let pipeline = TranscriptionPipeline(
-                engines: [FakeRecognitionEngine(script: .init(text: " um  the the plan "))], preferredEngine: { nil },
+                engines: [FakeRecognitionEngine(script: .init(text: " um  the the plan "))],
                 write: TextCleaner.write, delivery: delivery)
             _ = await pipeline.process(try Self.makeSession(mode: mode)) { _ in }
             #expect(delivery.delivered == [expected])
@@ -217,5 +219,20 @@ struct TranscriptionPipelineTests {
             preferred: RecognitionEngineID(rawValue: "retired"), candidates: [(.whisper, .ready)])
         #expect(choice == .engine(.whisper))
         #expect(EngineSelector.choose(preferred: nil, candidates: [(.whisper, .assetsMissing)]) == .noneAvailable)
+    }
+
+    @Test func approvedFallbackUsesAReadyEngineWithoutAsking() async throws {
+        let apple = FakeRecognitionEngine(id: .appleSpeech)
+        let whisper = FakeRecognitionEngine(id: .whisper, availability: .assetsMissing)
+        let session = try Self.makeSession(
+            preference: EnginePreference(selected: .whisper, fallsBackAutomatically: true))
+        let outcome = await makePipeline(engines: [apple, whisper]).process(session) { _ in }
+
+        #expect(outcome == .delivered(.accessibility))
+        #expect(apple.recognizeCount == 1)
+        #expect(
+            EngineSelector.choose(
+                preferred: .whisper, fallsBackAutomatically: true, candidates: [(.whisper, .assetsMissing)])
+                == .unavailable(.whisper, .assetsMissing, alternatives: []))
     }
 }

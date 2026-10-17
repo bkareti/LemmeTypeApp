@@ -6,6 +6,7 @@ import Observation
 public final class SettingsNavigation {
     public enum Pane: String, Hashable, Sendable {
         case general
+        case dictation
         case shortcut
         case audio
         case permissions

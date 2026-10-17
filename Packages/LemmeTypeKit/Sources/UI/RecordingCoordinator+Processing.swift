@@ -130,7 +130,7 @@ extension RecordingCoordinator {
         case .allowSpeechRecognition:
             await allowSpeechRecognition()
         case .chooseEngine:
-            onOpenSettings(.general)
+            onOpenSettings(.dictation)
         case .saveAudio:
             await onSaveAudio(session.audio.fileURL)
         case .openPermissions:

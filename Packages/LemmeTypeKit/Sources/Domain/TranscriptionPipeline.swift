@@ -5,23 +5,20 @@ import Foundation
 /// protocols, so it runs unchanged against fakes in tests.
 public actor TranscriptionPipeline: DictationProcessing {
     private let engines: [any SpeechRecognitionEngine]
-    private let preferredEngine: @Sendable () -> RecognitionEngineID?
     private let write: @Sendable (String, WritingMode) -> String
     private let delivery: any TextDelivering
     private let diagnostics: any DiagnosticsRecording
 
     /// `engines` are in recommendation order (Automatic picks the first ready
-    /// one); `preferredEngine` is read once per session (`nil` = Automatic);
-    /// `write` applies a writing mode to recognised text.
+    /// one); each session carries the user's ``EnginePreference``; `write`
+    /// applies a writing mode to recognised text.
     public init(
         engines: [any SpeechRecognitionEngine],
-        preferredEngine: @escaping @Sendable () -> RecognitionEngineID?,
         write: @escaping @Sendable (String, WritingMode) -> String = TextCleaner.write,
         delivery: any TextDelivering,
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
     ) {
         self.engines = engines
-        self.preferredEngine = preferredEngine
         self.write = write
         self.delivery = delivery
         self.diagnostics = diagnostics
@@ -110,7 +107,11 @@ public actor TranscriptionPipeline: DictationProcessing {
         for engine in engines where engine.descriptor.supports(language: session.language) {
             candidates.append((engine.descriptor.id, await engine.availability()))
         }
-        switch EngineSelector.choose(preferred: preferredEngine(), candidates: candidates) {
+        let preference = session.enginePreference
+        switch EngineSelector.choose(
+            preferred: preference.selected, fallsBackAutomatically: preference.fallsBackAutomatically,
+            candidates: candidates)
+        {
         case .engine(let id):
             guard let engine = engines.first(where: { $0.descriptor.id == id }) else {
                 return .failure(SelectionFailure(outcome: Self.noEngine))
