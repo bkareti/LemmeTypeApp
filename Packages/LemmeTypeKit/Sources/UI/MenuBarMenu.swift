@@ -34,19 +34,22 @@ public struct MenuBarMenu: View {
     private let shortcut: ShortcutSettingsModel
     private let recorder: RecordingCoordinator
     private let dictation: DictationSettingsModel
+    private let context: ContextSettingsModel?
 
     public init(
         actions: MenuBarActions,
         permissions: PermissionsModel,
         shortcut: ShortcutSettingsModel,
         recorder: RecordingCoordinator,
-        dictation: DictationSettingsModel
+        dictation: DictationSettingsModel,
+        context: ContextSettingsModel? = nil
     ) {
         self.actions = actions
         self.permissions = permissions
         self.shortcut = shortcut
         self.recorder = recorder
         self.dictation = dictation
+        self.context = context
     }
 
     public var body: some View {
@@ -59,6 +62,15 @@ public struct MenuBarMenu: View {
             }
         } else {
             Text(String(localized: "Dictate: \(shortcut.shortcut.displayString)", bundle: .module))
+        }
+        if let edit = shortcut.editShortcut {
+            Text(String(localized: "Edit Selection: \(edit.displayString)", bundle: .module))
+        }
+        if let context {
+            Text(
+                context.usesFormattingContext
+                    ? String(localized: "Text Near Cursor: On", bundle: .module)
+                    : String(localized: "Text Near Cursor: Off", bundle: .module))
         }
         Divider()
         Picker(

@@ -69,6 +69,8 @@ public protocol FocusedElementReference: AnyObject, Sendable {
 /// What the rest of the app should do in response to the shortcut.
 public enum ActivationCommand: Sendable {
     case start(ActivationTarget?)
+    /// The voice-editing shortcut: rewrite the target's selection (E3-S5).
+    case startEditing(ActivationTarget?)
     case stop
     case cancel
 }

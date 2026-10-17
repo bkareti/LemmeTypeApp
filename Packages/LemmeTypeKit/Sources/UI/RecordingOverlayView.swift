@@ -21,11 +21,16 @@ struct RecordingOverlayView: View {
                         .font(.headline)
                         .accessibilityIdentifier("overlay.state")
                     if coordinator.state.isCapturing || coordinator.state == .processing {
-                        let mode = coordinator.activeMode ?? coordinator.writingMode
-                        Text(String(localized: "\(mode.displayName) · On this Mac", bundle: .module))
+                        Text(modeLine)
                             .font(.callout)
                             .foregroundStyle(.secondary)
                             .accessibilityIdentifier("overlay.mode")
+                        if let context = coordinator.activeContext?.statusText {
+                            Label(context, systemImage: "text.cursor")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .accessibilityIdentifier("overlay.context")
+                        }
                     }
                     if let startedAt = coordinator.recordingStartedAt, coordinator.state == .recording {
                         TimelineView(.periodic(from: startedAt, by: 1)) { context in
@@ -93,6 +98,14 @@ struct RecordingOverlayView: View {
         case .idle, .stopping, .completed, .cancelled, .needsAttention:
             EmptyView()
         }
+    }
+
+    private var modeLine: String {
+        if coordinator.activePurpose == .editing {
+            return String(localized: "Editing selection · On this Mac", bundle: .module)
+        }
+        let mode = coordinator.activeMode ?? coordinator.writingMode
+        return String(localized: "\(mode.displayName) · On this Mac", bundle: .module)
     }
 
     private var message: String? {

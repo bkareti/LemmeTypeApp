@@ -15,6 +15,10 @@ public final class ShortcutSettingsModel {
     public private(set) var shortcut: KeyboardShortcut
     public private(set) var mode: ActivationMode
     public private(set) var isShortcutUnavailable = false
+    /// The voice-editing shortcut; `nil` when voice editing is off (E3-S5).
+    public private(set) var editShortcut: KeyboardShortcut?
+    public private(set) var isRecordingEdit = false
+    public private(set) var editErrorMessage: String?
 
     private let controller: any DictationShortcutControlling
     private let preferences: any AppPreferences
@@ -33,6 +37,56 @@ public final class ShortcutSettingsModel {
         mode = controller.mode
         isShortcutUnavailable = controller.registrationError != nil
         errorMessage = controller.registrationError.map(Self.message(for:))
+        editShortcut = controller.editShortcut
+        editErrorMessage = controller.editRegistrationError.map(Self.message(for:))
+    }
+
+    // MARK: Voice editing shortcut (E3-S5)
+
+    /// Turns the voice-editing shortcut on or off and stores the choice.
+    public func setVoiceEditing(_ enabled: Bool) {
+        let shortcut = enabled ? (preferences.voiceEditShortcut ?? .defaultVoiceEdit) : nil
+        do {
+            try controller.changeEdit(to: shortcut)
+            editErrorMessage = nil
+        } catch {
+            editErrorMessage = Self.message(for: error)
+        }
+        preferences.allowsVoiceEditing = enabled
+        editShortcut = controller.editShortcut
+    }
+
+    public func startRecordingEdit() {
+        controller.suspend()
+        editErrorMessage = nil
+        isRecordingEdit = true
+    }
+
+    public func cancelRecordingEdit() {
+        guard isRecordingEdit else { return }
+        isRecordingEdit = false
+        controller.activate()
+        refreshState()
+    }
+
+    public func recordedEdit(_ shortcut: KeyboardShortcut) {
+        guard isRecordingEdit else { return }
+        isRecordingEdit = false
+        controller.activate()
+        do {
+            try controller.changeEdit(to: shortcut)
+            preferences.voiceEditShortcut = shortcut
+            preferences.allowsVoiceEditing = true
+            refreshState()
+        } catch {
+            refreshState()
+            editErrorMessage = Self.message(for: error)
+        }
+    }
+
+    public func resetEditToDefault() {
+        isRecordingEdit = true
+        recordedEdit(.defaultVoiceEdit)
     }
 
     public func setMode(_ mode: ActivationMode) {
@@ -81,6 +135,9 @@ public final class ShortcutSettingsModel {
             case .start(let target):
                 target?.applicationName.map { String(localized: "Started in \($0)", bundle: .module) }
                     ?? String(localized: "Started", bundle: .module)
+            case .startEditing(let target):
+                target?.applicationName.map { String(localized: "Editing in \($0)", bundle: .module) }
+                    ?? String(localized: "Editing", bundle: .module)
             case .stop: String(localized: "Stopped", bundle: .module)
             case .cancel: String(localized: "Cancelled", bundle: .module)
             }

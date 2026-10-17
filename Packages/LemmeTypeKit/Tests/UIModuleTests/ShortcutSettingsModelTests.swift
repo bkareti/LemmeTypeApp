@@ -155,4 +155,44 @@ final class FakeShortcutController: DictationShortcutControlling {
     }
 
     func change(to mode: ActivationMode) { self.mode = mode }
+
+    private(set) var editShortcut: KeyboardShortcut? = .defaultVoiceEdit
+    private(set) var editRegistrationError: ShortcutError?
+
+    func changeEdit(to shortcut: KeyboardShortcut?) throws(ShortcutError) {
+        if let shortcut {
+            if let problem = ShortcutValidation.problem(with: shortcut) { throw .invalid(problem) }
+            if let error = failures[shortcut] { throw error }
+        }
+        editShortcut = shortcut
+    }
+}
+
+/// E3-S5: the voice-editing shortcut.
+@MainActor
+struct VoiceEditShortcutSettingsTests {
+    @Test func recordedEditShortcutIsAppliedAndPersisted() {
+        let controller = FakeShortcutController(failures: [:])
+        let preferences = FakePreferences()
+        let model = ShortcutSettingsModel(controller: controller, preferences: preferences)
+        let other = KeyboardShortcut(keyCode: 0x0E, modifiers: [.control, .option], keyLabel: "E")
+
+        model.startRecordingEdit()
+        model.recordedEdit(other)
+
+        #expect(model.editShortcut == other)
+        #expect(preferences.voiceEditShortcut == other)
+        #expect(!model.isRecordingEdit)
+    }
+
+    @Test func invalidEditShortcutKeepsThePreviousOne() {
+        let controller = FakeShortcutController(failures: [:])
+        let model = ShortcutSettingsModel(controller: controller, preferences: FakePreferences())
+
+        model.startRecordingEdit()
+        model.recordedEdit(KeyboardShortcut(keyCode: 0x0E, modifiers: [], keyLabel: "E"))
+
+        #expect(model.editShortcut == .defaultVoiceEdit)
+        #expect(model.editErrorMessage != nil)
+    }
 }

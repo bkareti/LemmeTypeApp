@@ -225,4 +225,7 @@ private final class StubShortcutController: DictationShortcutControlling {
     func suspend() {}
     func change(to shortcut: KeyboardShortcut) throws(ShortcutError) {}
     func change(to mode: ActivationMode) {}
+    let editShortcut: KeyboardShortcut? = .defaultVoiceEdit
+    let editRegistrationError: ShortcutError? = nil
+    func changeEdit(to shortcut: KeyboardShortcut?) throws(ShortcutError) {}
 }

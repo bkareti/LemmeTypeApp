@@ -8,23 +8,27 @@ public actor TranscriptionPipeline: DictationProcessing {
     private let write: @Sendable (String, WritingMode) -> String
     private let format: @Sendable (String, WritingMode, CursorContext) -> String
     private let delivery: any TextDelivering
+    private let rewriter: (any TextRewriting)?
     private let diagnostics: any DiagnosticsRecording
 
     /// `engines` are in recommendation order (Automatic picks the first ready
     /// one); each session carries the user's ``EnginePreference``; `write`
     /// applies a writing mode to recognised text; `format` fits it into the
-    /// cursor context, when the session has one (E3-S3).
+    /// cursor context, when the session has one (E3-S3); `rewriter` runs
+    /// voice-editing sessions (E3-S5), which are refused without one.
     public init(
         engines: [any SpeechRecognitionEngine],
         write: @escaping @Sendable (String, WritingMode) -> String = TextCleaner.write,
         format: @escaping @Sendable (String, WritingMode, CursorContext) -> String = ContextFormatter.format,
         delivery: any TextDelivering,
+        rewriter: (any TextRewriting)? = nil,
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
     ) {
         self.engines = engines
         self.write = write
         self.format = format
         self.delivery = delivery
+        self.rewriter = rewriter
         self.diagnostics = diagnostics
     }
 
@@ -55,9 +59,10 @@ public actor TranscriptionPipeline: DictationProcessing {
 
     /// The outcome, the engine used, and how long recognition took, if it ran.
     private struct Run {
-        let outcome: DictationOutcome
+        var outcome: DictationOutcome
         var engine: RecognitionEngineID?
         var recognition: Duration?
+        var rewriting: Duration?
     }
 
     private func run(
@@ -91,22 +96,95 @@ public actor TranscriptionPipeline: DictationProcessing {
                     .recognitionFailed(error), engine: id, alternatives: alternatives, transcript: nil),
                 engine: id, recognition: ContinuousClock.now - recognitionStart)
         }
-        let recognition = ContinuousClock.now - recognitionStart
-        updates(.phase(.writing))
-        var text = write(transcript.text, session.mode)
-        if let context = session.formattingContext, text.contains(where: { !$0.isWhitespace }) {
-            text = format(text, session.mode, context)
+        var run = Run(outcome: .cancelled, engine: id, recognition: ContinuousClock.now - recognitionStart)
+        guard let text = await text(from: transcript, session: session, run: &run, updates: updates) else {
+            return run
         }
-        if Task.isCancelled { return Run(outcome: .cancelled, engine: id, recognition: recognition) }
+        if Task.isCancelled { return run }
         // Delivering nothing would replace a selection with nothing.
         guard text.contains(where: { !$0.isWhitespace }) else {
-            return Run(
-                outcome: .needsAttention(
-                    .recognitionFailed(.noSpeechDetected), engine: id, alternatives: [], transcript: nil),
-                engine: id, recognition: recognition)
+            run.outcome = Self.attention(.recognitionFailed(.noSpeechDetected), engine: id)
+            return run
         }
         updates(.phase(.delivering))
-        return Run(outcome: await deliver(text, session: session, engine: id), engine: id, recognition: recognition)
+        run.outcome = await deliver(text, session: session, engine: id)
+        return run
+    }
+
+    /// The text to deliver: the written transcript, or (voice editing) the
+    /// rewritten selection. `nil` after setting `run.outcome` on failure.
+    private func text(
+        from transcript: Transcript, session: DictationSession, run: inout Run,
+        updates: @escaping @Sendable (ProcessingUpdate) -> Void
+    ) async -> String? {
+        switch session.purpose {
+        case .dictation:
+            updates(.phase(.writing))
+            return written(transcript.text, session: session)
+        case .editing:
+            updates(.phase(.rewriting))
+            let rewriteStart = ContinuousClock.now
+            let result = await rewrite(instruction: transcript.text, session: session)
+            run.rewriting = ContinuousClock.now - rewriteStart
+            switch result {
+            case .success(let edited):
+                return edited
+            case .failure(let failure):
+                run.outcome = Task.isCancelled ? .cancelled : Self.attention(failure.issue, engine: run.engine)
+                return nil
+            }
+        }
+    }
+
+    private func written(_ transcript: String, session: DictationSession) -> String {
+        let text = write(transcript, session.mode)
+        guard let context = session.formattingContext, text.contains(where: { !$0.isWhitespace }) else { return text }
+        return format(text, session.mode, context)
+    }
+
+    private struct EditingFailure: Error {
+        let issue: DictationIssue
+    }
+
+    /// Applies the spoken instruction to the captured selection (E3-S5).
+    private func rewrite(instruction spoken: String, session: DictationSession) async
+        -> Result<String, EditingFailure>
+    {
+        guard let selected = session.editingContext?.selectedText else {
+            return .failure(EditingFailure(issue: .editingUnavailable(.noSelection)))
+        }
+        let instruction = TextCleaner.normalizeWhitespace(spoken)
+        guard instruction.contains(where: { !$0.isWhitespace }) else {
+            return .failure(EditingFailure(issue: .recognitionFailed(.noSpeechDetected)))
+        }
+        guard let rewriter else { return .failure(EditingFailure(issue: .rewriterUnavailable(.unavailable))) }
+        do {
+            let edited = try await TextRewritingRunner().run(
+                rewriter, RewriteRequest(instruction: instruction, text: selected, language: session.language))
+            return .success(edited)
+        } catch .unavailable(let availability) {
+            return .failure(EditingFailure(issue: .rewriterUnavailable(availability)))
+        } catch {
+            return .failure(EditingFailure(issue: .rewriteFailed(error)))
+        }
+    }
+
+    private static func attention(_ issue: DictationIssue, engine: RecognitionEngineID?) -> DictationOutcome {
+        .needsAttention(issue, engine: engine, alternatives: [], transcript: nil)
+    }
+
+    public func editingIssue(for target: ActivationTarget?, language: String) async -> DictationIssue? {
+        switch target?.context {
+        case .captured(let context, .editing) where context.selectedText != nil:
+            break
+        case .blocked(let reason, .editing):
+            return .editingUnavailable(reason)
+        default:
+            return .editingUnavailable(target == nil ? .unreadable : .noSelection)
+        }
+        guard let rewriter else { return .rewriterUnavailable(.unavailable) }
+        let availability = await rewriter.availability(language: language)
+        return availability.isReady ? nil : .rewriterUnavailable(availability)
     }
 
     private func deliver(_ text: String, session: DictationSession, engine: RecognitionEngineID?) async
@@ -174,15 +252,17 @@ public actor TranscriptionPipeline: DictationProcessing {
                 [
                     "method": .id(method.rawValue), "mode": .id(session.mode.rawValue),
                     "engine": .id(run.engine?.rawValue ?? "none"), "context": .id(session.contextIdentifier),
+                    "purpose": .id(session.purpose.rawValue),
                     "audioSeconds": .seconds(session.audio.duration), "processingSeconds": .seconds(seconds),
                     "recognitionSeconds": .seconds(run.recognition.map(Self.seconds) ?? 0),
+                    "rewriteSeconds": .seconds(run.rewriting.map(Self.seconds) ?? 0),
                 ])
         case .needsAttention(let issue, let engine, _, _):
             diagnostics.record(
                 .recognition, "session.needs-attention",
                 [
                     "issue": .id(issue.identifier), "engine": .id(engine?.rawValue ?? "none"),
-                    "mode": .id(session.mode.rawValue),
+                    "mode": .id(session.mode.rawValue), "purpose": .id(session.purpose.rawValue),
                     "audioSeconds": .seconds(session.audio.duration), "processingSeconds": .seconds(seconds),
                 ])
         case .cancelled:

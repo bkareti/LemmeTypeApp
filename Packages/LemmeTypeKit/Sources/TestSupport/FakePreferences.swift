@@ -16,6 +16,7 @@ public final class FakePreferences: AppPreferences {
         var fallsBackToReadyEngine: Bool
         var usesFormattingContext: Bool
         var allowsVoiceEditing: Bool
+        var voiceEditShortcut: KeyboardShortcut?
         var contextExcludedApplications: [String]
     }
 
@@ -50,6 +51,7 @@ public final class FakePreferences: AppPreferences {
                 fallsBackToReadyEngine: fallsBackToReadyEngine,
                 usesFormattingContext: usesFormattingContext,
                 allowsVoiceEditing: allowsVoiceEditing,
+                voiceEditShortcut: nil,
                 contextExcludedApplications: contextExcludedApplications
             ))
     }
@@ -112,6 +114,11 @@ public final class FakePreferences: AppPreferences {
     public var allowsVoiceEditing: Bool {
         get { values.withLock { $0.allowsVoiceEditing } }
         set { values.withLock { $0.allowsVoiceEditing = newValue } }
+    }
+
+    public var voiceEditShortcut: KeyboardShortcut? {
+        get { values.withLock { $0.voiceEditShortcut } }
+        set { values.withLock { $0.voiceEditShortcut = newValue } }
     }
 
     public var contextExcludedApplications: [String] {

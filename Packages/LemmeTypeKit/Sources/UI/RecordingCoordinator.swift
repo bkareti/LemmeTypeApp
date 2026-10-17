@@ -39,6 +39,11 @@ public final class RecordingCoordinator {
     /// The writing mode captured when the current recording started; shown
     /// in the overlay and stored with the session.
     public private(set) var activeMode: WritingMode?
+    /// What the current session's speech is for (dictation or a voice edit).
+    public private(set) var activePurpose: SessionPurpose?
+    /// Context captured (or refused) when the current session started; shown
+    /// in the overlay. Never contains text the UI displays.
+    public private(set) var activeContext: ContextCapture?
     private var activeLanguage: String?
     private var activeEnginePreference: EnginePreference?
 
@@ -97,43 +102,19 @@ public final class RecordingCoordinator {
         self.attentionDisplay = attentionDisplay
     }
 
-    public var failure: AudioCaptureError? {
-        if case .failed(let error) = state { return error }
-        return nil
-    }
-
-    /// The processing issue waiting for the user's decision, if any.
-    public var attention: DictationIssue? {
-        if case .needsAttention(let issue) = state { return issue }
-        return nil
-    }
-
-    /// Recording, processing, or holding a recording for a decision.
-    public var hasActiveSession: Bool {
-        state.isCapturing || state == .processing || attention != nil
-    }
-
-    public var recoveryAction: RecoveryAction? {
-        switch failure {
-        case .microphonePermissionMissing: .openPermissions
-        case .noInputDevice, .deviceDisconnected: .openAudioSettings
-        case .interrupted, .engineFailure, .storageFailure, .alreadyCapturing, .notCapturing: .tryAgain
-        case nil: nil
-        }
-    }
-
     // MARK: Commands
 
     public func handle(_ command: ActivationCommand) {
         switch command {
         case .start(let target): requestStart(target: target)
+        case .startEditing(let target): requestStart(target: target, purpose: .editing)
         case .stop: requestStop()
         case .cancel: requestCancel()
         }
     }
 
-    public func requestStart(target: ActivationTarget?) {
-        enqueue { await $0.start(target: target) }
+    public func requestStart(target: ActivationTarget?, purpose: SessionPurpose = .dictation) {
+        enqueue { await $0.start(target: target, purpose: purpose) }
     }
 
     public func requestStop() {
@@ -184,7 +165,7 @@ public final class RecordingCoordinator {
         }
     }
 
-    private func start(target: ActivationTarget?) async {
+    private func start(target: ActivationTarget?, purpose: SessionPurpose) async {
         guard machine.handle(.activate) else { return }
         dismissTask?.cancel()
         discardSession()  // a recording kept for a decision is replaced by the new one
@@ -192,8 +173,17 @@ public final class RecordingCoordinator {
         self.target = target
         writingMode = preferences.writingMode  // Settings may have changed it
         activeMode = writingMode
+        activePurpose = purpose
+        activeContext = target?.context
         activeLanguage = preferences.dictationLanguage
         activeEnginePreference = preferences.enginePreference
+        // A voice edit that can't run is refused before the user speaks.
+        if purpose == .editing,
+            let issue = await processor.editingIssue(for: target, language: preferences.dictationLanguage)
+        {
+            refuse(issue)
+            return
+        }
         do {
             let events = try await capture.start(input: preferences.audioInput)
             guard machine.handle(.captureStarted) else {
@@ -203,7 +193,7 @@ public final class RecordingCoordinator {
             recordingStartedAt = Date()
             sync()
             feedback.play(.start)
-            feedback.announce(String(localized: "Recording started", bundle: .module))
+            feedback.announce(startAnnouncement(purpose: purpose, context: target?.context))
             eventsTask = Task { [weak self] in
                 for await event in events {
                     self?.receive(event)
@@ -237,7 +227,7 @@ public final class RecordingCoordinator {
             feedback.announce(String(localized: "Recording stopped", bundle: .module))
             let session = DictationSession(
                 audio: recording, target: target, mode: activeMode ?? writingMode,
-                language: activeLanguage ?? preferences.dictationLanguage,
+                purpose: activePurpose ?? .dictation, language: activeLanguage ?? preferences.dictationLanguage,
                 enginePreference: activeEnginePreference ?? preferences.enginePreference)
             self.session = session
             startProcessing(session)
@@ -274,6 +264,8 @@ public final class RecordingCoordinator {
     func finishSession(displayFor duration: Duration) {
         target = nil
         activeMode = nil
+        activePurpose = nil
+        activeContext = nil
         activeLanguage = nil
         activeEnginePreference = nil
         recordingStartedAt = nil
@@ -309,6 +301,33 @@ public final class RecordingCoordinator {
         case .cancelled: "cancelled"
         case .failed(let error): "failed.\(error.identifier)"
         case .needsAttention(let issue): "needs-attention.\(issue.identifier)"
+        }
+    }
+}
+
+extension RecordingCoordinator {
+    public var failure: AudioCaptureError? {
+        if case .failed(let error) = state { return error }
+        return nil
+    }
+
+    /// The processing issue waiting for the user's decision, if any.
+    public var attention: DictationIssue? {
+        if case .needsAttention(let issue) = state { return issue }
+        return nil
+    }
+
+    /// Recording, processing, or holding a recording for a decision.
+    public var hasActiveSession: Bool {
+        state.isCapturing || state == .processing || attention != nil
+    }
+
+    public var recoveryAction: RecoveryAction? {
+        switch failure {
+        case .microphonePermissionMissing: .openPermissions
+        case .noInputDevice, .deviceDisconnected: .openAudioSettings
+        case .interrupted, .engineFailure, .storageFailure, .alreadyCapturing, .notCapturing: .tryAgain
+        case nil: nil
         }
     }
 }

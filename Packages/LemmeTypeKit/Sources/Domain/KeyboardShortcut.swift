@@ -31,6 +31,13 @@ public struct KeyboardShortcut: Hashable, Codable, Sendable {
         keyLabel: "Space"
     )
 
+    /// ⌥⇧Space: voice editing of the selection (E3-S5), next to the dictation key.
+    public static let defaultVoiceEdit = KeyboardShortcut(
+        keyCode: KeyCode.space,
+        modifiers: [.option, .shift],
+        keyLabel: "Space"
+    )
+
     /// Escape, registered only while a dictation session is active.
     public static let cancel = KeyboardShortcut(keyCode: KeyCode.escape, modifiers: [], keyLabel: "Esc")
 

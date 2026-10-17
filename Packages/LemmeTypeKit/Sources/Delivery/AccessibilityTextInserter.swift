@@ -56,6 +56,10 @@ struct AccessibilityTextInserter<Driver: AccessibilityDriving>: Sendable {
         else { return .problem(.targetChanged) }
         // Checked before anything else is read from the element.
         if driver.isSecureTextField(captured) { return .problem(.secureField) }
+        // A voice edit replaces exactly the selection it rewrote (E3-S5).
+        if case .captured(let context, .editing) = target.context, driver.selection(of: captured) != context.selection {
+            return .problem(.targetChanged)
+        }
         return .focused(captured)
     }
 

@@ -1,6 +1,7 @@
 import Audio
 import Delivery
 import Domain
+import Editing
 import Foundation
 import Lifecycle
 import ModelAssets
@@ -47,6 +48,8 @@ struct AppComposition {
     var modelAssets: any ModelAssetManaging
     var textDelivery: any TextDelivering
     var textCopier: any TextCopying
+    /// On-device rewriting for voice editing (ADR 0018).
+    var textRewriter: any TextRewriting
     var diagnostics: DiagnosticsBuffer
     var loginItems: any LoginItemManaging
     var hotKeyRegistrar: any HotKeyRegistering
@@ -100,6 +103,7 @@ struct AppComposition {
                 diagnostics: diagnostics
             ),
             textCopier: PasteboardTextCopier(),
+            textRewriter: FoundationModelsRewriter(),
             diagnostics: diagnostics,
             loginItems: SystemLoginItemManager(),
             hotKeyRegistrar: CarbonHotKeyRegistrar(),
@@ -156,6 +160,7 @@ struct AppComposition {
                 modelAssets: FakeModelAssetManager(),
                 textDelivery: delivery,
                 textCopier: delivery,
+                textRewriter: FakeTextRewriter(),
                 diagnostics: diagnostics,
                 loginItems: FakeLoginItemManager(status: .disabled),
                 hotKeyRegistrar: CarbonHotKeyRegistrar(),
@@ -171,6 +176,7 @@ struct AppComposition {
             engines: recognitionEngines,
             write: TextCleaner.write,
             delivery: textDelivery,
+            rewriter: textRewriter,
             diagnostics: diagnostics
         )
     }
@@ -179,29 +185,16 @@ struct AppComposition {
         let permissions = PermissionsModel(
             checker: permissionChecker, requester: permissionRequester, diagnostics: diagnostics)
         let general = GeneralSettingsModel(loginItems: loginItems, preferences: preferences, buildInfo: buildInfo)
-        let activation = ActivationController(
-            registrar: hotKeyRegistrar,
-            targetCapturer: targetCapturer,
-            shortcut: preferences.dictationShortcut ?? .defaultDictation,
-            mode: preferences.activationMode,
-            diagnostics: diagnostics
-        )
+        let activation = makeActivationController()
         let shortcut = ShortcutSettingsModel(controller: activation, preferences: preferences)
+        let context = makeContextSettings(shortcut: shortcut)
         let audio = AudioSettingsModel(
             capture: audioCapture, deviceLister: audioDeviceLister, preferences: preferences)
         let navigation = SettingsNavigation()
         let dictation = DictationSettingsModel(
             engines: recognitionEngines, modelAssets: modelAssets, preferences: preferences,
             speechAuthorizer: speechAuthorizer, diagnostics: diagnostics)
-        let recorder = RecordingCoordinator(
-            capture: audioCapture,
-            processor: makeDictationProcessor(),
-            feedback: SystemRecordingFeedback(preferences: preferences),
-            preferences: preferences,
-            speechAuthorizer: speechAuthorizer,
-            textCopier: textCopier,
-            diagnostics: diagnostics
-        )
+        let recorder = makeRecorder()
         let diagnosticsModel = DiagnosticsModel(
             buffer: diagnostics, permissions: permissions, shortcut: shortcut, buildInfo: buildInfo)
         let settings = Self.makeSettingsWindow(
@@ -209,6 +202,7 @@ struct AppComposition {
                 general: general,
                 dictation: dictation,
                 shortcut: shortcut,
+                context: context,
                 audio: audio,
                 permissions: permissions,
                 diagnostics: diagnosticsModel,
@@ -222,10 +216,57 @@ struct AppComposition {
             recorder: recorder,
             dictation: dictation,
             shortcut: shortcut,
+            context: context,
             navigation: navigation,
             diagnostics: diagnostics,
             settings: settings
         )
+    }
+
+    /// The dictation shortcut and, when voice editing is on, its shortcut.
+    private func makeActivationController() -> ActivationController {
+        ActivationController(
+            registrar: hotKeyRegistrar,
+            targetCapturer: targetCapturer,
+            shortcut: preferences.dictationShortcut ?? .defaultDictation,
+            editShortcut: preferences.allowsVoiceEditing ? (preferences.voiceEditShortcut ?? .defaultVoiceEdit) : nil,
+            mode: preferences.activationMode,
+            diagnostics: diagnostics
+        )
+    }
+
+    private func makeRecorder() -> RecordingCoordinator {
+        RecordingCoordinator(
+            capture: audioCapture,
+            processor: makeDictationProcessor(),
+            feedback: SystemRecordingFeedback(preferences: preferences),
+            preferences: preferences,
+            speechAuthorizer: speechAuthorizer,
+            textCopier: textCopier,
+            diagnostics: diagnostics
+        )
+    }
+
+    private func makeContextSettings(shortcut: ShortcutSettingsModel) -> ContextSettingsModel {
+        ContextSettingsModel(
+            preferences: preferences, shortcut: shortcut, rewriter: textRewriter,
+            runningApplications: Self.runningApplications, applicationName: Self.applicationName,
+            diagnostics: diagnostics)
+    }
+
+    /// Regular apps that are running, for Settings › Context's exclusion list.
+    private static func runningApplications() -> [ApplicationIdentity] {
+        NSWorkspace.shared.runningApplications.compactMap { app in
+            guard app.activationPolicy == .regular, let id = app.bundleIdentifier, id != Bundle.main.bundleIdentifier
+            else { return nil }
+            return ApplicationIdentity(bundleIdentifier: id, name: app.localizedName ?? id)
+        }
+    }
+
+    private static func applicationName(_ bundleIdentifier: String) -> String? {
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier).map {
+            FileManager.default.displayName(atPath: $0.path).replacingOccurrences(of: ".app", with: "")
+        }
     }
 
     private static func makeSettingsWindow(_ view: SettingsView) -> ManagedWindowController {

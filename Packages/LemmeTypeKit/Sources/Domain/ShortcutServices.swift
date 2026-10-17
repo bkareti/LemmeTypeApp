@@ -47,4 +47,8 @@ public protocol DictationShortcutControlling: AnyObject {
     func suspend()
     func change(to shortcut: KeyboardShortcut) throws(ShortcutError)
     func change(to mode: ActivationMode)
+    /// The voice-editing shortcut; `nil` when voice editing is off.
+    var editShortcut: KeyboardShortcut? { get }
+    var editRegistrationError: ShortcutError? { get }
+    func changeEdit(to shortcut: KeyboardShortcut?) throws(ShortcutError)
 }

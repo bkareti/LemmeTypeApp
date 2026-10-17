@@ -40,6 +40,36 @@ struct AccessibilityInsertionTests {
         #expect(field.text == "Meet on Friday.")
     }
 
+    /// E3-S5: a voice edit replaces exactly the selection that was rewritten.
+    private func editTarget(for field: FakeTextElement, selection: TextSelection) throws -> ActivationTarget {
+        let context = try #require(
+            CursorContext(precedingText: "", followingText: "", selection: selection, selectedText: "Tuesday"))
+        return FakeAccessibilityDriver.target(for: field).with(context: .captured(context, purpose: .editing))
+    }
+
+    @Test func voiceEditReplacesTheCapturedSelection() async throws {
+        let selection = TextSelection(location: 8, length: 7)
+        let field = FakeTextElement(text: "Meet on Tuesday.", selection: selection)
+        let driver = FakeAccessibilityDriver(focused: field)
+
+        let outcome = await deliver("Friday", driver: driver, target: try editTarget(for: field, selection: selection))
+
+        #expect(outcome == .delivered(.accessibility))
+        #expect(field.text == "Meet on Friday.")
+    }
+
+    @Test func changedSelectionIsNotReplaced() async throws {
+        let selection = TextSelection(location: 8, length: 7)
+        let field = FakeTextElement(text: "Meet on Tuesday.", selection: selection)
+        let driver = FakeAccessibilityDriver(focused: field)
+        let target = try editTarget(for: field, selection: selection)
+        field.select(TextSelection(location: 0, length: 4))  // the user selected something else
+
+        #expect(await deliver("Friday", driver: driver, target: target) == .problem(.targetChanged))
+        #expect(field.writes.isEmpty)
+        #expect(field.text == "Meet on Tuesday.")
+    }
+
     @Test func sameLengthReplacementCountsAsInserted() async {
         let field = FakeTextElement(text: "abc", selection: TextSelection(location: 0, length: 3))
         let driver = FakeAccessibilityDriver(focused: field)
