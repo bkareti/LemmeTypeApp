@@ -195,11 +195,11 @@ struct AppComposition {
         let audio = AudioSettingsModel(
             capture: audioCapture, deviceLister: audioDeviceLister, preferences: preferences)
         let navigation = SettingsNavigation()
+        let personalization = PersonalizationModel(store: personalizationStore, diagnostics: diagnostics)
+        let recorder = makeRecorder(personalization: personalization)
         let dictation = DictationSettingsModel(
             engines: recognitionEngines, modelAssets: modelAssets, preferences: preferences,
             speechAuthorizer: speechAuthorizer, diagnostics: diagnostics)
-        let personalization = PersonalizationModel(store: personalizationStore, diagnostics: diagnostics)
-        let recorder = makeRecorder(personalization: personalization)
         let diagnosticsModel = DiagnosticsModel(
             buffer: diagnostics, permissions: permissions, shortcut: shortcut, buildInfo: buildInfo)
         let settings = Self.makeSettingsWindow(
@@ -208,6 +208,7 @@ struct AppComposition {
                 dictation: dictation,
                 shortcut: shortcut,
                 context: context,
+                personalization: personalization,
                 audio: audio,
                 permissions: permissions,
                 diagnostics: diagnosticsModel,

@@ -15,7 +15,7 @@ results in the PR description as `MA-N: pass/fail — notes`.
    defaults delete com.lemmetype.LemmeType
    rm -rf "$TMPDIR/LemmeType"
    ```
-3. Run MA-1 to MA-38 in order: clean-install onboarding (MA-6) must come
+3. Run MA-1 to MA-39 in order: clean-install onboarding (MA-6) must come
    before anything that assumes permissions; real-microphone checks are MA-11
    to MA-13 and MA-14 to MA-17.
 4. Finish with `make privacy-check` and confirm `$TMPDIR/LemmeType/Sessions` is empty.
@@ -417,4 +417,18 @@ Record results per app in `docs/testing/insertion-matrix.md`.
 5. Replace the file's contents with `{ broken`, relaunch: Settings explains the
    file could not be read; `library-unreadable-*.json` holds the old contents.
 6. Settings › Diagnostics › Copy: no vocabulary, phrase, or snippet text appears.
+
+## E4-S4 — Personalization settings
+
+**MA-39 Managing vocabulary, replacements, and snippets**
+1. Settings › Personalize: the segmented control shows Vocabulary,
+   Replacements, and Snippets, each with an explanation and "0 of N".
+2. Add a word, a replacement, and a two-line snippet; Edit each and Save; the
+   rows update. Saving an empty field or a duplicate shows the reason in the
+   sheet and nothing is saved.
+3. Start a dictation, add a replacement while recording, finish: the new
+   replacement is not applied; the next dictation applies it.
+4. With VoiceOver on, every row's Edit and Delete buttons are announced with the
+   item's name, and a validation error is announced.
+5. Quit and relaunch: everything is still there.
 

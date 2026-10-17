@@ -76,3 +76,51 @@ struct PersonalizationModelTests {
         #expect(processor.libraries.map { $0.vocabulary.map(\.term) } == [["Before"]])
     }
 }
+
+/// E4-S4: the add/edit sheet's draft saves every kind and reports errors.
+@MainActor
+struct PersonalizationDraftTests {
+    @Test func savesEachKindFromTheTwoFields() async {
+        let model = PersonalizationModel(store: FakePersonalizationStore())
+        var word = PersonalizationDraft.new(.vocabulary)
+        word.primary = "LemmeType"
+        word.secondary = "lemme type, lemon type"
+        #expect(word.save(in: model) == nil)
+        var replacement = PersonalizationDraft.new(.replacement)
+        replacement.primary = "my email"
+        replacement.secondary = "pat@example.com"
+        #expect(replacement.save(in: model) == nil)
+        var snippet = PersonalizationDraft.new(.snippet)
+        snippet.primary = "sign off"
+        snippet.secondary = "Best,\nPat"
+        #expect(snippet.save(in: model) == nil)
+
+        #expect(model.library.vocabulary.first?.soundsLike == ["lemme type", "lemon type"])
+        #expect(model.library.replacements.first?.written == "pat@example.com")
+        #expect(model.library.snippets.first?.expansion == "Best,\nPat")
+    }
+
+    @Test func editingKeepsTheIdAndInvalidInputIsNotSaved() async throws {
+        let model = PersonalizationModel(store: FakePersonalizationStore())
+        model.save(Replacement(spoken: "my email", written: "a@example.com"))
+        var edit = PersonalizationDraft(try #require(model.library.replacements.first))
+        #expect(!edit.isNew)
+        edit.secondary = "b@example.com"
+        #expect(edit.save(in: model) == nil)
+        #expect(model.library.replacements.map(\.written) == ["b@example.com"])
+
+        edit.primary = " "
+        #expect(edit.save(in: model) == .empty(.spoken))
+        #expect(model.library.replacements.map(\.spoken) == ["my email"])
+    }
+
+    @Test func everyErrorHasAMessageWithoutTheRejectedText() {
+        let errors: [PersonalizationError] =
+            PersonalizationField.allCases.flatMap { [.empty($0), .tooLong($0, limit: 9), .duplicate($0)] }
+            + PersonalizationKind.allCases.map { .limitReached($0, limit: 9) }
+            + [.tooManySpellings(limit: 5), .notFound, .unreadable, .unsupportedVersion, .invalidFile, .storageFailure]
+        for error in errors {
+            #expect(!error.userMessage.isEmpty)
+        }
+    }
+}
