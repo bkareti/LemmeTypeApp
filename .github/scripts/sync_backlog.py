@@ -21,6 +21,13 @@ ROOT = Path(__file__).resolve().parents[2]
 ROADMAP_PATH = ROOT / "docs" / "roadmap.md"
 EPIC_1_PATH = ROOT / "docs" / "backlog" / "epic-01-macos-foundation.md"
 EPIC_2_PATH = ROOT / "docs" / "backlog" / "epic-02-local-dictation.md"
+EPIC_3_PATH = ROOT / "docs" / "backlog" / "epic-03-context-aware-writing.md"
+# Refined epics: number -> (backlog file, story phase label, expected story count).
+REFINED_EPICS = {
+    1: (EPIC_1_PATH, "phase:mvp", 8),
+    2: (EPIC_2_PATH, "phase:mvp", 10),
+    3: (EPIC_3_PATH, "phase:post-mvp", 7),
+}
 
 LABELS = {
     "epic": ("5319e7", "Product outcome containing related delivery stories"),
@@ -28,17 +35,20 @@ LABELS = {
     "ready-for-development": ("1d76db", "Refined, testable, and ready to implement"),
     "platform:macOS": ("c5def5", "Applies to the macOS application"),
     "phase:mvp": ("fbca04", "Required for the first usable product release"),
+    "phase:post-mvp": ("f9e79f", "Refined work that follows the first usable release"),
     "future": ("d9d9d9", "Planned after core MVP validation"),
     "area:foundation": ("bfdadc", "Application foundation and lifecycle"),
     "area:audio": ("d4c5f9", "Microphone capture and recorder lifecycle"),
     "area:transcription": ("f9d0c4", "Speech recognition and transcript processing"),
     "area:text-delivery": ("fef2c0", "Insertion, paste, and target application behavior"),
+    "area:context": ("c2e0c6", "Cursor context capture, policy, and context-aware formatting"),
+    "area:voice-editing": ("e99695", "Selected-text editing with an on-device language model"),
 }
 
 EPIC_LABELS = {
     1: ["epic", "platform:macOS", "phase:mvp", "area:foundation", "area:audio"],
     2: ["epic", "platform:macOS", "phase:mvp", "area:transcription", "area:text-delivery"],
-    3: ["epic", "platform:macOS", "future"],
+    3: ["epic", "platform:macOS", "phase:post-mvp", "area:context", "area:voice-editing"],
     4: ["epic", "platform:macOS", "future"],
     5: ["epic", "platform:macOS", "future"],
     6: ["epic", "platform:macOS", "phase:mvp"],
@@ -65,6 +75,13 @@ STORY_AREA_LABELS = {
     "E2-S8": ["area:text-delivery"],
     "E2-S9": ["area:transcription"],
     "E2-S10": ["area:transcription", "area:text-delivery"],
+    "E3-S1": ["area:context"],
+    "E3-S2": ["area:context"],
+    "E3-S3": ["area:context"],
+    "E3-S4": ["area:voice-editing"],
+    "E3-S5": ["area:voice-editing"],
+    "E3-S6": ["area:context"],
+    "E3-S7": ["area:context", "area:voice-editing"],
 }
 
 
@@ -120,15 +137,15 @@ def roadmap_epics() -> list[IssueSpec]:
             if dependency_order != -1:
                 end = dependency_order
         body = text[match.end() : end].strip()
-        if number in (1, 2):
-            source_path = EPIC_1_PATH if number == 1 else EPIC_2_PATH
+        source_path = REFINED_EPICS[number][0] if number in REFINED_EPICS else ROADMAP_PATH
+        if number in REFINED_EPICS:
             source = source_path.read_text(encoding="utf-8")
             body_start = source.index("## Epic issue body") + len("## Epic issue body")
-            first_story = re.search(r"^## E[12]-S1 —", source, re.MULTILINE)
+            first_story = re.search(rf"^## E{number}-S1 —", source, re.MULTILINE)
             if first_story is None:
                 raise RuntimeError(f"No first story found in {source_path}")
             body = source[body_start : first_story.start()].strip().removesuffix("---").strip()
-        relative = (EPIC_1_PATH if number == 1 else EPIC_2_PATH if number == 2 else ROADMAP_PATH).relative_to(ROOT)
+        relative = source_path.relative_to(ROOT)
         body += (
             "\n\n## Planning source\n\n"
             f"[`{relative}`](https://github.com/{REPOSITORY}/blob/main/{relative})"
@@ -146,7 +163,7 @@ def roadmap_epics() -> list[IssueSpec]:
     return specs
 
 
-def stories(path: Path, epic_number: int, parent_number: int) -> list[IssueSpec]:
+def stories(path: Path, epic_number: int, parent_number: int, phase: str) -> list[IssueSpec]:
     text = path.read_text(encoding="utf-8")
     matches = list(re.finditer(rf"^## (E{epic_number}-S\d+) — (.+)$", text, re.MULTILINE))
     specs: list[IssueSpec] = []
@@ -166,7 +183,7 @@ def stories(path: Path, epic_number: int, parent_number: int) -> list[IssueSpec]
             "user-story",
             "ready-for-development",
             "platform:macOS",
-            "phase:mvp",
+            phase,
             *STORY_AREA_LABELS[key],
         ]
         specs.append(
@@ -303,23 +320,19 @@ def main() -> int:
     for index, spec in enumerate(roadmap_epics(), start=1):
         epic_issues[index] = ensure_issue(spec, known)
 
-    epic_1_stories = stories(EPIC_1_PATH, 1, int(epic_issues[1]["number"]))
-    epic_2_stories = stories(EPIC_2_PATH, 2, int(epic_issues[2]["number"]))
+    story_count = 0
+    for number, (path, phase, expected) in REFINED_EPICS.items():
+        epic_stories = stories(path, number, int(epic_issues[number]["number"]), phase)
+        if len(epic_stories) != expected:
+            raise RuntimeError(f"{path.name} has {len(epic_stories)} stories; expected {expected}")
+        for spec in epic_stories:
+            child = ensure_issue(spec, known)
+            add_sub_issue(epic_issues[number], child)
+        story_count += len(epic_stories)
 
-    for spec in epic_1_stories:
-        child = ensure_issue(spec, known)
-        add_sub_issue(epic_issues[1], child)
-
-    for spec in epic_2_stories:
-        child = ensure_issue(spec, known)
-        add_sub_issue(epic_issues[2], child)
-
-    verify(epic_issues[1], 8)
-    verify(epic_issues[2], 10)
-    print(
-        f"Backlog synchronized: 8 epics and "
-        f"{len(epic_1_stories) + len(epic_2_stories)} development stories."
-    )
+    for number, (_, _, expected) in REFINED_EPICS.items():
+        verify(epic_issues[number], expected)
+    print(f"Backlog synchronized: 8 epics and {story_count} development stories.")
     return 0
 
 

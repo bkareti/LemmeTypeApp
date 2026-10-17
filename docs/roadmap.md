@@ -1,7 +1,7 @@
 # Product roadmap and epics
 
-The roadmap is organized as GitHub epics. Epic 1 and Epic 2 are fully refined
-and ready for development. Later epics remain outcome-level until the technical
+The roadmap is organized as GitHub epics. Epics 1–3 are fully refined and
+ready for development. Later epics remain outcome-level until the technical
 prototype validates the core workflow.
 
 ## Epic 1 — macOS foundation, permissions, and audio capture
@@ -50,6 +50,8 @@ to rewrite, shorten, format, or translate it locally.
 - Context-aware formatting works without a language model.
 - Selected-text editing works with a supported on-device language model.
 - The user sees when context is used and can disable it globally or per app.
+
+Detailed stories: [Epic 3 backlog](backlog/epic-03-context-aware-writing.md)
 
 ## Epic 4 — personalization, modes, vocabulary, and snippets
 
