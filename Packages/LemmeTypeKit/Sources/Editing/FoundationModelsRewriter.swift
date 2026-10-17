@@ -35,6 +35,9 @@ public struct FoundationModelsRewriter: TextRewriting {
     }
 
     public func rewrite(_ request: RewriteRequest) async throws(RewriteError) -> String {
+        // Never call the model when it can't run, even if a caller skipped the runner.
+        let availability = await availability(language: request.language)
+        guard availability.isReady else { throw .unavailable(availability) }
         let session = LanguageModelSession(model: Self.model, instructions: Self.instructions)
         do {
             let response = try await session.respond(
