@@ -35,6 +35,7 @@ public struct MenuBarMenu: View {
     private let recorder: RecordingCoordinator
     private let dictation: DictationSettingsModel
     private let context: ContextSettingsModel?
+    private let modes: ModesSettingsModel?
 
     public init(
         actions: MenuBarActions,
@@ -42,8 +43,10 @@ public struct MenuBarMenu: View {
         shortcut: ShortcutSettingsModel,
         recorder: RecordingCoordinator,
         dictation: DictationSettingsModel,
-        context: ContextSettingsModel? = nil
+        context: ContextSettingsModel? = nil,
+        modes: ModesSettingsModel? = nil
     ) {
+        self.modes = modes
         self.actions = actions
         self.permissions = permissions
         self.shortcut = shortcut
@@ -73,12 +76,24 @@ public struct MenuBarMenu: View {
                     : String(localized: "Text Near Cursor: Off", bundle: .module))
         }
         Divider()
-        Picker(
-            String(localized: "Writing Mode: \(dictation.writingMode.displayName)", bundle: .module),
-            selection: Binding(get: { dictation.writingMode }, set: { dictation.setWritingMode($0) })
-        ) {
-            ForEach(WritingMode.allCases, id: \.self) { mode in
-                Text(mode.displayName).tag(mode)
+        if let modes {
+            // Applies from the next session (E4-S6).
+            Picker(
+                String(localized: "Mode: \(modes.currentDefault.displayName)", bundle: .module),
+                selection: Binding(get: { modes.currentDefault.id }, set: { modes.setDefault($0) })
+            ) {
+                ForEach(modes.modes) { mode in
+                    Text(mode.displayName).tag(mode.id)
+                }
+            }
+        } else {
+            Picker(
+                String(localized: "Writing Mode: \(dictation.writingMode.displayName)", bundle: .module),
+                selection: Binding(get: { dictation.writingMode }, set: { dictation.setWritingMode($0) })
+            ) {
+                ForEach(WritingMode.allCases, id: \.self) { mode in
+                    Text(mode.displayName).tag(mode)
+                }
             }
         }
         if dictation.effectiveEngine == nil {

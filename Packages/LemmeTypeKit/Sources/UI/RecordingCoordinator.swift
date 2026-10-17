@@ -36,17 +36,14 @@ public final class RecordingCoordinator {
     public var writingMode: WritingMode {
         didSet { preferences.writingMode = writingMode }
     }
-    /// The writing mode captured when the current recording started; shown
-    /// in the overlay and stored with the session.
-    public private(set) var activeMode: WritingMode?
+    /// Mode, language, engine choice, and personalization captured when the
+    /// current recording started (see `RecordingCoordinator+Settings`).
+    var activeSettings: SessionSettings?
     /// What the current session's speech is for (dictation or a voice edit).
     public private(set) var activePurpose: SessionPurpose?
     /// Context captured (or refused) when the current session started; shown
     /// in the overlay. Never contains text the UI displays.
     public private(set) var activeContext: ContextCapture?
-    private var activeLanguage: String?
-    private var activeEnginePreference: EnginePreference?
-    private var activePersonalization: PersonalizationLibrary?
 
     /// Called when a session ends for any reason, so the shortcut can re-arm.
     public var onSessionEnded: @MainActor () -> Void = {}
@@ -177,12 +174,9 @@ public final class RecordingCoordinator {
         sync()
         self.target = target
         writingMode = preferences.writingMode  // Settings may have changed it
-        activeMode = writingMode
+        activeSettings = SessionSettings(preferences: preferences, library: personalization(), target: target)
         activePurpose = purpose
         activeContext = target?.context
-        activeLanguage = preferences.dictationLanguage
-        activeEnginePreference = preferences.enginePreference
-        activePersonalization = personalization()
         // A voice edit that can't run is refused before the user speaks.
         if purpose == .editing,
             let issue = await processor.editingIssue(for: target, language: preferences.dictationLanguage)
@@ -231,11 +225,9 @@ public final class RecordingCoordinator {
             sync()
             feedback.play(.stop)
             feedback.announce(String(localized: "Recording stopped", bundle: .module))
-            let session = DictationSession(
-                audio: recording, target: target, mode: activeMode ?? writingMode,
-                purpose: activePurpose ?? .dictation, language: activeLanguage ?? preferences.dictationLanguage,
-                enginePreference: activeEnginePreference ?? preferences.enginePreference,
-                personalization: activePersonalization ?? personalization())
+            let settings =
+                activeSettings ?? SessionSettings(preferences: preferences, library: personalization(), target: target)
+            let session = settings.session(audio: recording, target: target, purpose: activePurpose ?? .dictation)
             self.session = session
             startProcessing(session)
         } catch {
@@ -270,12 +262,9 @@ public final class RecordingCoordinator {
     /// recording until it is dismissed.
     func finishSession(displayFor duration: Duration) {
         target = nil
-        activeMode = nil
+        activeSettings = nil
         activePurpose = nil
         activeContext = nil
-        activeLanguage = nil
-        activeEnginePreference = nil
-        activePersonalization = nil
         recordingStartedAt = nil
         eventsTask?.cancel()
         eventsTask = nil

@@ -16,6 +16,7 @@ final class AppController {
     let shortcut: ShortcutSettingsModel
     let context: ContextSettingsModel
     let personalization: PersonalizationModel
+    let modes: ModesSettingsModel
     let navigation: SettingsNavigation
     let diagnostics: any DiagnosticsRecording
     let settings: ManagedWindowController
@@ -47,6 +48,7 @@ final class AppController {
         shortcut: ShortcutSettingsModel,
         context: ContextSettingsModel,
         personalization: PersonalizationModel,
+        modes: ModesSettingsModel,
         navigation: SettingsNavigation,
         diagnostics: any DiagnosticsRecording,
         settings: ManagedWindowController
@@ -62,6 +64,7 @@ final class AppController {
         self.shortcut = shortcut
         self.context = context
         self.personalization = personalization
+        self.modes = modes
         self.navigation = navigation
         self.settings = settings
         activation.onCommand = { [weak self] command in self?.handle(command) }

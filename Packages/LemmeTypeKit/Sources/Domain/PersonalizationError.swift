@@ -8,6 +8,10 @@ public enum PersonalizationField: String, Sendable, CaseIterable {
     case expansion
     /// A dictation mode's name (E4-S5).
     case modeName = "mode-name"
+    /// A per-app rule's application (E4-S7).
+    case application
+    /// A custom mode's language code (E4-S5).
+    case language
 }
 
 /// A kind of personalization item, for count limits and summaries.

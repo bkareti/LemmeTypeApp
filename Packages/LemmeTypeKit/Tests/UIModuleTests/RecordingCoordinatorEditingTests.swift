@@ -103,7 +103,7 @@ struct RecordingCoordinatorEditingTests {
         await coordinator.settle()
 
         #expect(coordinator.activeContext?.statusText == "Using text near the cursor")
-        #expect(feedback.announcements.last == "Recording started. Using text near the cursor")
+        #expect(feedback.announcements.last == "Recording started. Exact Dictation. Using text near the cursor")
         coordinator.handle(.cancel)
         await coordinator.settle()
         #expect(coordinator.activeContext == nil)

@@ -9,8 +9,11 @@ public protocol AppPreferences: AnyObject, Sendable {
     var playsFeedbackSounds: Bool { get set }
     /// BCP 47 dictation language; English only in the MVP.
     var dictationLanguage: String { get set }
-    /// Exact or Clean; stored with each session when it starts.
+    /// Exact or Clean (Epic 2). Read only to migrate to ``dictationMode``.
     var writingMode: WritingMode { get set }
+    /// The default dictation mode (E4-S5); without a stored value, the
+    /// built-in mode matching ``writingMode``.
+    var dictationMode: DictationModeID { get set }
     /// The user's recognition engine; `nil` means Automatic.
     var selectedEngine: RecognitionEngineID? { get set }
     /// Use another ready engine, without asking, when the selected one isn't

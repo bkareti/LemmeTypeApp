@@ -15,7 +15,7 @@ results in the PR description as `MA-N: pass/fail — notes`.
    defaults delete com.lemmetype.LemmeType
    rm -rf "$TMPDIR/LemmeType"
    ```
-3. Run MA-1 to MA-39 in order: clean-install onboarding (MA-6) must come
+3. Run MA-1 to MA-41 in order: clean-install onboarding (MA-6) must come
    before anything that assumes permissions; real-microphone checks are MA-11
    to MA-13 and MA-14 to MA-17.
 4. Finish with `make privacy-check` and confirm `$TMPDIR/LemmeType/Sessions` is empty.
@@ -431,4 +431,29 @@ Record results per app in `docs/testing/insertion-matrix.md`.
 4. With VoiceOver on, every row's Edit and Delete buttons are announced with the
    item's name, and a validation error is announced.
 5. Quit and relaunch: everything is still there.
+
+## E4-S5/S6/S7 — Dictation modes
+
+**MA-40 Choosing and managing modes**
+1. Upgrade from a build with Clean Writing selected: the status menu shows
+   *Mode: Clean Writing* and dictation output is unchanged.
+2. Status menu › Mode › Message; dictate "see you tomorrow" in TextEdit:
+   "See you tomorrow" (no period). The overlay shows *Message · On this Mac*
+   and VoiceOver says "Recording started. Message".
+3. Settings › Dictation › Modes › Duplicate Message: "Message Copy" appears.
+   Edit it: Output *Clipboard only*, *Add a space after the text*. Dictate:
+   TextEdit is unchanged, the overlay says the text was copied, and ⌘V pastes
+   it with a trailing space.
+4. Make the copy the default, then Delete it: the confirmation says Clean
+   Writing becomes the default; after deleting, the menu shows Clean Writing.
+
+**MA-41 Modes by application**
+1. Settings › Dictation › Modes › Add App… › Slack (or Messages) and pick
+   Message. Dictate in Slack: no final period, the overlay says
+   *Message for this app*. Dictate in TextEdit: the default mode is used.
+2. Switch to Slack during a TextEdit recording: the TextEdit mode stays for
+   that recording (rules are read only when the shortcut is pressed).
+3. Remove the rule: Slack uses the default mode again.
+4. Diagnostics › Copy: `dictationMode` is `message`/`custom` and `modeSource`
+   is `app-rule`; no app or mode name appears.
 
