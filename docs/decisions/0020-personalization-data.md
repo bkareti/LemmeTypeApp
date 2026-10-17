@@ -54,7 +54,11 @@ words. Both rules need a precise, narrower form.
 
 - The coding-standards privacy rule now reads "never log … user vocabulary";
   persisting it is allowed only through this store.
-- Import/export (E4-S8) reuses `PersonalizationArchive`; modes and app rules
+- Import/export (E4-S8) reuses `PersonalizationArchive`. Import is
+  *replace* (everything from the file) or *merge* (`PersonalizationLibrary.merging`:
+  imported items get new ids; duplicates by the validation keys and items over
+  a limit are skipped; app rules follow their imported modes). Export uses the
+  system save panel only, so files land only where the user chooses; modes and app rules
   (E4-S5, E4-S7) are added to the same file with optional keys, so version 1
   files stay readable.
 - Matching cost is bounded by the limits (≤ 3,500 phrases, bucketed by first

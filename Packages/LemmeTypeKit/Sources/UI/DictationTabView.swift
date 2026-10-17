@@ -37,6 +37,9 @@ struct DictationTabView: View {
             case .modes:
                 ModesSettingsView(model: modes)
             }
+            if section != .engine {
+                PersonalizationDataControls(personalization: personalization, modes: modes)
+            }
         }
     }
 }

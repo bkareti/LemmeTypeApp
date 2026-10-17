@@ -1,4 +1,5 @@
 import Domain
+import Foundation
 import Observation
 import Support
 
@@ -88,10 +89,62 @@ public final class PersonalizationModel {
         change { $0.removeSnippet(id) }
     }
 
-    /// Replaces the whole library (import, E4-S8) and saves it.
-    public func replace(with library: PersonalizationLibrary) {
-        self.library = library
+    // MARK: Export, import, delete (E4-S8)
+
+    /// The whole library as a versioned JSON file.
+    public func exportData() throws(PersonalizationError) -> Data {
+        let data = try PersonalizationArchive(library).encoded()
+        diagnostics.record(.personalization, "personalization.exported", ["items": .count(Self.count(library))])
+        return data
+    }
+
+    /// Reads an import file without changing anything.
+    public func readImport(_ data: Data) -> Result<PersonalizationLibrary, PersonalizationError> {
+        do throws(PersonalizationError) {
+            return .success(try PersonalizationArchive.decode(data))
+        } catch {
+            diagnostics.record(.personalization, "personalization.import-rejected", ["error": .id(error.identifier)])
+            return .failure(error)
+        }
+    }
+
+    /// Adds what doesn't clash; returns how many items were added and skipped.
+    @discardableResult
+    public func merge(_ imported: PersonalizationLibrary) -> PersonalizationMerge {
+        let merge = library.merging(imported)
+        library = merge.library
         persist()
+        diagnostics.record(
+            .personalization, "personalization.imported",
+            ["strategy": .id("merge"), "added": .count(merge.added), "skipped": .count(merge.skipped)])
+        return merge
+    }
+
+    /// Replaces everything with `imported`.
+    public func replace(with imported: PersonalizationLibrary) {
+        library = imported
+        persist()
+        diagnostics.record(
+            .personalization, "personalization.imported",
+            ["strategy": .id("replace"), "added": .count(Self.count(imported)), "skipped": .count(0)])
+    }
+
+    /// Deletes the stored file and every copy moved aside, and empties the library.
+    public func deleteAll() async {
+        await saveTask?.value
+        saveTask = nil
+        do throws(PersonalizationError) {
+            try await store.deleteAll()
+            library = .empty
+            loadIssue = nil
+            saveError = nil
+        } catch {
+            saveError = error
+        }
+    }
+
+    private static func count(_ library: PersonalizationLibrary) -> Int {
+        PersonalizationSummary(library).total
     }
 
     /// Waits for pending saves. For tests and app termination.

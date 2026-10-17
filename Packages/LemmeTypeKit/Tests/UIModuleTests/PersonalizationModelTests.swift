@@ -124,3 +124,62 @@ struct PersonalizationDraftTests {
         }
     }
 }
+
+/// E4-S8: export, import, and Delete All through the shared model.
+@MainActor
+struct PersonalizationDataTests {
+    private func filled(_ store: FakePersonalizationStore) -> PersonalizationModel {
+        let model = PersonalizationModel(store: store)
+        model.save(VocabularyEntry(term: "LemmeType"))
+        model.save(Snippet(trigger: "sign off", expansion: "Best,\nPat"))
+        return model
+    }
+
+    @Test func exportedFileImportsIntoAnEmptyLibraryExactly() async throws {
+        let source = filled(FakePersonalizationStore())
+        let data = try source.exportData()
+
+        let target = PersonalizationModel(store: FakePersonalizationStore())
+        let imported = try target.readImport(data).get()
+        target.replace(with: imported)
+        #expect(target.library == source.library)
+    }
+
+    @Test func invalidFilesChangeNothing() async {
+        let model = filled(FakePersonalizationStore())
+        let before = model.library
+        #expect(model.readImport(Data("nope".utf8)) == .failure(.invalidFile))
+        let newer = Data(#"{"format":"com.lemmetype.personalization","formatVersion":9}"#.utf8)
+        #expect(model.readImport(newer) == .failure(.unsupportedVersion))
+        #expect(model.library == before)
+    }
+
+    @Test func mergeReportsAddedAndSkipped() throws {
+        let model = filled(FakePersonalizationStore())
+        let other = try PersonalizationLibrary(
+            vocabulary: [VocabularyEntry(term: "lemmetype"), VocabularyEntry(term: "Kubernetes")], replacements: [],
+            snippets: [])
+        let merge = model.merge(other)
+        #expect(merge.added == 1)
+        #expect(merge.skipped == 1)
+        #expect(model.library.vocabulary.map(\.term) == ["LemmeType", "Kubernetes"])
+    }
+
+    @Test func deleteAllEmptiesTheStoreAndResetsACustomDefault() async {
+        let store = FakePersonalizationStore()
+        let model = filled(store)
+        let preferences = FakePreferences()
+        let modes = ModesSettingsModel(personalization: model, preferences: preferences)
+        let chat = DictationMode(name: "Chat")
+        modes.save(chat)
+        modes.setDefault(chat.id)
+
+        await model.deleteAll()
+        modes.refresh()
+        #expect(model.library == .empty)
+        #expect(store.deleteCount == 1)
+        #expect(store.library == .empty)
+        #expect(modes.currentDefault == .clean)
+        #expect(preferences.dictationMode == .clean)
+    }
+}

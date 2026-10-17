@@ -78,9 +78,9 @@ No blockers.
 | S2 Exact and Clean | `PersonalizationPipelineTests` |
 | S2 hints | `PersonalizerTests.hints…`, `AppleSpeechEngineTests`, `WhisperEngineTests` |
 | S3 snippets | `SnippetMatcherTests`, `PersonalizationPipelineTests` |
-| S4 pane | `PersonalizationSettingsModelTests` + manual MA-40 |
+| S4 pane | `PersonalizationSettingsModelTests` + manual MA-39 |
 | S5 modes | `DictationModeTests`, `ModePipelineTests`, `UserDefaultsPreferencesTests` |
-| S6 mode management | `ModesSettingsModelTests` + manual MA-41 |
-| S7 per-app | `ModeResolverTests`, `ModesSettingsModelTests` + manual MA-42 |
-| S8 export/import/delete | `PersonalizationArchiveTests`, `PersonalizationSettingsModelTests` + manual MA-43 |
+| S6 mode management | `ModesSettingsModelTests` + manual MA-40 |
+| S7 per-app | `ModeResolverTests`, `ModesSettingsModelTests` + manual MA-41 |
+| S8 export/import/delete | `PersonalizationArchiveTests`, `PersonalizationSettingsModelTests` + manual MA-42 |
 | S9 end-to-end and canaries | `PersonalizationEndToEndTests`, `DiagnosticsPrivacyTests` |
