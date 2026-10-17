@@ -95,6 +95,23 @@ extension DeliveryMethod {
     }
 }
 
+extension WritingMode {
+    /// Plain-language behaviour, shown before the user picks a mode.
+    var summary: String {
+        switch self {
+        case .exact:
+            String(
+                localized: "Types exactly the words that were recognised. Only extra spaces are removed.",
+                bundle: .module)
+        case .clean:
+            String(
+                localized:
+                    "Adds capitals and end punctuation, turns spoken “comma” or “new line” into punctuation, and drops “um”, repeated words, and clear self-corrections like “Tuesday—sorry—Wednesday”. Numbers, links, email addresses, code, and quotes are never changed.",
+                bundle: .module)
+        }
+    }
+}
+
 extension ProcessingPhase {
     var title: String {
         switch self {

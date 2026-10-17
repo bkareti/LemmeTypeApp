@@ -21,15 +21,16 @@ struct RecordingSessionTests {
         (try? FileManager.default.contentsOfDirectory(at: storage.directory, includingPropertiesForKeys: nil)) ?? []
     }
 
-    private func makeCoordinator(copier: FakeTextDelivery, authorizer: FakeSpeechAuthorizer? = nil)
-        -> RecordingCoordinator
-    {
+    private func makeCoordinator(
+        copier: FakeTextDelivery, authorizer: FakeSpeechAuthorizer? = nil,
+        preferences: FakePreferences? = nil
+    ) -> RecordingCoordinator {
         RecordingCoordinator(
             capture: AudioCaptureService(
                 source: source, storage: storage, permissions: FakePermissions(statuses: [.microphone: .granted])),
             processor: processor,
             feedback: feedback,
-            preferences: preferences,
+            preferences: preferences ?? self.preferences,
             speechAuthorizer: authorizer,
             textCopier: copier,
             finishedDisplay: .milliseconds(50),
@@ -64,6 +65,22 @@ struct RecordingSessionTests {
         await coordinator.settle()
         #expect(coordinator.state == .idle)
         #expect(leftoverFiles.isEmpty)
+    }
+
+    @Test func writingModeIsCapturedWhenRecordingStarts() async {
+        let preferences = FakePreferences(writingMode: .clean)
+        let coordinator = makeCoordinator(copier: FakeTextDelivery(), preferences: preferences)
+        coordinator.handle(.start(FakeTargetCapturer.textEdit))
+        await coordinator.settle()
+        #expect(coordinator.activeMode == .clean)
+
+        preferences.writingMode = .exact  // changed in Settings mid-recording
+        source.emitTone(seconds: 0.3)
+        coordinator.handle(.stop)
+        await coordinator.settle()
+
+        #expect(processor.modes == [.clean])
+        #expect(coordinator.activeMode == nil)
     }
 
     @Test func retryReusesTheSameRecordingAndEngine() async {

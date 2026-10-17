@@ -155,6 +155,17 @@ struct TranscriptionPipelineTests {
         #expect(delivery.delivered == ["Hello."])
     }
 
+    @Test func productionCleanerKeepsExactAndCleansClean() async throws {
+        for (mode, expected) in [(WritingMode.exact, "um the the plan"), (.clean, "The plan.")] {
+            let delivery = FakeTextDelivery()
+            let pipeline = TranscriptionPipeline(
+                engines: [FakeRecognitionEngine(script: .init(text: " um  the the plan "))], preferredEngine: { nil },
+                write: TextCleaner.write, delivery: delivery)
+            _ = await pipeline.process(try Self.makeSession(mode: mode)) { _ in }
+            #expect(delivery.delivered == [expected])
+        }
+    }
+
     @Test func metricsCarryDurationsAndCategoriesButNoText() async throws {
         let buffer = RecordingDiagnostics()
         let engine = FakeRecognitionEngine(script: .init(text: "canary-dictated-words"))
@@ -166,6 +177,7 @@ struct TranscriptionPipelineTests {
         #expect(events.map(\.name) == ["session.delivered", "session.needs-attention"])
         #expect(events[1].attributes["issue"] == .identifier("recognition.model-load-failed"))
         #expect(events[0].attributes["audioSeconds"] == .seconds(2))
+        #expect(events[0].attributes["mode"] == .identifier("exact"))
         #expect(!String(describing: events).contains("canary"))
     }
 
