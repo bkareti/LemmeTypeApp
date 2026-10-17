@@ -22,11 +22,15 @@ ROADMAP_PATH = ROOT / "docs" / "roadmap.md"
 EPIC_1_PATH = ROOT / "docs" / "backlog" / "epic-01-macos-foundation.md"
 EPIC_2_PATH = ROOT / "docs" / "backlog" / "epic-02-local-dictation.md"
 EPIC_3_PATH = ROOT / "docs" / "backlog" / "epic-03-context-aware-writing.md"
+EPIC_4_PATH = ROOT / "docs" / "backlog" / "epic-04-personalization.md"
+EPIC_5_PATH = ROOT / "docs" / "backlog" / "epic-05-model-management.md"
 # Refined epics: number -> (backlog file, story phase label, expected story count).
 REFINED_EPICS = {
     1: (EPIC_1_PATH, "phase:mvp", 8),
     2: (EPIC_2_PATH, "phase:mvp", 10),
     3: (EPIC_3_PATH, "phase:post-mvp", 7),
+    4: (EPIC_4_PATH, "phase:post-mvp", 9),
+    5: (EPIC_5_PATH, "phase:post-mvp", 7),
 }
 
 LABELS = {
@@ -43,14 +47,18 @@ LABELS = {
     "area:text-delivery": ("fef2c0", "Insertion, paste, and target application behavior"),
     "area:context": ("c2e0c6", "Cursor context capture, policy, and context-aware formatting"),
     "area:voice-editing": ("e99695", "Selected-text editing with an on-device language model"),
+    "area:personalization": ("bfd4f2", "Vocabulary, replacements, snippets, and personalization data"),
+    "area:modes": ("d4c5f9", "Dictation modes and per-application mode rules"),
+    "area:models": ("f9d0c4", "Model catalog, downloads, verification, and model settings"),
+    "area:performance": ("c2e0c6", "Model residency, performance profiles, and system conditions"),
 }
 
 EPIC_LABELS = {
     1: ["epic", "platform:macOS", "phase:mvp", "area:foundation", "area:audio"],
     2: ["epic", "platform:macOS", "phase:mvp", "area:transcription", "area:text-delivery"],
     3: ["epic", "platform:macOS", "phase:post-mvp", "area:context", "area:voice-editing"],
-    4: ["epic", "platform:macOS", "future"],
-    5: ["epic", "platform:macOS", "future"],
+    4: ["epic", "platform:macOS", "phase:post-mvp", "area:personalization", "area:modes"],
+    5: ["epic", "platform:macOS", "phase:post-mvp", "area:models", "area:performance"],
     6: ["epic", "platform:macOS", "phase:mvp"],
     7: ["epic", "platform:macOS", "phase:mvp"],
     8: ["epic", "future"],
@@ -82,6 +90,22 @@ STORY_AREA_LABELS = {
     "E3-S5": ["area:voice-editing"],
     "E3-S6": ["area:context"],
     "E3-S7": ["area:context", "area:voice-editing"],
+    "E4-S1": ["area:personalization"],
+    "E4-S2": ["area:personalization", "area:transcription"],
+    "E4-S3": ["area:personalization"],
+    "E4-S4": ["area:personalization"],
+    "E4-S5": ["area:modes"],
+    "E4-S6": ["area:modes"],
+    "E4-S7": ["area:modes"],
+    "E4-S8": ["area:personalization", "area:modes"],
+    "E4-S9": ["area:personalization", "area:modes"],
+    "E5-S1": ["area:models"],
+    "E5-S2": ["area:models"],
+    "E5-S3": ["area:models"],
+    "E5-S4": ["area:performance"],
+    "E5-S5": ["area:performance"],
+    "E5-S6": ["area:performance"],
+    "E5-S7": ["area:models", "area:performance"],
 }
 
 

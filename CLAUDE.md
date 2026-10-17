@@ -166,7 +166,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
 ## Planning documents
 
 - `docs/product-brief.md`, `docs/roadmap.md` — scope, non-goals, epic exit criteria.
-- `docs/backlog/epic-0{1,2,3}-*.md` — development-ready stories (source of truth
+- `docs/backlog/epic-0{1,2,3,4,5}-*.md` — development-ready stories (source of truth
   for acceptance criteria). Readiness reviews go in `docs/backlog/reviews/`.
 - `docs/testing/manual-acceptance.md` — checks that cannot run on CI.
 - `docs/testing/insertion-matrix.md` — per-app insertion results and failure evidence.
@@ -201,7 +201,7 @@ sub-issues on `bkareti/LemmeTypeApp` (needs authenticated `gh`).
   `## Epic issue body`, `## EN-SM — Title` stories separated by `---`, and a
   final `## Epic N story order` section.
 - Refined epics are listed in `REFINED_EPICS` (backlog file, story phase
-  label, story count: 8 for Epic 1, 10 for Epic 2, 7 for Epic 3). Adding or
+  label, story count: 8 for Epic 1, 10 for Epic 2, 7 for Epic 3, 9 for Epic 4, 7 for Epic 5). Adding or
   removing a story requires updating `STORY_AREA_LABELS` and that count.
 
 ## Product constraints that shape implementation
