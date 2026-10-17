@@ -261,3 +261,23 @@ Requires Microphone permission (team-signed build).
    Wednesday." Dictate "send it to ana@example.com by 5": the address and
    number are delivered exactly as recognised.
 5. Run `defaults delete com.lemmetype.LemmeType writingMode` to restore Exact.
+6. Start a Clean Writing dictation and, while still recording, switch the
+   mode to Exact (from E2-S9, in the status menu's *Writing Mode* submenu).
+   That session still uses Clean Writing; the next one uses Exact. The
+   overlay shows *<mode> · On this Mac* while recording and processing.
+
+## E2-S7 — Accessibility insertion
+
+**MA-28 Insert, replace selection, target changed, password fields**
+Record results per app in `docs/testing/insertion-matrix.md`.
+1. TextEdit: put the caret mid-sentence and dictate. The text appears once at
+   the caret; the overlay shows *Text inserted.*
+2. Select a word and dictate: the selection is replaced.
+3. Start dictating in TextEdit, click into a Notes note before processing
+   finishes. Nothing is typed into Notes; the overlay offers **Copy Text**,
+   **Retry Insert**, **Discard**. Click back into the TextEdit field and choose
+   **Retry Insert**: the text is inserted once.
+4. Safari › any sign-in page: focus the password field and dictate. Nothing is
+   typed; the overlay explains LemmeType never types into password fields.
+5. Revoke Accessibility (`tccutil reset Accessibility com.lemmetype.LemmeType`)
+   and dictate: the overlay offers **Copy Text** and **Open Permissions**.

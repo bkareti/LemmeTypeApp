@@ -36,8 +36,14 @@ extension DictationIssue {
             String(localized: "LemmeType never types into password fields. Copy the text instead.", bundle: .module)
         case .deliveryFailed(.permissionMissing):
             String(localized: "Accessibility access is needed to insert text. Copy it for now.", bundle: .module)
-        case .deliveryFailed(.noTarget), .deliveryFailed(.unsupported), .deliveryFailed(.failed):
-            String(localized: "The text couldn’t be inserted here. Copy it instead.", bundle: .module)
+        case .deliveryFailed(.noTarget):
+            String(localized: "There was no text field to insert into. Copy the text instead.", bundle: .module)
+        case .deliveryFailed(.unsupported):
+            String(localized: "This field doesn’t accept inserted text. Copy it instead.", bundle: .module)
+        case .deliveryFailed(.failed):
+            String(
+                localized: "LemmeType couldn’t confirm the text was inserted. Check the field, or copy the text.",
+                bundle: .module)
         }
     }
 }

@@ -81,6 +81,12 @@ public actor TranscriptionPipeline: DictationProcessing {
         updates(.phase(.writing))
         let text = write(transcript.text, session.mode)
         if Task.isCancelled { return .cancelled }
+        // Delivering nothing would replace a selection with nothing.
+        guard text.contains(where: { !$0.isWhitespace }) else {
+            return .needsAttention(
+                .recognitionFailed(.noSpeechDetected), engine: engine.descriptor.id, alternatives: [],
+                transcript: nil)
+        }
         updates(.phase(.delivering))
         return await deliver(text, session: session, engine: engine.descriptor.id)
     }

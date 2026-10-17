@@ -43,4 +43,6 @@ public final class AXElementReference: FocusedElementReference, @unchecked Senda
     init(element: AXUIElement) {
         self.element = element
     }
+
+    public var handle: AnyObject { element }
 }

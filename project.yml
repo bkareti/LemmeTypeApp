@@ -70,6 +70,7 @@ schemes:
         - package: LemmeTypeKit/LifecycleTests
         - package: LemmeTypeKit/RecognitionTests
         - package: LemmeTypeKit/ModelAssetsTests
+        - package: LemmeTypeKit/DeliveryTests
         - package: LemmeTypeKit/ShortcutsTests
         - package: LemmeTypeKit/UIModuleTests
     archive:

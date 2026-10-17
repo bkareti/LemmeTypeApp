@@ -155,6 +155,21 @@ struct TranscriptionPipelineTests {
         #expect(delivery.delivered == ["Hello."])
     }
 
+    @Test func textThatCleansToNothingIsNeverDelivered() async throws {
+        let delivery = FakeTextDelivery()
+        let pipeline = TranscriptionPipeline(
+            engines: [FakeRecognitionEngine(script: .init(text: "um"))], preferredEngine: { nil },
+            write: TextCleaner.write, delivery: delivery)
+        let session = try Self.makeSession(mode: .clean)
+        let outcome = await pipeline.process(session) { _ in }
+        #expect(
+            outcome
+                == .needsAttention(
+                    .recognitionFailed(.noSpeechDetected), engine: RecognitionEngineID(rawValue: "fake"),
+                    alternatives: [], transcript: nil))
+        #expect(delivery.delivered.isEmpty)  // an empty insert would erase a selection
+    }
+
     @Test func productionCleanerKeepsExactAndCleansClean() async throws {
         for (mode, expected) in [(WritingMode.exact, "um the the plan"), (.clean, "The plan.")] {
             let delivery = FakeTextDelivery()
@@ -202,18 +217,5 @@ struct TranscriptionPipelineTests {
             preferred: RecognitionEngineID(rawValue: "retired"), candidates: [(.whisper, .ready)])
         #expect(choice == .engine(.whisper))
         #expect(EngineSelector.choose(preferred: nil, candidates: [(.whisper, .assetsMissing)]) == .noneAvailable)
-    }
-}
-
-/// Collects diagnostics events in memory.
-final class RecordingDiagnostics: DiagnosticsRecording {
-    private let storage = Mutex<[DiagnosticEvent]>([])
-    var events: [DiagnosticEvent] { storage.withLock { $0 } }
-
-    func record(
-        _ category: DiagnosticCategory, _ name: StaticString, _ attributes: KeyValuePairs<StaticString, DiagnosticValue>
-    ) {
-        let event = DiagnosticEvent(timestamp: Date(), category: category, name: name, attributes: attributes)
-        storage.withLock { $0.append(event) }
     }
 }
