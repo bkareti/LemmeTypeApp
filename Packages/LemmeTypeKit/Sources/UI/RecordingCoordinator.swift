@@ -32,10 +32,13 @@ public final class RecordingCoordinator {
     /// Choices for the current ``attention`` issue.
     public internal(set) var attentionActions: [DictationAction] = []
     /// The mode the next session will use, shown before and during recording.
-    /// Stored in preferences; each session copies it when the recording ends.
+    /// Stored in preferences (Settings may also change it there).
     public var writingMode: WritingMode {
         didSet { preferences.writingMode = writingMode }
     }
+    /// The writing mode captured when the current recording started; shown
+    /// in the overlay and stored with the session.
+    public private(set) var activeMode: WritingMode?
 
     /// Called when a session ends for any reason, so the shortcut can re-arm.
     public var onSessionEnded: @MainActor () -> Void = {}
@@ -185,6 +188,8 @@ public final class RecordingCoordinator {
         discardSession()  // a recording kept for a decision is replaced by the new one
         sync()
         self.target = target
+        writingMode = preferences.writingMode  // Settings may have changed it
+        activeMode = writingMode
         do {
             let events = try await capture.start(input: preferences.audioInput)
             guard machine.handle(.captureStarted) else {
@@ -227,7 +232,7 @@ public final class RecordingCoordinator {
             feedback.play(.stop)
             feedback.announce(String(localized: "Recording stopped", bundle: .module))
             let session = DictationSession(
-                audio: recording, target: target, mode: writingMode,
+                audio: recording, target: target, mode: activeMode ?? writingMode,
                 language: preferences.dictationLanguage)
             self.session = session
             startProcessing(session)
@@ -263,6 +268,7 @@ public final class RecordingCoordinator {
     /// recording until it is dismissed.
     func finishSession(displayFor duration: Duration) {
         target = nil
+        activeMode = nil
         recordingStartedAt = nil
         eventsTask?.cancel()
         eventsTask = nil

@@ -142,7 +142,8 @@ public actor TranscriptionPipeline: DictationProcessing {
             diagnostics.record(
                 .recognition, "session.delivered",
                 [
-                    "method": .id(method.rawValue), "audioSeconds": .seconds(session.audio.duration),
+                    "method": .id(method.rawValue), "mode": .id(session.mode.rawValue),
+                    "audioSeconds": .seconds(session.audio.duration),
                     "processingSeconds": .seconds(seconds),
                 ])
         case .needsAttention(let issue, let engine, _, _):
@@ -150,6 +151,7 @@ public actor TranscriptionPipeline: DictationProcessing {
                 .recognition, "session.needs-attention",
                 [
                     "issue": .id(issue.identifier), "engine": .id(engine?.rawValue ?? "none"),
+                    "mode": .id(session.mode.rawValue),
                     "audioSeconds": .seconds(session.audio.duration), "processingSeconds": .seconds(seconds),
                 ])
         case .cancelled:

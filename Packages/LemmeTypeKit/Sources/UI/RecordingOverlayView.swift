@@ -20,8 +20,9 @@ struct RecordingOverlayView: View {
                     Text(appearance.title)
                         .font(.headline)
                         .accessibilityIdentifier("overlay.state")
-                    if coordinator.state == .preparing || coordinator.state == .recording {
-                        Text(coordinator.writingMode.displayName)
+                    if coordinator.state.isCapturing || coordinator.state == .processing {
+                        let mode = coordinator.activeMode ?? coordinator.writingMode
+                        Text(String(localized: "\(mode.displayName) · On this Mac", bundle: .module))
                             .font(.callout)
                             .foregroundStyle(.secondary)
                             .accessibilityIdentifier("overlay.mode")

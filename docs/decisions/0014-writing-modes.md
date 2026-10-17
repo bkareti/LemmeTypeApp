@@ -49,8 +49,10 @@ rule. A language model would be none of those.
   yet; E2-S9 adds the UI.
 - **Visibility**: `RecordingCoordinator.writingMode` (observable, backed by
   preferences, Exact by default) is shown in the status menu ("Writing Mode:
-  …") and in the overlay while preparing and recording. Each
-  `DictationSession` stores the mode when the recording ends.
+  …") and in the overlay while recording and processing. The mode is read
+  when the recording *starts* (`activeMode`) and stored in the
+  `DictationSession`, so changing it mid-recording only affects the next
+  session. Diagnostics record the mode identifier, never text.
 
 ## Consequences
 
