@@ -141,6 +141,8 @@ public final class DictationSettingsModel {
     public func setWritingMode(_ mode: WritingMode) {
         writingMode = mode
         preferences.writingMode = mode
+        // The Exact/Clean choice here picks the matching built-in default mode (E4-S5).
+        preferences.dictationMode = DictationMode.builtIn(for: mode).id
         diagnostics.record(.recognition, "settings.writing-mode", ["mode": .id(mode.rawValue)])
     }
 

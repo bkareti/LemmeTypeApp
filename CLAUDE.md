@@ -148,6 +148,14 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   the window width is fixed and a ninth tab doesn't fit the CI screen.
   Pipeline order: hints → `SnippetMatcher` (whole utterance) → writing mode →
   `Personalizer` (whole words, longest first, one pass) → `ContextFormatter`.
+- Dictation modes (ADR 0021): `DictationMode` (Domain) bundles engine,
+  language, writing mode + Clean rules, style (personalization, snippets,
+  final period), and output (insert / copy only, trailing space). Built-ins
+  `exact`/`clean`/`message`; custom modes and `AppModeRule`s live in the
+  personalization library. `AppPreferences.dictationMode` is the default
+  (migrates from `writingMode`). `ModeResolver` picks app rule → default at
+  activation; `SessionSettings` (UI) captures it into the session.
+  `ModesSettingsModel` backs Settings › Dictation › Modes and the menu picker.
 - Engine/mode selection (ADR 0016): `DictationSettingsModel` (UI) backs
   Settings › Dictation and the status menu. Mode, language, and
   `EnginePreference` are captured when recording starts and stored in the
@@ -170,7 +178,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes).
 
 ## Planning documents
 

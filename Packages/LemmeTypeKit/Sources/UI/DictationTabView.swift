@@ -1,16 +1,18 @@
 import SwiftUI
 
 /// Settings › Dictation: the engine and output settings plus vocabulary,
-/// replacements, and snippets (E4-S4). Sections share the tab so the settings
+/// replacements, snippets, and modes (E4-S4, E4-S6). Sections share the tab so the settings
 /// window keeps its fixed width.
 struct DictationTabView: View {
     enum Section: Hashable {
         case engine
         case items(PersonalizationDraft.Kind)
+        case modes
     }
 
     let dictation: DictationSettingsModel
     let personalization: PersonalizationModel
+    let modes: ModesSettingsModel
     @State private var section: Section = .engine
 
     var body: some View {
@@ -20,6 +22,7 @@ struct DictationTabView: View {
                 Text(String(localized: "Vocabulary", bundle: .module)).tag(Section.items(.vocabulary))
                 Text(String(localized: "Replacements", bundle: .module)).tag(Section.items(.replacement))
                 Text(String(localized: "Snippets", bundle: .module)).tag(Section.items(.snippet))
+                Text(String(localized: "Modes", bundle: .module)).tag(Section.modes)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -31,6 +34,8 @@ struct DictationTabView: View {
             case .items(let kind):
                 PersonalizationSettingsView(
                     model: personalization, kind: Binding(get: { kind }, set: { section = .items($0) }))
+            case .modes:
+                ModesSettingsView(model: modes)
             }
         }
     }

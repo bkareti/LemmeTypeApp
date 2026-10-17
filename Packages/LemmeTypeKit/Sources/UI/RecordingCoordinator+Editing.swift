@@ -18,7 +18,8 @@ extension RecordingCoordinator {
             purpose == .editing
             ? String(localized: "Editing selection. Say what to change.", bundle: .module)
             : String(localized: "Recording started", bundle: .module)
-        guard let note = context?.statusText else { return started }
-        return "\(started). \(note)"
+        // Dictation names its mode (E4-S6) so VoiceOver users hear which one runs.
+        let mode = purpose == .dictation ? activeDictationMode.map(\.displayName) : nil
+        return [started, mode, context?.statusText].compactMap(\.self).joined(separator: ". ")
     }
 }

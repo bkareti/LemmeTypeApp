@@ -15,6 +15,10 @@ public struct PersonalizationArchive: Codable, Equatable, Sendable {
     public var vocabulary: [VocabularyEntry]
     public var replacements: [Replacement]
     public var snippets: [Snippet]
+    /// Custom modes (E4-S5); optional so earlier files still decode.
+    public var modes: [DictationMode]
+    /// Per-app mode rules (E4-S7).
+    public var appRules: [AppModeRule]
 
     public init(_ library: PersonalizationLibrary) {
         format = Self.formatName
@@ -22,6 +26,8 @@ public struct PersonalizationArchive: Codable, Equatable, Sendable {
         vocabulary = library.vocabulary
         replacements = library.replacements
         snippets = library.snippets
+        modes = library.modes
+        appRules = library.appRules
     }
 
     public init(from decoder: any Decoder) throws {
@@ -31,11 +37,14 @@ public struct PersonalizationArchive: Codable, Equatable, Sendable {
         vocabulary = try container.decodeIfPresent([VocabularyEntry].self, forKey: .vocabulary) ?? []
         replacements = try container.decodeIfPresent([Replacement].self, forKey: .replacements) ?? []
         snippets = try container.decodeIfPresent([Snippet].self, forKey: .snippets) ?? []
+        modes = try container.decodeIfPresent([DictationMode].self, forKey: .modes) ?? []
+        appRules = try container.decodeIfPresent([AppModeRule].self, forKey: .appRules) ?? []
     }
 
     /// The validated library.
     public func library() throws(PersonalizationError) -> PersonalizationLibrary {
-        try PersonalizationLibrary(vocabulary: vocabulary, replacements: replacements, snippets: snippets)
+        try PersonalizationLibrary(
+            vocabulary: vocabulary, replacements: replacements, snippets: snippets, modes: modes, appRules: appRules)
     }
 
     /// Pretty-printed JSON with sorted keys, so exports diff cleanly.

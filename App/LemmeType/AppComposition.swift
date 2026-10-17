@@ -181,6 +181,7 @@ struct AppComposition {
             write: TextCleaner.write,
             delivery: textDelivery,
             rewriter: textRewriter,
+            copier: textCopier,
             diagnostics: diagnostics
         )
     }
@@ -200,6 +201,11 @@ struct AppComposition {
         let dictation = DictationSettingsModel(
             engines: recognitionEngines, modelAssets: modelAssets, preferences: preferences,
             speechAuthorizer: speechAuthorizer, diagnostics: diagnostics)
+        let modes = ModesSettingsModel(
+            personalization: personalization, preferences: preferences,
+            engines: recognitionEngines.map(\.descriptor.id), languages: dictation.languages,
+            runningApplications: Self.runningApplications, applicationName: Self.applicationName,
+            diagnostics: diagnostics)
         let diagnosticsModel = DiagnosticsModel(
             buffer: diagnostics, permissions: permissions, shortcut: shortcut, buildInfo: buildInfo)
         let settings = Self.makeSettingsWindow(
@@ -209,6 +215,7 @@ struct AppComposition {
                 shortcut: shortcut,
                 context: context,
                 personalization: personalization,
+                modes: modes,
                 audio: audio,
                 permissions: permissions,
                 diagnostics: diagnosticsModel,
@@ -224,6 +231,7 @@ struct AppComposition {
             shortcut: shortcut,
             context: context,
             personalization: personalization,
+            modes: modes,
             navigation: navigation,
             diagnostics: diagnostics,
             settings: settings

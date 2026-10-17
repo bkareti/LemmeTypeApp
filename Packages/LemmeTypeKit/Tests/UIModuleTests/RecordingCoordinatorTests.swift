@@ -54,7 +54,8 @@ struct RecordingCoordinatorTests {
         #expect(processor.targets == ["TextEdit"])
         #expect(ended == 1)
         #expect(leftoverFiles.isEmpty)
-        #expect(feedback.announcements == ["Recording started", "Recording stopped", "Text inserted."])
+        #expect(
+            feedback.announcements == ["Recording started. Exact Dictation", "Recording stopped", "Text inserted."])
         #expect(coordinator.lastDelivery == .accessibility)
 
         try await Task.sleep(for: .milliseconds(150))

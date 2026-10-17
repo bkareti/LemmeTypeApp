@@ -56,6 +56,26 @@ public final class PersonalizationModel {
         change { library throws(PersonalizationError) in try library.upsert(snippet) }
     }
 
+    /// Adds or updates a custom mode (E4-S5).
+    @discardableResult
+    public func save(_ mode: DictationMode) -> PersonalizationError? {
+        change { library throws(PersonalizationError) in try library.upsert(mode) }
+    }
+
+    /// Removes a custom mode and the app rules that used it.
+    public func removeMode(_ id: DictationModeID) {
+        change { $0.removeMode(id) }
+    }
+
+    @discardableResult
+    public func save(_ rule: AppModeRule) -> PersonalizationError? {
+        change { library throws(PersonalizationError) in try library.upsert(rule) }
+    }
+
+    public func removeAppRule(_ id: AppModeRule.ID) {
+        change { $0.removeAppRule(id) }
+    }
+
     public func removeVocabulary(_ id: VocabularyEntry.ID) {
         change { $0.removeVocabulary(id) }
     }

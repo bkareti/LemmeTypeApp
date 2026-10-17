@@ -40,6 +40,11 @@ public struct DictationSession: Identifiable, Sendable {
     public let audio: RecordedAudio
     public let target: ActivationTarget?
     public let mode: WritingMode
+    /// Every transcription, cleanup, style, and output choice for this
+    /// session (E4-S5). ``mode`` is its writing mode.
+    public let dictationMode: DictationMode
+    /// Whether the mode came from the default or an app rule (E4-S7).
+    public let modeSource: ModeSource
     public let purpose: SessionPurpose
     public let language: String
     /// The engine choice in Settings when recording started.
@@ -56,6 +61,8 @@ public struct DictationSession: Identifiable, Sendable {
         audio: RecordedAudio,
         target: ActivationTarget?,
         mode: WritingMode,
+        dictationMode: DictationMode? = nil,
+        modeSource: ModeSource = .default,
         purpose: SessionPurpose = .dictation,
         language: String,
         enginePreference: EnginePreference = .automatic,
@@ -67,6 +74,8 @@ public struct DictationSession: Identifiable, Sendable {
         self.audio = audio
         self.target = target
         self.mode = mode
+        self.dictationMode = dictationMode ?? .builtIn(for: mode)
+        self.modeSource = modeSource
         self.purpose = purpose
         self.language = language
         self.enginePreference = enginePreference

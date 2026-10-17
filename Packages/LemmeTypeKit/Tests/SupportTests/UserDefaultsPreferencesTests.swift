@@ -106,3 +106,23 @@ struct ContextPreferencesTests {
         #expect(Set(stored.keys) == ["usesFormattingContext", "allowsVoiceEditing", "contextExcludedApplications"])
     }
 }
+
+/// E4-S5: the Epic 2 writing mode migrates to the matching built-in mode.
+struct DictationModePreferencesTests {
+    @Test func defaultModeFollowsTheOldWritingModeUntilChosen() throws {
+        let suite = "DictationModePreferencesTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let preferences = UserDefaultsPreferences(defaults: defaults)
+        #expect(preferences.dictationMode == .exact)
+        preferences.writingMode = .clean
+        #expect(UserDefaultsPreferences(defaults: defaults).dictationMode == .clean)
+
+        let custom = DictationModeID(rawValue: "custom-abc")
+        preferences.dictationMode = custom
+        #expect(UserDefaultsPreferences(defaults: defaults).dictationMode == custom)
+        // Only the identifier is stored, never a mode's settings or name.
+        #expect(defaults.string(forKey: "dictationMode") == "custom-abc")
+    }
+}
