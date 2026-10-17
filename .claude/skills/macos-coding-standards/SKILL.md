@@ -80,7 +80,9 @@ Rules:
 ## Privacy (non-negotiable)
 
 - Never log, persist, or include in errors: audio samples or levels, transcripts,
-  text from other apps, clipboard contents, file contents, or user vocabulary.
+  text from other apps, clipboard contents, or file contents. User vocabulary,
+  replacements, and snippets are persisted only by the personalization store
+  (ADR 0020) and are never logged or put in diagnostics or errors.
 - Log only through `Support.Log` (wraps `os.Logger`). Interpolated values are
   `.private` unless they are enums, identifiers, counts, or durations.
 - No `print`, `NSLog`, or `debugPrint` in production code.

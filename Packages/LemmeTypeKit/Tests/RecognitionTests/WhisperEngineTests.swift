@@ -47,6 +47,13 @@ final class FakeWhisperRuntime: WhisperRuntime {
         state.withLock { $0.live -= 1 }
     }
 
+    private let prompts = Mutex<[String?]>([])
+    var receivedPrompts: [String?] { prompts.withLock { $0 } }
+
+    fileprivate func recordPrompt(_ prompt: String?) {
+        prompts.withLock { $0.append(prompt) }
+    }
+
     final class Model: WhisperModel {
         let runtime: FakeWhisperRuntime
 
@@ -61,9 +68,11 @@ final class FakeWhisperRuntime: WhisperRuntime {
         func transcribe(
             _ samples: [Float],
             language: String,
+            prompt: String?,
             shouldAbort: @escaping @Sendable () -> Bool,
             progress: @escaping @Sendable (Double) -> Void
         ) throws(RecognitionError) -> [TranscriptSegment] {
+            runtime.recordPrompt(prompt)
             progress(0.5)
             if runtime.inferenceBlocksUntilAborted {
                 while !shouldAbort() {
@@ -107,6 +116,23 @@ struct WhisperEngineTests {
         #expect(transcript.segments.count == 2)
         #expect(transcript.segments.last?.start == 0.6)
         #expect(updates.withLock { $0 }.contains(.progress(1)))
+    }
+
+    @Test func vocabularyHintsBecomeABoundedInitialPrompt() async throws {
+        defer { fixtures.removeAll() }
+        let runtime = FakeWhisperRuntime()
+        let engine = makeEngine(runtime: runtime)
+        let tone = try fixtures.make(.tone(seconds: 1.5))
+        _ = try await engine.recognize(
+            RecognitionRequest(audio: tone.audio, language: "en-US", hints: ["LemmeType", " ", "Kubernetes"])
+        ) { _ in }
+        _ = try await engine.recognize(tone) { _ in }
+        #expect(runtime.receivedPrompts == ["Glossary: LemmeType, Kubernetes.", nil])
+
+        let many = (0..<200).map { "Term\($0)" }
+        let prompt = try #require(WhisperEngine.prompt(for: many))
+        #expect(prompt.count <= WhisperEngine.maximumPromptLength + "Glossary: .".count)
+        #expect(WhisperEngine.prompt(for: []) == nil)
     }
 
     @Test func missingModelIsAssetsMissing() async throws {

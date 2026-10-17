@@ -15,6 +15,7 @@ final class AppController {
     let overlay: RecordingOverlayController
     let shortcut: ShortcutSettingsModel
     let context: ContextSettingsModel
+    let personalization: PersonalizationModel
     let navigation: SettingsNavigation
     let diagnostics: any DiagnosticsRecording
     let settings: ManagedWindowController
@@ -45,6 +46,7 @@ final class AppController {
         dictation: DictationSettingsModel,
         shortcut: ShortcutSettingsModel,
         context: ContextSettingsModel,
+        personalization: PersonalizationModel,
         navigation: SettingsNavigation,
         diagnostics: any DiagnosticsRecording,
         settings: ManagedWindowController
@@ -59,6 +61,7 @@ final class AppController {
         self.overlay = RecordingOverlayController(coordinator: recorder)
         self.shortcut = shortcut
         self.context = context
+        self.personalization = personalization
         self.navigation = navigation
         self.settings = settings
         activation.onCommand = { [weak self] command in self?.handle(command) }
@@ -86,6 +89,7 @@ final class AppController {
     func launchFinished() {
         Task { [audioCapture = recorder.capture] in await audioCapture.purgeLeftovers() }
         Task { [modelAssets] in await modelAssets.removeUnusableFiles() }
+        Task { [personalization] in await personalization.load() }
         overlay.start()
         dictation.refreshInBackground()
         diagnostics.record(

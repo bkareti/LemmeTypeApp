@@ -63,6 +63,10 @@ public actor TranscriptionPipeline: DictationProcessing {
         var engine: RecognitionEngineID?
         var recognition: Duration?
         var rewriting: Duration?
+        /// Vocabulary and replacement changes applied (E4-S2).
+        var personalizations = 0
+        /// The utterance was a snippet trigger (E4-S3).
+        var usedSnippet = false
     }
 
     private func run(
@@ -83,7 +87,7 @@ public actor TranscriptionPipeline: DictationProcessing {
         let transcript: Transcript
         do {
             transcript = try await RecognitionRunner().run(
-                engine, RecognitionRequest(audio: session.audio, language: session.language)
+                engine, RecognitionRequest(audio: session.audio, language: session.language, hints: hints(for: session))
             ) { update in
                 if case .progress(let fraction) = update { updates(.progress(fraction)) }
             }
@@ -120,7 +124,7 @@ public actor TranscriptionPipeline: DictationProcessing {
         switch session.purpose {
         case .dictation:
             updates(.phase(.writing))
-            return written(transcript.text, session: session)
+            return written(transcript.text, session: session, run: &run)
         case .editing:
             updates(.phase(.rewriting))
             let rewriteStart = ContinuousClock.now
@@ -136,10 +140,26 @@ public actor TranscriptionPipeline: DictationProcessing {
         }
     }
 
-    private func written(_ transcript: String, session: DictationSession) -> String {
-        let text = write(transcript, session.mode)
+    /// Snippet, or writing mode then vocabulary and replacements; then the
+    /// cursor context (ADR 0020 orders the steps).
+    private func written(_ transcript: String, session: DictationSession, run: inout Run) -> String {
+        if let snippet = SnippetMatcher.match(transcript, in: session.personalization.snippets) {
+            // Delivered as written: only spacing may change around it.
+            run.usedSnippet = true
+            guard let context = session.formattingContext else { return snippet.expansion }
+            return format(snippet.expansion, .exact, context)
+        }
+        var text = write(transcript, session.mode)
+        let personalized = Personalizer(library: session.personalization).apply(text)
+        text = personalized.text
+        run.personalizations = personalized.transformations.count
         guard let context = session.formattingContext, text.contains(where: { !$0.isWhitespace }) else { return text }
         return format(text, session.mode, context)
+    }
+
+    /// Vocabulary hints for dictation; an instruction for voice editing gets none.
+    private func hints(for session: DictationSession) -> [String] {
+        session.purpose == .dictation ? session.personalization.recognitionHints : []
     }
 
     private struct EditingFailure: Error {
@@ -256,6 +276,7 @@ public actor TranscriptionPipeline: DictationProcessing {
                     "audioSeconds": .seconds(session.audio.duration), "processingSeconds": .seconds(seconds),
                     "recognitionSeconds": .seconds(run.recognition.map(Self.seconds) ?? 0),
                     "rewriteSeconds": .seconds(run.rewriting.map(Self.seconds) ?? 0),
+                    "personalizations": .count(run.personalizations), "snippet": .flag(run.usedSnippet),
                 ])
         case .needsAttention(let issue, let engine, _, _):
             diagnostics.record(

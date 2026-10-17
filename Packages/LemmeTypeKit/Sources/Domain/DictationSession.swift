@@ -46,6 +46,9 @@ public struct DictationSession: Identifiable, Sendable {
     public let enginePreference: EnginePreference
     /// `nil` until the pipeline picks one; retries reuse it.
     public var engine: RecognitionEngineID?
+    /// The user's vocabulary, replacements, and snippets when recording
+    /// started (E4-S2, E4-S3). In memory only.
+    public let personalization: PersonalizationLibrary
     public let createdAt: Date
 
     public init(
@@ -57,6 +60,7 @@ public struct DictationSession: Identifiable, Sendable {
         language: String,
         enginePreference: EnginePreference = .automatic,
         engine: RecognitionEngineID? = nil,
+        personalization: PersonalizationLibrary = .empty,
         createdAt: Date = Date()
     ) {
         self.id = id
@@ -67,6 +71,7 @@ public struct DictationSession: Identifiable, Sendable {
         self.language = language
         self.enginePreference = enginePreference
         self.engine = engine
+        self.personalization = personalization
         self.createdAt = createdAt
     }
 

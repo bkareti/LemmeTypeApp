@@ -16,4 +16,5 @@ public enum Log {
     public static let models = Logger(subsystem: subsystem, category: "models")
     public static let delivery = Logger(subsystem: subsystem, category: "delivery")
     public static let editing = Logger(subsystem: subsystem, category: "editing")
+    public static let personalization = Logger(subsystem: subsystem, category: "personalization")
 }

@@ -134,10 +134,14 @@ public enum EngineAvailability: Equatable, Sendable {
 public struct RecognitionRequest: Sendable {
     public let audio: RecordedAudio
     public let language: String
+    /// Words and names the user expects (vocabulary terms, E4-S2). Engines may
+    /// use them to bias recognition; they are never logged and never leave the Mac.
+    public let hints: [String]
 
-    public init(audio: RecordedAudio, language: String) {
+    public init(audio: RecordedAudio, language: String, hints: [String] = []) {
         self.audio = audio
         self.language = language
+        self.hints = hints
     }
 }
 

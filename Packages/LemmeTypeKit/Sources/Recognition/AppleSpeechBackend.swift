@@ -13,9 +13,11 @@ struct AppleSpeechResult: Sendable, Equatable {
 protocol AppleSpeechBackend: Sendable {
     func hasRecognizer(language: String) -> Bool
     func supportsOnDeviceRecognition(language: String) -> Bool
+    /// `hints` are vocabulary terms to favour (E4-S2).
     func recognize(
         fileURL: URL,
         language: String,
+        hints: [String],
         onPartial: @escaping @Sendable (String) -> Void
     ) async throws(RecognitionError) -> AppleSpeechResult
 }
@@ -33,6 +35,7 @@ struct SFSpeechBackend: AppleSpeechBackend {
     func recognize(
         fileURL: URL,
         language: String,
+        hints: [String],
         onPartial: @escaping @Sendable (String) -> Void
     ) async throws(RecognitionError) -> AppleSpeechResult {
         guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: language)) else {
@@ -48,6 +51,7 @@ struct SFSpeechBackend: AppleSpeechBackend {
         request.shouldReportPartialResults = true
         request.addsPunctuation = true
         request.taskHint = .dictation
+        request.contextualStrings = hints
 
         let session = SpeechTaskSession(onPartial: onPartial)
         do {

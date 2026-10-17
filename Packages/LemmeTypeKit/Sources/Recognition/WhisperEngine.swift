@@ -87,7 +87,8 @@ public actor WhisperEngine: SpeechRecognitionEngine {
 
         let start = ContinuousClock.now
         let segments = try await Self.transcribe(
-            try AudioFileReader.readSamples(from: request.audio.fileURL), with: model, updates: updates)
+            try AudioFileReader.readSamples(from: request.audio.fileURL), with: model,
+            prompt: Self.prompt(for: request.hints), updates: updates)
         if Task.isCancelled { throw .cancelled }
         let text = segments.map(\.text).joined(separator: " ")
             .split(whereSeparator: \.isWhitespace).joined(separator: " ")
@@ -122,16 +123,35 @@ public actor WhisperEngine: SpeechRecognitionEngine {
 
     /// Runs inference off the actor; cancellation sets the abort flag that
     /// whisper.cpp polls between decoding steps.
+    /// Vocabulary as an initial prompt ("Glossary: A, B, C."), whole terms
+    /// only, at most ``maximumPromptLength`` characters; `nil` without hints.
+    static func prompt(for hints: [String]) -> String? {
+        var terms: [String] = []
+        var length = 0
+        for hint in hints {
+            let term = hint.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !term.isEmpty, length + term.count + 2 <= maximumPromptLength else { continue }
+            terms.append(term)
+            length += term.count + 2
+        }
+        return terms.isEmpty ? nil : "Glossary: \(terms.joined(separator: ", "))."
+    }
+
+    /// Whisper's prompt window is about 224 tokens; this stays well inside it.
+    static let maximumPromptLength = 400
+
     private static func transcribe(
         _ samples: [Float],
         with model: any WhisperModel,
+        prompt: String?,
         updates: @escaping @Sendable (RecognitionUpdate) -> Void
     ) async throws(RecognitionError) -> [TranscriptSegment] {
         guard !samples.isEmpty, !SpeechActivity.isSilent(samples) else { throw .noSpeechDetected }
         let abort = AbortFlag()
         let inference = Task.detached {
             try model.transcribe(
-                samples, language: "en", shouldAbort: { abort.isSet }, progress: { updates(.progress($0)) })
+                samples, language: "en", prompt: prompt, shouldAbort: { abort.isSet },
+                progress: { updates(.progress($0)) })
         }
         do {
             return try await withTaskCancellationHandler {

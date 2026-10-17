@@ -21,6 +21,7 @@ final class FakeAppleSpeechBackend: AppleSpeechBackend {
 
     private let config: Mutex<Config>
     private let calls = Mutex(0)
+    let receivedHints = Mutex<[String]>([])
 
     init(_ config: Config = Config()) {
         self.config = Mutex(config)
@@ -34,9 +35,11 @@ final class FakeAppleSpeechBackend: AppleSpeechBackend {
     func recognize(
         fileURL: URL,
         language: String,
+        hints: [String],
         onPartial: @escaping @Sendable (String) -> Void
     ) async throws(RecognitionError) -> AppleSpeechResult {
         calls.withLock { $0 += 1 }
+        receivedHints.withLock { $0 = hints }
         let config = config.withLock { $0 }
         config.partials.forEach(onPartial)
         if config.delay > .zero {
@@ -180,6 +183,15 @@ struct AppleSpeechEngineTests {
     ])
     func frameworkErrorMapping(domain: String, code: Int, expected: RecognitionError) {
         #expect(AppleSpeechErrorMapping.map(domain: domain, code: code) == expected)
+    }
+
+    @Test func vocabularyHintsReachTheRecognizer() async throws {
+        defer { fixtures.removeAll() }
+        let (engine, backend) = makeEngine()
+        let tone = try fixtures.make(.tone(seconds: 1))
+        let request = RecognitionRequest(audio: tone.audio, language: "en-US", hints: ["LemmeType", "Kubernetes"])
+        _ = try await engine.recognize(request) { _ in }
+        #expect(backend.receivedHints.withLock { $0 } == ["LemmeType", "Kubernetes"])
     }
 
     @Test func unreadableFileIsReported() async throws {
