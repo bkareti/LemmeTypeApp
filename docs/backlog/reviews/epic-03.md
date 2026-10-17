@@ -145,13 +145,13 @@ No blockers.
 | S4 availability states | `FoundationModelsRewriterTests.mapsAvailability` |
 | S4 runner guarantees | `TextRewritingRunnerTests` + `TextRewriterContract` |
 | S4 error mapping | `FoundationModelsRewriterTests.mapsGenerationErrors` |
-| S4 nothing retained / network silent | Code review (session per request) + MA-40 |
+| S4 nothing retained / network silent | Code review (session per request) + MA-35 |
 | S5 replace selection once | `VoiceEditingPipelineTests.replacesSelectionOnce` |
 | S5 refuses before recording | `RecordingCoordinatorEditingTests.blockedEditNeverRecords` |
 | S5 changed selection | `AccessibilityInsertionTests.changedSelectionIsNotReplaced` |
 | S5 refusal leaves original | `VoiceEditingPipelineTests.refusalKeepsOriginal` |
 | S5 diagnostics | `DiagnosticsPrivacyTests.editingNeverReachesDiagnostics` |
-| S6 pane, switch, exclusions | `ContextSettingsModelTests` + MA-43 |
-| S6 overlay / VoiceOver | `RecordingCoordinatorEditingTests.reportsContextStatus` + MA-44 |
+| S6 pane, switch, exclusions | `ContextSettingsModelTests` + MA-32, MA-33, MA-36 |
+| S6 overlay / VoiceOver | `RecordingCoordinatorEditingTests.reportsContextStatus` + MA-32 |
 | S7 end-to-end and canaries | `ContextEndToEndTests` |
 | S7 manual / matrix / threshold | `docs/testing/manual-acceptance.md`, `insertion-matrix.md`, `performance-thresholds.md` |

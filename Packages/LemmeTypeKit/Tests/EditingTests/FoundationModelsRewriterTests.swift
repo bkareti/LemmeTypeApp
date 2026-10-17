@@ -7,7 +7,7 @@ import Testing
 @testable import Editing
 
 /// E3-S4: the Foundation Models engine's mapping and prompt. The real model
-/// is not available on CI; MA-40 covers a real rewrite.
+/// is not available on CI; MA-35 covers a real rewrite.
 struct FoundationModelsRewriterTests {
     @Test func mapsAvailability() {
         #expect(FoundationModelsRewriter.map(.deviceNotEligible) == .deviceNotEligible)

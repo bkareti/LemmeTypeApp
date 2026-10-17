@@ -15,7 +15,7 @@ results in the PR description as `MA-N: pass/fail — notes`.
    defaults delete com.lemmetype.LemmeType
    rm -rf "$TMPDIR/LemmeType"
    ```
-3. Run MA-1 to MA-31 in order: clean-install onboarding (MA-6) must come
+3. Run MA-1 to MA-37 in order: clean-install onboarding (MA-6) must come
    before anything that assumes permissions; real-microphone checks are MA-11
    to MA-13 and MA-14 to MA-17.
 4. Finish with `make privacy-check` and confirm `$TMPDIR/LemmeType/Sessions` is empty.
@@ -337,3 +337,67 @@ Record results per app in `docs/testing/insertion-matrix.md`.
    monitors show no connection.
 6. Afterwards `$TMPDIR/LemmeType/Sessions` is empty and Settings › Diagnostics
    › Copy shows session durations but no dictated words.
+
+## E3-S1/S2/S6 — Cursor context
+
+**MA-32 Context is read only on a shortcut press, and only when allowed**
+1. Fresh install: Settings › Context shows *Use text near the cursor* **off**
+   and *Edit selected text by voice* **on** with ⌥⇧Space.
+2. In TextEdit type "We met on Monday and", dictate "then we left" (Clean):
+   the result is Epic 2 behaviour ("andThen we left.") and the overlay shows
+   no context line.
+3. Turn the switch on and repeat: "We met on Monday and then we left." and the
+   overlay shows *Using text near the cursor*; VoiceOver says
+   "Recording started. Using text near the cursor".
+4. Put the caret mid-sentence before "world" in "Say world", dictate "hello":
+   "Say hello world" (no period, one space each side).
+5. Settings › Diagnostics › Copy: `activation.start` has `context: captured`
+   and no words from the document.
+
+**MA-33 Exclusions, sensitive apps, and password fields**
+1. Settings › Context › *Add App…* › Notes. Dictate in Notes: no context line
+   (or *Context off for this app*), and text is still inserted. Remove Notes:
+   context is used again from the next dictation.
+2. In 1Password or Keychain Access (if installed) and in any password field
+   (Safari login form), press both shortcuts: nothing is read, nothing is typed,
+   voice editing explains why, and nothing is recorded for the voice edit.
+
+## E3-S4/S5 — Voice editing
+
+**MA-34 Rewriting the selection on device**
+1. On a Mac with Apple Intelligence on, Settings › Context shows *The on-device
+   model is ready.* With it off (or on an ineligible Mac) it explains how to
+   enable it, and pressing ⌥⇧Space shows the same reason without recording.
+2. In TextEdit select a long sentence, hold ⌥⇧Space, say "make this shorter",
+   release. The overlay shows *Editing selection · On this Mac* →
+   *Rewriting on this Mac…* → *Done*; only the selection is replaced.
+3. Repeat with "fix the grammar", "turn this into a bulleted list", and
+   "translate to Spanish". ⌘Z in the app restores the original; record per app
+   in the insertion matrix.
+4. Start an edit, then click elsewhere to change the selection before it
+   finishes: nothing is replaced; the overlay offers **Copy Text**.
+5. With nothing selected, press ⌥⇧Space: *Select the text you want to change*,
+   no recording indicator.
+
+**MA-35 Network silence during rewriting**
+1. Start `scripts/check-network-silence.sh --attach 300` and
+   `sudo nettop -p LemmeType`, turn off Wi-Fi, and run MA-34 step 2 three
+   times: every rewrite succeeds and neither monitor shows a connection.
+2. Optional developer check: `LEMMETYPE_REAL_REWRITE=1 swift test --package-path
+   Packages/LemmeTypeKit --filter FoundationModelsRealRewriteTests` passes
+   offline.
+
+**MA-36 Shortcuts and switches**
+1. Settings › Context › *Change…*: record ⌃⌥E; the status menu shows *Edit
+   Selection: ⌃⌥E*. Recording the dictation shortcut there is refused.
+2. While dictating with ⌥Space held, press ⌥⇧Space: nothing changes. Esc
+   cancels either kind of session.
+3. Turn voice editing off: ⌥⇧Space is free for other apps (no LemmeType
+   reaction) and the menu line disappears.
+
+**MA-37 Latency (records the voice-edit threshold run)**
+1. On the minimum supported Apple Intelligence Mac, run MA-34 step 2 ten times
+   with a 1–3 sentence selection. Settings › Diagnostics › Copy: note the
+   `rewriteSeconds` and `processingSeconds` values of `session.delivered`
+   events with `purpose: editing`, and record p95 in
+   `docs/testing/performance-thresholds.md` › Voice editing.
