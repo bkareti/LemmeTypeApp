@@ -32,10 +32,13 @@ publishes, tags, or uploads anything.
 4. **Quality gate** — `make lint`, `make test`, CI green, and every step in
    `docs/testing/manual-acceptance.md` executed on a clean user account, with
    results recorded in the PR.
-5. **Privacy gate** — verify Local mode is network-silent (e.g. Little Snitch or
-   `nettop` during a dictation), diagnostics contain no canary content, no new
+5. **Privacy and performance gate** — verify Local mode is network-silent
+   (`scripts/check-network-silence.sh --attach` plus Little Snitch or `nettop`
+   during a dictation, MA-31), diagnostics contain no canary content, no new
    entitlements or TCC usage strings since the last release without
-   justification.
+   justification. Run `make benchmark` on the minimum hardware; the threshold
+   check (`docs/testing/performance-thresholds.json`) must pass and the
+   thresholds must be *Approved* by a product owner.
 6. **Archive & sign** (requires a Developer ID Application certificate and the
    team ID in `Config/Signing.local.xcconfig`, which is gitignored):
    ```bash
@@ -52,7 +55,10 @@ publishes, tags, or uploads anything.
    xcrun notarytool submit build/LemmeType.zip --keychain-profile <profile> --wait
    xcrun stapler staple build/export/LemmeType.app
    spctl --assess --type execute --verbose build/export/LemmeType.app
+   scripts/check-release-artifact.sh build/LemmeType.zip
    ```
+   The artifact check fails if the app contains recordings, transcripts, or
+   benchmark output.
 8. **Tag & publish** (after user confirmation): merge the release branch,
    `git tag -a vX.Y.Z -m "LemmeType X.Y.Z"`, push the tag, and
    `gh release create vX.Y.Z build/LemmeType-X.Y.Z.zip --notes-file <notes>`

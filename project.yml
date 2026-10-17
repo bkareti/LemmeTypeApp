@@ -71,6 +71,7 @@ schemes:
         - package: LemmeTypeKit/RecognitionTests
         - package: LemmeTypeKit/ModelAssetsTests
         - package: LemmeTypeKit/DeliveryTests
+        - package: LemmeTypeKit/EndToEndTests
         - package: LemmeTypeKit/ShortcutsTests
         - package: LemmeTypeKit/UIModuleTests
     archive:

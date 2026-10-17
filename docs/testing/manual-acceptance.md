@@ -15,7 +15,7 @@ results in the PR description as `MA-N: pass/fail — notes`.
    defaults delete com.lemmetype.LemmeType
    rm -rf "$TMPDIR/LemmeType"
    ```
-3. Run MA-1 to MA-26 in order: clean-install onboarding (MA-6) must come
+3. Run MA-1 to MA-31 in order: clean-install onboarding (MA-6) must come
    before anything that assumes permissions; real-microphone checks are MA-11
    to MA-13 and MA-14 to MA-17.
 4. Finish with `make privacy-check` and confirm `$TMPDIR/LemmeType/Sessions` is empty.
@@ -227,8 +227,11 @@ Requires Microphone permission (team-signed build).
 
 **MA-25 Benchmark run** (minimum and recommended hardware)
 1. `scripts/run-recognition-benchmark.sh` with the model installed.
-2. Copy the metrics from `build/benchmarks/` into
-   `docs/testing/performance-thresholds.md` with the Mac model and date.
+2. `scripts/run-e2e-benchmark.sh` (Apple Speech and Whisper, inside the app,
+   under the network monitor; allow Speech Recognition on first run).
+3. Copy the summaries from `build/benchmarks/*.md` into the *Recorded runs*
+   table of `docs/testing/performance-thresholds.md` with the Mac model and
+   date. The check script must pass.
 
 ## E2-S5 — Dictation sessions
 
@@ -315,3 +318,22 @@ Record results per app in `docs/testing/insertion-matrix.md`.
    the current session finishes with the engine it started with.
 5. Revoke Speech Recognition and choose Apple Speech: the pane shows *Needs
    Speech Recognition access* with **Allow Speech Recognition**.
+
+## E2-S10 — End-to-end acceptance
+
+**MA-31 Clean user account, offline, every supported app**
+1. Create a new macOS user account, log in, and install the team-signed
+   build in /Applications. Complete onboarding (MA-6).
+2. Download the Whisper model (MA-22), then turn off Wi-Fi and Ethernet.
+3. Start `scripts/check-network-silence.sh --attach 600` (from the
+   developer account with `sudo -u <user>` or a second terminal) and keep a
+   network monitor (Little Snitch, LuLu, or `sudo nettop -p LemmeType`) open.
+4. With **Automatic**, then **Apple Speech**, then **Whisper**, and in both
+   **Exact** and **Clean** mode, dictate one sentence into each app of
+   `docs/testing/insertion-matrix.md`; fill in its result columns. Include a
+   password field and a focus change during processing.
+5. Expected: text arrives once in every app (Accessibility or paste, as the
+   matrix says), the clipboard is restored, no app loses data, and both
+   monitors show no connection.
+6. Afterwards `$TMPDIR/LemmeType/Sessions` is empty and Settings › Diagnostics
+   › Copy shows session durations but no dictated words.

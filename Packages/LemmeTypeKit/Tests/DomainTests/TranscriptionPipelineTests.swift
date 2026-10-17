@@ -195,6 +195,8 @@ struct TranscriptionPipelineTests {
         #expect(events[1].attributes["issue"] == .identifier("recognition.model-load-failed"))
         #expect(events[0].attributes["audioSeconds"] == .seconds(2))
         #expect(events[0].attributes["mode"] == .identifier("exact"))
+        #expect(events[0].attributes["engine"] == .identifier("fake"))
+        #expect(events[0].attributes["recognitionSeconds"] != nil)
         #expect(!String(describing: events).contains("canary"))
     }
 

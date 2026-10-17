@@ -60,6 +60,9 @@ let package = Package(
         .testTarget(name: "RecognitionTests", dependencies: ["Recognition", "Domain", "TestSupport"]),
         .testTarget(name: "ModelAssetsTests", dependencies: ["ModelAssets", "Domain"]),
         .testTarget(name: "DeliveryTests", dependencies: ["Delivery", "Domain", "TestSupport"]),
+        // Recorder → pipeline → writing mode → delivery with fakes at the OS edges (E2-S10).
+        .testTarget(
+            name: "EndToEndTests", dependencies: ["UI", "Audio", "Delivery", "Domain", "Support", "TestSupport"]),
         .testTarget(name: "ShortcutsTests", dependencies: ["Shortcuts", "Domain", "TestSupport"]),
         .testTarget(
             name: "UIModuleTests", dependencies: ["UI", "Domain", "Support", "TestSupport", "Audio", "Shortcuts"]),
