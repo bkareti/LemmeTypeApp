@@ -94,7 +94,7 @@ struct AppComposition {
             speechAuthorizer: speechAuthorizer,
             recognitionEngines: [
                 AppleSpeechEngine(authorizer: speechAuthorizer, language: { preferences.dictationLanguage }),
-                WhisperEngine(assets: modelAssets),
+                WhisperEngine(assets: modelAssets, settings: { whisperSettings(preferences: preferences) }),
             ],
             modelAssets: modelAssets,
             textDelivery: DictationTextDelivery(
@@ -113,6 +113,15 @@ struct AppComposition {
             targetCapturer: makeTargetCapturer(preferences: preferences),
             buildInfo: buildInfo
         )
+    }
+
+    /// The Whisper model choice and the performance plan, read for every session (E5-S1, E5-S5).
+    private nonisolated static func whisperSettings(preferences: any AppPreferences) -> WhisperRunSettings {
+        let plan = PerformancePlan.make(
+            profile: preferences.performanceProfile, conditions: .nominal, idleUnload: preferences.modelIdleUnload)
+        return WhisperRunSettings(
+            choice: preferences.whisperModel, order: plan.whisperModelOrder, threads: plan.inferenceThreads,
+            usesGPU: plan.usesGPU)
     }
 
     /// Reads cursor context at activation only, under the current policy (ADR 0017).
@@ -201,11 +210,8 @@ struct AppComposition {
         let dictation = DictationSettingsModel(
             engines: recognitionEngines, modelAssets: modelAssets, preferences: preferences,
             speechAuthorizer: speechAuthorizer, diagnostics: diagnostics)
-        let modes = ModesSettingsModel(
-            personalization: personalization, preferences: preferences,
-            engines: recognitionEngines.map(\.descriptor.id), languages: dictation.languages,
-            runningApplications: Self.runningApplications, applicationName: Self.applicationName,
-            diagnostics: diagnostics)
+        let modes = makeModes(personalization: personalization, languages: dictation.languages)
+        let models = makeModels(dictation: dictation)
         let diagnosticsModel = DiagnosticsModel(
             buffer: diagnostics, permissions: permissions, shortcut: shortcut, buildInfo: buildInfo)
         let settings = Self.makeSettingsWindow(
@@ -216,6 +222,7 @@ struct AppComposition {
                 context: context,
                 personalization: personalization,
                 modes: modes,
+                models: models,
                 audio: audio,
                 permissions: permissions,
                 diagnostics: diagnosticsModel,
@@ -232,6 +239,7 @@ struct AppComposition {
             context: context,
             personalization: personalization,
             modes: modes,
+            models: models,
             navigation: navigation,
             diagnostics: diagnostics,
             settings: settings
@@ -261,28 +269,6 @@ struct AppComposition {
             personalization: { [weak personalization] in personalization?.library ?? .empty },
             diagnostics: diagnostics
         )
-    }
-
-    private func makeContextSettings(shortcut: ShortcutSettingsModel) -> ContextSettingsModel {
-        ContextSettingsModel(
-            preferences: preferences, shortcut: shortcut, rewriter: textRewriter,
-            runningApplications: Self.runningApplications, applicationName: Self.applicationName,
-            diagnostics: diagnostics)
-    }
-
-    /// Regular apps that are running, for Settings › Context's exclusion list.
-    private static func runningApplications() -> [ApplicationIdentity] {
-        NSWorkspace.shared.runningApplications.compactMap { app in
-            guard app.activationPolicy == .regular, let id = app.bundleIdentifier, id != Bundle.main.bundleIdentifier
-            else { return nil }
-            return ApplicationIdentity(bundleIdentifier: id, name: app.localizedName ?? id)
-        }
-    }
-
-    private static func applicationName(_ bundleIdentifier: String) -> String? {
-        NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier).map {
-            FileManager.default.displayName(atPath: $0.path).replacingOccurrences(of: ".app", with: "")
-        }
     }
 
     private static func makeSettingsWindow(_ view: SettingsView) -> ManagedWindowController {

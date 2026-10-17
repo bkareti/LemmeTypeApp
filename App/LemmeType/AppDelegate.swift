@@ -48,7 +48,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard controller.recorder.hasActiveSession else {
+        guard controller.recorder.hasActiveSession || controller.models.hasActiveDownloads else {
             return .terminateNow
         }
         Task {

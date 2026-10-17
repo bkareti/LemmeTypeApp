@@ -17,6 +17,7 @@ final class AppController {
     let context: ContextSettingsModel
     let personalization: PersonalizationModel
     let modes: ModesSettingsModel
+    let models: ModelsSettingsModel
     let navigation: SettingsNavigation
     let diagnostics: any DiagnosticsRecording
     let settings: ManagedWindowController
@@ -49,6 +50,7 @@ final class AppController {
         context: ContextSettingsModel,
         personalization: PersonalizationModel,
         modes: ModesSettingsModel,
+        models: ModelsSettingsModel,
         navigation: SettingsNavigation,
         diagnostics: any DiagnosticsRecording,
         settings: ManagedWindowController
@@ -65,6 +67,7 @@ final class AppController {
         self.context = context
         self.personalization = personalization
         self.modes = modes
+        self.models = models
         self.navigation = navigation
         self.settings = settings
         activation.onCommand = { [weak self] command in self?.handle(command) }
@@ -148,8 +151,10 @@ final class AppController {
 
     /// Stops any recording before the app exits so the microphone is released
     /// and partial audio is deleted.
+    /// Cancels a recording and pauses downloads, so their progress is kept (E5-S3).
     func prepareToTerminate() async {
         recorder.requestCancel()
+        await models.pauseAll()
         await recorder.settle()
     }
 
