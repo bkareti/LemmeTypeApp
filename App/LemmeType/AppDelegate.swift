@@ -14,6 +14,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var instanceCoordinator: SingleInstanceCoordinator?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
+        #if DEBUG
+            // A benchmark run is a separate, short-lived process (E2-S10).
+            if AppComposition.benchmarkRequest(arguments: ProcessInfo.processInfo.arguments) != nil { return }
+        #endif
         let coordinator = SingleInstanceCoordinator(bundleIdentifier: Bundle.main.bundleIdentifier ?? Log.subsystem)
         if coordinator.handOffToExistingInstanceIfNeeded() {
             NSApp.terminate(nil)
@@ -27,6 +31,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        #if DEBUG
+            if let request = AppComposition.benchmarkRequest(arguments: ProcessInfo.processInfo.arguments) {
+                Task { [composition] in exit(await composition.runBenchmark(request)) }
+                return
+            }
+        #endif
         controller.launchFinished()
         if composition.showsSettingsOnLaunch {
             controller.showSettings()

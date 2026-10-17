@@ -1,0 +1,25 @@
+{
+  "status": "Proposed",
+  "approvedBy": null,
+  "notes": "Limits for scripts/check-performance-thresholds.py. Keep in sync with performance-thresholds.md. A product owner sets status to Approved and fills approvedBy before Epic 2 closes.",
+  "default": {
+    "stopToDeliverySeconds.p95": 2.5,
+    "stopToDeliverySeconds.mean": 1.5,
+    "inferenceSeconds.p95": 2.0,
+    "realTimeFactor.mean": 0.5,
+    "warmUpSeconds": 3.0,
+    "peakMemoryIncreaseMB": 600,
+    "wordErrorRate": 0.12,
+    "noisyWordErrorRate": 0.25,
+    "failedSessions": 0
+  },
+  "engines": {
+    "apple-speech": {
+      "warmUpSeconds": 1.0,
+      "peakMemoryIncreaseMB": 250
+    },
+    "whisper": {
+      "stopToDeliverySeconds.p95": 3.0
+    }
+  }
+}

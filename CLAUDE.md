@@ -30,6 +30,8 @@ make test-unit   # fast: swift test on Packages/LemmeTypeKit
 make lint        # swift-format lint --strict + swiftlint --strict
 make ci          # what the required CI job runs
 make privacy-check  # fail if captured audio was left behind
+make benchmark   # end-to-end benchmark on this Mac + threshold check (not CI)
+make release-check APP=<app|zip>  # thresholds + release-artifact scan
 make format      # apply swift-format
 make run         # build and launch
 ```
@@ -51,7 +53,9 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   module: `Domain` (models, protocols, state, no OS frameworks), `Support`
   (`Log`, `BuildInfo`, `UserDefaultsPreferences`; depends on Domain), platform modules `Audio` / `Permissions` / `Shortcuts` /
   `Lifecycle` / `Recognition` / `ModelAssets` / `Delivery` (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
-  and `TestSupport` (fakes).
+  and `TestSupport` (fakes, plus the Debug-only `DictationBenchmark`).
+  `EndToEndTests` drives recorder → pipeline → cleaner → delivery with fakes
+  only at the OS edges.
 - The app target (`App/LemmeType`) holds only `LemmeTypeApp` and
   `AppComposition`, the single composition root where concrete OS services are
   created, plus `AppDelegate` (single instance) and `AppController` (menu
@@ -93,18 +97,34 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   and SHA-256. `ModelAssetStore` (ModelAssets) stages, verifies, activates,
   and removes them; `URLSessionModelDownloader` is the only network code in
   the app (lint exception in that file only) and needs a `ModelDownloadConsent`.
-- Writing modes: `TextCleaner` (Domain) is the pipeline's `write` step. Exact
-  only normalises whitespace; Clean runs `CleanupRule`s in a fixed order and
-  never rewrites protected tokens (numbers, URLs, emails, identifiers,
-  quotes). Every change is a `CleanupTransformation` naming its rule; the
-  corpus in `TextCleanerTests` is the spec.
+- Writing modes (ADR 0014): `TextCleaner` (Domain, pure) is the pipeline's
+  `write` step. Exact only
+  normalises whitespace; Clean runs ordered, individually switchable
+  `CleanupRule`s over tokens, never touching protected spans (numbers, URLs,
+  emails, identifiers, quotes). Every change is a `CleanupTransformation`
+  naming its rule; `TextCleanerTests` holds the before/after corpus.
+- Delivery (ADR 0015): `DictationTextDelivery` (Delivery) validates the
+  captured target via `AccessibilityDriving` (Domain; `SystemAccessibilityDriver`
+  real, `FakeAccessibilityDriver` in TestSupport), inserts once with
+  `kAXSelectedText`, verifies by character count (never reads text), and
+  only when insertion verifiably didn't happen uses the
+  `ClipboardFallbackPolicy` (paste with change-count-guarded restore via
+  `PasteboardAccessing`/`PasteKeystrokePosting`, copy only, or off).
+  Changed targets, password fields, and secure input never receive text.
+- Engine/mode selection (ADR 0016): `DictationSettingsModel` (UI) backs
+  Settings › Dictation and the status menu. Mode, language, and
+  `EnginePreference` are captured when recording starts and stored in the
+  session; a not-ready chosen engine is never swapped unless the user turned
+  on `fallsBackToReadyEngine`.
 - Diagnostics: components take `any DiagnosticsRecording` (default
   `DiscardingDiagnostics`); the app shares one `DiagnosticsBuffer`. Event names
   and keys must be literals and values typed (`.id(...)` redacts anything that
   isn't a lowercase identifier) — never pass device/app names or text.
 - Debug-only launch arguments: `-LemmeTypeUITesting` swaps in `TestSupport`
   fakes; `-LemmeTypeFreshInstall` (with it) starts with onboarding pending and
-  nothing granted; `-LemmeTypeShowSettings` opens Settings at launch. XCUITest cannot
+  nothing granted; `-LemmeTypeShowSettings` opens Settings at launch;
+  `-LemmeTypeBenchmark <corpus> <dir>` runs the end-to-end benchmark in the
+  live app and quits (`App/LemmeType/AppComposition+Benchmark.swift`). XCUITest cannot
   click status-menu items, so UI tests check menu contents only and use these.
 - `LemmeTypeTests` is hosted in the app and must not link package products
   (duplicate type copies break `is` checks); Debug disables dead-code stripping
@@ -113,7 +133,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection).
 
 ## Planning documents
 
@@ -121,6 +141,9 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
 - `docs/backlog/epic-0{1,2}-*.md` — development-ready stories (source of truth
   for acceptance criteria). Readiness reviews go in `docs/backlog/reviews/`.
 - `docs/testing/manual-acceptance.md` — checks that cannot run on CI.
+- `docs/testing/insertion-matrix.md` — per-app insertion results and failure evidence.
+- `docs/testing/performance-thresholds.md` (+ `.json`) — benchmark metrics and
+  the release thresholds (Proposed until a product owner approves).
 
 ### CI
 

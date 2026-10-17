@@ -30,8 +30,9 @@ public actor TranscriptionPipeline: DictationProcessing {
     ) async -> DictationOutcome {
         let start = ContinuousClock.now
         updates(.phase(.preparingEngine))
-        let outcome = await run(session, updates: updates)
-        record(outcome, session: session, elapsed: ContinuousClock.now - start)
+        let run = await run(session, updates: updates)
+        let outcome = run.outcome
+        record(run, session: session, elapsed: ContinuousClock.now - start)
         if case .delivered = outcome {
             session.discardAudio()
         }
@@ -48,19 +49,28 @@ public actor TranscriptionPipeline: DictationProcessing {
 
     // MARK: Steps
 
+    /// The outcome, the engine used, and how long recognition took, if it ran.
+    private struct Run {
+        let outcome: DictationOutcome
+        var engine: RecognitionEngineID?
+        var recognition: Duration?
+    }
+
     private func run(
         _ session: DictationSession,
         updates: @escaping @Sendable (ProcessingUpdate) -> Void
-    ) async -> DictationOutcome {
+    ) async -> Run {
         let engine: any SpeechRecognitionEngine
         switch await select(for: session) {
         case .success(let chosen):
             engine = chosen
         case .failure(let failure):
-            return failure.outcome
+            return Run(outcome: failure.outcome)
         }
-        if Task.isCancelled { return .cancelled }
+        let id = engine.descriptor.id
+        if Task.isCancelled { return Run(outcome: .cancelled, engine: id) }
         updates(.phase(.recognizing))
+        let recognitionStart = ContinuousClock.now
         let transcript: Transcript
         do {
             transcript = try await RecognitionRunner().run(
@@ -69,23 +79,27 @@ public actor TranscriptionPipeline: DictationProcessing {
                 if case .progress(let fraction) = update { updates(.progress(fraction)) }
             }
         } catch .cancelled {
-            return .cancelled
+            return Run(outcome: .cancelled, engine: id)
         } catch {
-            return .needsAttention(
-                .recognitionFailed(error), engine: engine.descriptor.id,
-                alternatives: await readyEngines(excluding: engine.descriptor.id), transcript: nil)
+            let alternatives = await readyEngines(excluding: engine.descriptor.id)
+            return Run(
+                outcome: .needsAttention(
+                    .recognitionFailed(error), engine: id, alternatives: alternatives, transcript: nil),
+                engine: id, recognition: ContinuousClock.now - recognitionStart)
         }
+        let recognition = ContinuousClock.now - recognitionStart
         updates(.phase(.writing))
         let text = write(transcript.text, session.mode)
-        if Task.isCancelled { return .cancelled }
+        if Task.isCancelled { return Run(outcome: .cancelled, engine: id, recognition: recognition) }
         // Delivering nothing would replace a selection with nothing.
         guard text.contains(where: { !$0.isWhitespace }) else {
-            return .needsAttention(
-                .recognitionFailed(.noSpeechDetected), engine: engine.descriptor.id, alternatives: [],
-                transcript: nil)
+            return Run(
+                outcome: .needsAttention(
+                    .recognitionFailed(.noSpeechDetected), engine: id, alternatives: [], transcript: nil),
+                engine: id, recognition: recognition)
         }
         updates(.phase(.delivering))
-        return await deliver(text, session: session, engine: engine.descriptor.id)
+        return Run(outcome: await deliver(text, session: session, engine: id), engine: id, recognition: recognition)
     }
 
     private func deliver(_ text: String, session: DictationSession, engine: RecognitionEngineID?) async
@@ -141,17 +155,20 @@ public actor TranscriptionPipeline: DictationProcessing {
         return ready
     }
 
-    /// Session metrics: outcome, engine, durations, error category — no audio or text.
-    private func record(_ outcome: DictationOutcome, session: DictationSession, elapsed: Duration) {
-        let seconds = Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18
-        switch outcome {
+    /// Session metrics: outcome, engine, durations, error category — no audio
+    /// or text. `processingSeconds` runs from capture stop to delivery (the
+    /// latency the user feels); `recognitionSeconds` is inference alone.
+    private func record(_ run: Run, session: DictationSession, elapsed: Duration) {
+        let seconds = Self.seconds(elapsed)
+        switch run.outcome {
         case .delivered(let method):
             diagnostics.record(
                 .recognition, "session.delivered",
                 [
                     "method": .id(method.rawValue), "mode": .id(session.mode.rawValue),
-                    "audioSeconds": .seconds(session.audio.duration),
-                    "processingSeconds": .seconds(seconds),
+                    "engine": .id(run.engine?.rawValue ?? "none"),
+                    "audioSeconds": .seconds(session.audio.duration), "processingSeconds": .seconds(seconds),
+                    "recognitionSeconds": .seconds(run.recognition.map(Self.seconds) ?? 0),
                 ])
         case .needsAttention(let issue, let engine, _, _):
             diagnostics.record(
@@ -164,6 +181,12 @@ public actor TranscriptionPipeline: DictationProcessing {
         case .cancelled:
             diagnostics.record(.recognition, "session.cancelled", ["processingSeconds": .seconds(seconds)])
         }
+    }
+}
+
+extension TranscriptionPipeline {
+    fileprivate static func seconds(_ duration: Duration) -> Double {
+        Double(duration.components.seconds) + Double(duration.components.attoseconds) / 1e18
     }
 }
 

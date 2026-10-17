@@ -1,7 +1,13 @@
 {
-  "version": 1,
-  "notes": "Versioned, licence-free reference sentences. Audio is synthesised on the benchmark Mac with `say` (voices listed below) so runs are reproducible; real-speech runs use the same sentences read aloud. Never add dictated user content.",
-  "voices": ["Samantha", "Daniel", "Karen", "Rishi"],
+  "version": 2,
+  "notes": "Versioned, licence-free reference sentences. Audio is synthesised on the benchmark Mac with `say` so runs are reproducible and identical for every engine; real-speech runs use the same sentences read aloud. Accents come from the voices; the noisy set adds white noise to the first voice at `noise.snrDecibels`. Never add dictated user content.",
+  "voices": [
+    {"name": "Samantha", "accent": "en-US"},
+    {"name": "Daniel", "accent": "en-GB"},
+    {"name": "Karen", "accent": "en-AU"},
+    {"name": "Rishi", "accent": "en-IN"}
+  ],
+  "noise": {"snrDecibels": 10, "seed": 7},
   "utterances": [
     { "id": "conv-01", "category": "conversational", "text": "Hey, are we still on for lunch tomorrow at noon?" },
     { "id": "conv-02", "category": "conversational", "text": "Thanks for the update, I will take a look this afternoon and get back to you." },
