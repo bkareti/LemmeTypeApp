@@ -48,8 +48,11 @@ public struct ActivationTarget: Sendable {
     }
 }
 
-/// Marker for a platform handle to a focused UI element.
-public protocol FocusedElementReference: AnyObject, Sendable {}
+/// An opaque platform handle to a focused UI element. Only the platform
+/// module that created it (Accessibility) knows what `handle` is.
+public protocol FocusedElementReference: AnyObject, Sendable {
+    var handle: AnyObject { get }
+}
 
 /// What the rest of the app should do in response to the shortcut.
 public enum ActivationCommand: Sendable {

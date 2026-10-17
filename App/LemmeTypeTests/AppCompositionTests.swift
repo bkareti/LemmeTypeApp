@@ -25,7 +25,7 @@ struct AppCompositionTests {
         #expect(composition.preferences is UserDefaultsPreferences)
         #expect(composition.audioDeviceLister is CaptureDeviceLister)
         #expect(composition.audioCapture is AudioCaptureService)
-        #expect(composition.textDelivery is CopyingTextDelivery)
+        #expect(composition.textDelivery is DictationTextDelivery<SystemAccessibilityDriver>)
         #expect(composition.textCopier is PasteboardTextCopier)
         #expect(composition.makeDictationProcessor() is TranscriptionPipeline)
         #expect(composition.loginItems is SystemLoginItemManager)
