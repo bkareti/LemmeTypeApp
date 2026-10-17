@@ -26,25 +26,37 @@ public struct ShortcutEvent: Equatable, Sendable {
 
 /// The app and field that were focused when dictation was activated.
 ///
-/// Held in memory for one session only so Epic 2 can deliver text back to it.
-/// Nothing here reads the field's contents.
+/// Held in memory for one session only so text can be delivered back to it.
+/// `context` is the only field content it may carry: the bounded text read
+/// at activation under docs/decisions/0017-cursor-context.md.
 public struct ActivationTarget: Sendable {
     public let processIdentifier: Int32
     public let bundleIdentifier: String?
     public let applicationName: String?
     /// Opaque reference to the focused element; `nil` without Accessibility trust.
     public let focusedElement: (any FocusedElementReference)?
+    /// Text near the cursor captured with the target, or why it wasn't.
+    public let context: ContextCapture
 
     public init(
         processIdentifier: Int32,
         bundleIdentifier: String?,
         applicationName: String?,
-        focusedElement: (any FocusedElementReference)?
+        focusedElement: (any FocusedElementReference)?,
+        context: ContextCapture = .notRequested
     ) {
         self.processIdentifier = processIdentifier
         self.bundleIdentifier = bundleIdentifier
         self.applicationName = applicationName
         self.focusedElement = focusedElement
+        self.context = context
+    }
+
+    /// The same target with `context` attached.
+    public func with(context: ContextCapture) -> ActivationTarget {
+        ActivationTarget(
+            processIdentifier: processIdentifier, bundleIdentifier: bundleIdentifier,
+            applicationName: applicationName, focusedElement: focusedElement, context: context)
     }
 }
 

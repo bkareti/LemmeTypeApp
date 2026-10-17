@@ -73,3 +73,36 @@ struct DictationPreferencesTests {
         #expect(UserDefaultsPreferences(defaults: defaults).clipboardFallback == policy)
     }
 }
+
+/// E3-S1: context switches and exclusions; identifiers only, never text.
+struct ContextPreferencesTests {
+    @Test func contextDefaults() throws {
+        let suite = "ContextPreferencesTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let preferences = UserDefaultsPreferences(defaults: defaults)
+        #expect(!preferences.usesFormattingContext)
+        #expect(preferences.allowsVoiceEditing)
+        #expect(preferences.contextExcludedApplications.isEmpty)
+    }
+
+    @Test func contextPreferences() throws {
+        let suite = "ContextPreferencesTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let preferences = UserDefaultsPreferences(defaults: defaults)
+        preferences.usesFormattingContext = true
+        preferences.allowsVoiceEditing = false
+        preferences.contextExcludedApplications = ["com.tinyspeck.slackmacgap"]
+
+        let reloaded = UserDefaultsPreferences(defaults: defaults)
+        #expect(reloaded.contextPolicy.usesFormattingContext)
+        #expect(!reloaded.contextPolicy.allowsVoiceEditing)
+        #expect(reloaded.contextPolicy.excludedApplications == ["com.tinyspeck.slackmacgap"])
+        // Only flags and bundle identifiers are stored.
+        let stored = defaults.persistentDomain(forName: suite) ?? [:]
+        #expect(Set(stored.keys) == ["usesFormattingContext", "allowsVoiceEditing", "contextExcludedApplications"])
+    }
+}

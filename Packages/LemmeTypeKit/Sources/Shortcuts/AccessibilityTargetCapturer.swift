@@ -4,24 +4,35 @@ import Domain
 import Support
 
 /// Captures the frontmost app and, with Accessibility trust, a handle to its
-/// focused element. It never reads the element's value or any other content.
+/// focused element. Field text is read only by `readContext` (a
+/// `CursorContextReader` supplied by the composition root, ADR 0017), at this
+/// moment and within its bounds.
 @MainActor
 public final class AccessibilityTargetCapturer: TargetCapturing {
     /// Upper bound on how long an unresponsive target app can delay activation.
     private static let messagingTimeout: Float = 0.25
 
-    public init() {}
+    private let readContext: @MainActor (ActivationTarget, ContextPurpose) -> ContextCapture
 
-    public func captureTarget() -> ActivationTarget? {
+    public init(
+        readContext: @escaping @MainActor (ActivationTarget, ContextPurpose) -> ContextCapture = { _, _ in
+            .notRequested
+        }
+    ) {
+        self.readContext = readContext
+    }
+
+    public func captureTarget(purpose: ContextPurpose) -> ActivationTarget? {
         guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
         let element = AXIsProcessTrusted() ? focusedElement(of: app.processIdentifier) : nil
         Log.shortcuts.debug("Captured target; hasElement=\(element != nil, privacy: .public)")
-        return ActivationTarget(
+        let target = ActivationTarget(
             processIdentifier: app.processIdentifier,
             bundleIdentifier: app.bundleIdentifier,
             applicationName: app.localizedName,
             focusedElement: element
         )
+        return target.with(context: readContext(target, purpose))
     }
 
     private func focusedElement(of processIdentifier: pid_t) -> AXElementReference? {

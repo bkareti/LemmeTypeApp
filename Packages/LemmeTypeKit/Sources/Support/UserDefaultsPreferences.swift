@@ -79,6 +79,22 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         }
     }
 
+    public var usesFormattingContext: Bool {
+        get { defaults.bool(forKey: Key.usesFormattingContext) }
+        set { defaults.set(newValue, forKey: Key.usesFormattingContext) }
+    }
+
+    public var allowsVoiceEditing: Bool {
+        get { defaults.object(forKey: Key.allowsVoiceEditing) as? Bool ?? true }
+        set { defaults.set(newValue, forKey: Key.allowsVoiceEditing) }
+    }
+
+    /// Bundle identifiers only.
+    public var contextExcludedApplications: [String] {
+        get { defaults.stringArray(forKey: Key.contextExcludedApplications) ?? [] }
+        set { defaults.set(newValue, forKey: Key.contextExcludedApplications) }
+    }
+
     private enum Key {
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let dictationShortcut = "dictationShortcut"
@@ -90,5 +106,8 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         static let selectedEngine = "selectedEngine"
         static let clipboardFallback = "clipboardFallback"
         static let fallsBackToReadyEngine = "fallsBackToReadyEngine"
+        static let usesFormattingContext = "usesFormattingContext"
+        static let allowsVoiceEditing = "allowsVoiceEditing"
+        static let contextExcludedApplications = "contextExcludedApplications"
     }
 }

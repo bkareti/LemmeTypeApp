@@ -18,12 +18,25 @@ public protocol AppPreferences: AnyObject, Sendable {
     var fallsBackToReadyEngine: Bool { get set }
     /// What happens when direct insertion is unsupported.
     var clipboardFallback: ClipboardFallbackPolicy { get set }
+    /// Read text near the cursor to fit dictation in (E3). Off by default.
+    var usesFormattingContext: Bool { get set }
+    /// Allow the voice-editing shortcut to read the selection. On by default.
+    var allowsVoiceEditing: Bool { get set }
+    /// Bundle identifiers excluded from all context use.
+    var contextExcludedApplications: [String] { get set }
 }
 
 extension AppPreferences {
     /// The engine choice to store with a new session.
     public var enginePreference: EnginePreference {
         EnginePreference(selected: selectedEngine, fallsBackAutomatically: fallsBackToReadyEngine)
+    }
+
+    /// The context rules, read for every activation.
+    public var contextPolicy: ContextPolicy {
+        ContextPolicy(
+            usesFormattingContext: usesFormattingContext, allowsVoiceEditing: allowsVoiceEditing,
+            excludedApplications: Set(contextExcludedApplications))
     }
 
     public static var defaultDictationLanguage: String { "en-US" }

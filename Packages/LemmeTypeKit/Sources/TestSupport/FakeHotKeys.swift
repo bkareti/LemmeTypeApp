@@ -54,15 +54,20 @@ public final class FakeHotKeyRegistrar: HotKeyRegistering {
 @MainActor
 public final class FakeTargetCapturer: TargetCapturing {
     public var target: ActivationTarget?
+    /// Context attached to the target for each purpose; `.notRequested` if absent.
+    public var contexts: [ContextPurpose: ContextCapture] = [:]
     public private(set) var captureCount = 0
+    public private(set) var purposes: [ContextPurpose] = []
 
     public init(target: ActivationTarget? = FakeTargetCapturer.textEdit) {
         self.target = target
     }
 
-    public func captureTarget() -> ActivationTarget? {
+    public func captureTarget(purpose: ContextPurpose) -> ActivationTarget? {
         captureCount += 1
-        return target
+        purposes.append(purpose)
+        guard let context = contexts[purpose] else { return target }
+        return target?.with(context: context)
     }
 
     public static let textEdit = ActivationTarget(

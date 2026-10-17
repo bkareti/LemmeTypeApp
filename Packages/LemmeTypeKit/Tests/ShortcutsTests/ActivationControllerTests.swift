@@ -140,6 +140,22 @@ struct ActivationControllerTests {
         #expect(controller.mode == .pushToTalk)
     }
 
+    @Test func capturesContextOnlyOnStart() throws {
+        let context = try #require(
+            CursorContext(precedingText: "Hi", followingText: "", selection: TextSelection(location: 2, length: 0)))
+        capturer.contexts[.formatting] = .captured(context, purpose: .formatting)
+        let (_, recorder) = makeController(mode: .toggle)
+
+        registrar.send(.pressed, shortcut, at: 0)
+        registrar.send(.released, shortcut, at: 0.1)
+        registrar.send(.pressed, shortcut, at: 2)  // stop: nothing is read
+        registrar.send(.released, shortcut, at: 2.1)
+
+        #expect(recorder.names == ["start", "stop"])
+        #expect(capturer.purposes == [.formatting])
+        #expect(recorder.startTargets.first??.context.context == context)
+    }
+
     @Test func sessionEndedElsewhereAllowsANewStart() {
         let (controller, recorder) = makeController(mode: .toggle)
         registrar.send(.pressed, shortcut, at: 0)

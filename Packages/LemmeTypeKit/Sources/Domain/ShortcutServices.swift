@@ -14,10 +14,11 @@ public protocol HotKeyRegistration: AnyObject {
     func unregister()
 }
 
-/// Identifies the app and element that currently have keyboard focus.
+/// Identifies the app and element that currently have keyboard focus and,
+/// when the policy allows, reads context for `purpose` (E3-S2).
 @MainActor
 public protocol TargetCapturing: AnyObject {
-    func captureTarget() -> ActivationTarget?
+    func captureTarget(purpose: ContextPurpose) -> ActivationTarget?
 }
 
 public enum ShortcutError: LemmeTypeError, Equatable {

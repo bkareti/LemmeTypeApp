@@ -13,9 +13,11 @@ public struct TextSelection: Equatable, Sendable {
 /// The Accessibility operations text delivery needs (E2-S7,
 /// docs/decisions/0015-text-delivery.md).
 ///
-/// Implementations never read an element's text value. They may read
-/// metadata — role, subrole, character count, and selection range — and only
-/// after the role check has ruled out a secure (password) field.
+/// Delivery never reads an element's text value; it reads metadata — role,
+/// subrole, character count, and selection range — and only after the role
+/// check has ruled out a secure (password) field. The one exception is
+/// ``text(in:of:)``, which only ``CursorContextReader`` calls, at activation
+/// and within the bounds of docs/decisions/0017-cursor-context.md.
 public protocol AccessibilityDriving: Sendable {
     associatedtype Element: Sendable
 
@@ -41,4 +43,7 @@ public protocol AccessibilityDriving: Sendable {
     /// Replaces the selection (or inserts at the caret). Returns whether the
     /// target reported success.
     func setSelectedText(_ text: String, on element: Element) -> Bool
+    /// The text in `range` (UTF-16), or `nil` if the element does not expose
+    /// it. Never called for secure fields or while secure input is active.
+    func text(in range: TextSelection, of element: Element) -> String?
 }
