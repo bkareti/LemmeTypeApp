@@ -62,6 +62,24 @@ Thresholds apply on the **minimum** hardware.
 Network: **zero** sockets opened by LemmeType during capture, recognition,
 cleanup, and delivery (`scripts/check-network-silence.sh`; MA-31).
 
+## Voice editing (E3-S7) — Proposed
+
+Measured manually with MA-37 (the app's diagnostics: `rewriteSeconds`, and
+`processingSeconds` for capture stop → edited text delivered, on
+`session.delivered` events with `purpose: editing`). Not part of
+`performance-thresholds.json` until the e2e benchmark can drive the on-device
+model; the product owner approves these with the others.
+
+| Metric | Threshold (Proposed) |
+|---|---|
+| Rewrite (on-device model), p95, selection ≤ 500 characters | ≤ 3.0 s |
+| Capture stop → edited text delivered, p95 | ≤ 4.5 s |
+| Failed edits that changed the user's text | 0 |
+
+Developer run, 2026-10-17, Apple M4 Mac, 16 GB, macOS 27.0:
+`FoundationModelsRealRewriteTests.shortensASentenceOnDevice` (one 96-character
+sentence, "make this shorter", cold model) took 2.4 s including model load.
+
 ## Recorded runs
 
 | Date | Mac (model, memory) | macOS | Engine | Report summary | Within thresholds |

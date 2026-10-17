@@ -40,7 +40,7 @@ with macOS 26 on Apple Intelligence–capable Macs.
   `failed`. Only identifiers are logged.
 - **Testing** — CI tests the mapping, prompt, and contract without calling the
   model (the runner stops on cancellation before the call). A real rewrite is
-  an opt-in test (`LEMMETYPE_REAL_REWRITE=1`) and manual step MA-40.
+  an opt-in test (`LEMMETYPE_REAL_REWRITE=1`) and manual step MA-35.
 
 ## Consequences
 

@@ -55,8 +55,9 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   (`Log`, `BuildInfo`, `UserDefaultsPreferences`; depends on Domain), platform modules `Audio` / `Permissions` / `Shortcuts` /
   `Lifecycle` / `Recognition` / `ModelAssets` / `Delivery` / `Editing` (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
   and `TestSupport` (fakes, plus the Debug-only `DictationBenchmark`).
-  `EndToEndTests` drives recorder → pipeline → cleaner → delivery with fakes
-  only at the OS edges.
+  `EndToEndTests` drives recorder → pipeline → cleaner → delivery (and, for
+  Epic 3, shortcut → context reader → formatter/rewriter → delivery) with
+  fakes only at the OS edges.
 - The app target (`App/LemmeType`) holds only `LemmeTypeApp` and
   `AppComposition`, the single composition root where concrete OS services are
   created, plus `AppDelegate` (single instance) and `AppController` (menu

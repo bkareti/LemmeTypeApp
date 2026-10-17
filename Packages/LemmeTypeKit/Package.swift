@@ -64,9 +64,10 @@ let package = Package(
         .testTarget(name: "ModelAssetsTests", dependencies: ["ModelAssets", "Domain"]),
         .testTarget(name: "DeliveryTests", dependencies: ["Delivery", "Domain", "TestSupport"]),
         .testTarget(name: "EditingTests", dependencies: ["Editing", "Domain", "TestSupport"]),
-        // Recorder → pipeline → writing mode → delivery with fakes at the OS edges (E2-S10).
+        // Shortcut → context → recorder → pipeline → delivery with fakes at the OS edges (E2-S10, E3-S7).
         .testTarget(
-            name: "EndToEndTests", dependencies: ["UI", "Audio", "Delivery", "Domain", "Support", "TestSupport"]),
+            name: "EndToEndTests",
+            dependencies: ["UI", "Audio", "Delivery", "Shortcuts", "Domain", "Support", "TestSupport"]),
         .testTarget(name: "ShortcutsTests", dependencies: ["Shortcuts", "Domain", "TestSupport"]),
         .testTarget(
             name: "UIModuleTests", dependencies: ["UI", "Domain", "Support", "TestSupport", "Audio", "Shortcuts"]),
