@@ -76,9 +76,13 @@ public final class ModesSettingsModel {
         diagnostics.record(.personalization, "mode.default", ["mode": .id(id.diagnosticIdentifier)])
     }
 
-    /// Re-reads the default (Settings › Dictation may have changed it).
+    /// Re-reads the default (Settings › Dictation may have changed it). A
+    /// default that no longer exists (deleted or not imported) becomes Clean.
     public func refresh() {
         defaultMode = preferences.dictationMode
+        if personalization.library.mode(defaultMode) == nil {
+            setDefault(.clean)
+        }
     }
 
     /// Adds or updates a custom mode; the validation error, if any.

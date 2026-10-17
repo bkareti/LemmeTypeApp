@@ -15,7 +15,7 @@ results in the PR description as `MA-N: pass/fail — notes`.
    defaults delete com.lemmetype.LemmeType
    rm -rf "$TMPDIR/LemmeType"
    ```
-3. Run MA-1 to MA-41 in order: clean-install onboarding (MA-6) must come
+3. Run MA-1 to MA-42 in order: clean-install onboarding (MA-6) must come
    before anything that assumes permissions; real-microphone checks are MA-11
    to MA-13 and MA-14 to MA-17.
 4. Finish with `make privacy-check` and confirm `$TMPDIR/LemmeType/Sessions` is empty.
@@ -456,4 +456,21 @@ Record results per app in `docs/testing/insertion-matrix.md`.
 3. Remove the rule: Slack uses the default mode again.
 4. Diagnostics › Copy: `dictationMode` is `message`/`custom` and `modeSource`
    is `app-rule`; no app or mode name appears.
+
+## E4-S8 — Export, import, and delete
+
+**MA-42 Personalization data controls**
+1. With vocabulary, a replacement, a snippet, a custom mode, and an app rule,
+   Settings › Dictation › Vocabulary › *Export…*: the save panel opens; save
+   to the Desktop. The file is readable JSON with `"formatVersion" : 1`.
+2. *Delete All…* explains what is removed; confirm. Every list is empty, a
+   custom default mode becomes Clean Writing, and
+   `~/Library/Application Support/LemmeType/Personalization/` holds no
+   `library*.json`. Dictation still works.
+3. *Import…* the exported file › *Replace Mine*: everything is back and
+   behaves as before (MA-38 step 3). *Import…* again › *Add to Mine*: the
+   result says 0 added and every item skipped.
+4. Import a text file renamed `.json`: "This isn’t a LemmeType personalization
+   file." and nothing changes.
+5. Diagnostics › Copy: only `personalization.*` events with counts appear.
 

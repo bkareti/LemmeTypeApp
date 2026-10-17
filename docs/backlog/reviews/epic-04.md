@@ -76,11 +76,11 @@ No blockers.
 | S1 redaction / no UserDefaults | `PersonalizationLibraryTests.descriptionsAreRedacted`, code review |
 | S2 vocabulary, replacement, whole words, longest match | `PersonalizerTests` |
 | S2 Exact and Clean | `PersonalizationPipelineTests` |
-| S2 hints | `PersonalizerTests.hints…`, `AppleSpeechEngineTests`, `WhisperEngineTests` |
+| S2 hints | `PersonalizationPipelineTests.vocabularyTermsAreRecognitionHints`, `AppleSpeechEngineTests`, `WhisperEngineTests` |
 | S3 snippets | `SnippetMatcherTests`, `PersonalizationPipelineTests` |
-| S4 pane | `PersonalizationSettingsModelTests` + manual MA-40 |
-| S5 modes | `DictationModeTests`, `ModePipelineTests`, `UserDefaultsPreferencesTests` |
-| S6 mode management | `ModesSettingsModelTests` + manual MA-41 |
-| S7 per-app | `ModeResolverTests`, `ModesSettingsModelTests` + manual MA-42 |
-| S8 export/import/delete | `PersonalizationArchiveTests`, `PersonalizationSettingsModelTests` + manual MA-43 |
-| S9 end-to-end and canaries | `PersonalizationEndToEndTests`, `DiagnosticsPrivacyTests` |
+| S4 pane (Settings › Dictation segments) | `PersonalizationModelTests`, `PersonalizationDraftTests`, UI `PersonalizationUITests` + manual MA-39 |
+| S5 modes | `DictationModeTests`, `ModePipelineTests`, `DictationModePreferencesTests` |
+| S6 mode management | `ModesSettingsModelTests` + manual MA-40 |
+| S7 per-app | `DictationModeTests.resolverPrefersTheAppRuleThenTheDefault`, `ModesSettingsModelTests` + manual MA-41 |
+| S8 export/import/delete | `PersonalizationArchiveTests`, `PersonalizationDataTests` + manual MA-42 |
+| S9 end-to-end and canaries | `PersonalizationEndToEndTests` (incl. `personalizationNeverReachesDiagnostics`) |

@@ -156,6 +156,8 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   (migrates from `writingMode`). `ModeResolver` picks app rule → default at
   activation; `SessionSettings` (UI) captures it into the session.
   `ModesSettingsModel` backs Settings › Dictation › Modes and the menu picker.
+  Export/Import/Delete All (`PersonalizationDataControls`) use the archive;
+  `PersonalizationEndToEndTests` covers Epic 4 end to end with canaries.
 - Engine/mode selection (ADR 0016): `DictationSettingsModel` (UI) backs
   Settings › Dictation and the status menu. Mode, language, and
   `EnginePreference` are captured when recording starts and stored in the
