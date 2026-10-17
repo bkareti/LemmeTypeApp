@@ -59,6 +59,17 @@ public struct DictationSession: Identifiable, Sendable {
         self.createdAt = createdAt
     }
 
+    /// Text near the cursor captured for formatting at activation, if allowed.
+    public var formattingContext: CursorContext? {
+        if case .captured(let context, .formatting) = target?.context { return context }
+        return nil
+    }
+
+    /// The context outcome for diagnostics: an identifier, never text.
+    public var contextIdentifier: String {
+        target?.context.identifier ?? ContextCapture.notRequested.identifier
+    }
+
     /// Deletes the session's temporary audio. Safe to call more than once.
     public func discardAudio() {
         try? FileManager.default.removeItem(at: audio.fileURL)

@@ -53,7 +53,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
 - Feature code lives in the local package `Packages/LemmeTypeKit`, one target per
   module: `Domain` (models, protocols, state, no OS frameworks), `Support`
   (`Log`, `BuildInfo`, `UserDefaultsPreferences`; depends on Domain), platform modules `Audio` / `Permissions` / `Shortcuts` /
-  `Lifecycle` / `Recognition` / `ModelAssets` / `Delivery` (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
+  `Lifecycle` / `Recognition` / `ModelAssets` / `Delivery` / `Editing` (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
   and `TestSupport` (fakes, plus the Debug-only `DictationBenchmark`).
   `EndToEndTests` drives recorder → pipeline → cleaner → delivery with fakes
   only at the OS edges.
@@ -121,6 +121,16 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   user exclusions, built-in sensitive apps. Result rides on
   `ActivationTarget.context` (redacted description); diagnostics get the
   outcome identifier only.
+- Context formatting (E3-S3): `ContextFormatter` (Domain, pure) runs after
+  the writing mode when the session has formatting context. Exact: spacing
+  only; Clean: also continuation case (only `commonWords` are lower-cased),
+  mid-sentence period, duplicate punctuation. Each change is a
+  `ContextTransformation` naming its `ContextRule`.
+- Rewriting (ADR 0018): `TextRewriting` (Domain) via `TextRewritingRunner`;
+  `FoundationModelsRewriter` (`Editing`) uses on-device `SystemLanguageModel`
+  only, a fresh session per request. `FakeTextRewriter` /
+  `TextRewriterContract` in TestSupport; real-model test is opt-in with
+  `LEMMETYPE_REAL_REWRITE=1`.
 - Engine/mode selection (ADR 0016): `DictationSettingsModel` (UI) backs
   Settings › Dictation and the status menu. Mode, language, and
   `EnginePreference` are captured when recording starts and stored in the
@@ -143,7 +153,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting).
 
 ## Planning documents
 

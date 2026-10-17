@@ -24,6 +24,7 @@ let package = Package(
         .library(name: "Recognition", targets: ["Recognition"]),
         .library(name: "ModelAssets", targets: ["ModelAssets"]),
         .library(name: "Delivery", targets: ["Delivery"]),
+        .library(name: "Editing", targets: ["Editing"]),
         .library(name: "UI", targets: ["UI"]),
         .library(name: "TestSupport", targets: ["TestSupport"]),
     ],
@@ -44,6 +45,8 @@ let package = Package(
         ),
         .target(name: "ModelAssets", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
         .target(name: "Delivery", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
+        // On-device rewriting with Apple Foundation Models (docs/decisions/0018-on-device-rewriting.md).
+        .target(name: "Editing", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
         .target(
             name: "UI",
             dependencies: ["Domain", "Support"],
@@ -60,6 +63,7 @@ let package = Package(
         .testTarget(name: "RecognitionTests", dependencies: ["Recognition", "Domain", "TestSupport"]),
         .testTarget(name: "ModelAssetsTests", dependencies: ["ModelAssets", "Domain"]),
         .testTarget(name: "DeliveryTests", dependencies: ["Delivery", "Domain", "TestSupport"]),
+        .testTarget(name: "EditingTests", dependencies: ["Editing", "Domain", "TestSupport"]),
         // Recorder → pipeline → writing mode → delivery with fakes at the OS edges (E2-S10).
         .testTarget(
             name: "EndToEndTests", dependencies: ["UI", "Audio", "Delivery", "Domain", "Support", "TestSupport"]),

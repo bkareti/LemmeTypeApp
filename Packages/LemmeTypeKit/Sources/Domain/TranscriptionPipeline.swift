@@ -6,20 +6,24 @@ import Foundation
 public actor TranscriptionPipeline: DictationProcessing {
     private let engines: [any SpeechRecognitionEngine]
     private let write: @Sendable (String, WritingMode) -> String
+    private let format: @Sendable (String, WritingMode, CursorContext) -> String
     private let delivery: any TextDelivering
     private let diagnostics: any DiagnosticsRecording
 
     /// `engines` are in recommendation order (Automatic picks the first ready
     /// one); each session carries the user's ``EnginePreference``; `write`
-    /// applies a writing mode to recognised text.
+    /// applies a writing mode to recognised text; `format` fits it into the
+    /// cursor context, when the session has one (E3-S3).
     public init(
         engines: [any SpeechRecognitionEngine],
         write: @escaping @Sendable (String, WritingMode) -> String = TextCleaner.write,
+        format: @escaping @Sendable (String, WritingMode, CursorContext) -> String = ContextFormatter.format,
         delivery: any TextDelivering,
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
     ) {
         self.engines = engines
         self.write = write
+        self.format = format
         self.delivery = delivery
         self.diagnostics = diagnostics
     }
@@ -89,7 +93,10 @@ public actor TranscriptionPipeline: DictationProcessing {
         }
         let recognition = ContinuousClock.now - recognitionStart
         updates(.phase(.writing))
-        let text = write(transcript.text, session.mode)
+        var text = write(transcript.text, session.mode)
+        if let context = session.formattingContext, text.contains(where: { !$0.isWhitespace }) {
+            text = format(text, session.mode, context)
+        }
         if Task.isCancelled { return Run(outcome: .cancelled, engine: id, recognition: recognition) }
         // Delivering nothing would replace a selection with nothing.
         guard text.contains(where: { !$0.isWhitespace }) else {
@@ -166,7 +173,7 @@ public actor TranscriptionPipeline: DictationProcessing {
                 .recognition, "session.delivered",
                 [
                     "method": .id(method.rawValue), "mode": .id(session.mode.rawValue),
-                    "engine": .id(run.engine?.rawValue ?? "none"),
+                    "engine": .id(run.engine?.rawValue ?? "none"), "context": .id(session.contextIdentifier),
                     "audioSeconds": .seconds(session.audio.duration), "processingSeconds": .seconds(seconds),
                     "recognitionSeconds": .seconds(run.recognition.map(Self.seconds) ?? 0),
                 ])
