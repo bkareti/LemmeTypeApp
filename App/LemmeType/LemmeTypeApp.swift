@@ -13,7 +13,8 @@ struct LemmeTypeApp: App {
                 shortcut: appDelegate.controller.shortcut,
                 recorder: appDelegate.controller.recorder,
                 dictation: appDelegate.controller.dictation,
-                context: appDelegate.controller.context
+                context: appDelegate.controller.context,
+                modes: appDelegate.controller.modes
             )
         } label: {
             Image(systemName: "waveform")

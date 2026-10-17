@@ -58,6 +58,14 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         set { defaults.set(newValue.rawValue, forKey: Key.writingMode) }
     }
 
+    public var dictationMode: DictationModeID {
+        get {
+            defaults.string(forKey: Key.dictationMode).map(DictationModeID.init(rawValue:))
+                ?? DictationMode.builtIn(for: writingMode).id
+        }
+        set { defaults.set(newValue.rawValue, forKey: Key.dictationMode) }
+    }
+
     public var selectedEngine: RecognitionEngineID? {
         get { defaults.string(forKey: Key.selectedEngine).map(RecognitionEngineID.init(rawValue:)) }
         set { defaults.set(newValue?.rawValue, forKey: Key.selectedEngine) }
@@ -114,6 +122,7 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         static let playsFeedbackSounds = "playsFeedbackSounds"
         static let dictationLanguage = "dictationLanguage"
         static let writingMode = "writingMode"
+        static let dictationMode = "dictationMode"
         static let selectedEngine = "selectedEngine"
         static let clipboardFallback = "clipboardFallback"
         static let fallsBackToReadyEngine = "fallsBackToReadyEngine"

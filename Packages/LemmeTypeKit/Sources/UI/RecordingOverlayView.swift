@@ -104,8 +104,11 @@ struct RecordingOverlayView: View {
         if coordinator.activePurpose == .editing {
             return String(localized: "Editing selection · On this Mac", bundle: .module)
         }
-        let mode = coordinator.activeMode ?? coordinator.writingMode
-        return String(localized: "\(mode.displayName) · On this Mac", bundle: .module)
+        let mode = coordinator.activeDictationMode?.displayName ?? coordinator.writingMode.displayName
+        if coordinator.activeModeSource == .appRule {
+            return String(localized: "\(mode) for this app · On this Mac", bundle: .module)
+        }
+        return String(localized: "\(mode) · On this Mac", bundle: .module)
     }
 
     private var message: String? {

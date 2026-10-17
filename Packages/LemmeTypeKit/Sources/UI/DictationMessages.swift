@@ -9,6 +9,18 @@ extension WritingMode {
     }
 }
 
+extension DictationMode {
+    /// Built-in names are localized; custom modes show the user's name.
+    public var displayName: String {
+        switch id {
+        case .exact: WritingMode.exact.displayName
+        case .clean: WritingMode.clean.displayName
+        case .message: String(localized: "Message", bundle: .module)
+        default: name
+        }
+    }
+}
+
 extension DictationIssue {
     /// Concise, actionable text for the overlay. Never includes dictated text.
     var userMessage: String {

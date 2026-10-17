@@ -47,4 +47,21 @@ final class PersonalizationUITests: XCTestCase {
         window.buttons["Delete my email"].click()
         XCTAssertFalse(window.staticTexts["my email"].waitForExistence(timeout: 2))
     }
+
+    @MainActor
+    func testModesListBuiltInsAndDuplicateOne() {
+        let window = app.windows["settings"]
+        XCTAssertTrue(window.waitForExistence(timeout: 10))
+        let tab = window.tabs["Dictation"]
+        XCTAssertTrue(tab.waitForExistence(timeout: 5))
+        tab.click()
+        window.radioButtons["Modes"].click()
+
+        XCTAssertTrue(window.popUpButtons["modes.default"].waitForExistence(timeout: 5))
+        let duplicate = window.buttons["Duplicate Message"]
+        XCTAssertTrue(duplicate.waitForExistence(timeout: 5))
+        XCTAssertFalse(window.buttons["Delete Message"].exists)  // built-ins can't be deleted
+        duplicate.click()
+        XCTAssertTrue(window.buttons["Delete Message Copy"].waitForExistence(timeout: 5))
+    }
 }

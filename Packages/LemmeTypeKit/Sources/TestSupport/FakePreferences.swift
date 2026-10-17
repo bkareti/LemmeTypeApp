@@ -11,6 +11,7 @@ public final class FakePreferences: AppPreferences {
         var playsFeedbackSounds: Bool
         var dictationLanguage: String
         var writingMode: WritingMode
+        var dictationMode: DictationModeID?
         var selectedEngine: RecognitionEngineID?
         var clipboardFallback: ClipboardFallbackPolicy
         var fallsBackToReadyEngine: Bool
@@ -46,6 +47,7 @@ public final class FakePreferences: AppPreferences {
                 playsFeedbackSounds: playsFeedbackSounds,
                 dictationLanguage: dictationLanguage,
                 writingMode: writingMode,
+                dictationMode: nil,
                 selectedEngine: selectedEngine,
                 clipboardFallback: clipboardFallback,
                 fallsBackToReadyEngine: fallsBackToReadyEngine,
@@ -89,6 +91,11 @@ public final class FakePreferences: AppPreferences {
     public var writingMode: WritingMode {
         get { values.withLock { $0.writingMode } }
         set { values.withLock { $0.writingMode = newValue } }
+    }
+
+    public var dictationMode: DictationModeID {
+        get { values.withLock { $0.dictationMode ?? DictationMode.builtIn(for: $0.writingMode).id } }
+        set { values.withLock { $0.dictationMode = newValue } }
     }
 
     public var selectedEngine: RecognitionEngineID? {

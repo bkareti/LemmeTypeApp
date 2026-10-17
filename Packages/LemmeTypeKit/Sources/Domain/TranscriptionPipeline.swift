@@ -5,25 +5,29 @@ import Foundation
 /// protocols, so it runs unchanged against fakes in tests.
 public actor TranscriptionPipeline: DictationProcessing {
     private let engines: [any SpeechRecognitionEngine]
-    private let write: @Sendable (String, WritingMode) -> String
-    private let format: @Sendable (String, WritingMode, CursorContext) -> String
+    let write: @Sendable (String, WritingMode) -> String
+    let format: @Sendable (String, WritingMode, CursorContext) -> String
     private let delivery: any TextDelivering
     private let rewriter: (any TextRewriting)?
+    private let copier: (any TextCopying)?
     private let diagnostics: any DiagnosticsRecording
 
     /// `engines` are in recommendation order (Automatic picks the first ready
     /// one); each session carries the user's ``EnginePreference``; `write`
     /// applies a writing mode to recognised text; `format` fits it into the
     /// cursor context, when the session has one (E3-S3); `rewriter` runs
-    /// voice-editing sessions (E3-S5), which are refused without one.
+    /// voice-editing sessions (E3-S5), which are refused without one;
+    /// `copier` serves modes whose output is Copy only (E4-S5).
     public init(
         engines: [any SpeechRecognitionEngine],
         write: @escaping @Sendable (String, WritingMode) -> String = TextCleaner.write,
         format: @escaping @Sendable (String, WritingMode, CursorContext) -> String = ContextFormatter.format,
         delivery: any TextDelivering,
         rewriter: (any TextRewriting)? = nil,
+        copier: (any TextCopying)? = nil,
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
     ) {
+        self.copier = copier
         self.engines = engines
         self.write = write
         self.format = format
@@ -58,7 +62,7 @@ public actor TranscriptionPipeline: DictationProcessing {
     // MARK: Steps
 
     /// The outcome, the engine used, and how long recognition took, if it ran.
-    private struct Run {
+    struct Run {
         var outcome: DictationOutcome
         var engine: RecognitionEngineID?
         var recognition: Duration?
@@ -140,28 +144,6 @@ public actor TranscriptionPipeline: DictationProcessing {
         }
     }
 
-    /// Snippet, or writing mode then vocabulary and replacements; then the
-    /// cursor context (ADR 0020 orders the steps).
-    private func written(_ transcript: String, session: DictationSession, run: inout Run) -> String {
-        if let snippet = SnippetMatcher.match(transcript, in: session.personalization.snippets) {
-            // Delivered as written: only spacing may change around it.
-            run.usedSnippet = true
-            guard let context = session.formattingContext else { return snippet.expansion }
-            return format(snippet.expansion, .exact, context)
-        }
-        var text = write(transcript, session.mode)
-        let personalized = Personalizer(library: session.personalization).apply(text)
-        text = personalized.text
-        run.personalizations = personalized.transformations.count
-        guard let context = session.formattingContext, text.contains(where: { !$0.isWhitespace }) else { return text }
-        return format(text, session.mode, context)
-    }
-
-    /// Vocabulary hints for dictation; an instruction for voice editing gets none.
-    private func hints(for session: DictationSession) -> [String] {
-        session.purpose == .dictation ? session.personalization.recognitionHints : []
-    }
-
     private struct EditingFailure: Error {
         let issue: DictationIssue
     }
@@ -210,6 +192,11 @@ public actor TranscriptionPipeline: DictationProcessing {
     private func deliver(_ text: String, session: DictationSession, engine: RecognitionEngineID?) async
         -> DictationOutcome
     {
+        // Copy only: the target app is never touched (E4-S5).
+        if session.purpose == .dictation, session.dictationMode.output == .copy, let copier {
+            await copier.copy(text)
+            return .delivered(.copied)
+        }
         switch await delivery.deliver(text, to: session.target) {
         case .delivered(let method):
             return .delivered(method)
@@ -273,6 +260,8 @@ public actor TranscriptionPipeline: DictationProcessing {
                     "method": .id(method.rawValue), "mode": .id(session.mode.rawValue),
                     "engine": .id(run.engine?.rawValue ?? "none"), "context": .id(session.contextIdentifier),
                     "purpose": .id(session.purpose.rawValue),
+                    "dictationMode": .id(session.dictationMode.id.diagnosticIdentifier),
+                    "modeSource": .id(session.modeSource.rawValue),
                     "audioSeconds": .seconds(session.audio.duration), "processingSeconds": .seconds(seconds),
                     "recognitionSeconds": .seconds(run.recognition.map(Self.seconds) ?? 0),
                     "rewriteSeconds": .seconds(run.rewriting.map(Self.seconds) ?? 0),
