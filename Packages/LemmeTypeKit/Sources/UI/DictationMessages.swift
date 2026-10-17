@@ -54,6 +54,84 @@ extension DictationIssue {
             String(
                 localized: "LemmeType couldn’t confirm the text was inserted. Check the field, or copy the text.",
                 bundle: .module)
+        case .editingUnavailable(let reason):
+            reason.editingMessage
+        case .rewriterUnavailable(let availability):
+            availability.userMessage
+        case .rewriteFailed(.refused):
+            String(
+                localized: "The on-device model declined this edit. Your text is unchanged.", bundle: .module)
+        case .rewriteFailed(.tooLong):
+            String(localized: "The selection is too long to edit. Select less text.", bundle: .module)
+        case .rewriteFailed:
+            String(localized: "The edit didn’t work. Your text is unchanged.", bundle: .module)
+        }
+    }
+}
+
+extension ContextBlockReason {
+    /// Why a voice edit can't start.
+    var editingMessage: String {
+        switch self {
+        case .noSelection, .unreadable:
+            String(localized: "Select the text you want to change, then press the shortcut.", bundle: .module)
+        case .selectionTooLong:
+            String(localized: "The selection is too long to edit. Select less text.", bundle: .module)
+        case .secureField, .secureInput:
+            String(localized: "LemmeType never reads password fields.", bundle: .module)
+        case .sensitiveApp:
+            String(localized: "LemmeType never reads text in password managers.", bundle: .module)
+        case .excludedApp:
+            String(localized: "You turned off context for this app in Settings › Context.", bundle: .module)
+        case .editingDisabled, .disabled:
+            String(localized: "Voice editing is turned off in Settings › Context.", bundle: .module)
+        case .noAccessibility:
+            String(localized: "Voice editing needs Accessibility access.", bundle: .module)
+        }
+    }
+}
+
+extension ContextCapture {
+    /// The overlay's context line; `nil` when there is nothing worth saying
+    /// (not requested, or formatting context switched off by the user).
+    var statusText: String? {
+        switch self {
+        case .notRequested, .blocked(.disabled, _), .captured(_, .editing), .blocked(_, .editing):
+            nil
+        case .captured(_, .formatting):
+            String(localized: "Using text near the cursor", bundle: .module)
+        case .blocked(.excludedApp, _):
+            String(localized: "Context off for this app", bundle: .module)
+        case .blocked(.sensitiveApp, _), .blocked(.secureField, _), .blocked(.secureInput, _):
+            String(localized: "Context not read here (private field or app)", bundle: .module)
+        case .blocked:
+            String(localized: "Context not available in this field", bundle: .module)
+        }
+    }
+}
+
+extension RewriterAvailability {
+    var userMessage: String {
+        switch self {
+        case .ready:
+            String(localized: "The on-device model is ready.", bundle: .module)
+        case .notEnabled:
+            String(
+                localized:
+                    "Voice editing needs Apple Intelligence. Turn it on in System Settings › Apple Intelligence & Siri.",
+                bundle: .module)
+        case .deviceNotEligible:
+            String(
+                localized: "This Mac can’t run Apple’s on-device model, so voice editing isn’t available.",
+                bundle: .module)
+        case .modelNotReady:
+            String(
+                localized: "Apple’s on-device model is still getting ready. Try again in a few minutes.",
+                bundle: .module)
+        case .unsupportedLanguage:
+            String(localized: "The on-device model doesn’t support your dictation language yet.", bundle: .module)
+        case .unavailable:
+            String(localized: "Voice editing isn’t available right now.", bundle: .module)
         }
     }
 }
@@ -69,6 +147,7 @@ extension DictationAction {
         case .copyText: String(localized: "Copy Text", bundle: .module)
         case .retryDelivery: String(localized: "Retry Insert", bundle: .module)
         case .openPermissions: String(localized: "Open Permissions", bundle: .module)
+        case .openContextSettings: String(localized: "Context Settings…", bundle: .module)
         case .discard: String(localized: "Discard", bundle: .module)
         }
     }
@@ -84,6 +163,7 @@ extension DictationAction {
         case .copyText: "copy-text"
         case .retryDelivery: "retry-delivery"
         case .openPermissions: "open-permissions"
+        case .openContextSettings: "open-context-settings"
         case .discard: "discard"
         }
     }
@@ -134,6 +214,7 @@ extension ProcessingPhase {
         case .preparingEngine: String(localized: "Preparing…", bundle: .module)
         case .recognizing: String(localized: "Transcribing…", bundle: .module)
         case .writing: String(localized: "Writing…", bundle: .module)
+        case .rewriting: String(localized: "Rewriting on this Mac…", bundle: .module)
         case .delivering: String(localized: "Inserting…", bundle: .module)
         }
     }

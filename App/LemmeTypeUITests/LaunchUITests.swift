@@ -72,6 +72,20 @@ final class LaunchUITests: XCTestCase {
         XCTAssertEqual(toggle.value as? Int, 1)
     }
 
+    /// E3-S6: the Context pane shows both switches with their defaults.
+    @MainActor
+    func testContextPaneShowsPrivacyFirstDefaults() {
+        launch(showingSettings: true)
+        XCTAssertTrue(settingsWindow.waitForExistence(timeout: 10))
+        selectTab("Context")
+
+        let formatting = settingsWindow.switches["context.formatting"]
+        XCTAssertTrue(formatting.waitForExistence(timeout: 10))
+        XCTAssertEqual(formatting.value as? Int, 0)
+        XCTAssertEqual(settingsWindow.switches["context.voiceEditing"].value as? Int, 1)
+        XCTAssertTrue(settingsWindow.staticTexts["context.editShortcut"].exists)
+    }
+
     @MainActor
     func testSettingsWindowCanBeClosedWithoutQuitting() {
         launch(showingSettings: true)

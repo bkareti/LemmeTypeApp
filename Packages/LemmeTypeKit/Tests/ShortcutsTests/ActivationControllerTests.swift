@@ -10,11 +10,14 @@ struct ActivationControllerTests {
     private let registrar = FakeHotKeyRegistrar()
     private let capturer = FakeTargetCapturer()
 
-    private func makeController(mode: ActivationMode = .pushToTalk) -> (ActivationController, Recorder) {
+    private func makeController(
+        mode: ActivationMode = .pushToTalk, editShortcut: KeyboardShortcut? = nil
+    ) -> (ActivationController, Recorder) {
         let controller = ActivationController(
             registrar: registrar,
             targetCapturer: capturer,
             shortcut: shortcut,
+            editShortcut: editShortcut,
             mode: mode
         )
         let recorder = Recorder()
@@ -156,6 +159,51 @@ struct ActivationControllerTests {
         #expect(recorder.startTargets.first??.context.context == context)
     }
 
+    // MARK: Voice editing (E3-S5)
+
+    @Test func editShortcutStartsAnEditingSessionWithTheSelection() {
+        let (_, recorder) = makeController(editShortcut: .defaultVoiceEdit)
+        #expect(registrar.registeredShortcuts == [.defaultVoiceEdit, shortcut])
+
+        registrar.send(.pressed, .defaultVoiceEdit, at: 0)
+        registrar.send(.released, .defaultVoiceEdit, at: 1)
+
+        #expect(recorder.names == ["edit", "stop"])
+        #expect(capturer.purposes == [.editing])
+    }
+
+    @Test func theOtherShortcutIsIgnoredDuringASession() {
+        let (_, recorder) = makeController(mode: .toggle, editShortcut: .defaultVoiceEdit)
+
+        registrar.send(.pressed, shortcut, at: 0)
+        registrar.send(.released, shortcut, at: 0.1)
+        registrar.send(.pressed, .defaultVoiceEdit, at: 1)  // ignored: dictation is running
+        registrar.send(.released, .defaultVoiceEdit, at: 1.1)
+        registrar.send(.pressed, shortcut, at: 2)
+
+        #expect(recorder.names == ["start", "stop"])
+        #expect(capturer.purposes == [.formatting])
+    }
+
+    @Test func editShortcutCanBeTurnedOffAndChanged() throws {
+        let (controller, _) = makeController(editShortcut: .defaultVoiceEdit)
+
+        try controller.changeEdit(to: nil)
+        #expect(registrar.registeredShortcuts == [shortcut])
+        #expect(!registrar.send(.pressed, .defaultVoiceEdit, at: 0))
+
+        let other = KeyboardShortcut(keyCode: 0x0E, modifiers: [.control, .option], keyLabel: "E")
+        try controller.changeEdit(to: other)
+        #expect(controller.editShortcut == other)
+        #expect(registrar.registeredShortcuts.contains(other))
+    }
+
+    @Test func editShortcutCannotReuseTheDictationShortcut() {
+        let (controller, _) = makeController(editShortcut: .defaultVoiceEdit)
+        #expect(throws: ShortcutError.unavailable) { try controller.changeEdit(to: shortcut) }
+        #expect(controller.editShortcut == .defaultVoiceEdit)
+    }
+
     @Test func sessionEndedElsewhereAllowsANewStart() {
         let (controller, recorder) = makeController(mode: .toggle)
         registrar.send(.pressed, shortcut, at: 0)
@@ -177,6 +225,7 @@ private final class Recorder {
         commands.map {
             switch $0 {
             case .start: "start"
+            case .startEditing: "edit"
             case .stop: "stop"
             case .cancel: "cancel"
             }

@@ -22,6 +22,8 @@ public protocol AppPreferences: AnyObject, Sendable {
     var usesFormattingContext: Bool { get set }
     /// Allow the voice-editing shortcut to read the selection. On by default.
     var allowsVoiceEditing: Bool { get set }
+    /// The voice-editing shortcut; `nil` means the default (⌥⇧Space).
+    var voiceEditShortcut: KeyboardShortcut? { get set }
     /// Bundle identifiers excluded from all context use.
     var contextExcludedApplications: [String] { get set }
 }

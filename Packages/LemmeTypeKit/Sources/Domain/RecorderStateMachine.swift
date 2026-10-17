@@ -75,6 +75,8 @@ public struct RecorderStateMachine: Sendable {
         // The user resolved an issue themselves (for example Copy Text).
         case (.needsAttention, .processingFinished): .completed
         case (.processing, .processingNeedsAttention(let issue)): .needsAttention(issue)
+        // Voice editing is refused before the microphone starts (E3-S5).
+        case (.preparing, .processingNeedsAttention(let issue)): .needsAttention(issue)
         case (.needsAttention, .retry): .processing
         case (.preparing, .cancel), (.recording, .cancel), (.processing, .cancel), (.needsAttention, .cancel):
             .cancelled

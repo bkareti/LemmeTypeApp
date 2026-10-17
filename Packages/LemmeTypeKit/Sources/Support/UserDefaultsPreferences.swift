@@ -89,6 +89,17 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         set { defaults.set(newValue, forKey: Key.allowsVoiceEditing) }
     }
 
+    public var voiceEditShortcut: KeyboardShortcut? {
+        get {
+            defaults.data(forKey: Key.voiceEditShortcut).flatMap {
+                try? JSONDecoder().decode(KeyboardShortcut.self, from: $0)
+            }
+        }
+        set {
+            defaults.set(newValue.flatMap { try? JSONEncoder().encode($0) }, forKey: Key.voiceEditShortcut)
+        }
+    }
+
     /// Bundle identifiers only.
     public var contextExcludedApplications: [String] {
         get { defaults.stringArray(forKey: Key.contextExcludedApplications) ?? [] }
@@ -108,6 +119,7 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         static let fallsBackToReadyEngine = "fallsBackToReadyEngine"
         static let usesFormattingContext = "usesFormattingContext"
         static let allowsVoiceEditing = "allowsVoiceEditing"
+        static let voiceEditShortcut = "voiceEditShortcut"
         static let contextExcludedApplications = "contextExcludedApplications"
     }
 }

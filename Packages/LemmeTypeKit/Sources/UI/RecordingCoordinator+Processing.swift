@@ -94,7 +94,7 @@ extension RecordingCoordinator {
         finishSession(displayFor: finishedDisplay)
     }
 
-    private func isOffered(_ action: DictationAction) -> Bool {
+    func isOffered(_ action: DictationAction) -> Bool {
         switch action {
         case .allowSpeechRecognition: speechAuthorizer != nil
         case .copyText: textCopier != nil
@@ -118,7 +118,7 @@ extension RecordingCoordinator {
     }
 
     private func decide(_ action: DictationAction) async {
-        guard attention != nil, let session else { return }
+        guard attention != nil, !decideWithoutRecording(action), let session else { return }
         switch action {
         case .retry, .useEngine:
             var next = session
@@ -129,15 +129,24 @@ extension RecordingCoordinator {
             await useTranscript(for: action, session: session)
         case .allowSpeechRecognition:
             await allowSpeechRecognition()
-        case .chooseEngine:
-            onOpenSettings(.dictation)
         case .saveAudio:
             await onSaveAudio(session.audio.fileURL)
-        case .openPermissions:
-            onOpenSettings(.permissions)
-        case .discard:
-            dismiss()
+        case .chooseEngine, .openPermissions, .openContextSettings, .discard:
+            break  // handled above
         }
+    }
+
+    /// Actions that need no recording (a refused voice edit has none).
+    /// Returns whether `action` was one of them.
+    private func decideWithoutRecording(_ action: DictationAction) -> Bool {
+        switch action {
+        case .chooseEngine: onOpenSettings(.dictation)
+        case .openPermissions: onOpenSettings(.permissions)
+        case .openContextSettings: onOpenSettings(.context)
+        case .discard: dismiss()
+        default: return false
+        }
+        return true
     }
 
     /// Copy Text or Retry Insert with the transcript kept in memory.

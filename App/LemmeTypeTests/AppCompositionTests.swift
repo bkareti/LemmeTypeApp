@@ -1,6 +1,7 @@
 import Audio
 import Delivery
 import Domain
+import Editing
 import Lifecycle
 import ModelAssets
 import Permissions
@@ -36,6 +37,7 @@ struct AppCompositionTests {
         #expect(composition.recognitionEngines.contains { $0 is WhisperEngine })
         #expect(composition.recognitionEngines.allSatisfy { $0.descriptor.location == .onDevice })
         #expect(composition.modelAssets is ModelAssetStore)
+        #expect(composition.textRewriter is FoundationModelsRewriter)
     }
 
     @Test func uiTestingArgumentReplacesOperatingSystemServices() {
@@ -55,6 +57,7 @@ struct AppCompositionTests {
         #expect(composition.recognitionEngines.allSatisfy { $0 is FakeRecognitionEngine })
         #expect(composition.modelAssets is FakeModelAssetManager)
         #expect(composition.textDelivery is FakeTextDelivery)
+        #expect(composition.textRewriter is FakeTextRewriter)
         #expect(composition.preferences.hasCompletedOnboarding)
     }
 

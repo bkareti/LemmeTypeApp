@@ -39,6 +39,8 @@ struct RecorderStateMachineTests {
         Transition(.processing, .cancel, .cancelled),
         Transition(.processing, .fail(.deviceDisconnected), .failed(.deviceDisconnected)),
         Transition(.processing, .processingNeedsAttention(.noEngineAvailable), .needsAttention(.noEngineAvailable)),
+        // E3-S5: a voice edit that can't run is refused before recording.
+        Transition(.preparing, .processingNeedsAttention(.noEngineAvailable), .needsAttention(.noEngineAvailable)),
         Transition(.needsAttention(.noEngineAvailable), .retry, .processing),
         Transition(.needsAttention(.noEngineAvailable), .processingFinished, .completed),
         Transition(.needsAttention(.noEngineAvailable), .cancel, .cancelled),

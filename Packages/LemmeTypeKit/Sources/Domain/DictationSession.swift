@@ -8,6 +8,14 @@ public enum WritingMode: String, CaseIterable, Codable, Sendable {
     case clean
 }
 
+/// What a session's speech is for.
+public enum SessionPurpose: String, Sendable {
+    /// Dictate text at the cursor.
+    case dictation
+    /// Speak an instruction that rewrites the selection (E3-S5).
+    case editing
+}
+
 /// The user's engine choice, read when a recording starts.
 public struct EnginePreference: Equatable, Sendable {
     /// `nil` means Automatic.
@@ -32,6 +40,7 @@ public struct DictationSession: Identifiable, Sendable {
     public let audio: RecordedAudio
     public let target: ActivationTarget?
     public let mode: WritingMode
+    public let purpose: SessionPurpose
     public let language: String
     /// The engine choice in Settings when recording started.
     public let enginePreference: EnginePreference
@@ -44,6 +53,7 @@ public struct DictationSession: Identifiable, Sendable {
         audio: RecordedAudio,
         target: ActivationTarget?,
         mode: WritingMode,
+        purpose: SessionPurpose = .dictation,
         language: String,
         enginePreference: EnginePreference = .automatic,
         engine: RecognitionEngineID? = nil,
@@ -53,6 +63,7 @@ public struct DictationSession: Identifiable, Sendable {
         self.audio = audio
         self.target = target
         self.mode = mode
+        self.purpose = purpose
         self.language = language
         self.enginePreference = enginePreference
         self.engine = engine
@@ -62,6 +73,12 @@ public struct DictationSession: Identifiable, Sendable {
     /// Text near the cursor captured for formatting at activation, if allowed.
     public var formattingContext: CursorContext? {
         if case .captured(let context, .formatting) = target?.context { return context }
+        return nil
+    }
+
+    /// The selection captured for voice editing, with its text.
+    public var editingContext: CursorContext? {
+        if case .captured(let context, .editing) = target?.context, context.selectedText != nil { return context }
         return nil
     }
 
@@ -81,6 +98,8 @@ public enum ProcessingPhase: String, Sendable {
     case preparingEngine = "preparing-engine"
     case recognizing
     case writing
+    /// Rewriting the selection with the on-device model (voice editing).
+    case rewriting
     case delivering
 }
 
@@ -100,6 +119,12 @@ public enum DictationIssue: Equatable, Sendable {
     case noEngineAvailable
     /// Text was produced but could not be delivered.
     case deliveryFailed(DeliveryProblem)
+    /// Voice editing can't start: no selection, excluded app, password field, … (E3-S5).
+    case editingUnavailable(ContextBlockReason)
+    /// The on-device language model can't run.
+    case rewriterUnavailable(RewriterAvailability)
+    /// The model did not produce an edit; the selection is unchanged.
+    case rewriteFailed(RewriteError)
 
     /// Stable lowercase name for diagnostics.
     public var identifier: String {
@@ -108,6 +133,9 @@ public enum DictationIssue: Equatable, Sendable {
         case .engineUnavailable(_, let availability): "engine.\(availability.identifier)"
         case .noEngineAvailable: "engine.none-available"
         case .deliveryFailed(let problem): "delivery.\(problem.rawValue)"
+        case .editingUnavailable(let reason): "editing.\(reason.rawValue)"
+        case .rewriterUnavailable(let availability): "rewrite.\(availability.identifier)"
+        case .rewriteFailed(let error): error.identifier
         }
     }
 }
@@ -129,6 +157,8 @@ public enum DictationAction: Equatable, Sendable {
     /// Try delivering the transcript to the original field again.
     case retryDelivery
     case openPermissions
+    /// Open Settings › Context (voice editing and context controls).
+    case openContextSettings
     /// Delete the recording and transcript.
     case discard
 }
@@ -153,6 +183,22 @@ extension DictationIssue {
             return [.copyText, .openPermissions, .discard]
         case .deliveryFailed:
             return [.copyText, .discard]
+        case .editingUnavailable, .rewriterUnavailable, .rewriteFailed:
+            return editingActions
+        }
+    }
+
+    /// Voice-editing issues (E3-S5): nothing was changed, so Discard is safe.
+    private var editingActions: [DictationAction] {
+        switch self {
+        case .editingUnavailable(.editingDisabled), .editingUnavailable(.excludedApp), .rewriterUnavailable:
+            [.openContextSettings, .discard]
+        case .editingUnavailable(.noAccessibility):
+            [.openPermissions, .discard]
+        case .rewriteFailed(let error) where error.isRetryable:
+            [.retry, .discard]
+        default:
+            [.discard]
         }
     }
 }
@@ -178,4 +224,14 @@ public protocol DictationProcessing: Sendable {
 
     /// Delivers an already produced transcript again (Retry Delivery).
     func deliver(_ transcript: String, for session: DictationSession) async -> DictationOutcome
+
+    /// Why voice editing can't start for `target`, checked before recording
+    /// so the user doesn't speak for nothing; `nil` when it can.
+    func editingIssue(for target: ActivationTarget?, language: String) async -> DictationIssue?
+}
+
+extension DictationProcessing {
+    public func editingIssue(for target: ActivationTarget?, language: String) async -> DictationIssue? {
+        .rewriterUnavailable(.unavailable)
+    }
 }

@@ -8,6 +8,7 @@ public final class SettingsNavigation {
         case general
         case dictation
         case shortcut
+        case context
         case audio
         case permissions
         case diagnostics
