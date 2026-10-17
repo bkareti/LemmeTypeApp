@@ -1,4 +1,5 @@
 import Domain
+import Foundation
 import Support
 
 /// Runs one capture session at a time: checks permission, starts the source,
@@ -19,6 +20,7 @@ public actor AudioCaptureService: AudioCapturing {
     private let storage: AudioSessionStorage
     private let permissions: any PermissionChecking
     private let diagnostics: any DiagnosticsRecording
+    private let freeSpace: @Sendable (URL) -> Int64?
     private var session: Session?
     private var failure: AudioCaptureError?
 
@@ -26,12 +28,25 @@ public actor AudioCaptureService: AudioCapturing {
         source: any AudioSource,
         storage: AudioSessionStorage,
         permissions: any PermissionChecking,
-        diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
+        diagnostics: any DiagnosticsRecording = DiscardingDiagnostics(),
+        freeSpace: @escaping @Sendable (URL) -> Int64? = AudioCaptureService.volumeFreeSpace
     ) {
+        self.freeSpace = freeSpace
         self.source = source
         self.storage = storage
         self.permissions = permissions
         self.diagnostics = diagnostics
+    }
+
+    /// Free space for important data on the volume holding `url` (or its
+    /// nearest existing parent); `nil` when it can't be read.
+    public static let volumeFreeSpace: @Sendable (URL) -> Int64? = { url in
+        var candidate = url
+        while !FileManager.default.fileExists(atPath: candidate.path), candidate.pathComponents.count > 1 {
+            candidate.deleteLastPathComponent()
+        }
+        let values = try? candidate.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
+        return values?.volumeAvailableCapacityForImportantUsage
     }
 
     public func start(input: AudioInputSelection) throws(AudioCaptureError) -> AsyncStream<AudioCaptureEvent> {
@@ -41,6 +56,12 @@ public actor AudioCaptureService: AudioCapturing {
                 .audio, "capture.start-failed", ["error": .id(AudioCaptureError.microphonePermissionMissing.identifier)]
             )
             throw .microphonePermissionMissing
+        }
+        // Refuse before the microphone starts rather than fail mid-sentence (E5-S6).
+        if let available = freeSpace(storage.directory), available < AudioCaptureError.minimumFreeBytes {
+            diagnostics.record(
+                .audio, "capture.start-failed", ["error": .id(AudioCaptureError.insufficientStorage.identifier)])
+            throw .insufficientStorage
         }
 
         let writer = try storage.makeWriter()

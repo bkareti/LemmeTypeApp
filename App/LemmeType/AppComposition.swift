@@ -52,6 +52,8 @@ struct AppComposition {
     var textRewriter: any TextRewriting
     /// Vocabulary, replacements, and snippets on disk (ADR 0020).
     var personalizationStore: any PersonalizationStoring
+    /// Memory pressure, heat, and Low Power Mode (E5-S6).
+    var systemConditions: any SystemConditionsMonitoring
     var diagnostics: DiagnosticsBuffer
     var loginItems: any LoginItemManaging
     var hotKeyRegistrar: any HotKeyRegistering
@@ -79,6 +81,7 @@ struct AppComposition {
         let preferences = UserDefaultsPreferences()
         let speechAuthorizer = SystemSpeechAuthorizer()
         let modelAssets = ModelAssetStore.makeDefault(diagnostics: diagnostics)
+        let conditions = SystemConditionsMonitor()
         return AppComposition(
             mode: .live,
             permissionChecker: permissionChecker,
@@ -94,7 +97,9 @@ struct AppComposition {
             speechAuthorizer: speechAuthorizer,
             recognitionEngines: [
                 AppleSpeechEngine(authorizer: speechAuthorizer, language: { preferences.dictationLanguage }),
-                WhisperEngine(assets: modelAssets, settings: { whisperSettings(preferences: preferences) }),
+                WhisperEngine(
+                    assets: modelAssets,
+                    settings: { whisperSettings(preferences: preferences, conditions: conditions.current) }),
             ],
             modelAssets: modelAssets,
             textDelivery: DictationTextDelivery(
@@ -107,21 +112,13 @@ struct AppComposition {
             textCopier: PasteboardTextCopier(),
             textRewriter: FoundationModelsRewriter(),
             personalizationStore: FilePersonalizationStore.makeDefault(diagnostics: diagnostics),
+            systemConditions: conditions,
             diagnostics: diagnostics,
             loginItems: SystemLoginItemManager(),
             hotKeyRegistrar: CarbonHotKeyRegistrar(),
             targetCapturer: makeTargetCapturer(preferences: preferences),
             buildInfo: buildInfo
         )
-    }
-
-    /// The Whisper model choice and the performance plan, read for every session (E5-S1, E5-S5).
-    private nonisolated static func whisperSettings(preferences: any AppPreferences) -> WhisperRunSettings {
-        let plan = PerformancePlan.make(
-            profile: preferences.performanceProfile, conditions: .nominal, idleUnload: preferences.modelIdleUnload)
-        return WhisperRunSettings(
-            choice: preferences.whisperModel, order: plan.whisperModelOrder, threads: plan.inferenceThreads,
-            usesGPU: plan.usesGPU)
     }
 
     /// Reads cursor context at activation only, under the current policy (ADR 0017).
@@ -174,6 +171,7 @@ struct AppComposition {
                 textCopier: delivery,
                 textRewriter: FakeTextRewriter(),
                 personalizationStore: FakePersonalizationStore(),
+                systemConditions: FakeSystemConditions(),
                 diagnostics: diagnostics,
                 loginItems: FakeLoginItemManager(status: .disabled),
                 hotKeyRegistrar: CarbonHotKeyRegistrar(),
@@ -198,7 +196,6 @@ struct AppComposition {
     func makeAppController() -> AppController {
         let permissions = PermissionsModel(
             checker: permissionChecker, requester: permissionRequester, diagnostics: diagnostics)
-        let general = GeneralSettingsModel(loginItems: loginItems, preferences: preferences, buildInfo: buildInfo)
         let activation = makeActivationController()
         let shortcut = ShortcutSettingsModel(controller: activation, preferences: preferences)
         let context = makeContextSettings(shortcut: shortcut)
@@ -206,7 +203,8 @@ struct AppComposition {
             capture: audioCapture, deviceLister: audioDeviceLister, preferences: preferences)
         let navigation = SettingsNavigation()
         let personalization = PersonalizationModel(store: personalizationStore, diagnostics: diagnostics)
-        let recorder = makeRecorder(personalization: personalization)
+        let residency = makeResidency()
+        let recorder = makeRecorder(personalization: personalization, residency: residency)
         let dictation = DictationSettingsModel(
             engines: recognitionEngines, modelAssets: modelAssets, preferences: preferences,
             speechAuthorizer: speechAuthorizer, diagnostics: diagnostics)
@@ -216,7 +214,7 @@ struct AppComposition {
             buffer: diagnostics, permissions: permissions, shortcut: shortcut, buildInfo: buildInfo)
         let settings = Self.makeSettingsWindow(
             SettingsView(
-                general: general,
+                general: GeneralSettingsModel(loginItems: loginItems, preferences: preferences, buildInfo: buildInfo),
                 dictation: dictation,
                 shortcut: shortcut,
                 context: context,
@@ -240,6 +238,8 @@ struct AppComposition {
             personalization: personalization,
             modes: modes,
             models: models,
+            residency: residency,
+            systemConditions: systemConditions,
             navigation: navigation,
             diagnostics: diagnostics,
             settings: settings
@@ -258,7 +258,9 @@ struct AppComposition {
         )
     }
 
-    private func makeRecorder(personalization: PersonalizationModel) -> RecordingCoordinator {
+    private func makeRecorder(
+        personalization: PersonalizationModel, residency: ModelResidencyController
+    ) -> RecordingCoordinator {
         RecordingCoordinator(
             capture: audioCapture,
             processor: makeDictationProcessor(),
@@ -267,6 +269,7 @@ struct AppComposition {
             speechAuthorizer: speechAuthorizer,
             textCopier: textCopier,
             personalization: { [weak personalization] in personalization?.library ?? .empty },
+            residency: residency,
             diagnostics: diagnostics
         )
     }

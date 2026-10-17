@@ -33,6 +33,24 @@ struct AudioCaptureServiceTests {
         }
     }
 
+    @Test func refusesToStartWithTooLittleDiskSpace() async {
+        let service = AudioCaptureService(
+            source: source, storage: storage, permissions: FakePermissions(statuses: [.microphone: .granted]),
+            freeSpace: { _ in 50_000_000 })
+        await #expect(throws: AudioCaptureError.insufficientStorage) {
+            _ = try await service.start(input: .systemDefault)
+        }
+        #expect(sessionFiles().isEmpty)
+        #expect(AudioCaptureError.insufficientStorage.identifier == "audio.insufficient-storage")
+
+        let roomy = AudioCaptureService(
+            source: source, storage: storage, permissions: FakePermissions(statuses: [.microphone: .granted]),
+            freeSpace: { _ in AudioCaptureError.minimumFreeBytes })
+        let events = try? await roomy.start(input: .systemDefault)
+        #expect(events != nil)
+        await roomy.cancel()
+    }
+
     @Test func refusesToStartWithoutMicrophonePermission() async {
         let service = makeService(microphone: .denied)
 
