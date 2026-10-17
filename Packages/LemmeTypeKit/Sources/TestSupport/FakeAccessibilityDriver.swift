@@ -24,6 +24,7 @@ public final class FakeTextElement: FocusedElementReference, Sendable {
         var selection: TextSelection
         var behavior: Behavior
         var writes: [String] = []
+        var pastes: [String] = []
         var pendingReads = 0
         var visibleCount: Int?
     }
@@ -47,7 +48,10 @@ public final class FakeTextElement: FocusedElementReference, Sendable {
 
     /// The field's content, for assertions only (the real driver cannot read it).
     public var text: String { state.withLock { $0.text } }
+    /// Accessibility writes attempted.
     public var writes: [String] { state.withLock { $0.writes } }
+    /// Text received through ⌘V.
+    public var pastes: [String] { state.withLock { $0.pastes } }
 
     public func setText(_ text: String) {
         state.withLock {
@@ -77,17 +81,29 @@ public final class FakeTextElement: FocusedElementReference, Sendable {
         state.withLock { state in
             state.writes.append(inserted)
             if state.behavior.appliesWrites {
-                state.visibleCount = state.text.utf16.count
-                state.pendingReads = state.behavior.readsBeforeChangeIsVisible
-                var units = Array(state.text.utf16)
-                let start = min(state.selection.location, units.count)
-                let end = min(start + state.selection.length, units.count)
-                units.replaceSubrange(start..<end, with: Array(inserted.utf16))
-                state.text = String(decoding: units, as: UTF16.self)
-                state.selection = TextSelection(location: start + inserted.utf16.count, length: 0)
+                Self.apply(inserted, to: &state)
             }
             return state.behavior.reportsSuccess
         }
+    }
+
+    /// Paste always works in the fake app (it is a keyboard command).
+    func paste(_ inserted: String) {
+        state.withLock { state in
+            state.pastes.append(inserted)
+            Self.apply(inserted, to: &state)
+        }
+    }
+
+    private static func apply(_ inserted: String, to state: inout State) {
+        state.visibleCount = state.text.utf16.count
+        state.pendingReads = state.behavior.readsBeforeChangeIsVisible
+        var units = Array(state.text.utf16)
+        let start = min(state.selection.location, units.count)
+        let end = min(start + state.selection.length, units.count)
+        units.replaceSubrange(start..<end, with: Array(inserted.utf16))
+        state.text = String(decoding: units, as: UTF16.self)
+        state.selection = TextSelection(location: start + inserted.utf16.count, length: 0)
     }
 }
 

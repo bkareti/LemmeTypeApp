@@ -10,8 +10,13 @@ struct AccessibilityInsertionTests {
         _ text: String, driver: FakeAccessibilityDriver, target: ActivationTarget?,
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
     ) async -> DeliveryOutcome {
-        await DictationTextDelivery(driver: driver, diagnostics: diagnostics, sleep: { _ in })
-            .deliver(text, to: target)
+        // Fallback off: these tests cover Accessibility outcomes alone.
+        let pasteboard = FakePasteboard()
+        return await DictationTextDelivery(
+            driver: driver, pasteboard: pasteboard,
+            keystroke: FakePasteKeystroke(pasteboard: pasteboard, driver: driver),
+            policy: { ClipboardFallbackPolicy(fallback: .off) }, diagnostics: diagnostics, sleep: { _ in }
+        ).deliver(text, to: target)
     }
 
     @Test func insertsOnceAtTheCaretOfTheCapturedField() async {

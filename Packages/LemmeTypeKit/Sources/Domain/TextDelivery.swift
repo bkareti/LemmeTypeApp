@@ -21,8 +21,14 @@ public enum DeliveryProblem: String, Sendable {
     case secureField = "secure-field"
     /// Dictation started without a target (for example from the menu).
     case noTarget = "no-target"
-    /// Insertion was attempted and failed; nothing was inserted.
+    /// Insertion was attempted and failed, or its result could not be confirmed.
     case failed
+    /// The clipboard fallback pasted, but the target did not take the text
+    /// before the timeout. The previous clipboard was restored.
+    case pasteTimedOut = "paste-timed-out"
+    /// The clipboard holds data that could not be restored after a paste, so
+    /// it was left untouched.
+    case clipboardUnsupported = "clipboard-unsupported"
 }
 
 public enum DeliveryOutcome: Equatable, Sendable {
