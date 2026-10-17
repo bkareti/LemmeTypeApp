@@ -105,7 +105,12 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   `PerformancePlan` order) with the plan's threads/GPU, and loads only
   `verifiedFile` (SHA-256 once per launch; a modified file is deleted).
   Transient download failures retry twice; quitting pauses downloads.
-  `ModelsSettingsModel` backs Settings › Dictation › Models.
+  `ModelsSettingsModel` backs Settings › Dictation › Models (also profile,
+  idle unload). `ModelResidencyController` (Domain) warms up while recording
+  and unloads after the idle period or on memory pressure; the recorder marks
+  sessions busy/idle. `SystemConditionsMonitor` (Lifecycle) reports memory,
+  thermal, and Low Power Mode; `AudioCaptureService` refuses to record with
+  < 100 MB free. `ManualClock` (TestSupport) drives timing tests.
 - Writing modes (ADR 0014): `TextCleaner` (Domain, pure) is the pipeline's
   `write` step. Exact only
   normalises whitespace; Clean runs ordered, individually switchable

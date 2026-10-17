@@ -1,9 +1,11 @@
 import AppKit
 import Domain
+import Recognition
 import UI
 
 /// Settings models that need app identity from AppKit (context exclusions,
-/// per-app modes) or several services (models).
+/// per-app modes) or several services (models), and the performance plan
+/// that Whisper and model residency read for every session (E5-S5).
 extension AppComposition {
     func makeModes(personalization: PersonalizationModel, languages: [String]) -> ModesSettingsModel {
         ModesSettingsModel(
@@ -16,7 +18,7 @@ extension AppComposition {
     func makeModels(dictation: DictationSettingsModel) -> ModelsSettingsModel {
         let models = ModelsSettingsModel(
             modelAssets: modelAssets, preferences: preferences, engines: recognitionEngines, hardware: hardware,
-            diagnostics: diagnostics)
+            conditions: systemConditions.current, diagnostics: diagnostics)
         models.onModelsChanged = { [weak dictation] in dictation?.refreshInBackground() }
         return models
     }
@@ -41,5 +43,32 @@ extension AppComposition {
         NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier).map {
             FileManager.default.displayName(atPath: $0.path).replacingOccurrences(of: ".app", with: "")
         }
+    }
+
+    /// The Whisper model choice and the performance plan, read for every session (E5-S1, E5-S5).
+    nonisolated static func whisperSettings(
+        preferences: any AppPreferences, conditions: SystemConditions
+    ) -> WhisperRunSettings {
+        let plan = performancePlan(preferences: preferences, conditions: conditions)
+        return WhisperRunSettings(
+            choice: preferences.whisperModel, order: plan.whisperModelOrder, threads: plan.inferenceThreads,
+            usesGPU: plan.usesGPU)
+    }
+
+    /// The plan for the next session: profile, idle setting, and the system now (E5-S5).
+    nonisolated static func performancePlan(
+        preferences: any AppPreferences, conditions: SystemConditions
+    ) -> PerformancePlan {
+        PerformancePlan.make(
+            profile: preferences.performanceProfile, conditions: conditions, idleUnload: preferences.modelIdleUnload)
+    }
+
+    func makeResidency() -> ModelResidencyController {
+        let preferences = self.preferences
+        let conditions = systemConditions
+        return ModelResidencyController(
+            engines: recognitionEngines,
+            plan: { Self.performancePlan(preferences: preferences, conditions: conditions.current) },
+            diagnostics: diagnostics)
     }
 }

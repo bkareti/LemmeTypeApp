@@ -1,7 +1,7 @@
 {
   "status": "Proposed",
   "approvedBy": null,
-  "notes": "Limits for scripts/check-performance-thresholds.py. Keep in sync with performance-thresholds.md. A product owner sets status to Approved and fills approvedBy before Epic 2 closes.",
+  "notes": "Limits for scripts/check-performance-thresholds.py. Keep in sync with performance-thresholds.md. A product owner sets status to Approved and fills approvedBy before Epic 2 closes. Epic 5 adds per-model Whisper limits (whisper-tiny-en, whisper-small-en; whisper = Base).",
   "default": {
     "stopToDeliverySeconds.p95": 2.5,
     "stopToDeliverySeconds.mean": 1.5,
@@ -20,6 +20,20 @@
     },
     "whisper": {
       "stopToDeliverySeconds.p95": 3.0
+    },
+    "whisper-tiny-en": {
+      "warmUpSeconds": 1.5,
+      "peakMemoryIncreaseMB": 400,
+      "wordErrorRate": 0.2,
+      "noisyWordErrorRate": 0.35
+    },
+    "whisper-small-en": {
+      "warmUpSeconds": 5.0,
+      "peakMemoryIncreaseMB": 1200,
+      "realTimeFactor.mean": 1.0,
+      "inferenceSeconds.p95": 5.0,
+      "stopToDeliverySeconds.p95": 6.0,
+      "wordErrorRate": 0.1
     }
   }
 }

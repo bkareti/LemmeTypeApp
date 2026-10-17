@@ -80,6 +80,26 @@ Developer run, 2026-10-17, Apple M4 Mac, 16 GB, macOS 27.0:
 `FoundationModelsRealRewriteTests.shortensASentenceOnDevice` (one 96-character
 sentence, "make this shorter", cold model) took 2.4 s including model load.
 
+## Models and profiles (E5-S7) — Proposed
+
+`scripts/run-recognition-benchmark.sh` measures every installed Whisper model
+and writes one report per model (`whisper.json` is Base, plus
+`whisper-tiny-en.json` and `whisper-small-en.json`). `warmUpSeconds` is the
+model load time, `peakMemoryIncreaseMB` the resident memory the model adds,
+`realTimeFactor` inference time ÷ audio time. Limits per model live in
+`performance-thresholds.json` › `engines`.
+
+| Metric | Tiny | Base | Small |
+|---|---|---|---|
+| Model load (`warmUpSeconds`) | ≤ 1.5 s | ≤ 3.0 s | ≤ 5.0 s |
+| Memory added (`peakMemoryIncreaseMB`) | ≤ 400 MB | ≤ 600 MB | ≤ 1,200 MB |
+| Real-time factor, mean | ≤ 0.5 | ≤ 0.5 | ≤ 1.0 |
+| Word error rate (clean / noisy) | ≤ 0.20 / 0.35 | ≤ 0.12 / 0.25 | ≤ 0.10 / 0.25 |
+
+Residency (MA-46, from diagnostics): models are unloaded within 1 s of the idle
+period ending or of a memory-pressure warning (`model.unloaded` events), and no
+model is loaded at launch.
+
 ## Recorded runs
 
 | Date | Mac (model, memory) | macOS | Engine | Report summary | Within thresholds |

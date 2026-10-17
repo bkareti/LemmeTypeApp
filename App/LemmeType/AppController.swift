@@ -18,6 +18,9 @@ final class AppController {
     let personalization: PersonalizationModel
     let modes: ModesSettingsModel
     let models: ModelsSettingsModel
+    private let residency: any ModelResidencyManaging
+    private let systemConditions: any SystemConditionsMonitoring
+    private var conditionsTask: Task<Void, Never>?
     let navigation: SettingsNavigation
     let diagnostics: any DiagnosticsRecording
     let settings: ManagedWindowController
@@ -51,6 +54,8 @@ final class AppController {
         personalization: PersonalizationModel,
         modes: ModesSettingsModel,
         models: ModelsSettingsModel,
+        residency: any ModelResidencyManaging,
+        systemConditions: any SystemConditionsMonitoring,
         navigation: SettingsNavigation,
         diagnostics: any DiagnosticsRecording,
         settings: ManagedWindowController
@@ -68,6 +73,8 @@ final class AppController {
         self.personalization = personalization
         self.modes = modes
         self.models = models
+        self.residency = residency
+        self.systemConditions = systemConditions
         self.navigation = navigation
         self.settings = settings
         activation.onCommand = { [weak self] command in self?.handle(command) }
@@ -96,6 +103,7 @@ final class AppController {
         Task { [audioCapture = recorder.capture] in await audioCapture.purgeLeftovers() }
         Task { [modelAssets] in await modelAssets.removeUnusableFiles() }
         Task { [personalization] in await personalization.load() }
+        watchSystemConditions()
         overlay.start()
         dictation.refreshInBackground()
         diagnostics.record(
@@ -151,6 +159,30 @@ final class AppController {
 
     /// Stops any recording before the app exits so the microphone is released
     /// and partial audio is deleted.
+    /// Memory pressure frees idle models; heat and Low Power Mode change the
+    /// plan, which Settings shows (E5-S6). Levels only reach diagnostics.
+    private func watchSystemConditions() {
+        conditionsTask?.cancel()
+        let changes = systemConditions.changes()
+        conditionsTask = Task { [weak self] in
+            var previous = self?.systemConditions.current ?? .nominal
+            for await conditions in changes {
+                guard let self else { return }
+                models.update(conditions)
+                if conditions.memoryPressure != .normal && previous.memoryPressure == .normal {
+                    await residency.memoryPressure()
+                }
+                diagnostics.record(
+                    .lifecycle, "system.conditions",
+                    [
+                        "thermal": .id(conditions.thermal.rawValue), "memory": .id(conditions.memoryPressure.rawValue),
+                        "lowPowerMode": .flag(conditions.isLowPowerModeEnabled),
+                    ])
+                previous = conditions
+            }
+        }
+    }
+
     /// Cancels a recording and pauses downloads, so their progress is kept (E5-S3).
     func prepareToTerminate() async {
         recorder.requestCancel()

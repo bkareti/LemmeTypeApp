@@ -66,7 +66,7 @@ No blockers.
 | S2 pane (Settings › Dictation › Models) | `ModelsSettingsModelTests`, UI `DictationSettingsUITests` + manual MA-43 |
 | S3 tampered file never loaded, once per launch | `ModelAssetStoreTests.modifiedFileIsDeletedAndNeverReturned`, `…verifiedFileChecksOncePerLaunchUntilTheFileChanges`, `WhisperEngineTests.aModifiedModelIsNeverLoaded` + manual MA-44 |
 | S3 quit keeps progress, retries | `ModelAssetStoreTests.pausedProgressSurvivesARelaunch`, `…transientFailuresRetryFromTheResumePoint`, `…retriesStopAfterTwoAndKeepResumableProgress` + manual MA-44 |
-| S4 lazy, warm-up, idle unload | `ModelResidencyControllerTests`, `RecordingCoordinatorTests` |
-| S5 plans, Automatic, model order, reload | `PerformancePlanTests`, `WhisperEngineTests` |
-| S6 memory, thermal, storage | `ModelResidencyControllerTests`, `PerformancePlanTests`, `AudioCaptureServiceTests` + manual MA-45 |
-| S7 end-to-end, benchmark, thresholds | `PerformanceEndToEndTests`, `scripts/run-recognition-benchmark.sh`, `performance-thresholds.md` |
+| S4 lazy, warm-up, idle unload | `ModelResidencyControllerTests`, `RecordingResidencyTests` + manual MA-45 |
+| S5 plans, Automatic, model order, reload | `PerformancePlanTests`, `PerformanceSettingsTests`, `WhisperEngineTests.planThreadsAndGPUReachTheRuntimeAndAGPUChangeReloads` + manual MA-46 |
+| S6 memory, thermal, storage | `ModelResidencyControllerTests`, `PerformancePlanTests`, `AudioCaptureServiceTests.refusesToStartWithTooLittleDiskSpace`, `RecordingResidencyTests`, `SystemConditionsMonitorTests` + manual MA-45 |
+| S7 end-to-end, benchmark, thresholds | `PerformanceEndToEndTests`, `RecognitionBenchmarkTests.everyInstalledWhisperModel`, `performance-thresholds.md` + manual MA-46 |
