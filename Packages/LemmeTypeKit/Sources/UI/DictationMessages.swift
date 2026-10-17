@@ -40,6 +40,16 @@ extension DictationIssue {
             String(localized: "There was no text field to insert into. Copy the text instead.", bundle: .module)
         case .deliveryFailed(.unsupported):
             String(localized: "This field doesn’t accept inserted text. Copy it instead.", bundle: .module)
+        case .deliveryFailed(.pasteTimedOut):
+            String(
+                localized:
+                    "The app didn’t take the pasted text in time. Your clipboard was put back; copy the text to paste it yourself.",
+                bundle: .module)
+        case .deliveryFailed(.clipboardUnsupported):
+            String(
+                localized:
+                    "Your clipboard holds something LemmeType can’t put back, so it wasn’t used. Copying the text will replace it.",
+                bundle: .module)
         case .deliveryFailed(.failed):
             String(
                 localized: "LemmeType couldn’t confirm the text was inserted. Check the field, or copy the text.",

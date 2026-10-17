@@ -13,6 +13,8 @@ public protocol AppPreferences: AnyObject, Sendable {
     var writingMode: WritingMode { get set }
     /// The user's recognition engine; `nil` means Automatic.
     var selectedEngine: RecognitionEngineID? { get set }
+    /// What happens when direct insertion is unsupported.
+    var clipboardFallback: ClipboardFallbackPolicy { get set }
 }
 
 extension AppPreferences {

@@ -12,6 +12,7 @@ public final class FakePreferences: AppPreferences {
         var dictationLanguage: String
         var writingMode: WritingMode
         var selectedEngine: RecognitionEngineID?
+        var clipboardFallback: ClipboardFallbackPolicy
     }
 
     private let values: Mutex<Values>
@@ -24,7 +25,8 @@ public final class FakePreferences: AppPreferences {
         playsFeedbackSounds: Bool = false,
         dictationLanguage: String = "en-US",
         writingMode: WritingMode = .exact,
-        selectedEngine: RecognitionEngineID? = nil
+        selectedEngine: RecognitionEngineID? = nil,
+        clipboardFallback: ClipboardFallbackPolicy = .default
     ) {
         values = Mutex(
             Values(
@@ -35,7 +37,8 @@ public final class FakePreferences: AppPreferences {
                 playsFeedbackSounds: playsFeedbackSounds,
                 dictationLanguage: dictationLanguage,
                 writingMode: writingMode,
-                selectedEngine: selectedEngine
+                selectedEngine: selectedEngine,
+                clipboardFallback: clipboardFallback
             ))
     }
 
@@ -77,5 +80,10 @@ public final class FakePreferences: AppPreferences {
     public var selectedEngine: RecognitionEngineID? {
         get { values.withLock { $0.selectedEngine } }
         set { values.withLock { $0.selectedEngine = newValue } }
+    }
+
+    public var clipboardFallback: ClipboardFallbackPolicy {
+        get { values.withLock { $0.clipboardFallback } }
+        set { values.withLock { $0.clipboardFallback = newValue } }
     }
 }

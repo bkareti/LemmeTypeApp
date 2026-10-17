@@ -63,6 +63,17 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         set { defaults.set(newValue?.rawValue, forKey: Key.selectedEngine) }
     }
 
+    public var clipboardFallback: ClipboardFallbackPolicy {
+        get {
+            defaults.data(forKey: Key.clipboardFallback).flatMap {
+                try? JSONDecoder().decode(ClipboardFallbackPolicy.self, from: $0)
+            } ?? .default
+        }
+        set {
+            defaults.set(try? JSONEncoder().encode(newValue), forKey: Key.clipboardFallback)
+        }
+    }
+
     private enum Key {
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let dictationShortcut = "dictationShortcut"
@@ -72,5 +83,6 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         static let dictationLanguage = "dictationLanguage"
         static let writingMode = "writingMode"
         static let selectedEngine = "selectedEngine"
+        static let clipboardFallback = "clipboardFallback"
     }
 }

@@ -61,4 +61,15 @@ struct DictationPreferencesTests {
         reloaded.selectedEngine = nil
         #expect(UserDefaultsPreferences(defaults: defaults).selectedEngine == nil)
     }
+
+    @Test func clipboardFallbackDefaultsToPasteAndRestore() throws {
+        let suite = "ClipboardPreferencesTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        #expect(UserDefaultsPreferences(defaults: defaults).clipboardFallback == .default)
+        let policy = ClipboardFallbackPolicy(fallback: .copyOnly, restoreDelay: 1)
+        UserDefaultsPreferences(defaults: defaults).clipboardFallback = policy
+        #expect(UserDefaultsPreferences(defaults: defaults).clipboardFallback == policy)
+    }
 }

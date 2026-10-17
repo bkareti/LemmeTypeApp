@@ -281,3 +281,19 @@ Record results per app in `docs/testing/insertion-matrix.md`.
    typed; the overlay explains LemmeType never types into password fields.
 5. Revoke Accessibility (`tccutil reset Accessibility com.lemmetype.LemmeType`)
    and dictate: the overlay offers **Copy Text** and **Open Permissions**.
+
+## E2-S8 — Clipboard fallback
+
+**MA-29 Paste and restore**
+1. Copy a mix to the clipboard: rich text from TextEdit, then (separately) an
+   image from Preview and a file in Finder — run the steps once for each.
+2. Dictate into Slack's message composer (Electron ignores Accessibility
+   writes). The text is pasted once; the overlay says *Text pasted.*;
+   ⌘V in TextEdit afterwards pastes your original clipboard item, unchanged.
+3. Settings › Dictation › When text can't be inserted: **Copy only**. Dictate
+   into Slack: nothing is pasted, the overlay says *Text copied. Press ⌘V to
+   paste it.*
+4. Choose **Ask me (Copy Text)** (fallback off). Dictate into Slack: the
+   overlay offers **Copy Text** and **Discard**.
+5. With a clipboard manager (Maccy, Raycast) running, repeat step 2: the
+   dictated text does not appear in its history (transient marker).

@@ -92,7 +92,13 @@ struct AppComposition {
                 WhisperEngine(assets: modelAssets),
             ],
             modelAssets: modelAssets,
-            textDelivery: DictationTextDelivery(driver: SystemAccessibilityDriver(), diagnostics: diagnostics),
+            textDelivery: DictationTextDelivery(
+                driver: SystemAccessibilityDriver(),
+                pasteboard: SystemPasteboard(),
+                keystroke: SystemPasteKeystroke(),
+                policy: { preferences.clipboardFallback },
+                diagnostics: diagnostics
+            ),
             textCopier: PasteboardTextCopier(),
             diagnostics: diagnostics,
             loginItems: SystemLoginItemManager(),
