@@ -6,8 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 LemmeType is a privacy-first macOS menu-bar voice-writing app (global shortcut →
 record → local transcription → optional cleanup → insert text at the cursor of
-the previously focused app). Epic 1 (foundation) is complete; Epic 2 (local
-transcription and delivery) is in progress.
+the previously focused app). Epics 1 (foundation) and 2 (local transcription
+and delivery) are complete; Epic 3 (context-aware writing and voice editing) is
+in progress.
 
 ## Project skills — use them
 
@@ -138,7 +139,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
 ## Planning documents
 
 - `docs/product-brief.md`, `docs/roadmap.md` — scope, non-goals, epic exit criteria.
-- `docs/backlog/epic-0{1,2}-*.md` — development-ready stories (source of truth
+- `docs/backlog/epic-0{1,2,3}-*.md` — development-ready stories (source of truth
   for acceptance criteria). Readiness reviews go in `docs/backlog/reviews/`.
 - `docs/testing/manual-acceptance.md` — checks that cannot run on CI.
 - `docs/testing/insertion-matrix.md` — per-app insertion results and failure evidence.
@@ -172,8 +173,9 @@ sub-issues on `bkareti/LemmeTypeApp` (needs authenticated `gh`).
   8) then `## Dependency order` in `roadmap.md`; backlog files need
   `## Epic issue body`, `## EN-SM — Title` stories separated by `---`, and a
   final `## Epic N story order` section.
-- Adding/removing a story requires updating `STORY_AREA_LABELS` and the
-  `verify()` counts (8 for Epic 1, 10 for Epic 2).
+- Refined epics are listed in `REFINED_EPICS` (backlog file, story phase
+  label, story count: 8 for Epic 1, 10 for Epic 2, 7 for Epic 3). Adding or
+  removing a story requires updating `STORY_AREA_LABELS` and that count.
 
 ## Product constraints that shape implementation
 
