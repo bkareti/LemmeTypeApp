@@ -15,7 +15,7 @@ results in the PR description as `MA-N: pass/fail — notes`.
    defaults delete com.lemmetype.LemmeType
    rm -rf "$TMPDIR/LemmeType"
    ```
-3. Run MA-1 to MA-37 in order: clean-install onboarding (MA-6) must come
+3. Run MA-1 to MA-38 in order: clean-install onboarding (MA-6) must come
    before anything that assumes permissions; real-microphone checks are MA-11
    to MA-13 and MA-14 to MA-17.
 4. Finish with `make privacy-check` and confirm `$TMPDIR/LemmeType/Sessions` is empty.
@@ -401,3 +401,20 @@ Record results per app in `docs/testing/insertion-matrix.md`.
    `rewriteSeconds` and `processingSeconds` values of `session.delivered`
    events with `purpose: editing`, and record p95 in
    `docs/testing/performance-thresholds.md` › Voice editing.
+
+## E4-S1/S2/S3 — Vocabulary, replacements, and snippets
+
+**MA-38 Personalization with real engines**
+1. Quit LemmeType. Create `~/Library/Application Support/LemmeType/Personalization/library.json`
+   by exporting from a test build, or add entries in Settings › Personalization
+   (E4-S4): vocabulary "LemmeType" (sounds like "lemme type"), replacement
+   "my email" → `pat@example.com`, snippet "sign off" → "Best regards,⏎Pat".
+2. `ls -l` the file: `-rw-------`; its folder is `drwx------`.
+3. In TextEdit, with Apple Speech and then Whisper, dictate "I use lemme type
+   every day": both deliver "LemmeType". Dictate "send it to my email": the
+   address is inserted. Say "Sign off": the two-line snippet is inserted exactly.
+4. Say "please sign off now": no snippet; the sentence is dictated.
+5. Replace the file's contents with `{ broken`, relaunch: Settings explains the
+   file could not be read; `library-unreadable-*.json` holds the old contents.
+6. Settings › Diagnostics › Copy: no vocabulary, phrase, or snippet text appears.
+

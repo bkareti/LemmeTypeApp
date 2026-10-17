@@ -6,9 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 LemmeType is a privacy-first macOS menu-bar voice-writing app (global shortcut →
 record → local transcription → optional cleanup → insert text at the cursor of
-the previously focused app). Epics 1 (foundation) and 2 (local transcription
-and delivery) are complete; Epic 3 (context-aware writing and voice editing) is
-in progress.
+the previously focused app). Epics 1–3 (foundation, local transcription and delivery, context-aware
+writing and voice editing) are complete; Epics 4 (personalization and modes)
+and 5 (model management and performance) are in progress.
 
 ## Project skills — use them
 
@@ -139,6 +139,13 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   the recorder refuse (`preparing → needsAttention`) before recording;
   delivery refuses if the selection changed. Settings › Context
   (`ContextSettingsModel`) holds the switches, model status, and exclusions.
+- Personalization (ADR 0020): `PersonalizationLibrary` (Domain; vocabulary,
+  replacements, snippets; validated on every change) is stored by
+  `FilePersonalizationStore` (Support; versioned JSON in Application Support,
+  0600, unreadable files moved aside) and held by `PersonalizationModel` (UI).
+  The recorder snapshots it into `DictationSession.personalization` at start.
+  Pipeline order: hints → `SnippetMatcher` (whole utterance) → writing mode →
+  `Personalizer` (whole words, longest first, one pass) → `ContextFormatter`.
 - Engine/mode selection (ADR 0016): `DictationSettingsModel` (UI) backs
   Settings › Dictation and the status menu. Mode, language, and
   `EnginePreference` are captured when recording starts and stored in the
@@ -161,7 +168,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data).
 
 ## Planning documents
 

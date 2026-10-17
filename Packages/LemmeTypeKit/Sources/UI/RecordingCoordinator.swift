@@ -46,6 +46,7 @@ public final class RecordingCoordinator {
     public private(set) var activeContext: ContextCapture?
     private var activeLanguage: String?
     private var activeEnginePreference: EnginePreference?
+    private var activePersonalization: PersonalizationLibrary?
 
     /// Called when a session ends for any reason, so the shortcut can re-arm.
     public var onSessionEnded: @MainActor () -> Void = {}
@@ -65,6 +66,8 @@ public final class RecordingCoordinator {
     let failureDisplay: Duration
     let attentionDisplay: Duration
     let diagnostics: any DiagnosticsRecording
+    /// The personalization library to capture when a recording starts (E4-S2).
+    let personalization: @MainActor () -> PersonalizationLibrary
 
     var queue: Task<Void, Never>?
     var processingTask: Task<Void, Never>?
@@ -87,9 +90,11 @@ public final class RecordingCoordinator {
         finishedDisplay: Duration = .seconds(1.5),
         failureDisplay: Duration = .seconds(8),
         attentionDisplay: Duration = .seconds(120),
+        personalization: @escaping @MainActor () -> PersonalizationLibrary = { .empty },
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
     ) {
         self.diagnostics = diagnostics
+        self.personalization = personalization
         self.capture = capture
         self.processor = processor
         self.feedback = feedback
@@ -177,6 +182,7 @@ public final class RecordingCoordinator {
         activeContext = target?.context
         activeLanguage = preferences.dictationLanguage
         activeEnginePreference = preferences.enginePreference
+        activePersonalization = personalization()
         // A voice edit that can't run is refused before the user speaks.
         if purpose == .editing,
             let issue = await processor.editingIssue(for: target, language: preferences.dictationLanguage)
@@ -228,7 +234,8 @@ public final class RecordingCoordinator {
             let session = DictationSession(
                 audio: recording, target: target, mode: activeMode ?? writingMode,
                 purpose: activePurpose ?? .dictation, language: activeLanguage ?? preferences.dictationLanguage,
-                enginePreference: activeEnginePreference ?? preferences.enginePreference)
+                enginePreference: activeEnginePreference ?? preferences.enginePreference,
+                personalization: activePersonalization ?? personalization())
             self.session = session
             startProcessing(session)
         } catch {
@@ -268,6 +275,7 @@ public final class RecordingCoordinator {
         activeContext = nil
         activeLanguage = nil
         activeEnginePreference = nil
+        activePersonalization = nil
         recordingStartedAt = nil
         eventsTask?.cancel()
         eventsTask = nil

@@ -72,7 +72,9 @@ public final class AppleSpeechEngine: SpeechRecognitionEngine {
         try checkCancellation()
 
         let start = ContinuousClock.now
-        let result = try await backend.recognize(fileURL: request.audio.fileURL, language: request.language) {
+        let result = try await backend.recognize(
+            fileURL: request.audio.fileURL, language: request.language, hints: request.hints
+        ) {
             updates(.partial($0))
         }
         try checkCancellation()

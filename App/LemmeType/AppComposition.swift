@@ -50,6 +50,8 @@ struct AppComposition {
     var textCopier: any TextCopying
     /// On-device rewriting for voice editing (ADR 0018).
     var textRewriter: any TextRewriting
+    /// Vocabulary, replacements, and snippets on disk (ADR 0020).
+    var personalizationStore: any PersonalizationStoring
     var diagnostics: DiagnosticsBuffer
     var loginItems: any LoginItemManaging
     var hotKeyRegistrar: any HotKeyRegistering
@@ -104,6 +106,7 @@ struct AppComposition {
             ),
             textCopier: PasteboardTextCopier(),
             textRewriter: FoundationModelsRewriter(),
+            personalizationStore: FilePersonalizationStore.makeDefault(diagnostics: diagnostics),
             diagnostics: diagnostics,
             loginItems: SystemLoginItemManager(),
             hotKeyRegistrar: CarbonHotKeyRegistrar(),
@@ -161,6 +164,7 @@ struct AppComposition {
                 textDelivery: delivery,
                 textCopier: delivery,
                 textRewriter: FakeTextRewriter(),
+                personalizationStore: FakePersonalizationStore(),
                 diagnostics: diagnostics,
                 loginItems: FakeLoginItemManager(status: .disabled),
                 hotKeyRegistrar: CarbonHotKeyRegistrar(),
@@ -194,7 +198,8 @@ struct AppComposition {
         let dictation = DictationSettingsModel(
             engines: recognitionEngines, modelAssets: modelAssets, preferences: preferences,
             speechAuthorizer: speechAuthorizer, diagnostics: diagnostics)
-        let recorder = makeRecorder()
+        let personalization = PersonalizationModel(store: personalizationStore, diagnostics: diagnostics)
+        let recorder = makeRecorder(personalization: personalization)
         let diagnosticsModel = DiagnosticsModel(
             buffer: diagnostics, permissions: permissions, shortcut: shortcut, buildInfo: buildInfo)
         let settings = Self.makeSettingsWindow(
@@ -217,6 +222,7 @@ struct AppComposition {
             dictation: dictation,
             shortcut: shortcut,
             context: context,
+            personalization: personalization,
             navigation: navigation,
             diagnostics: diagnostics,
             settings: settings
@@ -235,7 +241,7 @@ struct AppComposition {
         )
     }
 
-    private func makeRecorder() -> RecordingCoordinator {
+    private func makeRecorder(personalization: PersonalizationModel) -> RecordingCoordinator {
         RecordingCoordinator(
             capture: audioCapture,
             processor: makeDictationProcessor(),
@@ -243,6 +249,7 @@ struct AppComposition {
             preferences: preferences,
             speechAuthorizer: speechAuthorizer,
             textCopier: textCopier,
+            personalization: { [weak personalization] in personalization?.library ?? .empty },
             diagnostics: diagnostics
         )
     }

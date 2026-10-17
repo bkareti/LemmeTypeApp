@@ -17,6 +17,7 @@ public enum DiagnosticCategory: String, Codable, CaseIterable, Sendable {
     case models
     case delivery
     case editing
+    case personalization
 }
 
 public enum DiagnosticValue: Codable, Equatable, Sendable {

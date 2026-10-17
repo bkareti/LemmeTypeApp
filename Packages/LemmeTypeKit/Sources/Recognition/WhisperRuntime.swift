@@ -12,9 +12,11 @@ protocol WhisperRuntime: Sendable {
 protocol WhisperModel: AnyObject, Sendable {
     /// Blocking inference over 16 kHz mono samples. Returns
     /// `RecognitionError.cancelled` soon after `shouldAbort` returns true.
+    /// `prompt` primes the decoder with expected words (vocabulary, E4-S2).
     func transcribe(
         _ samples: [Float],
         language: String,
+        prompt: String?,
         shouldAbort: @escaping @Sendable () -> Bool,
         progress: @escaping @Sendable (Double) -> Void
     ) throws(RecognitionError) -> [TranscriptSegment]
@@ -62,6 +64,7 @@ final class WhisperCppModel: WhisperModel, @unchecked Sendable {
     func transcribe(
         _ samples: [Float],
         language: String,
+        prompt: String?,
         shouldAbort: @escaping @Sendable () -> Bool,
         progress: @escaping @Sendable (Double) -> Void
     ) throws(RecognitionError) -> [TranscriptSegment] {
@@ -89,11 +92,15 @@ final class WhisperCppModel: WhisperModel, @unchecked Sendable {
         }
         parameters.progress_callback_user_data = userData
 
+        // C strings live only for the call; whisper.cpp copies what it keeps.
         let status = withExtendedLifetime(callbacks) {
             language.withCString { languageCode in
-                parameters.language = languageCode
-                return samples.withUnsafeBufferPointer { buffer in
-                    whisper_full(context, parameters, buffer.baseAddress, Int32(buffer.count))
+                (prompt ?? "").withCString { promptText in
+                    parameters.language = languageCode
+                    parameters.initial_prompt = prompt == nil ? nil : promptText
+                    return samples.withUnsafeBufferPointer { buffer in
+                        whisper_full(context, parameters, buffer.baseAddress, Int32(buffer.count))
+                    }
                 }
             }
         }

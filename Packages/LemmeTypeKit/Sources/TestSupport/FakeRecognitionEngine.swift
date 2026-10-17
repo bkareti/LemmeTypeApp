@@ -37,6 +37,7 @@ public final class FakeRecognitionEngine: SpeechRecognitionEngine {
         var unloadCount = 0
         var isPrepared = false
         var lastLanguage: String?
+        var lastHints: [String] = []
     }
 
     public let descriptor: EngineDescriptor
@@ -60,6 +61,8 @@ public final class FakeRecognitionEngine: SpeechRecognitionEngine {
     public var unloadCount: Int { state.withLock { $0.unloadCount } }
     public var isPrepared: Bool { state.withLock { $0.isPrepared } }
     public var lastLanguage: String? { state.withLock { $0.lastLanguage } }
+    /// The recognition hints of the last request (E4-S2).
+    public var lastHints: [String] { state.withLock { $0.lastHints } }
 
     public func setAvailability(_ availability: EngineAvailability) {
         state.withLock { $0.availability = availability }
@@ -89,6 +92,7 @@ public final class FakeRecognitionEngine: SpeechRecognitionEngine {
         let (availability, script) = state.withLock { state in
             state.recognizeCount += 1
             state.lastLanguage = request.language
+            state.lastHints = request.hints
             return (state.availability, state.script)
         }
         if let error = availability.recognitionError { throw error }
