@@ -76,7 +76,7 @@ struct AppControllerTests {
         #expect(!window.isVisible)
     }
 
-    @Test func launchRegistersTheDictationShortcut() {
+    @Test func launchRegistersTheDictationAndVoiceEditShortcuts() {
         // The test host already owns ⌥Space through its own live composition.
         var composition = AppComposition.uiTesting(buildInfo: .init(version: "1", build: "1"))
         let registrar = FakeHotKeyRegistrar()
@@ -85,8 +85,9 @@ struct AppControllerTests {
 
         controller.launchFinished()
 
-        #expect(registrar.registeredShortcuts == [.defaultDictation])
+        #expect(Set(registrar.registeredShortcuts) == [.defaultDictation, .defaultVoiceEdit])
         #expect(!controller.shortcut.isShortcutUnavailable)
+        #expect(controller.shortcut.editShortcut == .defaultVoiceEdit)
     }
 
     @Test func unavailableShortcutAtLaunchIsSurfaced() {

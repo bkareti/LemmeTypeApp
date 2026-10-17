@@ -63,7 +63,7 @@ public struct SettingsView: View {
                 DiagnosticsSettingsView(model: diagnostics)
             }
         }
-        .frame(width: 600, height: 500)
+        .frame(width: 560, height: 460)
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             general.refresh()
             permissions.refresh()
