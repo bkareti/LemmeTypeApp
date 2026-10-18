@@ -65,6 +65,9 @@ public final class RecordingCoordinator {
     let diagnostics: any DiagnosticsRecording
     /// The personalization library to capture when a recording starts (E4-S2).
     let personalization: @MainActor () -> PersonalizationLibrary
+    /// Loads and unloads models around sessions (E5-S4); see `RecordingCoordinator+Residency`.
+    let residency: (any ModelResidencyManaging)?
+    var residencyQueue: Task<Void, Never>?
 
     var queue: Task<Void, Never>?
     var processingTask: Task<Void, Never>?
@@ -88,8 +91,10 @@ public final class RecordingCoordinator {
         failureDisplay: Duration = .seconds(8),
         attentionDisplay: Duration = .seconds(120),
         personalization: @escaping @MainActor () -> PersonalizationLibrary = { .empty },
+        residency: (any ModelResidencyManaging)? = nil,
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
     ) {
+        self.residency = residency
         self.diagnostics = diagnostics
         self.personalization = personalization
         self.capture = capture
@@ -191,6 +196,7 @@ public final class RecordingCoordinator {
                 return
             }
             recordingStartedAt = Date()
+            markResidencyBusy(warmingUp: true)
             sync()
             feedback.play(.start)
             feedback.announce(startAnnouncement(purpose: purpose, context: target?.context))
@@ -261,6 +267,7 @@ public final class RecordingCoordinator {
     /// Ends the visible session. A session waiting for a decision keeps its
     /// recording until it is dismissed.
     func finishSession(displayFor duration: Duration) {
+        markResidencyIdle()
         target = nil
         activeSettings = nil
         activePurpose = nil
@@ -324,6 +331,7 @@ extension RecordingCoordinator {
         case .microphonePermissionMissing: .openPermissions
         case .noInputDevice, .deviceDisconnected: .openAudioSettings
         case .interrupted, .engineFailure, .storageFailure, .alreadyCapturing, .notCapturing: .tryAgain
+        case .insufficientStorage: nil
         case nil: nil
         }
     }

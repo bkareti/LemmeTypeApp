@@ -28,6 +28,7 @@ struct ModelsSettingsView: View {
                 .font(.callout)
                 .foregroundStyle(.secondary)
             }
+            performanceSection
             Section(String(localized: "Models", bundle: .module)) {
                 ForEach(model.rows) { row in
                     ModelCatalogRow(model: model, row: row)
@@ -59,6 +60,104 @@ struct ModelsSettingsView: View {
             Text(
                 offer.confirmationMessage + "\n\n"
                     + offer.asset.fitMessage(model.rows.first { $0.id == offer.asset.id }?.fit))
+        }
+    }
+}
+
+extension ModelsSettingsView {
+    @ViewBuilder
+    var performanceSection: some View {
+        Section(String(localized: "Performance", bundle: .module)) {
+            Picker(
+                String(localized: "Profile", bundle: .module),
+                selection: Binding(get: { model.profile }, set: { model.setProfile($0) })
+            ) {
+                ForEach(PerformanceProfile.allCases, id: \.self) { profile in
+                    Text(profile.title).tag(profile)
+                }
+            }
+            .accessibilityIdentifier("models.profile")
+            Text(model.profile.summary)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            if let reduction = model.plan.reduction {
+                Label(reduction.message, systemImage: reduction == .thermal ? "thermometer.high" : "battery.25")
+                    .foregroundStyle(.orange)
+                    .accessibilityIdentifier("models.reduced")
+            } else if model.profile == .automatic {
+                Text(String(localized: "In effect now: \(model.plan.profile.title).", bundle: .module))
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+            Picker(
+                String(localized: "Unload models after", bundle: .module),
+                selection: Binding(get: { model.idleUnload }, set: { model.setIdleUnload($0) })
+            ) {
+                ForEach(IdleUnloadPolicy.choices, id: \.self) { policy in
+                    Text(policy.title).tag(policy)
+                }
+            }
+            .accessibilityIdentifier("models.idleUnload")
+            Text(
+                String(
+                    localized:
+                        "Models load when you dictate and are removed from memory after this much time without dictation, or at once when your Mac runs short of memory.",
+                    bundle: .module)
+            )
+            .font(.callout)
+            .foregroundStyle(.secondary)
+        }
+    }
+}
+
+extension PerformanceProfile {
+    var title: String {
+        switch self {
+        case .automatic: String(localized: "Automatic", bundle: .module)
+        case .balanced: String(localized: "Balanced", bundle: .module)
+        case .lowPower: String(localized: "Low Power", bundle: .module)
+        case .bestAccuracy: String(localized: "Best Accuracy", bundle: .module)
+        }
+    }
+
+    var summary: String {
+        switch self {
+        case .automatic:
+            String(localized: "Balanced, or Low Power while your Mac is in Low Power Mode.", bundle: .module)
+        case .balanced:
+            String(
+                localized: "Prefers Whisper Base, uses the GPU, and starts loading the model while you speak.",
+                bundle: .module)
+        case .lowPower:
+            String(
+                localized:
+                    "Prefers Whisper Tiny, uses two CPU cores and no GPU, loads only when needed, and frees memory after a minute.",
+                bundle: .module)
+        case .bestAccuracy:
+            String(
+                localized: "Prefers Whisper Small when installed, uses the GPU, and loads while you speak.",
+                bundle: .module)
+        }
+    }
+}
+
+extension PerformancePlan.Reduction {
+    var message: String {
+        switch self {
+        case .lowPowerMode: String(localized: "Using Low Power because Low Power Mode is on.", bundle: .module)
+        case .thermal:
+            String(localized: "Performance is reduced to keep your Mac cool.", bundle: .module)
+        }
+    }
+}
+
+extension IdleUnloadPolicy {
+    var title: String {
+        switch self {
+        case .after(let minutes) where minutes == 1: String(localized: "1 minute", bundle: .module)
+        case .after(let minutes) where minutes == 60: String(localized: "1 hour", bundle: .module)
+        case .after(let minutes): String(localized: "\(minutes) minutes", bundle: .module)
+        case .never: String(localized: "Never", bundle: .module)
         }
     }
 }

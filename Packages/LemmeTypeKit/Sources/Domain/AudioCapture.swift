@@ -61,6 +61,10 @@ public enum AudioCaptureEvent: Sendable {
 }
 
 public enum AudioCaptureError: LemmeTypeError, Equatable {
+    /// Recording needs at least this much free space (E5-S6). A minute of
+    /// speech audio is about 4 MB; the margin protects the rest of the system.
+    public static let minimumFreeBytes: Int64 = 100_000_000
+
     case microphonePermissionMissing
     case noInputDevice
     case deviceDisconnected
@@ -70,6 +74,8 @@ public enum AudioCaptureError: LemmeTypeError, Equatable {
     case notCapturing
     case engineFailure(code: Int32)
     case storageFailure
+    /// Less free space than ``AudioCaptureError/minimumFreeBytes`` for the temporary recording (E5-S6).
+    case insufficientStorage
 
     public var identifier: String {
         switch self {
@@ -81,6 +87,7 @@ public enum AudioCaptureError: LemmeTypeError, Equatable {
         case .notCapturing: "audio.not-capturing"
         case .engineFailure: "audio.engine-failure"
         case .storageFailure: "audio.storage-failure"
+        case .insufficientStorage: "audio.insufficient-storage"
         }
     }
 }

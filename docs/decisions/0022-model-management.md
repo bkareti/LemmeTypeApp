@@ -43,6 +43,19 @@ use, and adapts memory and CPU use to the Mac's state.
   Automatic is Low Power in macOS Low Power Mode, otherwise Balanced. Serious
   or critical thermal state lowers every profile to Low Power. A GPU change
   reloads the model on next use.
+- **Residency** — `ModelResidencyController` (Domain actor, injected
+  `Clock`): the recorder marks a session busy from recording start through
+  processing and idle when it ends (calls queued in order). Busy cancels the
+  idle timer and, when the plan allows, warms up the preferred (or first
+  ready) engine while the user speaks. After the plan's idle period every
+  engine is unloaded. Memory pressure unloads at once, or right after a busy
+  session. Nothing loads at launch.
+- **System conditions** — `SystemConditionsMonitor` (`Lifecycle`):
+  `DispatchSource` memory-pressure events plus `ProcessInfo` thermal and
+  power-state notifications; no permission. `AppController` forwards
+  memory-pressure warnings to residency and shows reductions in Settings.
+- **Low storage** — recording refuses to start with less than 100 MB free on
+  the temporary-audio volume (`audio.insufficient-storage`).
 - **UI** — Settings › Dictation › Models (the window has no room for a new
   tab). The Engine section links there instead of duplicating model controls.
 

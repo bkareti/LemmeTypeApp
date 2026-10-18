@@ -95,10 +95,13 @@
             case engineNotReady(String)
         }
 
+        /// `label` names the report (and its thresholds); the engine id by default.
+        /// Per-model Whisper runs use the model id (E5-S7).
         public static func run(
             engine: any SpeechRecognitionEngine,
             corpus: BenchmarkCorpus,
-            workDirectory: URL
+            workDirectory: URL,
+            label: String? = nil
         ) async throws -> Report {
             let availability = await engine.availability()
             guard availability.isReady else { throw BenchmarkError.engineNotReady(availability.identifier) }
@@ -134,7 +137,7 @@
             }
             await engine.unload()
             return report(
-                engine: engine.descriptor.id.rawValue, corpus: corpus, warmUp: warmUp,
+                engine: label ?? engine.descriptor.id.rawValue, corpus: corpus, warmUp: warmUp,
                 peakMemory: peakMemoryBytes() - memoryBefore, measurements: measurements)
         }
 

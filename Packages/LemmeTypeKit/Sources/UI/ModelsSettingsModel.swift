@@ -5,7 +5,8 @@ import Support
 
 /// Settings › Dictation › Models (E5-S2): every catalog model with its size,
 /// languages, memory, fit for this Mac, and install state; download, pause,
-/// resume, and remove; and which Whisper model runs.
+/// resume, and remove; which Whisper model runs; and the performance profile
+/// and idle unload (E5-S4, E5-S5) with the system conditions behind them (E5-S6).
 @MainActor
 @Observable
 public final class ModelsSettingsModel {
@@ -22,6 +23,9 @@ public final class ModelsSettingsModel {
     public private(set) var whisperModel: WhisperModelChoice
     public private(set) var availableBytes: Int64 = 0
     public private(set) var modelError: ModelAssetError?
+    public private(set) var profile: PerformanceProfile
+    public private(set) var idleUnload: IdleUnloadPolicy
+    public private(set) var conditions: SystemConditions
     /// Set while the download confirmation is showing.
     public var downloadOffer: DownloadOffer?
 
@@ -39,8 +43,12 @@ public final class ModelsSettingsModel {
         engines: [any SpeechRecognitionEngine] = [],
         hardware: HardwareProfile = .current,
         catalog: [ModelAsset] = ModelCatalog.all,
+        conditions: SystemConditions = .nominal,
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
     ) {
+        self.conditions = conditions
+        profile = preferences.performanceProfile
+        idleUnload = preferences.modelIdleUnload
         self.modelAssets = modelAssets
         self.preferences = preferences
         self.engines = engines
@@ -70,6 +78,33 @@ public final class ModelsSettingsModel {
             rows[index].state = await modelAssets.state(of: rows[index].id)
         }
         availableBytes = await modelAssets.availableBytes()
+    }
+
+    // MARK: Performance (E5-S4, E5-S5, E5-S6)
+
+    /// What the next session runs with, given the profile and the system now.
+    public var plan: PerformancePlan {
+        PerformancePlan.make(profile: profile, conditions: conditions, idleUnload: idleUnload)
+    }
+
+    public func setProfile(_ profile: PerformanceProfile) {
+        self.profile = profile
+        preferences.performanceProfile = profile
+        diagnostics.record(
+            .models, "settings.performance-profile",
+            ["profile": .id(profile.rawValue), "effective": .id(plan.profile.rawValue)])
+        onModelsChanged()
+    }
+
+    public func setIdleUnload(_ policy: IdleUnloadPolicy) {
+        idleUnload = policy
+        preferences.modelIdleUnload = policy
+        diagnostics.record(.models, "settings.idle-unload", ["policy": .id(policy.identifier)])
+    }
+
+    /// The system's state changed (memory, heat, Low Power Mode).
+    public func update(_ conditions: SystemConditions) {
+        self.conditions = conditions
     }
 
     // MARK: Whisper model choice

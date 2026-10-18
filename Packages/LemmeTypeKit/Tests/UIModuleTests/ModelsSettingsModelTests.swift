@@ -85,3 +85,33 @@ struct ModelsSettingsModelTests {
         #expect(preferences.whisperModel == .specific(.whisperSmallEnglish))
     }
 }
+
+/// E5-S4/E5-S5/E5-S6: profile, idle unload, and conditions in the Models pane.
+@MainActor
+struct PerformanceSettingsTests {
+    @Test func profileAndIdlePeriodPersistAndShapeThePlan() {
+        let preferences = FakePreferences()
+        let model = ModelsSettingsModel(modelAssets: FakeModelAssetManager(), preferences: preferences)
+        #expect(model.profile == .automatic)
+        #expect(model.idleUnload == .after(minutes: 5))
+        #expect(model.plan.profile == .balanced)
+
+        model.setProfile(.bestAccuracy)
+        model.setIdleUnload(.never)
+        #expect(preferences.performanceProfile == .bestAccuracy)
+        #expect(preferences.modelIdleUnload == .never)
+        #expect(model.plan.whisperModelOrder.first == .whisperSmallEnglish)
+    }
+
+    @Test func conditionsLowerThePlanAndSayWhy() {
+        let model = ModelsSettingsModel(modelAssets: FakeModelAssetManager(), preferences: FakePreferences())
+        model.update(SystemConditions(isLowPowerModeEnabled: true))
+        #expect(model.plan.profile == .lowPower)
+        #expect(model.plan.reduction == .lowPowerMode)
+        model.update(SystemConditions(thermal: .critical))
+        #expect(model.plan.reduction == .thermal)
+        #expect(model.plan.reduction?.message == "Performance is reduced to keep your Mac cool.")
+        model.update(.nominal)
+        #expect(model.plan.reduction == nil)
+    }
+}
