@@ -57,6 +57,9 @@ struct AppComposition {
     var hotKeyRegistrar: any HotKeyRegistering
     var targetCapturer: any TargetCapturing
     var buildInfo: BuildInfo
+    /// The Mac model fit is judged against. UI tests use a fixed profile so
+    /// a small CI runner doesn't make every model "unsupported".
+    var hardware: HardwareProfile = .current
     var showsSettingsOnLaunch = false
 
     static func make(arguments: [String], infoDictionary: [String: Any]?) -> AppComposition {
@@ -66,6 +69,9 @@ struct AppComposition {
                 arguments.contains(uiTestingArgument)
                 ? uiTesting(buildInfo: buildInfo, freshInstall: arguments.contains(freshInstallArgument))
                 : live(buildInfo: buildInfo)
+            if composition.mode == .uiTesting {
+                composition.hardware = HardwareProfile(isAppleSilicon: true, physicalMemoryBytes: 16 << 30)
+            }
             composition.showsSettingsOnLaunch = arguments.contains(showSettingsArgument)
             return composition
         #else

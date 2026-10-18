@@ -15,7 +15,8 @@ extension AppComposition {
 
     func makeModels(dictation: DictationSettingsModel) -> ModelsSettingsModel {
         let models = ModelsSettingsModel(
-            modelAssets: modelAssets, preferences: preferences, engines: recognitionEngines, diagnostics: diagnostics)
+            modelAssets: modelAssets, preferences: preferences, engines: recognitionEngines, hardware: hardware,
+            diagnostics: diagnostics)
         models.onModelsChanged = { [weak dictation] in dictation?.refreshInBackground() }
         return models
     }
