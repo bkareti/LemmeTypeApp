@@ -61,6 +61,12 @@ struct AppCompositionTests {
         #expect(composition.preferences.hasCompletedOnboarding)
     }
 
+    @Test func uiTestingJudgesModelFitAgainstAFixedMac() {
+        let composition = AppComposition.make(arguments: [AppComposition.uiTestingArgument], infoDictionary: info)
+        #expect(composition.hardware == HardwareProfile(isAppleSilicon: true, physicalMemoryBytes: 16 << 30))
+        #expect(AppComposition.make(arguments: [], infoDictionary: info).hardware == .current)
+    }
+
     @Test func freshInstallArgumentStartsWithOnboardingPending() {
         let composition = AppComposition.make(
             arguments: [AppComposition.uiTestingArgument, AppComposition.freshInstallArgument],

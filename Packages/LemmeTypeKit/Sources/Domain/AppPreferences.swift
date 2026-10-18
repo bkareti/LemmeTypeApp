@@ -29,6 +29,12 @@ public protocol AppPreferences: AnyObject, Sendable {
     var voiceEditShortcut: KeyboardShortcut? { get set }
     /// Bundle identifiers excluded from all context use.
     var contextExcludedApplications: [String] { get set }
+    /// Which Whisper model runs (E5-S1). Automatic by default.
+    var whisperModel: WhisperModelChoice { get set }
+    /// Automatic by default (E5-S5).
+    var performanceProfile: PerformanceProfile { get set }
+    /// How long models stay loaded after the last session (E5-S4). Five minutes by default.
+    var modelIdleUnload: IdleUnloadPolicy { get set }
 }
 
 extension AppPreferences {

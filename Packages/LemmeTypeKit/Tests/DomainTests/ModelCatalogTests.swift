@@ -58,3 +58,44 @@ struct ModelCatalogTests {
         #expect(ModelInstallState.verifying.isBusy)
     }
 }
+
+/// E5-S1: three Whisper sizes, each described well enough to choose.
+struct ModelFitTests {
+    private static let gigabyte: UInt64 = 1 << 30
+
+    @Test func catalogDescribesEveryWhisperSize() {
+        #expect(ModelCatalog.all.map(\.id) == [.whisperTinyEnglish, .whisperBaseEnglish, .whisperSmallEnglish])
+        #expect(ModelCatalog.all.map(\.tier) == [.fastest, .balanced, .mostAccurate])
+        for asset in ModelCatalog.all {
+            #expect(asset.engine == .whisper)
+            #expect(asset.languages == ["en"])
+            #expect(asset.runtimeMemoryBytes > 0)
+            #expect(asset.hardware.requiresAppleSilicon)
+            #expect(asset.hardware.recommendedMemoryBytes >= asset.hardware.minimumMemoryBytes)
+            #expect(asset.files.first?.url.host == "huggingface.co")
+        }
+        // Sizes and memory grow with accuracy.
+        #expect(ModelCatalog.all.map(\.downloadBytes) == ModelCatalog.all.map(\.downloadBytes).sorted())
+        #expect(ModelCatalog.all.map(\.runtimeMemoryBytes) == ModelCatalog.all.map(\.runtimeMemoryBytes).sorted())
+        // The existing Base install is untouched: same id, version folder, and file.
+        #expect(ModelCatalog.whisperBaseEnglish.id.rawValue == "whisper-base-en")
+        #expect(ModelCatalog.whisperBaseEnglish.version == "ggml-base.en")
+        #expect(ModelCatalog.whisperBaseEnglish.files.first?.bytes == 147_964_211)
+    }
+
+    @Test func fitDependsOnChipAndMemory() {
+        let small = ModelCatalog.whisperSmallEnglish.hardware
+        #expect(
+            small.fit(for: .init(isAppleSilicon: false, physicalMemoryBytes: 32 * Self.gigabyte))
+                == .unsupported(.hardware))
+        #expect(
+            small.fit(for: .init(isAppleSilicon: true, physicalMemoryBytes: 4 * Self.gigabyte))
+                == .unsupported(.insufficientMemory))
+        #expect(small.fit(for: .init(isAppleSilicon: true, physicalMemoryBytes: 8 * Self.gigabyte)) == .supported)
+        #expect(small.fit(for: .init(isAppleSilicon: true, physicalMemoryBytes: 16 * Self.gigabyte)) == .recommended)
+        let base = ModelCatalog.whisperBaseEnglish.hardware
+        #expect(base.fit(for: .init(isAppleSilicon: true, physicalMemoryBytes: 8 * Self.gigabyte)) == .recommended)
+        #expect(ModelFit.unsupported(.hardware).identifier == "unsupported.hardware")
+        #expect(!ModelFit.unsupported(.hardware).canRun && ModelFit.supported.canRun)
+    }
+}

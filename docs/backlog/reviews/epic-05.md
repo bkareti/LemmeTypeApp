@@ -63,10 +63,10 @@ No blockers.
 |---|---|
 | S1 catalog fields and fit | `ModelCatalogTests`, `ModelFitTests` |
 | S1 chosen model not installed / Base keeps working | `WhisperEngineTests` |
-| S2 pane | `ModelsSettingsModelTests` + manual MA-50 |
-| S3 tampered file never loaded, once per launch | `ModelAssetStoreTests`, `WhisperEngineTests` |
-| S3 quit keeps progress, retries | `ModelAssetStoreTests` + manual MA-51 |
+| S2 pane (Settings › Dictation › Models) | `ModelsSettingsModelTests`, UI `DictationSettingsUITests` + manual MA-43 |
+| S3 tampered file never loaded, once per launch | `ModelAssetStoreTests.modifiedFileIsDeletedAndNeverReturned`, `…verifiedFileChecksOncePerLaunchUntilTheFileChanges`, `WhisperEngineTests.aModifiedModelIsNeverLoaded` + manual MA-44 |
+| S3 quit keeps progress, retries | `ModelAssetStoreTests.pausedProgressSurvivesARelaunch`, `…transientFailuresRetryFromTheResumePoint`, `…retriesStopAfterTwoAndKeepResumableProgress` + manual MA-44 |
 | S4 lazy, warm-up, idle unload | `ModelResidencyControllerTests`, `RecordingCoordinatorTests` |
 | S5 plans, Automatic, model order, reload | `PerformancePlanTests`, `WhisperEngineTests` |
-| S6 memory, thermal, storage | `ModelResidencyControllerTests`, `PerformancePlanTests`, `AudioCaptureServiceTests` + manual MA-52 |
+| S6 memory, thermal, storage | `ModelResidencyControllerTests`, `PerformancePlanTests`, `AudioCaptureServiceTests` + manual MA-45 |
 | S7 end-to-end, benchmark, thresholds | `PerformanceEndToEndTests`, `scripts/run-recognition-benchmark.sh`, `performance-thresholds.md` |

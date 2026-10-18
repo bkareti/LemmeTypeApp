@@ -52,6 +52,7 @@ struct FixedModelLocation: ModelAssetManaging {
 
     func state(of asset: ModelAssetID) async -> ModelInstallState { .installed }
     func installedFile(for asset: ModelAssetID, named name: String) async -> URL? { url }
+    func verifiedFile(for asset: ModelAssetID, named name: String) async -> URL? { url }
     func availableBytes() async -> Int64 { 0 }
     func install(
         _ consent: ModelDownloadConsent, progress: @escaping @Sendable (ModelInstallState) -> Void
