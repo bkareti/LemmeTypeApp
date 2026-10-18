@@ -24,7 +24,8 @@ final class PersonalizationUITests: XCTestCase {
         XCTAssertTrue(tab.waitForExistence(timeout: 5))
         tab.click()
 
-        window.radioButtons["Replacements"].click()
+        window.popUpButtons["dictation.section"].click()
+        app.menuItems["Replacements"].click()
         let add = window.buttons["personalization.add"]
         XCTAssertTrue(add.waitForExistence(timeout: 5))
         add.click()
@@ -55,7 +56,8 @@ final class PersonalizationUITests: XCTestCase {
         let tab = window.tabs["Dictation"]
         XCTAssertTrue(tab.waitForExistence(timeout: 5))
         tab.click()
-        window.radioButtons["Modes"].click()
+        window.popUpButtons["dictation.section"].click()
+        app.menuItems["Modes"].click()
 
         XCTAssertTrue(window.popUpButtons["modes.default"].waitForExistence(timeout: 5))
         let duplicate = window.buttons["Duplicate Message"]

@@ -421,8 +421,8 @@ Record results per app in `docs/testing/insertion-matrix.md`.
 ## E4-S4 — Personalization settings
 
 **MA-39 Managing vocabulary, replacements, and snippets**
-1. Settings › Dictation: the segmented control shows Engine, Vocabulary,
-   Replacements, and Snippets, each with an explanation and "0 of N".
+1. Settings › Dictation: the *Show* menu lists Engine, Models, Vocabulary,
+   Replacements, Snippets, and Modes, each with an explanation and "0 of N".
 2. Add a word, a replacement, and a two-line snippet; Edit each and Save; the
    rows update. Saving an empty field or a duplicate shows the reason in the
    sheet and nothing is saved.

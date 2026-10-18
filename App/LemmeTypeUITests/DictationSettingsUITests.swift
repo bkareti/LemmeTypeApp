@@ -36,7 +36,8 @@ final class DictationSettingsUITests: XCTestCase {
     @MainActor
     func testDownloadAsksForConfirmationFirst() {
         openDictationPane()
-        window.radioButtons["Models"].click()
+        window.popUpButtons["dictation.section"].click()
+        app.menuItems["Models"].click()
         let download = window.buttons["models.whisper-base-en.download"]
         XCTAssertTrue(download.waitForExistence(timeout: 5))
         for _ in 0..<5 where !download.isHittable {

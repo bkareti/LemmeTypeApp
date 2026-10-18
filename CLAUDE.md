@@ -151,8 +151,9 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   `FilePersonalizationStore` (Support; versioned JSON in Application Support,
   0600, unreadable files moved aside) and held by `PersonalizationModel` (UI).
   The recorder snapshots it into `DictationSession.personalization` at start.
-  Settings › Dictation (`DictationTabView`) manages it in segmented sections;
-  the window width is fixed and a ninth tab doesn't fit the CI screen.
+  Settings › Dictation (`DictationTabView`) manages it in sections chosen from a
+  *Show* menu; the window width is fixed (a new tab or a wide segmented
+  control pushes controls off the CI screen).
   Pipeline order: hints → `SnippetMatcher` (whole utterance) → writing mode →
   `Personalizer` (whole words, longest first, one pass) → `ContextFormatter`.
 - Dictation modes (ADR 0021): `DictationMode` (Domain) bundles engine,
