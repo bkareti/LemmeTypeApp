@@ -20,7 +20,8 @@ extension TranscriptionPipeline {
     {
         guard LanguageReadiness.isBeyondEnglishDictation(language: language, output: output) else { return nil }
         let readiness = await LanguageReadiness.evaluate(
-            language: language, output: output, engines: engines, preference: enginePreference)
+            language: language, output: output, engines: engines, preference: enginePreference,
+            hardware: hardware)
         return readiness.isReady ? nil : .languageUnavailable(readiness)
     }
 

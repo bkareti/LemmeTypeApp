@@ -182,7 +182,9 @@ struct MultilingualPipelineTests {
 
     @Test func aMissingModelIsReportedBeforeRecordingForOtherLanguagesOnly() async throws {
         let engine = whisper(text: "x", availability: .assetsMissing)
-        let pipeline = TranscriptionPipeline(engines: [engine], delivery: FakeTextDelivery())
+        let pipeline = TranscriptionPipeline(
+            engines: [engine], delivery: FakeTextDelivery(),
+            hardware: HardwareProfile(isAppleSilicon: true, physicalMemoryBytes: 16 << 30))
 
         let hindi = await pipeline.languageIssue(language: "hi", output: .original, enginePreference: .automatic)
         #expect(hindi == .languageUnavailable(.needsModel(.whisperSmall)))

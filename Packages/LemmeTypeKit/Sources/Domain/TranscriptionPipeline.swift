@@ -11,6 +11,8 @@ public actor TranscriptionPipeline: DictationProcessing {
     let rewriter: (any TextRewriting)?
     private let copier: (any TextCopying)?
     let diagnostics: any DiagnosticsRecording
+    /// What model fit is judged against (E9-S3); the current Mac in the app.
+    let hardware: HardwareProfile
 
     /// `engines` are in recommendation order (Automatic picks the first ready
     /// one); each session carries the user's ``EnginePreference``; `write`
@@ -25,8 +27,10 @@ public actor TranscriptionPipeline: DictationProcessing {
         delivery: any TextDelivering,
         rewriter: (any TextRewriting)? = nil,
         copier: (any TextCopying)? = nil,
-        diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
+        diagnostics: any DiagnosticsRecording = DiscardingDiagnostics(),
+        hardware: HardwareProfile = .current
     ) {
+        self.hardware = hardware
         self.copier = copier
         self.engines = engines
         self.write = write

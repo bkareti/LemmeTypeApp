@@ -14,10 +14,13 @@ struct DictationSettingsLanguageTests {
         id: .whisper, supportedLanguages: ["en", "hi", "te"], assets: .downloadable(.whisperBaseEnglish),
         capabilities: [.languageDetection], tasks: [.transcribe, .translateToEnglish])
     let preferences = FakePreferences()
+    /// Model fit is judged against a fixed Mac, not the machine running the tests.
+    static let mac = HardwareProfile(isAppleSilicon: true, physicalMemoryBytes: 16 << 30)
 
     func makeModel(engines: [FakeRecognitionEngine]? = nil) async -> DictationSettingsModel {
         let model = DictationSettingsModel(
-            engines: engines ?? [apple, whisper], modelAssets: FakeModelAssetManager(), preferences: preferences)
+            engines: engines ?? [apple, whisper], modelAssets: FakeModelAssetManager(), preferences: preferences,
+            hardware: Self.mac)
         await model.refresh()
         return model
     }

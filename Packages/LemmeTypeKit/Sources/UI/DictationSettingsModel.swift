@@ -54,6 +54,7 @@ public final class DictationSettingsModel {
     private let preferences: any AppPreferences
     private let speechAuthorizer: (any SpeechRecognitionAuthorizing)?
     private let diagnostics: any DiagnosticsRecording
+    private let hardware: HardwareProfile
     private var downloads: [ModelAssetID: Task<Void, Never>] = [:]
     private var refreshTask: Task<Void, Never>?
 
@@ -63,8 +64,10 @@ public final class DictationSettingsModel {
         modelAssets: any ModelAssetManaging,
         preferences: any AppPreferences,
         speechAuthorizer: (any SpeechRecognitionAuthorizing)? = nil,
-        diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
+        diagnostics: any DiagnosticsRecording = DiscardingDiagnostics(),
+        hardware: HardwareProfile = .current
     ) {
+        self.hardware = hardware
         self.engines = engines
         self.modelAssets = modelAssets
         self.preferences = preferences
@@ -169,7 +172,8 @@ public final class DictationSettingsModel {
         }
         readiness = await LanguageReadiness.evaluate(
             language: language, output: speechOutput, engines: engines,
-            preference: EnginePreference(selected: selectedEngine, fallsBackAutomatically: fallsBackToReadyEngine))
+            preference: EnginePreference(selected: selectedEngine, fallsBackAutomatically: fallsBackToReadyEngine),
+            hardware: hardware)
     }
 
     public func refreshInBackground() {
