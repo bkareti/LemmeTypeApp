@@ -214,7 +214,7 @@ struct AppComposition {
         let dictation = DictationSettingsModel(
             engines: recognitionEngines, modelAssets: modelAssets, preferences: preferences,
             speechAuthorizer: speechAuthorizer, diagnostics: diagnostics)
-        let modes = makeModes(personalization: personalization, languages: dictation.languages)
+        let modes = makeModes(personalization: personalization, languages: dictation.languageChoices)
         let models = makeModels(dictation: dictation)
         let diagnosticsModel = DiagnosticsModel(
             buffer: diagnostics, permissions: permissions, shortcut: shortcut, buildInfo: buildInfo)

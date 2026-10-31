@@ -163,10 +163,17 @@ private struct ModeEditor: View {
                     Picker(String(localized: "Language", bundle: .module), selection: $mode.language) {
                         Text(String(localized: "As in Dictation settings", bundle: .module)).tag(String?.none)
                         ForEach(model.languages, id: \.self) { language in
-                            Text(Locale.current.localizedString(forIdentifier: language) ?? language)
+                            Text(DictationSettingsModel.settingLanguageName(language))
                                 .tag(String?.some(language))
                         }
                     }
+                    Picker(String(localized: "Text you get", bundle: .module), selection: $mode.speechOutput) {
+                        Text(String(localized: "As in Dictation settings", bundle: .module)).tag(SpeechOutput?.none)
+                        ForEach(SpeechOutput.allCases, id: \.self) { output in
+                            Text(output.displayName).tag(SpeechOutput?.some(output))
+                        }
+                    }
+                    .accessibilityIdentifier("modes.editor.output")
                 }
                 Section(String(localized: "Cleanup", bundle: .module)) {
                     Picker(String(localized: "Writing", bundle: .module), selection: $mode.writingMode) {
@@ -244,6 +251,7 @@ extension DictationMode {
         if finalPunctuation == .omit { parts.append(String(localized: "no final period", bundle: .module)) }
         if !usesPersonalization { parts.append(String(localized: "no vocabulary", bundle: .module)) }
         if output == .copy { parts.append(String(localized: "clipboard only", bundle: .module)) }
+        if speechOutput == .english { parts.append(String(localized: "English text", bundle: .module)) }
         if let engine { parts.append(engine.displayName) }
         return parts.joined(separator: " · ")
     }

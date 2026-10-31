@@ -132,4 +132,15 @@ struct ModesSettingsModelTests {
         coordinator.handle(.cancel)
         await coordinator.settle()
     }
+
+    @Test func aSavedModeKeepsItsLanguageAndOutputAndSaysSoInItsSummary() {
+        let (model, _) = makeModel()
+        let hindi = DictationMode(name: "Hindi to English", language: "hi", speechOutput: .english)
+        #expect(model.save(hindi) == nil)
+        let saved = model.customModes.first { $0.id == hindi.id }
+        #expect(saved?.language == "hi")
+        #expect(saved?.speechOutput == .english)
+        #expect(saved?.summary.contains("English text") == true)
+        #expect(DictationMode.clean.summary.contains("English text") == false)
+    }
 }
