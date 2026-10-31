@@ -87,7 +87,11 @@ public enum LanguageReadiness: Equatable, Sendable {
             if let model = ModelCatalog.recommendedModel(for: need, hardware: hardware) {
                 return .needsModel(model.id)
             }
-            return .unsupportedOnThisMac(.hardware)
+            // No model that serves this request runs on this Mac: say why.
+            let reason = ModelCatalog.whisperModels
+                .filter { $0.serves(language: need.language, task: need.task) }
+                .compactMap { $0.hardware.unsupportedReason(for: hardware) }.first
+            return .unsupportedOnThisMac(reason ?? .hardware)
         case .unsupported(let reason):
             return .unsupportedOnThisMac(reason)
         case .ready:

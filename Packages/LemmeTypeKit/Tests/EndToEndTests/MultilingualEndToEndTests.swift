@@ -52,7 +52,8 @@ struct MultilingualEndToEndTests {
                     source: source, storage: storage,
                     permissions: FakePermissions(statuses: [.microphone: .granted]), diagnostics: diagnostics),
                 processor: TranscriptionPipeline(
-                    engines: [engine], delivery: delivery, diagnostics: diagnostics),
+                    engines: [engine], delivery: delivery, diagnostics: diagnostics,
+                    hardware: HardwareProfile(isAppleSilicon: true, physicalMemoryBytes: 16 << 30)),
                 feedback: SilentFeedback(), preferences: preferences, textCopier: copier,
                 finishedDisplay: .seconds(60), failureDisplay: .seconds(60), attentionDisplay: .seconds(60),
                 diagnostics: diagnostics)

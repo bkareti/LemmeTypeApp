@@ -140,7 +140,7 @@ struct RecordingCoordinatorTests {
         await coordinator.settle()
 
         source.emitTone(seconds: 0.2, amplitude: 0.5)
-        try await Task.sleep(for: .milliseconds(50))
+        await waitUntil { coordinator.level > 0.5 }
         #expect(coordinator.level > 0.5)
 
         coordinator.handle(.stop)
