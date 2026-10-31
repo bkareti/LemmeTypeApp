@@ -149,6 +149,9 @@ public enum DictationIssue: Equatable, Sendable {
     case languageUnavailable(LanguageReadiness)
     /// A translation to read before it is inserted or copied (E9-S5).
     case reviewTranslation
+    /// A rewrite in the chosen tone and format to read before it is inserted
+    /// or copied; `notice` is set when the rewrite did not apply (E10-S4).
+    case reviewRewrite(RewriteNotice?)
 
     /// Stable lowercase name for diagnostics.
     public var identifier: String {
@@ -162,6 +165,7 @@ public enum DictationIssue: Equatable, Sendable {
         case .rewriteFailed(let error): error.identifier
         case .languageUnavailable(let readiness): "language.\(readiness.identifier)"
         case .reviewTranslation: "review.translation"
+        case .reviewRewrite(let notice): notice.map { "review.\($0.identifier)" } ?? "review.rewrite"
         }
     }
 }
@@ -191,6 +195,10 @@ public enum DictationAction: Equatable, Sendable {
     case chooseLanguage
     /// Deliver the text being reviewed to the original field (E9-S5).
     case insertText
+    /// Deliver the text from before the rewrite instead of the rewrite (E10-S4).
+    case useOriginal
+    /// Rewrite the same text again, without recognising the audio again (E10-S4).
+    case regenerate
     /// Delete the recording and transcript.
     case discard
 }
@@ -207,6 +215,8 @@ extension DictationIssue {
             return [.discard]
         case .recognitionFailed(.languageUncertain), .languageUnavailable, .reviewTranslation:
             return languageActions
+        case .reviewRewrite(let notice):
+            return Self.rewriteReviewActions(notice)
         case .recognitionFailed(let error) where error.isRetryable:
             return [.retry] + switchEngine + [.saveAudio, .discard]
         case .recognitionFailed, .engineUnavailable, .noEngineAvailable:
@@ -220,6 +230,13 @@ extension DictationIssue {
         case .editingUnavailable, .rewriterUnavailable, .rewriteFailed:
             return editingActions
         }
+    }
+
+    /// Choices for a rewrite review (E10-S4): Regenerate only when trying again can help.
+    private static func rewriteReviewActions(_ notice: RewriteNotice?) -> [DictationAction] {
+        guard let notice else { return [.insertText, .useOriginal, .regenerate, .copyText, .discard] }
+        return notice.isRetryable
+            ? [.insertText, .regenerate, .copyText, .discard] : [.insertText, .copyText, .discard]
     }
 
     /// Choices for language problems and translation review (E9-S2, E9-S3, E9-S5).
@@ -253,6 +270,9 @@ public enum DictationOutcome: Equatable, Sendable {
     case needsAttention(
         DictationIssue, engine: RecognitionEngineID?, alternatives: [RecognitionEngineID], transcript: String?)
     case cancelled
+    /// A rewrite (or the original, with a reason) waiting for the user's choice
+    /// before anything is inserted (E10-S4). Held in memory only.
+    case review(DictationReview, engine: RecognitionEngineID?)
 }
 
 /// Turns a session's recording into delivered text (E2-S5).
@@ -268,6 +288,14 @@ public protocol DictationProcessing: Sendable {
     /// Delivers an already produced transcript again (Retry Delivery).
     func deliver(_ transcript: String, for session: DictationSession) async -> DictationOutcome
 
+    /// Rewrites `original` again in the session's style, without recognising
+    /// the audio again (E10-S4). Ends in another review.
+    func regenerate(
+        _ original: String,
+        for session: DictationSession,
+        updates: @escaping @Sendable (ProcessingUpdate) -> Void
+    ) async -> DictationOutcome
+
     /// Why voice editing can't start for `target`, checked before recording
     /// so the user doesn't speak for nothing; `nil` when it can.
     func editingIssue(for target: ActivationTarget?, language: String) async -> DictationIssue?
@@ -281,6 +309,14 @@ public protocol DictationProcessing: Sendable {
 }
 
 extension DictationProcessing {
+    public func regenerate(
+        _ original: String,
+        for session: DictationSession,
+        updates: @escaping @Sendable (ProcessingUpdate) -> Void
+    ) async -> DictationOutcome {
+        .cancelled
+    }
+
     public func languageIssue(language: String, output: SpeechOutput, enginePreference: EnginePreference) async
         -> DictationIssue?
     {

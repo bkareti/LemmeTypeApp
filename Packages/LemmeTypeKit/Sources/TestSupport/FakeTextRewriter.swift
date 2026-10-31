@@ -6,6 +6,8 @@ public final class FakeTextRewriter: TextRewriting {
     public enum Script: Sendable {
         case uppercase
         case text(String)
+        /// Successive answers, repeating the last one (Regenerate tests).
+        case sequence([String])
         case failure(RewriteError)
     }
 
@@ -14,6 +16,9 @@ public final class FakeTextRewriter: TextRewriting {
         var script: Script
         var delay: Duration?
         var requests: [String] = []
+        var passages: [String] = []
+        var languages: [String] = []
+        var answered = 0
     }
 
     private let state: Mutex<State>
@@ -25,6 +30,10 @@ public final class FakeTextRewriter: TextRewriting {
     /// Instructions received, for assertions.
     public var instructions: [String] { state.withLock { $0.requests } }
     public var rewriteCount: Int { instructions.count }
+    /// The passages received (E10-S3). Test assertions only.
+    public var passages: [String] { state.withLock { $0.passages } }
+    /// The languages received (E10-S3).
+    public var languages: [String] { state.withLock { $0.languages } }
 
     public func setAvailability(_ availability: RewriterAvailability) {
         state.withLock { $0.availability = availability }
@@ -35,9 +44,12 @@ public final class FakeTextRewriter: TextRewriting {
     }
 
     public func rewrite(_ request: RewriteRequest) async throws(RewriteError) -> String {
-        let (availability, script, delay) = state.withLock { state in
+        let (availability, script, delay, answer) = state.withLock { state in
             state.requests.append(request.instruction)
-            return (state.availability, state.script, state.delay)
+            state.passages.append(request.text)
+            state.languages.append(request.language)
+            defer { state.answered += 1 }
+            return (state.availability, state.script, state.delay, state.answered)
         }
         guard availability.isReady else { throw .unavailable(availability) }
         if let delay {
@@ -46,6 +58,7 @@ public final class FakeTextRewriter: TextRewriting {
         switch script {
         case .uppercase: return request.text.uppercased()
         case .text(let text): return text
+        case .sequence(let answers): return answers.isEmpty ? request.text : answers[min(answer, answers.count - 1)]
         case .failure(let error): throw error
         }
     }

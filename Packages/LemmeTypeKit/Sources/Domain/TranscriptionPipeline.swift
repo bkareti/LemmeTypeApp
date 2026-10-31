@@ -8,7 +8,7 @@ public actor TranscriptionPipeline: DictationProcessing {
     let write: @Sendable (String, WritingMode) -> String
     let format: @Sendable (String, WritingMode, CursorContext) -> String
     private let delivery: any TextDelivering
-    private let rewriter: (any TextRewriting)?
+    let rewriter: (any TextRewriting)?
     private let copier: (any TextCopying)?
     let diagnostics: any DiagnosticsRecording
 
@@ -71,6 +71,8 @@ public actor TranscriptionPipeline: DictationProcessing {
         var personalizations = 0
         /// The utterance was a snippet trigger (E4-S3).
         var usedSnippet = false
+        /// The rewrite (or the original with a reason) to read before delivery (E10-S3).
+        var review: DictationReview?
     }
 
     private func run(
@@ -118,9 +120,8 @@ public actor TranscriptionPipeline: DictationProcessing {
             run.outcome = Self.attention(.recognitionFailed(.noSpeechDetected), engine: id)
             return run
         }
-        // A translation is read before it goes anywhere (E9-S5).
-        if session.purpose == .dictation, Self.wasTranslated(transcript, task: task, session: session) {
-            run.outcome = .needsAttention(.reviewTranslation, engine: id, alternatives: [], transcript: text)
+        if let held = Self.heldForReview(run, transcript: transcript, task: task, session: session, text: text) {
+            run.outcome = held
             return run
         }
         updates(.phase(.delivering))
@@ -137,7 +138,7 @@ public actor TranscriptionPipeline: DictationProcessing {
         switch session.purpose {
         case .dictation:
             updates(.phase(.writing))
-            return written(transcript.text, language: transcript.language, session: session, run: &run)
+            return await styled(transcript, session: session, run: &run, updates: updates)
         case .editing:
             updates(.phase(.rewriting))
             let rewriteStart = ContinuousClock.now

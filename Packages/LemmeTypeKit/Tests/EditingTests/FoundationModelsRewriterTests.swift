@@ -60,6 +60,53 @@ struct FoundationModelsRealRewriteTests {
     }
 }
 
+/// Opt-in (`LEMMETYPE_REAL_REWRITE=1`): every tone, format, and length on the
+/// real on-device model (E10-S5), scored by the same preservation check the
+/// app uses. The thresholds are Proposed in docs/testing/style-rewriting.md.
+struct FoundationModelsStyleTests {
+    /// Proposed: share of the 31 combinations whose result keeps what was said.
+    static let proposedPassRate = 0.9
+    /// Proposed: seconds for the slowest short rewrite.
+    static let proposedLatencyLimit = 15.0
+
+    @Test(.enabled(if: Environment.realRewrite))
+    func stylesKeepWhatWasSaid() async throws {
+        let rewriter = FoundationModelsRewriter()
+        try #require(await rewriter.availability(language: "en-US") == .ready)
+        let text = "Tell Priya that I will not be at the review on Friday but I will send the 3 slides tomorrow."
+        var slowest = 0.0
+        var failures: [String] = []
+        var total = 0
+        for tone in Tone.allCases {
+            for format in WritingFormat.allCases {
+                for length in LengthPreference.allCases {
+                    let options = StyleOptions(tone: tone, format: format, length: length)
+                    guard let instruction = StyleInstruction.make(options) else { continue }
+                    total += 1
+                    let start = ContinuousClock.now
+                    let result = try await TextRewritingRunner().run(
+                        rewriter, RewriteRequest(instruction: instruction, text: text, language: "en-US"))
+                    slowest = max(slowest, Double((ContinuousClock.now - start).components.seconds))
+                    let violations = PreservationChecker.violations(original: text, rewritten: result)
+                    if !violations.isEmpty {
+                        failures.append("\(options.identifier): \(violations.map(\.rawValue).joined(separator: ","))")
+                    }
+                }
+            }
+        }
+        let rate = Double(total - failures.count) / Double(total)
+        // A measurement against Proposed thresholds, so a miss is a warning, not a failure.
+        if rate < Self.proposedPassRate {
+            Issue.record(
+                "pass rate \(rate) is below \(Self.proposedPassRate); changed: \(failures)", severity: .warning)
+        }
+        if slowest > Self.proposedLatencyLimit {
+            Issue.record("slowest rewrite took \(slowest) s", severity: .warning)
+        }
+        #expect(total == 31)
+    }
+}
+
 enum Environment {
     static var realRewrite: Bool { ProcessInfo.processInfo.environment["LEMMETYPE_REAL_REWRITE"] == "1" }
 }

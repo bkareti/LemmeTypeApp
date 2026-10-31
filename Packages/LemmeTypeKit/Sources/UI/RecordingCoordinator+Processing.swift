@@ -20,6 +20,13 @@ extension RecordingCoordinator {
         }
     }
 
+    /// Rewrites the text under review again (Regenerate, E10-S4).
+    func startRegeneration(_ original: String, for session: DictationSession) {
+        run(session) { processor, updates in
+            await processor.regenerate(original, for: session) { updates.yield($0) }
+        }
+    }
+
     private func run(
         _ session: DictationSession,
         work:
@@ -80,6 +87,19 @@ extension RecordingCoordinator {
                 String(localized: "Dictation needs your attention. \(issue.userMessage)", bundle: .module))
             Log.recognition.info("Session needs attention: \(issue.identifier, privacy: .public)")
             finishSession(displayFor: attentionDisplay)
+        case .review(let review, let engine):
+            let issue = DictationIssue.reviewRewrite(review.notice)
+            guard machine.handle(.processingNeedsAttention(issue)) else { return }
+            if let engine { session?.engine = engine }
+            pendingTranscript = review.text
+            pendingReview = review
+            reviewShowsOriginal = false
+            attentionActions = issue.actions(alternatives: []).filter(isOffered)
+            sync()
+            feedback.announce(
+                String(localized: "Dictation needs your attention. \(issue.userMessage)", bundle: .module))
+            Log.recognition.info("Session needs attention: \(issue.identifier, privacy: .public)")
+            finishSession(displayFor: attentionDisplay)
         case .cancelled:
             break
         }
@@ -108,6 +128,8 @@ extension RecordingCoordinator {
         session?.discardAudio()
         session = nil
         pendingTranscript = nil
+        pendingReview = nil
+        reviewShowsOriginal = false
         attentionActions = []
     }
 
@@ -131,8 +153,12 @@ extension RecordingCoordinator {
             next.language = language
             self.session = next
             retry(next)
-        case .copyText, .retryDelivery, .insertText:
+        case .copyText, .retryDelivery, .insertText, .useOriginal:
             await useTranscript(for: action, session: session)
+        case .regenerate:
+            guard let original = pendingReview?.original, machine.handle(.retry) else { return }
+            beginRetry()
+            startRegeneration(original, for: session)
         case .allowSpeechRecognition:
             await allowSpeechRecognition()
         case .saveAudio:
@@ -157,11 +183,19 @@ extension RecordingCoordinator {
 
     /// Copy Text or Retry Insert with the transcript kept in memory.
     private func useTranscript(for action: DictationAction, session: DictationSession) async {
+        // Use Original delivers the text from before the rewrite (E10-S4).
+        if action == .useOriginal, let original = pendingReview?.original { pendingTranscript = original }
+        // Copy copies what the review is showing.
+        if action == .copyText, reviewShowsOriginal, let original = pendingReview?.original {
+            pendingTranscript = original
+        }
         guard let transcript = pendingTranscript else { return }
         if action == .copyText, let textCopier {
             await textCopier.copy(transcript)
             complete(with: .copied)
-        } else if action == .retryDelivery || action == .insertText, machine.handle(.retry) {
+        } else if action == .retryDelivery || action == .insertText || action == .useOriginal,
+            machine.handle(.retry)
+        {
             beginRetry()
             startDelivery(transcript, for: session)
         }
