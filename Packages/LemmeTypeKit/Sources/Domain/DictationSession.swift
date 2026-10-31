@@ -46,7 +46,11 @@ public struct DictationSession: Identifiable, Sendable {
     /// Whether the mode came from the default or an app rule (E4-S7).
     public let modeSource: ModeSource
     public let purpose: SessionPurpose
-    public let language: String
+    /// A BCP 47 identifier or ``SpokenLanguages/automatic``. Changes only
+    /// when the user picks a language after uncertain detection (E9-S2).
+    public var language: String
+    /// Original text or English, captured when recording started (E9-S3).
+    public let speechOutput: SpeechOutput
     /// The engine choice in Settings when recording started.
     public let enginePreference: EnginePreference
     /// `nil` until the pipeline picks one; retries reuse it.
@@ -65,6 +69,7 @@ public struct DictationSession: Identifiable, Sendable {
         modeSource: ModeSource = .default,
         purpose: SessionPurpose = .dictation,
         language: String,
+        speechOutput: SpeechOutput = .original,
         enginePreference: EnginePreference = .automatic,
         engine: RecognitionEngineID? = nil,
         personalization: PersonalizationLibrary = .empty,
@@ -78,6 +83,7 @@ public struct DictationSession: Identifiable, Sendable {
         self.modeSource = modeSource
         self.purpose = purpose
         self.language = language
+        self.speechOutput = speechOutput
         self.enginePreference = enginePreference
         self.engine = engine
         self.personalization = personalization
@@ -139,6 +145,10 @@ public enum DictationIssue: Equatable, Sendable {
     case rewriterUnavailable(RewriterAvailability)
     /// The model did not produce an edit; the selection is unchanged.
     case rewriteFailed(RewriteError)
+    /// The chosen language and output cannot run; nothing was recorded (E9-S3).
+    case languageUnavailable(LanguageReadiness)
+    /// A translation to read before it is inserted or copied (E9-S5).
+    case reviewTranslation
 
     /// Stable lowercase name for diagnostics.
     public var identifier: String {
@@ -150,6 +160,8 @@ public enum DictationIssue: Equatable, Sendable {
         case .editingUnavailable(let reason): "editing.\(reason.rawValue)"
         case .rewriterUnavailable(let availability): "rewrite.\(availability.identifier)"
         case .rewriteFailed(let error): error.identifier
+        case .languageUnavailable(let readiness): "language.\(readiness.identifier)"
+        case .reviewTranslation: "review.translation"
         }
     }
 }
@@ -173,6 +185,12 @@ public enum DictationAction: Equatable, Sendable {
     case openPermissions
     /// Open Settings › Context (voice editing and context controls).
     case openContextSettings
+    /// Process the recording again in this language (E9-S2).
+    case useLanguage(String)
+    /// Open Settings › Dictation to choose a language or download a model (E9-S3).
+    case chooseLanguage
+    /// Deliver the text being reviewed to the original field (E9-S5).
+    case insertText
     /// Delete the recording and transcript.
     case discard
 }
@@ -187,6 +205,12 @@ extension DictationIssue {
             return [.allowSpeechRecognition, .retry] + switchEngine + [.saveAudio, .discard]
         case .recognitionFailed(.noSpeechDetected):
             return [.discard]
+        case .recognitionFailed(.languageUncertain):
+            return SpokenLanguages.all.map { .useLanguage($0.code) } + [.discard]
+        case .languageUnavailable:
+            return [.chooseLanguage, .discard]
+        case .reviewTranslation:
+            return [.insertText, .copyText, .retry, .discard]
         case .recognitionFailed(let error) where error.isRetryable:
             return [.retry] + switchEngine + [.saveAudio, .discard]
         case .recognitionFailed, .engineUnavailable, .noEngineAvailable:
@@ -242,9 +266,22 @@ public protocol DictationProcessing: Sendable {
     /// Why voice editing can't start for `target`, checked before recording
     /// so the user doesn't speak for nothing; `nil` when it can.
     func editingIssue(for target: ActivationTarget?, language: String) async -> DictationIssue?
+
+    /// Why the chosen language and output can't run, checked before recording
+    /// so the user doesn't speak for nothing (E9-S3). `nil` when they can, and
+    /// always `nil` for plain English dictation.
+    func languageIssue(language: String, output: SpeechOutput, enginePreference: EnginePreference) async
+        -> DictationIssue?
+
 }
 
 extension DictationProcessing {
+    public func languageIssue(language: String, output: SpeechOutput, enginePreference: EnginePreference) async
+        -> DictationIssue?
+    {
+        nil
+    }
+
     public func editingIssue(for target: ActivationTarget?, language: String) async -> DictationIssue? {
         .rewriterUnavailable(.unavailable)
     }

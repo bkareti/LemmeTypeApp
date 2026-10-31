@@ -13,14 +13,18 @@ public final class FakeRecognitionEngine: SpeechRecognitionEngine {
         /// Return the transcript even when cancelled, to prove that
         /// `RecognitionRunner` still reports cancellation.
         public var ignoresCancellation: Bool
+        /// The language reported as spoken when the request is Automatic (E9-S2).
+        public var detectedLanguage: String?
 
         public init(
             text: String = "Hello from the fake engine.",
             partials: [String] = [],
             delay: Duration = .zero,
             error: RecognitionError? = nil,
-            ignoresCancellation: Bool = false
+            ignoresCancellation: Bool = false,
+            detectedLanguage: String? = nil
         ) {
+            self.detectedLanguage = detectedLanguage
             self.text = text
             self.partials = partials
             self.delay = delay
@@ -37,7 +41,10 @@ public final class FakeRecognitionEngine: SpeechRecognitionEngine {
         var unloadCount = 0
         var isPrepared = false
         var lastLanguage: String?
+        var lastTask: RecognitionTask?
         var lastHints: [String] = []
+        /// Availability that differs from ``availability`` for one need (E9-S2).
+        var needAvailability: [RecognitionNeed: EngineAvailability] = [:]
     }
 
     public let descriptor: EngineDescriptor
@@ -49,10 +56,11 @@ public final class FakeRecognitionEngine: SpeechRecognitionEngine {
         script: Script = Script(),
         supportedLanguages: [String] = ["en"],
         assets: AssetRequirement = .none,
-        capabilities: EngineCapabilities = [.partialResults]
+        capabilities: EngineCapabilities = [.partialResults],
+        tasks: Set<RecognitionTask> = [.transcribe]
     ) {
         descriptor = EngineDescriptor(
-            id: id, supportedLanguages: supportedLanguages, assets: assets, capabilities: capabilities)
+            id: id, supportedLanguages: supportedLanguages, assets: assets, capabilities: capabilities, tasks: tasks)
         state = Mutex(State(availability: availability, script: script))
     }
 
@@ -61,6 +69,8 @@ public final class FakeRecognitionEngine: SpeechRecognitionEngine {
     public var unloadCount: Int { state.withLock { $0.unloadCount } }
     public var isPrepared: Bool { state.withLock { $0.isPrepared } }
     public var lastLanguage: String? { state.withLock { $0.lastLanguage } }
+    /// The task of the last request (E9-S2).
+    public var lastTask: RecognitionTask? { state.withLock { $0.lastTask } }
     /// The recognition hints of the last request (E4-S2).
     public var lastHints: [String] { state.withLock { $0.lastHints } }
 
@@ -70,6 +80,16 @@ public final class FakeRecognitionEngine: SpeechRecognitionEngine {
 
     public func setScript(_ script: Script) {
         state.withLock { $0.script = script }
+    }
+
+    /// Makes `need` report `availability` while everything else keeps the engine's own.
+    public func setAvailability(_ availability: EngineAvailability, for need: RecognitionNeed) {
+        state.withLock { $0.needAvailability[need] = availability }
+    }
+
+    public func availability(for need: RecognitionNeed) async -> EngineAvailability {
+        guard descriptor.supports(need) else { return .unsupported(.language) }
+        return state.withLock { $0.needAvailability[need] ?? $0.availability }
     }
 
     public func availability() async -> EngineAvailability {
@@ -92,8 +112,9 @@ public final class FakeRecognitionEngine: SpeechRecognitionEngine {
         let (availability, script) = state.withLock { state in
             state.recognizeCount += 1
             state.lastLanguage = request.language
+            state.lastTask = request.task
             state.lastHints = request.hints
-            return (state.availability, state.script)
+            return (state.needAvailability[request.need] ?? state.availability, state.script)
         }
         if let error = availability.recognitionError { throw error }
         if Task.isCancelled && !script.ignoresCancellation { throw .cancelled }
@@ -115,7 +136,8 @@ public final class FakeRecognitionEngine: SpeechRecognitionEngine {
             text: script.text,
             segments: script.text.isEmpty ? [] : [TranscriptSegment(text: script.text, start: 0, confidence: 1)],
             engine: descriptor.id,
-            language: request.language,
+            language: request.task == .translateToEnglish ? "en" : (script.detectedLanguage ?? request.language),
+            spokenLanguage: script.detectedLanguage ?? request.language,
             audioDuration: request.audio.duration,
             processingDuration: Double(elapsed.components.seconds)
                 + Double(elapsed.components.attoseconds) / 1e18

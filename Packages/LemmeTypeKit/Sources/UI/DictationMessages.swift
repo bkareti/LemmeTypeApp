@@ -27,6 +27,16 @@ extension DictationIssue {
         switch self {
         case .recognitionFailed(.noSpeechDetected):
             String(localized: "No speech was detected.", bundle: .module)
+        case .recognitionFailed(.languageUncertain):
+            String(
+                localized: "LemmeType couldn’t tell which language you spoke. Choose it and your recording is used again.",
+                bundle: .module)
+        case .languageUnavailable(let readiness):
+            readiness.userMessage
+        case .reviewTranslation:
+            String(
+                localized: "Read the translation. Nothing is inserted until you choose Insert or Copy.",
+                bundle: .module)
         case .recognitionFailed(.permissionDenied), .engineUnavailable(_, .permissionUnavailable):
             String(
                 localized: "Apple Speech needs Speech Recognition access. Your recording is kept until you decide.",
@@ -160,6 +170,11 @@ extension DictationAction {
         case .retryDelivery: String(localized: "Retry Insert", bundle: .module)
         case .openPermissions: String(localized: "Open Permissions", bundle: .module)
         case .openContextSettings: String(localized: "Context Settings…", bundle: .module)
+        case .useLanguage(let code):
+            String(
+                localized: "Use \(SpokenLanguages.language(for: code)?.englishName ?? code)", bundle: .module)
+        case .chooseLanguage: String(localized: "Language Settings…", bundle: .module)
+        case .insertText: String(localized: "Insert", bundle: .module)
         case .discard: String(localized: "Discard", bundle: .module)
         }
     }
@@ -176,6 +191,9 @@ extension DictationAction {
         case .retryDelivery: "retry-delivery"
         case .openPermissions: "open-permissions"
         case .openContextSettings: "open-context-settings"
+        case .useLanguage(let code): "use-language-\(code)"
+        case .chooseLanguage: "choose-language"
+        case .insertText: "insert-text"
         case .discard: "discard"
         }
     }

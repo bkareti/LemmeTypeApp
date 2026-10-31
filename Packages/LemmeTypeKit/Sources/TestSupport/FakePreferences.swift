@@ -19,6 +19,7 @@ public final class FakePreferences: AppPreferences {
         var allowsVoiceEditing: Bool
         var voiceEditShortcut: KeyboardShortcut?
         var contextExcludedApplications: [String]
+        var speechOutput: SpeechOutput = .original
         var whisperModel: WhisperModelChoice = .automatic
         var performanceProfile: PerformanceProfile = .automatic
         var modelIdleUnload: IdleUnloadPolicy = .default
@@ -59,6 +60,11 @@ public final class FakePreferences: AppPreferences {
                 voiceEditShortcut: nil,
                 contextExcludedApplications: contextExcludedApplications
             ))
+    }
+
+    public var speechOutput: SpeechOutput {
+        get { values.withLock { $0.speechOutput } }
+        set { values.withLock { $0.speechOutput = newValue } }
     }
 
     public var hasCompletedOnboarding: Bool {

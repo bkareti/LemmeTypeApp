@@ -13,10 +13,10 @@ public struct RecognitionRunner: Sendable {
         _ request: RecognitionRequest,
         updates: @escaping @Sendable (RecognitionUpdate) -> Void = { _ in }
     ) async throws(RecognitionError) -> Transcript {
-        guard engine.descriptor.supports(language: request.language) else {
+        guard engine.descriptor.supports(request.need) else {
             throw .unsupported(.language)
         }
-        let availability = await engine.availability()
+        let availability = await engine.availability(for: request.need)
         if let error = availability.recognitionError {
             throw error
         }

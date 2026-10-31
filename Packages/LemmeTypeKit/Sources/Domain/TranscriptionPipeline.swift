@@ -77,8 +77,10 @@ public actor TranscriptionPipeline: DictationProcessing {
         _ session: DictationSession,
         updates: @escaping @Sendable (ProcessingUpdate) -> Void
     ) async -> Run {
+        let task = Self.task(for: session)
+        let need = RecognitionNeed(language: session.language, task: task)
         let engine: any SpeechRecognitionEngine
-        switch await select(for: session) {
+        switch await select(for: session, need: need) {
         case .success(let chosen):
             engine = chosen
         case .failure(let failure):
@@ -91,14 +93,16 @@ public actor TranscriptionPipeline: DictationProcessing {
         let transcript: Transcript
         do {
             transcript = try await RecognitionRunner().run(
-                engine, RecognitionRequest(audio: session.audio, language: session.language, hints: hints(for: session))
+                engine,
+                RecognitionRequest(
+                    audio: session.audio, language: session.language, task: task, hints: hints(for: session))
             ) { update in
                 if case .progress(let fraction) = update { updates(.progress(fraction)) }
             }
         } catch .cancelled {
             return Run(outcome: .cancelled, engine: id)
         } catch {
-            let alternatives = await readyEngines(excluding: engine.descriptor.id)
+            let alternatives = await readyEngines(excluding: engine.descriptor.id, for: need)
             return Run(
                 outcome: .needsAttention(
                     .recognitionFailed(error), engine: id, alternatives: alternatives, transcript: nil),
@@ -112,6 +116,11 @@ public actor TranscriptionPipeline: DictationProcessing {
         // Delivering nothing would replace a selection with nothing.
         guard text.contains(where: { !$0.isWhitespace }) else {
             run.outcome = Self.attention(.recognitionFailed(.noSpeechDetected), engine: id)
+            return run
+        }
+        // A translation is read before it goes anywhere (E9-S5).
+        if session.purpose == .dictation, Self.wasTranslated(transcript, task: task, session: session) {
+            run.outcome = .needsAttention(.reviewTranslation, engine: id, alternatives: [], transcript: text)
             return run
         }
         updates(.phase(.delivering))
@@ -128,11 +137,13 @@ public actor TranscriptionPipeline: DictationProcessing {
         switch session.purpose {
         case .dictation:
             updates(.phase(.writing))
-            return written(transcript.text, session: session, run: &run)
+            return written(transcript.text, language: transcript.language, session: session, run: &run)
         case .editing:
             updates(.phase(.rewriting))
             let rewriteStart = ContinuousClock.now
-            let result = await rewrite(instruction: transcript.text, session: session)
+            let result = await rewrite(
+                instruction: transcript.text, language: transcript.spokenLanguage ?? transcript.language,
+                session: session)
             run.rewriting = ContinuousClock.now - rewriteStart
             switch result {
             case .success(let edited):
@@ -149,7 +160,7 @@ public actor TranscriptionPipeline: DictationProcessing {
     }
 
     /// Applies the spoken instruction to the captured selection (E3-S5).
-    private func rewrite(instruction spoken: String, session: DictationSession) async
+    private func rewrite(instruction spoken: String, language: String, session: DictationSession) async
         -> Result<String, EditingFailure>
     {
         guard let selected = session.editingContext?.selectedText else {
@@ -162,13 +173,36 @@ public actor TranscriptionPipeline: DictationProcessing {
         guard let rewriter else { return .failure(EditingFailure(issue: .rewriterUnavailable(.unavailable))) }
         do {
             let edited = try await TextRewritingRunner().run(
-                rewriter, RewriteRequest(instruction: instruction, text: selected, language: session.language))
+                rewriter, RewriteRequest(instruction: instruction, text: selected, language: language))
             return .success(edited)
         } catch .unavailable(let availability) {
             return .failure(EditingFailure(issue: .rewriterUnavailable(availability)))
         } catch {
             return .failure(EditingFailure(issue: .rewriteFailed(error)))
         }
+    }
+
+    /// Dictation follows the session's language and output; a spoken editing
+    /// instruction is only transcribed (E9-S4).
+    static func task(for session: DictationSession) -> RecognitionTask {
+        session.purpose == .dictation
+            ? .required(for: session.language, output: session.speechOutput) : .transcribe
+    }
+
+    /// Whether the text is a translation the user must review: translation was
+    /// asked for and the speech was not already English.
+    static func wasTranslated(_ transcript: Transcript, task: RecognitionTask, session: DictationSession) -> Bool {
+        task == .translateToEnglish
+            && !SpokenLanguages.isEnglish(transcript.spokenLanguage ?? session.language)
+    }
+
+    public func languageIssue(language: String, output: SpeechOutput, enginePreference: EnginePreference) async
+        -> DictationIssue?
+    {
+        guard LanguageReadiness.isBeyondEnglishDictation(language: language, output: output) else { return nil }
+        let readiness = await LanguageReadiness.evaluate(
+            language: language, output: output, engines: engines, preference: enginePreference)
+        return readiness.isReady ? nil : .languageUnavailable(readiness)
     }
 
     private static func attention(_ issue: DictationIssue, engine: RecognitionEngineID?) -> DictationOutcome {
@@ -205,13 +239,15 @@ public actor TranscriptionPipeline: DictationProcessing {
         }
     }
 
-    private func select(for session: DictationSession) async -> Result<any SpeechRecognitionEngine, SelectionFailure> {
+    private func select(for session: DictationSession, need: RecognitionNeed) async -> Result<
+        any SpeechRecognitionEngine, SelectionFailure
+    > {
         if let id = session.engine, let engine = engines.first(where: { $0.descriptor.id == id }) {
             return .success(engine)
         }
         var candidates: [(id: RecognitionEngineID, availability: EngineAvailability)] = []
-        for engine in engines where engine.descriptor.supports(language: session.language) {
-            candidates.append((engine.descriptor.id, await engine.availability()))
+        for engine in engines where engine.descriptor.supports(need) {
+            candidates.append((engine.descriptor.id, await engine.availability(for: need)))
         }
         let preference = session.enginePreference
         switch EngineSelector.choose(
@@ -237,10 +273,12 @@ public actor TranscriptionPipeline: DictationProcessing {
     private static let noEngine = DictationOutcome.needsAttention(
         .noEngineAvailable, engine: nil, alternatives: [], transcript: nil)
 
-    private func readyEngines(excluding id: RecognitionEngineID) async -> [RecognitionEngineID] {
+    private func readyEngines(excluding id: RecognitionEngineID, for need: RecognitionNeed) async
+        -> [RecognitionEngineID]
+    {
         var ready: [RecognitionEngineID] = []
-        for engine in engines where engine.descriptor.id != id {
-            if await engine.availability().isReady {
+        for engine in engines where engine.descriptor.id != id && engine.descriptor.supports(need) {
+            if await engine.availability(for: need).isReady {
                 ready.append(engine.descriptor.id)
             }
         }
@@ -260,6 +298,8 @@ public actor TranscriptionPipeline: DictationProcessing {
                     "method": .id(method.rawValue), "mode": .id(session.mode.rawValue),
                     "engine": .id(run.engine?.rawValue ?? "none"), "context": .id(session.contextIdentifier),
                     "purpose": .id(session.purpose.rawValue),
+                    "language": .id(Self.languageIdentifier(session.language)),
+                    "task": .id(Self.task(for: session).rawValue), "output": .id(session.speechOutput.rawValue),
                     "dictationMode": .id(session.dictationMode.id.diagnosticIdentifier),
                     "modeSource": .id(session.modeSource.rawValue),
                     "audioSeconds": .seconds(session.audio.duration), "processingSeconds": .seconds(seconds),
@@ -273,6 +313,8 @@ public actor TranscriptionPipeline: DictationProcessing {
                 [
                     "issue": .id(issue.identifier), "engine": .id(engine?.rawValue ?? "none"),
                     "mode": .id(session.mode.rawValue), "purpose": .id(session.purpose.rawValue),
+                    "language": .id(Self.languageIdentifier(session.language)),
+                    "task": .id(Self.task(for: session).rawValue),
                     "audioSeconds": .seconds(session.audio.duration), "processingSeconds": .seconds(seconds),
                 ])
         case .cancelled:
@@ -282,6 +324,11 @@ public actor TranscriptionPipeline: DictationProcessing {
 }
 
 extension TranscriptionPipeline {
+    /// `auto` or a lowercase language code: safe for diagnostics.
+    fileprivate static func languageIdentifier(_ language: String) -> String {
+        SpokenLanguages.isAutomatic(language) ? language : SpokenLanguages.code(of: language)
+    }
+
     fileprivate static func seconds(_ duration: Duration) -> Double {
         Double(duration.components.seconds) + Double(duration.components.attoseconds) / 1e18
     }

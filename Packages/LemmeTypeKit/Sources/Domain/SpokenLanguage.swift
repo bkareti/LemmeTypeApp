@@ -55,6 +55,12 @@ public enum SpokenLanguages {
     public static func isAutomatic(_ identifier: String) -> Bool {
         identifier == automatic
     }
+
+    /// The language to ask the on-device rewriter about before the speech has
+    /// been heard: Automatic has no language yet, so English.
+    public static func editingLanguage(for setting: String) -> String {
+        isAutomatic(setting) ? english.settingValue : setting
+    }
 }
 
 /// What the user gets back from speech (E9-S3). Independent of the language
