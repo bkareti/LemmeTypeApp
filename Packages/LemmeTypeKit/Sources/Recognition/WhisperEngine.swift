@@ -10,17 +10,22 @@ public struct WhisperRunSettings: Equatable, Sendable {
     public var order: [ModelAssetID]
     public var threads: Int
     public var usesGPU: Bool
+    /// What warm-up prepares for: the language and output Settings has now
+    /// (E9-S2). A request that needs something else loads its own model.
+    public var warmUpNeed: RecognitionNeed
 
     public init(
         choice: WhisperModelChoice = .automatic,
         order: [ModelAssetID] = [.whisperBaseEnglish, .whisperSmallEnglish, .whisperTinyEnglish],
         threads: Int = max(1, min(8, ProcessInfo.processInfo.activeProcessorCount - 2)),
-        usesGPU: Bool = true
+        usesGPU: Bool = true,
+        warmUpNeed: RecognitionNeed = RecognitionNeed(language: "en")
     ) {
         self.choice = choice
         self.order = order
         self.threads = threads
         self.usesGPU = usesGPU
+        self.warmUpNeed = warmUpNeed
     }
 }
 
@@ -63,53 +68,78 @@ public actor WhisperEngine: SpeechRecognitionEngine {
         self.settings = settings
         descriptor = EngineDescriptor(
             id: .whisper,
-            supportedLanguages: ["en"],
+            supportedLanguages: SpokenLanguages.detectionCandidates,
             // The default download offered from Settings › Dictation.
             assets: .downloadable(.whisperBaseEnglish),
-            capabilities: [.segmentTimings, .progress]
+            capabilities: [.segmentTimings, .progress, .languageDetection],
+            tasks: [.transcribe, .translateToEnglish]
         )
     }
 
-    /// Hardware is checked before assets, so an incompatible Mac is never
-    /// offered the download.
+    /// Whether English dictation can run. Hardware is checked before assets,
+    /// so an incompatible Mac is never offered the download.
     public func availability() async -> EngineAvailability {
-        switch await resolve(settings()) {
-        case .success: .ready
-        case .failure(.unsupported(let reason)): .unsupported(reason)
-        case .failure: .assetsMissing
+        await availability(for: RecognitionNeed(language: "en"))
+    }
+
+    /// Whether `need` can run: an installed model must serve the language and
+    /// task (E9-S2).
+    public func availability(for need: RecognitionNeed) async -> EngineAvailability {
+        guard descriptor.supports(need) else { return .unsupported(.language) }
+        switch await resolve(settings(), for: need) {
+        case .success: return .ready
+        case .failure(.unsupported(let reason)): return .unsupported(reason)
+        case .failure: return .assetsMissing
         }
     }
 
-    /// The model this session runs: the specific choice, or the first
-    /// installed model in the plan's order that this Mac supports.
-    private func resolve(_ settings: WhisperRunSettings) async -> Result<ModelAsset, RecognitionError> {
+    /// The model this request runs: the specific choice, or the first
+    /// installed model in the plan's order that serves it and this Mac
+    /// supports. English-only models come first for English; the multilingual
+    /// model of the same size follows (E9-S2).
+    private func resolve(_ settings: WhisperRunSettings, for need: RecognitionNeed) async -> Result<
+        ModelAsset, RecognitionError
+    > {
         let candidates: [ModelAsset]
         switch settings.choice {
         case .specific(let id):
             candidates = models.filter { $0.id == id }
         case .automatic:
-            candidates = settings.order.compactMap { id in models.first { $0.id == id } }
+            let preferred = settings.order.compactMap { id in models.first { $0.id == id } }
+            let multilingual = settings.order.compactMap(ModelCatalog.multilingualCounterpart(of:))
+                .compactMap { id in models.first { $0.id == id } }
+            candidates = preferred + multilingual.filter { model in !preferred.contains { $0.id == model.id } }
         }
+        let serving = candidates.filter { $0.serves(language: need.language, task: need.task) }
+        // A chosen model that cannot serve the language is a language problem,
+        // not a missing download.
+        if serving.isEmpty, !candidates.isEmpty { return .failure(.unsupported(.language)) }
         var unsupported: UnsupportedReason?
-        for asset in candidates {
+        for asset in serving {
             if let reason = asset.hardware.unsupportedReason(for: hardware) {
                 unsupported = unsupported ?? reason
                 continue
             }
             if await modelFile(asset, verified: false) != nil { return .success(asset) }
         }
-        let anySupported = candidates.contains { $0.hardware.unsupportedReason(for: hardware) == nil }
+        let anySupported = serving.contains { $0.hardware.unsupportedReason(for: hardware) == nil }
         if let unsupported, !anySupported { return .failure(.unsupported(unsupported)) }
         return .failure(.assetsMissing)
     }
 
     public func prepare() async throws(RecognitionError) {
+        _ = try await load(for: settings().warmUpNeed)
+    }
+
+    /// Loads (or keeps) the model that serves `need`.
+    @discardableResult
+    private func load(for need: RecognitionNeed) async throws(RecognitionError) -> any WhisperModel {
         let settings = settings()
-        let asset = try await resolve(settings).get()
+        let asset = try await resolve(settings, for: need).get()
         if model != nil, let loaded, loaded.usesGPU == settings.usesGPU,
-            await modelFile(asset, verified: false) == loaded.url
+            await modelFile(asset, verified: false) == loaded.url, let model
         {
-            return
+            return model
         }
         guard let url = await modelFile(asset, verified: true) else { throw .assetsMissing }
         model = nil
@@ -134,6 +164,7 @@ public actor WhisperEngine: SpeechRecognitionEngine {
         model = loaded
         self.loaded = (url, usesGPU)
         Log.recognition.info("Whisper model loaded: \(asset.id.rawValue, privacy: .public)")
+        return loaded
     }
 
     public func recognize(
@@ -141,27 +172,32 @@ public actor WhisperEngine: SpeechRecognitionEngine {
         updates: @escaping @Sendable (RecognitionUpdate) -> Void
     ) async throws(RecognitionError) -> Transcript {
         if Task.isCancelled { throw .cancelled }
-        if let error = await availability().recognitionError { throw error }
-        guard descriptor.supports(language: request.language) else { throw .unsupported(.language) }
+        let need = request.need
+        if let error = await availability(for: need).recognitionError { throw error }
         guard request.audio.duration >= SpeechActivity.minimumDuration else { throw .noSpeechDetected }
-        try await prepare()
-        guard let model else { throw .modelLoadFailed }
+        let model = try await load(for: need)
         let threads = settings().threads
 
         let start = ContinuousClock.now
+        let samples = try AudioFileReader.readSamples(from: request.audio.fileURL)
+        guard !samples.isEmpty, !SpeechActivity.isSilent(samples) else { throw .noSpeechDetected }
+        let language = try await Self.spokenLanguage(for: request.language, samples: samples, with: model, threads: threads)
         let segments = try await Self.transcribe(
-            try AudioFileReader.readSamples(from: request.audio.fileURL), with: model,
+            samples, with: model, language: language, task: request.task,
             prompt: Self.prompt(for: request.hints), threads: threads, updates: updates)
         if Task.isCancelled { throw .cancelled }
         let text = segments.map(\.text).joined(separator: " ")
             .split(whereSeparator: \.isWhitespace).joined(separator: " ")
         guard !text.isEmpty else { throw .noSpeechDetected }
-        Log.recognition.info("Whisper finished; segments=\(segments.count, privacy: .public)")
+        Log.recognition.info(
+            "Whisper finished; segments=\(segments.count, privacy: .public) task=\(request.task.rawValue, privacy: .public)"
+        )
         return Transcript(
             text: text,
             segments: segments,
             engine: descriptor.id,
-            language: request.language,
+            language: request.task == .translateToEnglish ? "en" : language,
+            spokenLanguage: language,
             audioDuration: request.audio.duration,
             processingDuration: (ContinuousClock.now - start).seconds
         )
@@ -206,18 +242,61 @@ public actor WhisperEngine: SpeechRecognitionEngine {
     /// Whisper's prompt window is about 224 tokens; this stays well inside it.
     static let maximumPromptLength = 400
 
+    /// Detection must be this sure of one candidate language (E9-S2, Proposed
+    /// until the quality thresholds are approved in E9-S6).
+    static let minimumDetectionConfidence: Float = 0.6
+    /// The candidate languages together must hold at least this much of the
+    /// probability, or the speech is probably another language.
+    static let minimumCandidateMass: Float = 0.5
+
+    /// The most probable of `candidates`, or `nil` when the speech is
+    /// probably another language or no candidate is clearly ahead. Pure.
+    static func choose(from probabilities: [LanguageProbability], among candidates: [String]) -> String? {
+        let relevant = probabilities.filter { candidates.contains($0.code) }
+        let mass = relevant.reduce(0) { $0 + $1.probability }
+        guard mass >= minimumCandidateMass, let best = relevant.max(by: { $0.probability < $1.probability }) else {
+            return nil
+        }
+        return best.probability / mass >= minimumDetectionConfidence ? best.code : nil
+    }
+
+    /// The two-letter code to run with: the requested language, or the
+    /// detected one. Detection never falls back to English (E9-S2).
+    private static func spokenLanguage(
+        for requested: String, samples: [Float], with model: any WhisperModel, threads: Int
+    ) async throws(RecognitionError) -> String {
+        guard SpokenLanguages.isAutomatic(requested) else { return SpokenLanguages.code(of: requested) }
+        let detection = Task.detached { try model.detectLanguage(samples, threads: threads) }
+        let probabilities: [LanguageProbability]
+        do {
+            probabilities = try await withTaskCancellationHandler {
+                try await detection.value
+            } onCancel: {
+                detection.cancel()
+            }
+        } catch {
+            throw Task.isCancelled ? .cancelled : (error as? RecognitionError ?? .engineFailure(code: -1))
+        }
+        if Task.isCancelled { throw .cancelled }
+        guard let language = choose(from: probabilities, among: SpokenLanguages.detectionCandidates) else {
+            throw .languageUncertain
+        }
+        return language
+    }
+
     private static func transcribe(
         _ samples: [Float],
         with model: any WhisperModel,
+        language: String,
+        task: RecognitionTask,
         prompt: String?,
         threads: Int,
         updates: @escaping @Sendable (RecognitionUpdate) -> Void
     ) async throws(RecognitionError) -> [TranscriptSegment] {
-        guard !samples.isEmpty, !SpeechActivity.isSilent(samples) else { throw .noSpeechDetected }
         let abort = AbortFlag()
         let inference = Task.detached {
             try model.transcribe(
-                samples, WhisperInference(language: "en", prompt: prompt, threads: threads),
+                samples, WhisperInference(language: language, task: task, prompt: prompt, threads: threads),
                 shouldAbort: { abort.isSet },
                 progress: { updates(.progress($0)) })
         }

@@ -49,6 +49,8 @@ public struct EngineCapabilities: OptionSet, Hashable, Sendable {
     public static let confidence = EngineCapabilities(rawValue: 1 << 2)
     /// Emits ``RecognitionUpdate/progress(_:)``.
     public static let progress = EngineCapabilities(rawValue: 1 << 3)
+    /// Detects the spoken language when asked for ``SpokenLanguages/automatic`` (E9-S2).
+    public static let languageDetection = EngineCapabilities(rawValue: 1 << 4)
 }
 
 /// Static, provider-neutral facts about an engine.
@@ -59,19 +61,23 @@ public struct EngineDescriptor: Equatable, Sendable {
     public let supportedLanguages: [String]
     public let assets: AssetRequirement
     public let capabilities: EngineCapabilities
+    /// What the engine can be asked to do. Every engine transcribes.
+    public let tasks: Set<RecognitionTask>
 
     public init(
         id: RecognitionEngineID,
         location: ProcessingLocation = .onDevice,
         supportedLanguages: [String],
         assets: AssetRequirement,
-        capabilities: EngineCapabilities
+        capabilities: EngineCapabilities,
+        tasks: Set<RecognitionTask> = [.transcribe]
     ) {
         self.id = id
         self.location = location
         self.supportedLanguages = supportedLanguages
         self.assets = assets
         self.capabilities = capabilities
+        self.tasks = tasks
     }
 
     /// Whether `language` (for example `"en-GB"`) is supported, matching on
@@ -79,6 +85,26 @@ public struct EngineDescriptor: Equatable, Sendable {
     public func supports(language: String) -> Bool {
         let code = language.split(separator: "-").first.map(String.init) ?? language
         return supportedLanguages.contains { $0 == language || $0 == code }
+    }
+
+    /// Whether the engine can take `need`: the language (or detection, for
+    /// Automatic) and the task. Says nothing about installed assets.
+    public func supports(_ need: RecognitionNeed) -> Bool {
+        guard tasks.contains(need.task) else { return false }
+        if SpokenLanguages.isAutomatic(need.language) { return capabilities.contains(.languageDetection) }
+        return supports(language: need.language)
+    }
+}
+
+/// A language and task an engine is asked to serve (E9-S2).
+public struct RecognitionNeed: Equatable, Hashable, Sendable {
+    /// A BCP 47 identifier or ``SpokenLanguages/automatic``.
+    public let language: String
+    public let task: RecognitionTask
+
+    public init(language: String, task: RecognitionTask = .transcribe) {
+        self.language = language
+        self.task = task
     }
 }
 
@@ -133,16 +159,22 @@ public enum EngineAvailability: Equatable, Sendable {
 /// One recognition job: a finished recording and the language to use.
 public struct RecognitionRequest: Sendable {
     public let audio: RecordedAudio
+    /// A BCP 47 identifier, or ``SpokenLanguages/automatic`` (E9-S2).
     public let language: String
+    /// Transcribe in the spoken language, or write English (E9-S2).
+    public let task: RecognitionTask
     /// Words and names the user expects (vocabulary terms, E4-S2). Engines may
     /// use them to bias recognition; they are never logged and never leave the Mac.
     public let hints: [String]
 
-    public init(audio: RecordedAudio, language: String, hints: [String] = []) {
+    public init(audio: RecordedAudio, language: String, task: RecognitionTask = .transcribe, hints: [String] = []) {
         self.audio = audio
         self.language = language
+        self.task = task
         self.hints = hints
     }
+
+    public var need: RecognitionNeed { RecognitionNeed(language: language, task: task) }
 }
 
 /// Progress reported while an engine works. Partial text is shown in the
@@ -176,6 +208,11 @@ public protocol SpeechRecognitionEngine: Sendable {
     /// Current availability. Must not prompt for permissions or download anything.
     func availability() async -> EngineAvailability
 
+    /// Availability for one language and task (E9-S2): ``availability()``
+    /// plus whether the installed assets can serve `need`. Must not prompt or
+    /// download. The default serves engines whose assets do not depend on the language.
+    func availability(for need: RecognitionNeed) async -> EngineAvailability
+
     /// Optional warm-up (for example loading a model). Safe to call repeatedly.
     func prepare() async throws(RecognitionError)
 
@@ -187,4 +224,11 @@ public protocol SpeechRecognitionEngine: Sendable {
 
     /// Releases memory held by ``prepare()``. Safe to call at any time.
     func unload() async
+}
+
+extension SpeechRecognitionEngine {
+    public func availability(for need: RecognitionNeed) async -> EngineAvailability {
+        guard descriptor.supports(need) else { return .unsupported(.language) }
+        return await availability()
+    }
 }

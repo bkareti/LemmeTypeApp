@@ -11,6 +11,9 @@ public enum RecognitionError: LemmeTypeError, Equatable {
     /// The recording contained no recognisable speech.
     case noSpeechDetected
     case modelLoadFailed
+    /// Automatic detection could not name the language with enough confidence
+    /// (E9-S2). The user chooses the language instead of the app guessing.
+    case languageUncertain
     /// The framework reported an error; `code` is its numeric code only.
     case engineFailure(code: Int)
 
@@ -23,6 +26,7 @@ public enum RecognitionError: LemmeTypeError, Equatable {
         case .audioUnreadable: "recognition.audio-unreadable"
         case .noSpeechDetected: "recognition.no-speech"
         case .modelLoadFailed: "recognition.model-load-failed"
+        case .languageUncertain: "recognition.language-uncertain"
         case .engineFailure: "recognition.engine-failure"
         }
     }
@@ -32,7 +36,7 @@ public enum RecognitionError: LemmeTypeError, Equatable {
     public var isRetryable: Bool {
         switch self {
         case .engineFailure, .modelLoadFailed, .audioUnreadable: true
-        case .cancelled, .assetsMissing, .unsupported, .permissionDenied, .noSpeechDetected: false
+        case .cancelled, .assetsMissing, .unsupported, .permissionDenied, .noSpeechDetected, .languageUncertain: false
         }
     }
 }
