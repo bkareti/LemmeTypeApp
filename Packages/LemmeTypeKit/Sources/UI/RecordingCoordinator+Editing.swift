@@ -20,6 +20,18 @@ extension RecordingCoordinator {
         finishSession(displayFor: failureDisplay)
     }
 
+    /// Refuses a dictation whose language or output can't run, before the user
+    /// speaks (E9-S3). Returns whether it was refused.
+    func refusesLanguage(for purpose: SessionPurpose) async -> Bool {
+        guard purpose == .dictation, let settings = activeSettings,
+            let issue = await processor.languageIssue(
+                language: settings.language, output: settings.speechOutput,
+                enginePreference: settings.enginePreference)
+        else { return false }
+        refuse(issue)
+        return true
+    }
+
     func startAnnouncement(purpose: SessionPurpose, context: ContextCapture?) -> String {
         let started =
             purpose == .editing

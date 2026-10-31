@@ -35,9 +35,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## Whisper `tiny.en`, `base.en`, and `small.en` model weights (downloaded on request)
+## Whisper `tiny`, `base`, and `small` model weights, English-only and multilingual (downloaded on request)
 
-- Files: `ggml-tiny.en.bin`, `ggml-base.en.bin`, `ggml-small.en.bin` (ggml conversions published by the whisper.cpp
+- Files: `ggml-tiny.en.bin`, `ggml-base.en.bin`, `ggml-small.en.bin`, `ggml-tiny.bin`, `ggml-base.bin`, `ggml-small.bin` (ggml conversions published by the whisper.cpp
   project at https://huggingface.co/ggerganov/whisper.cpp), pinned by size and
   SHA-256 in `ModelCatalog`.
 - Original weights: OpenAI Whisper, https://github.com/openai/whisper

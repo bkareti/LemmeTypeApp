@@ -95,7 +95,8 @@ struct LanguageReadinessTests {
 
     @Test func identifiersAreStableDiagnosticsNames() {
         #expect(LanguageReadiness.needsModel(.whisperSmall).identifier == "needs-model")
-        #expect(LanguageReadiness.unsupportedOnThisMac(.insufficientMemory).identifier == "unsupported.insufficient-memory")
+        #expect(
+            LanguageReadiness.unsupportedOnThisMac(.insufficientMemory).identifier == "unsupported.insufficient-memory")
         #expect(DictationIssue.languageUnavailable(.noEngine).identifier == "language.no-engine")
         #expect(DictationIssue.reviewTranslation.identifier == "review.translation")
         #expect(RecognitionError.languageUncertain.identifier == "recognition.language-uncertain")

@@ -27,6 +27,9 @@ struct RecordingCoordinatorLanguageTests {
             finishedDisplay: .milliseconds(50), failureDisplay: .milliseconds(50))
     }
 
+    /// Recordings kept for a decision must not outlive the test (`make privacy-check`).
+    private func cleanUp() { try? FileManager.default.removeItem(at: storage.directory) }
+
     private var leftoverFiles: [URL] {
         (try? FileManager.default.contentsOfDirectory(at: storage.directory, includingPropertiesForKeys: nil)) ?? []
     }
@@ -45,6 +48,7 @@ struct RecordingCoordinatorLanguageTests {
     // MARK: Refused before recording (E9-S3)
 
     @Test func anUnavailableLanguageIsRefusedBeforeTheMicrophoneStarts() async {
+        defer { cleanUp() }
         processor.refuseLanguage(with: .languageUnavailable(.needsModel(.whisperSmall)))
         let coordinator = makeCoordinator(preferences: FakePreferences(dictationLanguage: "hi"))
         var opened: [SettingsNavigation.Pane] = []
@@ -66,6 +70,7 @@ struct RecordingCoordinatorLanguageTests {
     }
 
     @Test func theSessionCapturesLanguageAndOutputFromSettings() async {
+        defer { cleanUp() }
         let preferences = FakePreferences(dictationLanguage: "te")
         preferences.speechOutput = .english
         let coordinator = makeCoordinator(preferences: preferences)
@@ -82,6 +87,7 @@ struct RecordingCoordinatorLanguageTests {
     }
 
     @Test func aModeCanOverrideLanguageAndOutput() async throws {
+        defer { cleanUp() }
         let mode = DictationMode(name: "Hindi to English", language: "hi", speechOutput: .english)
         var library = PersonalizationLibrary.empty
         try library.upsert(mode)
@@ -101,6 +107,7 @@ struct RecordingCoordinatorLanguageTests {
     // MARK: Choosing a language (E9-S2)
 
     @Test func choosingALanguageProcessesTheSameRecordingAgain() async {
+        defer { cleanUp() }
         processor.script([
             .needsAttention(.recognitionFailed(.languageUncertain), engine: .whisper, alternatives: [], transcript: nil)
         ])
@@ -120,6 +127,7 @@ struct RecordingCoordinatorLanguageTests {
     // MARK: Reviewing a translation (E9-S5)
 
     @Test func aTranslationIsShownAndNothingIsDelivered() async {
+        defer { cleanUp() }
         processor.script([review])
         let coordinator = makeCoordinator()
         await speak(coordinator)
@@ -132,6 +140,7 @@ struct RecordingCoordinatorLanguageTests {
     }
 
     @Test func insertDeliversTheReviewedTextOnceAndEndsTheSession() async {
+        defer { cleanUp() }
         processor.script([review])
         let coordinator = makeCoordinator()
         await speak(coordinator)
@@ -146,6 +155,7 @@ struct RecordingCoordinatorLanguageTests {
     }
 
     @Test func copyPutsTheTranslationOnTheClipboardAndNeverInsertsIt() async {
+        defer { cleanUp() }
         processor.script([review])
         let coordinator = makeCoordinator()
         await speak(coordinator)
@@ -160,6 +170,7 @@ struct RecordingCoordinatorLanguageTests {
     }
 
     @Test func translateAgainRunsTheSameRecordingAndReplacesTheText() async {
+        defer { cleanUp() }
         processor.script([
             review,
             .needsAttention(.reviewTranslation, engine: .whisper, alternatives: [], transcript: "Ship it Wednesday."),
@@ -175,6 +186,7 @@ struct RecordingCoordinatorLanguageTests {
     }
 
     @Test func discardDeletesTheRecordingAndTheText() async {
+        defer { cleanUp() }
         processor.script([review])
         let coordinator = makeCoordinator()
         await speak(coordinator)
@@ -190,6 +202,7 @@ struct RecordingCoordinatorLanguageTests {
     }
 
     @Test func aNewSessionReplacesAReviewAndDeletesItsRecording() async {
+        defer { cleanUp() }
         processor.script([review])
         let coordinator = makeCoordinator()
         await speak(coordinator)
@@ -202,6 +215,7 @@ struct RecordingCoordinatorLanguageTests {
     }
 
     @Test func reviewingAnnouncesTheStateForVoiceOver() async {
+        defer { cleanUp() }
         processor.script([review])
         let coordinator = makeCoordinator()
         await speak(coordinator)

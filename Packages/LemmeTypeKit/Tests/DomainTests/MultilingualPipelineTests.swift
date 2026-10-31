@@ -20,7 +20,8 @@ struct MultilingualPipelineTests {
     private func session(
         language: String, output: SpeechOutput = .original, mode: WritingMode = .clean
     ) throws -> DictationSession {
-        try FileManager.default.createDirectory(at: TranscriptionPipelineTests.directory, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: TranscriptionPipelineTests.directory, withIntermediateDirectories: true)
         let url = TranscriptionPipelineTests.directory.appendingPathComponent("\(UUID().uuidString).placeholder")
         try Data("not audio".utf8).write(to: url)
         return DictationSession(
@@ -201,7 +202,7 @@ struct MultilingualPipelineTests {
         _ = await TranscriptionPipeline(engines: [engine], delivery: FakeTextDelivery(), diagnostics: diagnostics)
             .process(try session(language: "hi", output: .english)) { _ in }
 
-        let json = String(decoding: try JSONEncoder().encode(diagnostics.events), as: UTF8.self)
+        let json = String(describing: diagnostics.events)
         #expect(!json.contains(canary))
         #expect(!json.localizedCaseInsensitiveContains("CANARY"))
         #expect(json.contains("\"language\""))

@@ -115,7 +115,8 @@ struct ModelFitTests {
             #expect(asset?.languages == ["en", "hi", "te"])
             #expect(asset?.tasks == [.transcribe, .translateToEnglish])
             #expect(asset?.detectsLanguage == true)
-            #expect(asset?.files.first?.name == "ggml-\(id.rawValue.replacingOccurrences(of: "whisper-", with: "")).bin")
+            #expect(
+                asset?.files.first?.name == "ggml-\(id.rawValue.replacingOccurrences(of: "whisper-", with: "")).bin")
         }
     }
 

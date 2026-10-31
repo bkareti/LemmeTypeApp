@@ -95,7 +95,8 @@ struct WhisperEngineLanguageTests {
 
     @Test func automaticDetectsTheMostProbableCandidate() async throws {
         defer { fixtures.removeAll() }
-        let runtime = FakeWhisperRuntime(probabilities: probabilities(["te": 0.82, "hi": 0.08, "en": 0.05, "ta": 0.01]))
+        let runtime = FakeWhisperRuntime(
+            probabilities: probabilities(["te": 0.82, "hi": 0.08, "en": 0.05, "ta": 0.01]))
         let engine = makeEngine(installed: [.whisperBase], runtime: runtime)
         let transcript = try await engine.recognize(try request(SpokenLanguages.automatic)) { _ in }
         #expect(runtime.detectionCount == 1)
@@ -125,10 +126,13 @@ struct WhisperEngineLanguageTests {
 
     @Test func automaticNeedsAnInstalledModelThatCanDetect() async {
         let englishOnly = makeEngine(installed: [.whisperBaseEnglish], runtime: FakeWhisperRuntime())
-        #expect(await englishOnly.availability(for: RecognitionNeed(language: SpokenLanguages.automatic)) == .assetsMissing)
+        #expect(
+            await englishOnly.availability(for: RecognitionNeed(language: SpokenLanguages.automatic)) == .assetsMissing)
         let chosen = makeEngine(
             installed: [.whisperBaseEnglish], choice: .specific(.whisperBaseEnglish), runtime: FakeWhisperRuntime())
-        #expect(await chosen.availability(for: RecognitionNeed(language: SpokenLanguages.automatic)) == .unsupported(.language))
+        #expect(
+            await chosen.availability(for: RecognitionNeed(language: SpokenLanguages.automatic))
+                == .unsupported(.language))
     }
 
     @Test func detectionChoiceIsPureAndUsesTheDocumentedThresholds() {

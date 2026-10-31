@@ -4,13 +4,13 @@ import Foundation
 /// through ``RecognitionRunner``, writing mode, and delivery. Uses only Domain
 /// protocols, so it runs unchanged against fakes in tests.
 public actor TranscriptionPipeline: DictationProcessing {
-    private let engines: [any SpeechRecognitionEngine]
+    let engines: [any SpeechRecognitionEngine]
     let write: @Sendable (String, WritingMode) -> String
     let format: @Sendable (String, WritingMode, CursorContext) -> String
     private let delivery: any TextDelivering
     private let rewriter: (any TextRewriting)?
     private let copier: (any TextCopying)?
-    private let diagnostics: any DiagnosticsRecording
+    let diagnostics: any DiagnosticsRecording
 
     /// `engines` are in recommendation order (Automatic picks the first ready
     /// one); each session carries the user's ``EnginePreference``; `write`
@@ -182,29 +182,6 @@ public actor TranscriptionPipeline: DictationProcessing {
         }
     }
 
-    /// Dictation follows the session's language and output; a spoken editing
-    /// instruction is only transcribed (E9-S4).
-    static func task(for session: DictationSession) -> RecognitionTask {
-        session.purpose == .dictation
-            ? .required(for: session.language, output: session.speechOutput) : .transcribe
-    }
-
-    /// Whether the text is a translation the user must review: translation was
-    /// asked for and the speech was not already English.
-    static func wasTranslated(_ transcript: Transcript, task: RecognitionTask, session: DictationSession) -> Bool {
-        task == .translateToEnglish
-            && !SpokenLanguages.isEnglish(transcript.spokenLanguage ?? session.language)
-    }
-
-    public func languageIssue(language: String, output: SpeechOutput, enginePreference: EnginePreference) async
-        -> DictationIssue?
-    {
-        guard LanguageReadiness.isBeyondEnglishDictation(language: language, output: output) else { return nil }
-        let readiness = await LanguageReadiness.evaluate(
-            language: language, output: output, engines: engines, preference: enginePreference)
-        return readiness.isReady ? nil : .languageUnavailable(readiness)
-    }
-
     private static func attention(_ issue: DictationIssue, engine: RecognitionEngineID?) -> DictationOutcome {
         .needsAttention(issue, engine: engine, alternatives: [], transcript: nil)
     }
@@ -283,54 +260,6 @@ public actor TranscriptionPipeline: DictationProcessing {
             }
         }
         return ready
-    }
-
-    /// Session metrics: outcome, engine, durations, error category — no audio
-    /// or text. `processingSeconds` runs from capture stop to delivery (the
-    /// latency the user feels); `recognitionSeconds` is inference alone.
-    private func record(_ run: Run, session: DictationSession, elapsed: Duration) {
-        let seconds = Self.seconds(elapsed)
-        switch run.outcome {
-        case .delivered(let method):
-            diagnostics.record(
-                .recognition, "session.delivered",
-                [
-                    "method": .id(method.rawValue), "mode": .id(session.mode.rawValue),
-                    "engine": .id(run.engine?.rawValue ?? "none"), "context": .id(session.contextIdentifier),
-                    "purpose": .id(session.purpose.rawValue),
-                    "language": .id(Self.languageIdentifier(session.language)),
-                    "task": .id(Self.task(for: session).rawValue), "output": .id(session.speechOutput.rawValue),
-                    "dictationMode": .id(session.dictationMode.id.diagnosticIdentifier),
-                    "modeSource": .id(session.modeSource.rawValue),
-                    "audioSeconds": .seconds(session.audio.duration), "processingSeconds": .seconds(seconds),
-                    "recognitionSeconds": .seconds(run.recognition.map(Self.seconds) ?? 0),
-                    "rewriteSeconds": .seconds(run.rewriting.map(Self.seconds) ?? 0),
-                    "personalizations": .count(run.personalizations), "snippet": .flag(run.usedSnippet),
-                ])
-        case .needsAttention(let issue, let engine, _, _):
-            diagnostics.record(
-                .recognition, "session.needs-attention",
-                [
-                    "issue": .id(issue.identifier), "engine": .id(engine?.rawValue ?? "none"),
-                    "mode": .id(session.mode.rawValue), "purpose": .id(session.purpose.rawValue),
-                    "language": .id(Self.languageIdentifier(session.language)),
-                    "task": .id(Self.task(for: session).rawValue),
-                    "audioSeconds": .seconds(session.audio.duration), "processingSeconds": .seconds(seconds),
-                ])
-        case .cancelled:
-            diagnostics.record(.recognition, "session.cancelled", ["processingSeconds": .seconds(seconds)])
-        }
-    }
-}
-
-extension TranscriptionPipeline {
-    /// `auto` or a lowercase language code: safe for diagnostics.
-    fileprivate static func languageIdentifier(_ language: String) -> String {
-        SpokenLanguages.isAutomatic(language) ? language : SpokenLanguages.code(of: language)
-    }
-
-    fileprivate static func seconds(_ duration: Duration) -> Double {
-        Double(duration.components.seconds) + Double(duration.components.attoseconds) / 1e18
     }
 }
 

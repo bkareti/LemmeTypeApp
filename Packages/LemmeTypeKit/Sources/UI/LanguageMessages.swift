@@ -31,7 +31,8 @@ extension SpeechOutput {
     var summary: String {
         switch self {
         case .original:
-            String(localized: "Types what you said, in the language you said it. Nothing is translated.", bundle: .module)
+            String(
+                localized: "Types what you said, in the language you said it. Nothing is translated.", bundle: .module)
         case .english:
             String(
                 localized:

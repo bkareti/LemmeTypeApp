@@ -28,7 +28,8 @@ struct ModelsSettingsModelTests {
                 .whisperTinyEnglish, .whisperBaseEnglish, .whisperSmallEnglish, .whisperTiny, .whisperBase,
                 .whisperSmall,
             ])
-        #expect(model.rows.map(\.fit) == [.recommended, .recommended, .supported, .recommended, .recommended, .supported])
+        #expect(
+            model.rows.map(\.fit) == [.recommended, .recommended, .supported, .recommended, .recommended, .supported])
         #expect(
             model.rows.map(\.state) == [
                 .notInstalled, .installed, .notInstalled, .notInstalled, .notInstalled, .notInstalled,

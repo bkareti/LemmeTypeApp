@@ -181,10 +181,11 @@ public actor WhisperEngine: SpeechRecognitionEngine {
         let start = ContinuousClock.now
         let samples = try AudioFileReader.readSamples(from: request.audio.fileURL)
         guard !samples.isEmpty, !SpeechActivity.isSilent(samples) else { throw .noSpeechDetected }
-        let language = try await Self.spokenLanguage(for: request.language, samples: samples, with: model, threads: threads)
-        let segments = try await Self.transcribe(
-            samples, with: model, language: language, task: request.task,
-            prompt: Self.prompt(for: request.hints), threads: threads, updates: updates)
+        let language = try await Self.spokenLanguage(
+            for: request.language, samples: samples, with: model, threads: threads)
+        let inference = WhisperInference(
+            language: language, task: request.task, prompt: Self.prompt(for: request.hints), threads: threads)
+        let segments = try await Self.transcribe(samples, with: model, inference: inference, updates: updates)
         if Task.isCancelled { throw .cancelled }
         let text = segments.map(\.text).joined(separator: " ")
             .split(whereSeparator: \.isWhitespace).joined(separator: " ")
@@ -287,16 +288,13 @@ public actor WhisperEngine: SpeechRecognitionEngine {
     private static func transcribe(
         _ samples: [Float],
         with model: any WhisperModel,
-        language: String,
-        task: RecognitionTask,
-        prompt: String?,
-        threads: Int,
+        inference: WhisperInference,
         updates: @escaping @Sendable (RecognitionUpdate) -> Void
     ) async throws(RecognitionError) -> [TranscriptSegment] {
         let abort = AbortFlag()
         let inference = Task.detached {
             try model.transcribe(
-                samples, WhisperInference(language: language, task: task, prompt: prompt, threads: threads),
+                samples, inference,
                 shouldAbort: { abort.isSet },
                 progress: { updates(.progress($0)) })
         }

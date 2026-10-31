@@ -205,12 +205,8 @@ extension DictationIssue {
             return [.allowSpeechRecognition, .retry] + switchEngine + [.saveAudio, .discard]
         case .recognitionFailed(.noSpeechDetected):
             return [.discard]
-        case .recognitionFailed(.languageUncertain):
-            return SpokenLanguages.all.map { .useLanguage($0.code) } + [.discard]
-        case .languageUnavailable:
-            return [.chooseLanguage, .discard]
-        case .reviewTranslation:
-            return [.insertText, .copyText, .retry, .discard]
+        case .recognitionFailed(.languageUncertain), .languageUnavailable, .reviewTranslation:
+            return languageActions
         case .recognitionFailed(let error) where error.isRetryable:
             return [.retry] + switchEngine + [.saveAudio, .discard]
         case .recognitionFailed, .engineUnavailable, .noEngineAvailable:
@@ -223,6 +219,15 @@ extension DictationIssue {
             return [.copyText, .discard]
         case .editingUnavailable, .rewriterUnavailable, .rewriteFailed:
             return editingActions
+        }
+    }
+
+    /// Choices for language problems and translation review (E9-S2, E9-S3, E9-S5).
+    private var languageActions: [DictationAction] {
+        switch self {
+        case .recognitionFailed(.languageUncertain): SpokenLanguages.all.map { .useLanguage($0.code) } + [.discard]
+        case .languageUnavailable: [.chooseLanguage, .discard]
+        default: [.insertText, .copyText, .retry, .discard]
         }
     }
 

@@ -21,12 +21,21 @@
             public let id: String
             public let category: String
             public let text: String
+            /// The English reference when the corpus translates (E9-S6).
+            public let english: String?
         }
 
         public let version: Int
+        /// Names a multilingual corpus; it becomes part of the report name (E9-S6).
+        public let name: String?
+        /// `"translate-to-english"` scores the English translation against
+        /// each utterance's `english` reference; otherwise the original text.
+        public let task: String?
         public let voices: [Voice]
         public let noise: Noise
         public let utterances: [Utterance]
+
+        var translatesToEnglish: Bool { task == RecognitionTask.translateToEnglish.rawValue }
 
         public static func load(from url: URL) throws -> BenchmarkCorpus {
             try JSONDecoder().decode(BenchmarkCorpus.self, from: Data(contentsOf: url))
@@ -103,7 +112,10 @@
             workDirectory: URL,
             label: String? = nil
         ) async throws -> Report {
-            let availability = await engine.availability()
+            let language = corpus.voices.first?.accent ?? "en-US"
+            let need = RecognitionNeed(
+                language: language, task: corpus.translatesToEnglish ? .translateToEnglish : .transcribe)
+            let availability = await engine.availability(for: need)
             guard availability.isReady else { throw BenchmarkError.engineNotReady(availability.identifier) }
             try FileManager.default.createDirectory(at: workDirectory, withIntermediateDirectories: true)
             defer { try? FileManager.default.removeItem(at: workDirectory) }
@@ -129,15 +141,19 @@
                         }
                         let measurement = try await measure(
                             utterance, voice: voice, noisy: noisy, url: url,
-                            run: Run(pipeline: pipeline, engine: engine.descriptor.id, delivery: delivery))
+                            run: Run(
+                                pipeline: pipeline, engine: engine.descriptor.id, delivery: delivery,
+                                translates: corpus.translatesToEnglish))
                         measurements.append(measurement)
                         try? FileManager.default.removeItem(at: url)  // already gone after delivery
                     }
                 }
             }
             await engine.unload()
+            let reportName =
+                label ?? [engine.descriptor.id.rawValue, corpus.name].compactMap(\.self).joined(separator: "-")
             return report(
-                engine: label ?? engine.descriptor.id.rawValue, corpus: corpus, warmUp: warmUp,
+                engine: reportName, corpus: corpus, warmUp: warmUp,
                 peakMemory: peakMemoryBytes() - memoryBefore, measurements: measurements)
         }
 
@@ -146,6 +162,8 @@
             let pipeline: TranscriptionPipeline
             let engine: RecognitionEngineID
             let delivery: MeasuringDelivery
+            /// Score the English translation (E9-S6).
+            let translates: Bool
         }
 
         private static func measure(
@@ -156,9 +174,10 @@
             let seconds = Double(file.length) / file.processingFormat.sampleRate
             let session = DictationSession(
                 audio: RecordedAudio(fileURL: url, duration: seconds, format: .speech), target: nil, mode: .clean,
-                language: voice.accent, enginePreference: EnginePreference(selected: engine))
+                language: voice.accent, speechOutput: run.translates ? .english : .original,
+                enginePreference: EnginePreference(selected: engine))
             let phases = Mutex<[ProcessingPhase: ContinuousClock.Instant]>([:])
-            delivery.expect(reference: utterance.text)
+            delivery.expect(reference: run.translates ? (utterance.english ?? utterance.text) : utterance.text)
             let start = ContinuousClock.now
             let outcome = await pipeline.process(session) { update in
                 if case .phase(let phase) = update { phases.withLock { $0[phase] = ContinuousClock.now } }
@@ -170,7 +189,16 @@
                 marks[.recognizing].map { recognizing in ((marks[.writing] ?? end) - recognizing).benchmarkSeconds }
                 ?? 0
             let delivered: Bool
-            if case .delivered = outcome { delivered = true } else { delivered = false }
+            switch outcome {
+            case .delivered:
+                delivered = true
+            case .needsAttention(.reviewTranslation, _, _, let text?):
+                // A translation waits for the user; score it as if inserted.
+                _ = await delivery.deliver(text, to: nil)
+                delivered = true
+            default:
+                delivered = false
+            }
             return Measurement(
                 id: utterance.id, category: utterance.category, accent: voice.accent, noisy: noisy,
                 audioSeconds: seconds, inferenceSeconds: inference,

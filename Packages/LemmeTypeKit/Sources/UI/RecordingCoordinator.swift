@@ -190,15 +190,7 @@ public final class RecordingCoordinator {
             refuse(issue)
             return
         }
-        // A language or output that can't run is refused before the user speaks (E9-S3).
-        if purpose == .dictation, let settings = activeSettings,
-            let issue = await processor.languageIssue(
-                language: settings.language, output: settings.speechOutput,
-                enginePreference: settings.enginePreference)
-        {
-            refuse(issue)
-            return
-        }
+        if await refusesLanguage(for: purpose) { return }
         do {
             let events = try await capture.start(input: preferences.audioInput)
             guard machine.handle(.captureStarted) else {
