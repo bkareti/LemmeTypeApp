@@ -66,6 +66,8 @@ LABELS = {
     "area:security": ("b60205", "Network, entitlement, dependency, and threat-model guardrails"),
     "area:release": ("1d76db", "Packaging, signing, notarization, updates, and rollback"),
     "area:quality": ("fbca04", "Accessibility, localization, compatibility, and the quality gate"),
+    "beta-feedback": ("d93f0b", "Report from a beta tester (see docs/release/beta-program.md)"),
+    "release-blocker": ("b60205", "A published build that should be withdrawn (see docs/release/rollback.md)"),
 }
 
 EPIC_LABELS = {

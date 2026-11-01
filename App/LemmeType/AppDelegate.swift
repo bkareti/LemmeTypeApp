@@ -37,6 +37,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 return
             }
         #endif
+        // A second launch has already asked the first to come forward and is quitting.
+        guard instanceCoordinator != nil else { return }
         controller.launchFinished()
         if composition.showsSettingsOnLaunch {
             controller.showSettings()
@@ -56,6 +58,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.reply(toApplicationShouldTerminate: true)
         }
         return .terminateLater
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        // Only a normal quit gets here; a crash or force-quit leaves the marker (E7-S4).
+        controller.endRun()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

@@ -48,9 +48,13 @@ struct ModesSettingsView: View {
                                 Text(mode.displayName).tag(mode.id)
                             }
                         }
-                        Button(String(localized: "Remove", bundle: .module)) { model.removeRule(row.id) }
-                            .accessibilityLabel(
-                                Text(String(localized: "Remove rule for \(row.applicationName)", bundle: .module)))
+                        Button(
+                            String(
+                                localized: "Remove", bundle: .module,
+                                comment: "Button label (verb): take a downloaded model off this Mac")
+                        ) { model.removeRule(row.id) }
+                        .accessibilityLabel(
+                            Text(String(localized: "Remove rule for \(row.applicationName)", bundle: .module)))
                     }
                 }
                 Menu(String(localized: "Add App…", bundle: .module)) {
@@ -95,14 +99,19 @@ struct ModesSettingsView: View {
             }
             Spacer()
             if !mode.isBuiltIn {
-                Button(String(localized: "Edit", bundle: .module)) { editing = mode }
-                    .accessibilityLabel(Text(String(localized: "Edit \(mode.displayName)", bundle: .module)))
+                Button(
+                    String(localized: "Edit", bundle: .module, comment: "Button label (verb): change an existing item")
+                ) { editing = mode }
+                .accessibilityLabel(Text(String(localized: "Edit \(mode.displayName)", bundle: .module)))
             }
             Button(String(localized: "Duplicate", bundle: .module)) { model.duplicate(mode) }
                 .accessibilityLabel(Text(String(localized: "Duplicate \(mode.displayName)", bundle: .module)))
             if !mode.isBuiltIn {
-                Button(String(localized: "Delete", bundle: .module), role: .destructive) { requestDelete(mode) }
-                    .accessibilityLabel(Text(String(localized: "Delete \(mode.displayName)", bundle: .module)))
+                Button(
+                    String(localized: "Delete", bundle: .module, comment: "Button label (verb): remove one item"),
+                    role: .destructive
+                ) { requestDelete(mode) }
+                .accessibilityLabel(Text(String(localized: "Delete \(mode.displayName)", bundle: .module)))
             }
         }
     }
@@ -150,17 +159,25 @@ private struct ModeEditor: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Form {
-                TextField(String(localized: "Name", bundle: .module), text: $mode.name)
-                    .accessibilityIdentifier("modes.editor.name")
+                TextField(
+                    String(localized: "Name", bundle: .module, comment: "Noun: the name of a mode"), text: $mode.name
+                )
+                .accessibilityIdentifier("modes.editor.name")
                 Section(String(localized: "Transcription", bundle: .module)) {
-                    Picker(String(localized: "Engine", bundle: .module), selection: $mode.engine) {
+                    Picker(
+                        String(localized: "Engine", bundle: .module, comment: "Noun: the speech recognition engine"),
+                        selection: $mode.engine
+                    ) {
                         Text(String(localized: "As in Dictation settings", bundle: .module))
                             .tag(RecognitionEngineID?.none)
                         ForEach(model.engines, id: \.self) { engine in
                             Text(engine.displayName).tag(RecognitionEngineID?.some(engine))
                         }
                     }
-                    Picker(String(localized: "Language", bundle: .module), selection: $mode.language) {
+                    Picker(
+                        String(localized: "Language", bundle: .module, comment: "Noun: the language you speak"),
+                        selection: $mode.language
+                    ) {
                         Text(String(localized: "As in Dictation settings", bundle: .module)).tag(String?.none)
                         ForEach(model.languages, id: \.self) { language in
                             Text(DictationSettingsModel.settingLanguageName(language))
@@ -175,8 +192,16 @@ private struct ModeEditor: View {
                     }
                     .accessibilityIdentifier("modes.editor.output")
                 }
-                Section(String(localized: "Cleanup", bundle: .module)) {
-                    Picker(String(localized: "Writing", bundle: .module), selection: $mode.writingMode) {
+                Section(
+                    String(
+                        localized: "Cleanup", bundle: .module,
+                        comment: "Noun: automatic fixing of punctuation and filler words")
+                ) {
+                    Picker(
+                        String(
+                            localized: "Writing", bundle: .module,
+                            comment: "Noun: the way text is written, Exact or Clean"), selection: $mode.writingMode
+                    ) {
                         ForEach(WritingMode.allCases, id: \.self) { writing in
                             Text(writing.displayName).tag(writing)
                         }
@@ -187,7 +212,9 @@ private struct ModeEditor: View {
                         }
                     }
                 }
-                Section(String(localized: "Style", bundle: .module)) {
+                Section(
+                    String(localized: "Style", bundle: .module, comment: "Noun: the tone, format, and length settings")
+                ) {
                     Toggle(
                         String(localized: "Use vocabulary and replacements", bundle: .module),
                         isOn: $mode.usesPersonalization)
@@ -199,7 +226,11 @@ private struct ModeEditor: View {
                             set: { mode.finalPunctuation = $0 ? .omit : .keep }))
                 }
                 styleSection
-                Section(String(localized: "Output", bundle: .module)) {
+                Section(
+                    String(
+                        localized: "Output", bundle: .module,
+                        comment: "Noun: what LemmeType does with the finished text")
+                ) {
                     Picker(String(localized: "Send text to", bundle: .module), selection: $mode.output) {
                         Text(String(localized: "Insert at the cursor", bundle: .module)).tag(OutputAction.insert)
                         Text(String(localized: "Clipboard only", bundle: .module)).tag(OutputAction.copy)
@@ -218,7 +249,7 @@ private struct ModeEditor: View {
                 Spacer()
                 Button(String(localized: "Cancel", bundle: .module), role: .cancel, action: dismiss)
                     .keyboardShortcut(.cancelAction)
-                Button(String(localized: "Save", bundle: .module)) {
+                Button(String(localized: "Save", bundle: .module, comment: "Button label (verb): keep the changes")) {
                     error = model.save(mode)
                     if error == nil { dismiss() }
                 }
@@ -239,15 +270,26 @@ private struct ModeEditor: View {
     /// Exact Dictation, which never rewrites.
     private var styleSection: some View {
         Section {
-            Picker(String(localized: "Tone", bundle: .module), selection: $mode.style.tone) {
+            Picker(
+                String(
+                    localized: "Tone", bundle: .module,
+                    comment: "Noun: how the text sounds, such as friendly or professional"), selection: $mode.style.tone
+            ) {
                 ForEach(Tone.allCases, id: \.self) { Text($0.displayName).tag($0) }
             }
             .accessibilityIdentifier("modes.editor.tone")
-            Picker(String(localized: "Format", bundle: .module), selection: $mode.style.format) {
+            Picker(
+                String(
+                    localized: "Format", bundle: .module,
+                    comment: "Noun: the shape of the text, such as email or bullet list"), selection: $mode.style.format
+            ) {
                 ForEach(WritingFormat.allCases, id: \.self) { Text($0.displayName).tag($0) }
             }
             .accessibilityIdentifier("modes.editor.format")
-            Picker(String(localized: "Length", bundle: .module), selection: $mode.style.length) {
+            Picker(
+                String(localized: "Length", bundle: .module, comment: "Noun: how long the rewritten text should be"),
+                selection: $mode.style.length
+            ) {
                 ForEach(LengthPreference.allCases, id: \.self) { Text($0.displayName).tag($0) }
             }
             .accessibilityIdentifier("modes.editor.length")

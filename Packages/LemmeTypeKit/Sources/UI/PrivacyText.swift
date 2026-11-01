@@ -111,7 +111,14 @@ enum PrivacyText {
     static var network: String {
         String(
             localized:
-                "Recording, speech recognition, cleanup, and rewriting never use the internet. LemmeType connects only to download a model you choose, after you confirm its size.",
+                "Recording, speech recognition, cleanup, and rewriting never use the internet. LemmeType connects only to download a model you choose, after you confirm its size, and to look for a new version when you ask.",
+            bundle: .module)
+    }
+
+    static var updates: String {
+        String(
+            localized:
+                "Looking for a new version sends your app’s version number and, like any web request, your IP address to GitHub. LemmeType never downloads or installs an update by itself. It opens the release page in your browser.",
             bundle: .module)
     }
 
@@ -154,7 +161,10 @@ enum PrivacyText {
                 duration: String(localized: "Until the dictation ends.", bundle: .module),
                 removal: String(localized: "Nothing to remove.", bundle: .module)),
             PrivacyDataItem(
-                id: "history", name: String(localized: "History", bundle: .module),
+                id: "history",
+                name: String(
+                    localized: "History", bundle: .module,
+                    comment: "Noun: the list of dictations the user chose to keep"),
                 what: String(
                     localized: "The text you inserted or copied, with the time. Off unless you turn it on.",
                     bundle: .module),

@@ -45,8 +45,8 @@ extension PersonalizationField {
         case .trigger: String(localized: "Trigger", bundle: .module)
         case .expansion: String(localized: "Snippet text", bundle: .module)
         case .modeName: String(localized: "Mode name", bundle: .module)
-        case .application: String(localized: "App", bundle: .module)
-        case .language: String(localized: "Language", bundle: .module)
+        case .application: String(localized: "App", bundle: .module, comment: "Noun: a macOS application")
+        case .language: String(localized: "Language", bundle: .module, comment: "Noun: the language you speak")
         }
     }
 }

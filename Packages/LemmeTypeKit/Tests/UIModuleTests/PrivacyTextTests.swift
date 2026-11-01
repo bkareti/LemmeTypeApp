@@ -90,8 +90,8 @@ struct PrivacyTextTests {
 
     @Test func everyPrivacyTextIsPlainLanguage() {
         var texts = [
-            PrivacyText.intro, PrivacyText.contextExplanation, PrivacyText.network, PrivacyText.analytics,
-            PrivacyText.backups,
+            PrivacyText.intro, PrivacyText.contextExplanation, PrivacyText.network, PrivacyText.updates,
+            PrivacyText.analytics, PrivacyText.backups,
         ]
         for explanation in PermissionExplanation.all {
             texts += [explanation.why, explanation.reads, explanation.never, explanation.turnOff]

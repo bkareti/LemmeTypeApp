@@ -98,7 +98,11 @@ struct HistorySettingsView: View {
         .confirmationDialog(
             String(localized: "Delete all saved dictations?", bundle: .module), isPresented: $isConfirmingDeleteAll
         ) {
-            Button(String(localized: "Delete All", bundle: .module), role: .destructive) {
+            Button(
+                String(
+                    localized: "Delete All", bundle: .module,
+                    comment: "Button label (verb): remove every item of this kind"), role: .destructive
+            ) {
                 Task {
                     await model.deleteAll()
                     announce(model.message)
@@ -200,7 +204,7 @@ private struct HistoryRow: View {
                 Text(entry.text)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                Text(entry.createdAt.formatted(date: .abbreviated, time: .shortened))
+                Text(HistorySettingsModel.when(entry.createdAt))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -214,8 +218,14 @@ private struct HistoryRow: View {
                 Image(systemName: "doc.on.doc")
             }
             .buttonStyle(.borderless)
-            .help(String(localized: "Copy", bundle: .module))
-            .accessibilityLabel(String(localized: "Copy", bundle: .module))
+            .help(
+                String(
+                    localized: "Copy", bundle: .module, comment: "Button label (verb): put the text on the clipboard")
+            )
+            .accessibilityLabel(
+                String(
+                    localized: "Copy", bundle: .module, comment: "Button label (verb): put the text on the clipboard")
+            )
             .accessibilityIdentifier("history.copy.\(index)")
             Button {
                 Task {
@@ -226,8 +236,10 @@ private struct HistoryRow: View {
                 Image(systemName: "trash")
             }
             .buttonStyle(.borderless)
-            .help(String(localized: "Delete", bundle: .module))
-            .accessibilityLabel(String(localized: "Delete", bundle: .module))
+            .help(String(localized: "Delete", bundle: .module, comment: "Button label (verb): remove one item"))
+            .accessibilityLabel(
+                String(localized: "Delete", bundle: .module, comment: "Button label (verb): remove one item")
+            )
             .accessibilityIdentifier("history.delete.\(index)")
         }
         .accessibilityElement(children: .contain)

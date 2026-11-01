@@ -14,7 +14,10 @@ public struct OnboardingView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             HStack {
                 if model.step != .welcome {
-                    Button(String(localized: "Back", bundle: .module)) { model.back() }
+                    Button(
+                        String(
+                            localized: "Back", bundle: .module, comment: "Button label: go to the previous setup step")
+                    ) { model.back() }
                 }
                 Spacer()
                 primaryButton
@@ -74,7 +77,7 @@ public struct OnboardingView: View {
     @ViewBuilder
     private var primaryButton: some View {
         if model.step == .summary {
-            Button(String(localized: "Done", bundle: .module)) { model.finish() }
+            Button(String(localized: "Done", bundle: .module, comment: "Button label: finish setup")) { model.finish() }
                 .keyboardShortcut(.defaultAction)
                 .accessibilityIdentifier("onboarding.done")
         } else {

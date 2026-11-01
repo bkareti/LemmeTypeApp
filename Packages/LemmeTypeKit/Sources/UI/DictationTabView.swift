@@ -21,7 +21,8 @@ struct DictationTabView: View {
     var body: some View {
         VStack(spacing: 0) {
             Picker(String(localized: "Show:", bundle: .module), selection: $section) {
-                Text(String(localized: "Engine", bundle: .module)).tag(Section.engine)
+                Text(String(localized: "Engine", bundle: .module, comment: "Noun: the speech recognition engine")).tag(
+                    Section.engine)
                 Text(String(localized: "Models", bundle: .module)).tag(Section.models)
                 Divider()
                 Text(String(localized: "Vocabulary", bundle: .module)).tag(Section.items(.vocabulary))

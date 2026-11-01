@@ -5,6 +5,8 @@
 #   the privacy threat model.
 # - ui-tests (non-blocking until proven stable on the hosted runner): XCUITest
 #   smoke tests against fake services.
+# - release-readiness (non-blocking at first): an ad-hoc rehearsal archive and its
+#   verification (E7-S2).
 # Manual checks that CI cannot do live in docs/testing/manual-acceptance.md.
 name: CI
 
@@ -78,6 +80,12 @@ jobs:
       - name: Threat model and privacy checklist cite real checks
         run: make privacy-docs-check
 
+      - name: Localization is ready (catalog, literals, formats)
+        run: make l10n-check
+
+      - name: Release and support documents point at real files
+        run: make docs-check
+
       # Deliberately no artifact upload: build logs and .xcresult bundles can
       # carry environment and test details we do not want to retain.
 
@@ -109,3 +117,36 @@ jobs:
 
       - name: No captured audio left behind
         run: make privacy-check
+
+  release-readiness:
+    name: Release rehearsal
+    runs-on: xcode-27
+    timeout-minutes: 40
+    # A rehearsal archive, signed ad hoc, proves the release pipeline and Hardened
+    # Runtime on every change. Non-blocking until it has been green for a week; it
+    # never signs with a real identity and uploads nothing (E7-S2, ADR 0026).
+    continue-on-error: true
+    env:
+      XCODE_APP: /Applications/Xcode_27.0.app
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+      HOMEBREW_NO_ANALYTICS: "1"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Select Xcode 27
+        run: sudo xcode-select --switch "$XCODE_APP"
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Release script tests
+        run: make release-script-tests
+
+      - name: Rehearsal archive (ad hoc)
+        run: make release-build REHEARSAL=1
+
+      - name: Verify the rehearsal artifact
+        run: make release-verify REHEARSAL=1

@@ -17,6 +17,7 @@ public final class DiagnosticsModel {
     private let buildInfo: BuildInfo
     private let osVersion: String
     private let hardwareModel: String
+    private let support: @MainActor () -> SupportSnapshot
     private var report: DiagnosticsReport?
 
     public init(
@@ -25,8 +26,10 @@ public final class DiagnosticsModel {
         shortcut: ShortcutSettingsModel,
         buildInfo: BuildInfo,
         osVersion: String = SystemInfo.osVersion,
-        hardwareModel: String = SystemInfo.hardwareModel
+        hardwareModel: String = SystemInfo.hardwareModel,
+        support: @escaping @MainActor () -> SupportSnapshot = { .empty }
     ) {
+        self.support = support
         self.buffer = buffer
         self.permissions = permissions
         self.shortcut = shortcut
@@ -48,7 +51,8 @@ public final class DiagnosticsModel {
                     ($0.rawValue, permissions.status(for: $0).rawValue)
                 }),
             activationMode: shortcut.mode.rawValue,
-            events: buffer.snapshot()
+            events: buffer.snapshot(),
+            support: support()
         )
     }
 

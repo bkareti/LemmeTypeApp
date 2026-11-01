@@ -1,7 +1,1830 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ · %@ download and disk · about %@ memory · %@ · Apple silicon, %@+ memory" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@ download and disk · about %3$@ memory · %4$@ · Apple silicon, %5$@+ memory"
+          }
+        }
+      }
+    },
+    "%@ · On this Mac" : {
 
+    },
+    "%@ → English" : {
+
+    },
+    "%@ can be at most %lld characters." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ can be at most %2$lld characters."
+          }
+        }
+      }
+    },
+    "%@ can’t be empty." : {
+
+    },
+    "%@ Copy" : {
+
+    },
+    "%@ download" : {
+
+    },
+    "%@ for this app · On this Mac" : {
+
+    },
+    "%@ isn’t ready: %@. LemmeType will ask before using another engine." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ isn’t ready: %2$@. LemmeType will ask before using another engine."
+          }
+        }
+      }
+    },
+    "%@: this language is being evaluated. It can be chosen, but its accuracy has not been measured yet." : {
+
+    },
+    "%lld diagnostic events" : {
+
+    },
+    "%lld downloaded models" : {
+
+    },
+    "%lld minutes" : {
+
+    },
+    "%lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "%lld saved dictations" : {
+
+    },
+    "%lld vocabulary, snippet, and mode items" : {
+
+    },
+    "%lld words, %lld replacements, %lld snippets, %lld modes, and %lld app rules. Add them to yours (duplicates are skipped), or replace yours?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld words, %2$lld replacements, %3$lld snippets, %4$lld modes, and %5$lld app rules. Add them to yours (duplicates are skipped), or replace yours?"
+          }
+        }
+      }
+    },
+    "1 day" : {
+
+    },
+    "1 hour" : {
+
+    },
+    "1 minute" : {
+
+    },
+    "1 month" : {
+
+    },
+    "1 week" : {
+
+    },
+    "A device policy blocks this permission. Contact your administrator." : {
+
+    },
+    "A diagnostics report helps with support. It contains the app and macOS versions, Mac model, permission states, and recent app events such as “recording started” or error codes." : {
+
+    },
+    "A dictation is in progress. Check again when it finishes." : {
+
+    },
+    "A few words around the cursor, if you turn on context." : {
+
+    },
+    "A folder on this Mac." : {
+
+    },
+    "A mode decides the engine, how text is cleaned up, its style, and whether it’s inserted or only copied. The default is used everywhere without an app rule." : {
+
+    },
+    "A private file on this Mac." : {
+
+    },
+    "A private temporary file on this Mac." : {
+
+    },
+    "A short list of recent events, such as “recording stopped”. It has no words or audio." : {
+
+    },
+    "About and support" : {
+
+    },
+    "About LemmeType" : {
+
+    },
+    "Accessibility" : {
+
+    },
+    "Accessibility access is needed to insert text. Copy it for now." : {
+
+    },
+    "Add a key to the modifiers, for example ⌥Space." : {
+
+    },
+    "Add a space after the text" : {
+
+    },
+    "Add App…" : {
+
+    },
+    "Add at most %lld “sounds like” spellings." : {
+
+    },
+    "Add Replacement…" : {
+
+    },
+    "Add Snippet…" : {
+
+    },
+    "Add to Mine" : {
+
+    },
+    "Add Word…" : {
+
+    },
+    "Added %lld items; skipped %lld duplicates." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Added %1$lld items; skipped %2$lld duplicates."
+          }
+        }
+      }
+    },
+    "Adds capitals and end punctuation, turns spoken “comma” or “new line” into punctuation, and drops “um”, repeated words, and clear self-corrections like “Tuesday—sorry—Wednesday”. Numbers, links, email addresses, code, and quotes are never changed." : {
+
+    },
+    "All saved dictations were deleted." : {
+
+    },
+    "All vocabulary, replacements, snippets, and custom modes were deleted." : {
+
+    },
+    "Allow Accessibility Access…" : {
+
+    },
+    "Allow Microphone Access…" : {
+
+    },
+    "Allow Speech Recognition" : {
+
+    },
+    "Also remove downloaded models" : {
+
+    },
+    "Always excluded: %@." : {
+
+    },
+    "Another app is using this shortcut. Choose another." : {
+
+    },
+    "Another item already uses this %@." : {
+
+    },
+    "App" : {
+      "comment" : "Noun: a macOS application"
+    },
+    "app rules" : {
+
+    },
+    "Apple Intelligence is turned off." : {
+
+    },
+    "Apple Speech" : {
+
+    },
+    "Apple Speech needs Speech Recognition access. Your recording is kept until you decide." : {
+
+    },
+    "Apple’s on-device model is still getting ready." : {
+
+    },
+    "Apple’s on-device model is still getting ready. Try again in a few minutes." : {
+
+    },
+    "Apple’s speech engine needs this permission. You only see it if you choose that engine." : {
+
+    },
+    "Approve LemmeType in System Settings › Login Items to finish." : {
+
+    },
+    "As in Dictation settings" : {
+
+    },
+    "As long as you choose, or until you delete it." : {
+
+    },
+    "Ask me (Copy Text)" : {
+
+    },
+    "Audio" : {
+
+    },
+    "Audio Settings" : {
+
+    },
+    "Automatic" : {
+
+    },
+    "Automatic (best installed for the performance profile)" : {
+
+    },
+    "Automatic. Any leftovers are removed when LemmeType starts." : {
+
+    },
+    "Availability" : {
+
+    },
+    "Available" : {
+
+    },
+    "Back" : {
+      "comment" : "Button label: go to the previous setup step"
+    },
+    "Balanced" : {
+
+    },
+    "Balanced, or Low Power while your Mac is in Low Power Mode." : {
+
+    },
+    "Best Accuracy" : {
+
+    },
+    "Bullet list" : {
+      "comment" : "Noun: text turned into a bulleted list"
+    },
+    "Cancel" : {
+
+    },
+    "Cancel Recording" : {
+
+    },
+    "Cancelled" : {
+
+    },
+    "Capitalize sentences" : {
+
+    },
+    "Casual" : {
+      "comment" : "Adjective: a relaxed tone for rewritten text"
+    },
+    "Change…" : {
+
+    },
+    "Channel" : {
+      "comment" : "Noun: how this build was distributed, for example direct or development"
+    },
+    "Check for Updates…" : {
+
+    },
+    "Check once a week" : {
+
+    },
+    "Checking…" : {
+
+    },
+    "Choose Engine…" : {
+
+    },
+    "Clean Writing" : {
+
+    },
+    "Cleanup" : {
+      "comment" : "Noun: automatic fixing of punctuation and filler words"
+    },
+    "clipboard only" : {
+
+    },
+    "Clipboard only" : {
+
+    },
+    "Concise" : {
+      "comment" : "Adjective: shorter rewritten text"
+    },
+    "Context" : {
+
+    },
+    "Context is off until you turn it on. When you start dictating, LemmeType reads up to 240 characters before the cursor and 40 after it, once. It uses them to fix spacing and capital letters. They stay on this Mac, are never saved, and are forgotten when the dictation ends. Password fields and password managers are always skipped, and you can skip other apps too." : {
+
+    },
+    "Context not available in this field" : {
+
+    },
+    "Context not read here (private field or app)" : {
+
+    },
+    "Context off for this app" : {
+
+    },
+    "Context Settings…" : {
+
+    },
+    "Continue" : {
+
+    },
+    "Copied." : {
+
+    },
+    "Copied. Paste it into your message." : {
+
+    },
+    "Copy" : {
+      "comment" : "Button label (verb): put the text on the clipboard"
+    },
+    "Copy only (I’ll paste)" : {
+
+    },
+    "Copy Support Info" : {
+
+    },
+    "Copy Text" : {
+
+    },
+    "Couldn’t reach GitHub. Check your connection and try again." : {
+
+    },
+    "Couldn’t record" : {
+
+    },
+    "Couldn’t start" : {
+
+    },
+    "custom modes" : {
+
+    },
+    "Default mode" : {
+
+    },
+    "Delete" : {
+      "comment" : "Button label (verb): remove one item"
+    },
+    "Delete “%@”?" : {
+
+    },
+    "Delete %@" : {
+
+    },
+    "Delete All" : {
+      "comment" : "Button label (verb): remove every item of this kind"
+    },
+    "Delete All Local Data" : {
+
+    },
+    "Delete all local data?" : {
+
+    },
+    "Delete All Local Data…" : {
+
+    },
+    "Delete all personalization?" : {
+
+    },
+    "Delete all saved dictations?" : {
+
+    },
+    "Delete All…" : {
+
+    },
+    "Delete and Continue" : {
+
+    },
+    "Delete everything" : {
+
+    },
+    "Delete Mode" : {
+
+    },
+    "Deleted %lld saved dictations." : {
+      "comment" : "Shown after a shorter history period or turning history off deleted entries"
+    },
+    "Deleted as soon as the text is delivered, cancelled, or fails." : {
+
+    },
+    "Deleted: %@." : {
+      "comment" : "Lists what Delete All Local Data removed"
+    },
+    "Deleted." : {
+
+    },
+    "Denied" : {
+
+    },
+    "Diagnostics" : {
+
+    },
+    "Diagnostics Report Preview" : {
+
+    },
+    "Dictate: %@" : {
+
+    },
+    "Dictated text" : {
+
+    },
+    "Dictation" : {
+
+    },
+    "Dictation › Delete All, or Delete All Local Data below." : {
+
+    },
+    "Dictation › Models, or Delete All Local Data below." : {
+
+    },
+    "Dictation can’t start." : {
+
+    },
+    "Dictation needs your attention. %@" : {
+
+    },
+    "Dictation recording" : {
+
+    },
+    "Dictation shortcut" : {
+
+    },
+    "Discard" : {
+      "comment" : "Button label (verb): throw away the text without using it"
+    },
+    "Disk used by models" : {
+
+    },
+    "Dismiss" : {
+      "comment" : "Button label (verb): hide this notice"
+    },
+    "Doesn’t support the selected language." : {
+
+    },
+    "Doesn’t support this language" : {
+
+    },
+    "Done" : {
+      "comment" : "Button label: finish setup"
+    },
+    "Download" : {
+
+    },
+    "Download %@" : {
+
+    },
+    "Download %@?" : {
+
+    },
+    "Download progress for %@" : {
+
+    },
+    "Download required" : {
+
+    },
+    "Download…" : {
+
+    },
+    "Downloadable models" : {
+
+    },
+    "Downloaded models" : {
+
+    },
+    "Downloading %@ of %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading %1$@ of %2$@"
+          }
+        }
+      }
+    },
+    "Downloads %@ from Hugging Face and uses %@ on this Mac. Licence: %@. Free space: %@. The file is verified before use; dictation itself never uses the network." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloads %1$@ from Hugging Face and uses %2$@ on this Mac. Licence: %3$@. Free space: %4$@. The file is verified before use; dictation itself never uses the network."
+          }
+        }
+      }
+    },
+    "Duplicate" : {
+
+    },
+    "Duplicate %@" : {
+
+    },
+    "Edit" : {
+      "comment" : "Button label (verb): change an existing item"
+    },
+    "Edit %@" : {
+
+    },
+    "Edit Replacement" : {
+
+    },
+    "Edit selected text by voice" : {
+
+    },
+    "Edit Selection: %@" : {
+
+    },
+    "Edit Snippet" : {
+
+    },
+    "Edit Word" : {
+
+    },
+    "Editing" : {
+
+    },
+    "Editing in %@" : {
+
+    },
+    "Editing selection · On this Mac" : {
+
+    },
+    "Editing selection. Say what to change." : {
+
+    },
+    "Email" : {
+      "comment" : "Noun: an email-shaped text format"
+    },
+    "End with punctuation" : {
+
+    },
+    "Engine" : {
+      "comment" : "Noun: the speech recognition engine"
+    },
+    "Engine: %@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Engine: %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "Engine: Automatic (%@) · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Engine: Automatic (%1$@) · %2$@"
+          }
+        }
+      }
+    },
+    "Engine: not ready" : {
+
+    },
+    "English" : {
+
+    },
+    "English text" : {
+
+    },
+    "Esc is reserved for cancelling dictation." : {
+
+    },
+    "Evaluation" : {
+
+    },
+    "Every engine runs on this Mac. Your recordings and text never leave it. Changes apply to your next dictation." : {
+
+    },
+    "Exact Dictation" : {
+
+    },
+    "Exact Dictation never rewrites. Choose Clean Writing to use a tone or format." : {
+
+    },
+    "Expand snippets" : {
+
+    },
+    "Export…" : {
+
+    },
+    "Fastest" : {
+
+    },
+    "Files LemmeType keeps live in your Mac’s Application Support folder, readable only by your account. Time Machine backs them up if you use it, and FileVault protects them when your Mac is locked." : {
+
+    },
+    "Finish Setup…" : {
+
+    },
+    "Finishing…" : {
+
+    },
+    "Format" : {
+      "comment" : "Noun: the shape of the text, such as email or bullet list"
+    },
+    "Free space" : {
+
+    },
+    "Friendly" : {
+      "comment" : "Adjective: a warm tone for rewritten text"
+    },
+    "General" : {
+
+    },
+    "GitHub is limiting requests right now. Try again later." : {
+
+    },
+    "GitHub’s answer wasn’t what LemmeType expected. Try again later." : {
+
+    },
+    "Granted" : {
+
+    },
+    "History" : {
+      "comment" : "Noun: the list of dictations the user chose to keep"
+    },
+    "History couldn’t be changed. Try again." : {
+
+    },
+    "History is off. Nothing is being saved." : {
+
+    },
+    "If LemmeType ever crashes, macOS saves its own crash report on this Mac (Console › Crash Reports). LemmeType never reads or sends it. You can attach it to a bug report if you choose." : {
+
+    },
+    "If my engine isn’t ready, use another on-device engine without asking" : {
+
+    },
+    "Import personalization?" : {
+
+    },
+    "Import…" : {
+
+    },
+    "Imported %lld items." : {
+
+    },
+    "In effect now: %@." : {
+
+    },
+    "Include ⌘, ⌥, or ⌃ so the shortcut doesn’t interfere with typing." : {
+
+    },
+    "Input level" : {
+
+    },
+    "Insert" : {
+      "comment" : "Button label (verb): type the text into the app that was in front"
+    },
+    "Insert at the cursor" : {
+
+    },
+    "Inserting text" : {
+
+    },
+    "Inserting…" : {
+
+    },
+    "Installed and verified" : {
+
+    },
+    "It finds the text box you were in. If you turn on context, it also reads a few words around your cursor, once, when you start." : {
+
+    },
+    "it is ready." : {
+
+    },
+    "It listens only while you hold or toggle the dictation shortcut." : {
+
+    },
+    "It never contains audio, dictated text, text from other apps, clipboard contents, or device and app names. Nothing is sent anywhere — you choose where to save it." : {
+
+    },
+    "It never listens in the background. Your voice is turned into text on this Mac, and the recording is deleted afterwards." : {
+
+    },
+    "It never reads password fields, never watches what you type, and never saves what it reads." : {
+
+    },
+    "It turns your recording into text, using the speech model built into your Mac." : {
+
+    },
+    "It’s your default mode; Clean Writing becomes the default." : {
+
+    },
+    "Keep a history of what I dictate" : {
+
+    },
+    "Keep for:" : {
+
+    },
+    "Language" : {
+      "comment" : "Noun: the language you speak"
+    },
+    "Language Settings…" : {
+
+    },
+    "Language you speak" : {
+
+    },
+    "Language: %@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Language: %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "Last checked %@." : {
+
+    },
+    "Launch at Login" : {
+
+    },
+    "Leave out the final period" : {
+
+    },
+    "LemmeType %@ is available." : {
+
+    },
+    "LemmeType %@ is up to date." : {
+
+    },
+    "LemmeType closed unexpectedly last time." : {
+
+    },
+    "LemmeType couldn’t confirm the text was inserted. Check the field, or copy the text." : {
+
+    },
+    "LemmeType couldn’t create a temporary recording. Check free disk space." : {
+
+    },
+    "LemmeType couldn’t save your changes to disk." : {
+
+    },
+    "LemmeType couldn’t tell which language you spoke. Choose it and your recording is used again." : {
+
+    },
+    "LemmeType has no analytics, no tracking, and no account. Nothing about how you use it is sent anywhere." : {
+
+    },
+    "LemmeType History" : {
+
+    },
+    "LemmeType needs Accessibility to type your dictated text into the app you were using." : {
+
+    },
+    "LemmeType needs the microphone to hear what you dictate." : {
+
+    },
+    "LemmeType never reads password fields." : {
+
+    },
+    "LemmeType never reads text in password managers." : {
+
+    },
+    "LemmeType never types into password fields. Copy the text instead." : {
+
+    },
+    "LemmeType only uses the on-device mode, so your audio is not sent to Apple." : {
+
+    },
+    "LemmeType Personalization" : {
+
+    },
+    "LemmeType recorder" : {
+
+    },
+    "LemmeType works on this Mac. This page says what it uses, what it keeps, and how to remove it." : {
+
+    },
+    "Length" : {
+      "comment" : "Noun: how long the rewritten text should be"
+    },
+    "Looking for a new version sends your app’s version number and, like any web request, your IP address to GitHub. LemmeType never downloads or installs an update by itself. It opens the release page in your browser." : {
+
+    },
+    "Low Power" : {
+
+    },
+    "Mac" : {
+      "comment" : "Label for the model of this computer, for example Mac16,1"
+    },
+    "macOS" : {
+
+    },
+    "macOS already uses that shortcut. Choose another." : {
+
+    },
+    "macOS couldn’t register this shortcut. Choose another." : {
+
+    },
+    "macOS couldn’t update Launch at Login. Try again, or change it in System Settings › Login Items." : {
+
+    },
+    "Manage Models…" : {
+
+    },
+    "Memory only." : {
+
+    },
+    "Memory, then the app you chose, or the clipboard if you copy it." : {
+
+    },
+    "Message" : {
+      "comment" : "Noun: a short chat-style message format and a built-in mode name"
+    },
+    "Microphone" : {
+
+    },
+    "Microphone access is off. Allow it in the Permissions pane." : {
+
+    },
+    "Mode" : {
+      "comment" : "Noun: a dictation mode, such as Exact or Clean"
+    },
+    "Mode name" : {
+
+    },
+    "Mode: %@" : {
+
+    },
+    "Models" : {
+
+    },
+    "Models load when you dictate and are removed from memory after this much time without dictation, or at once when your Mac runs short of memory." : {
+
+    },
+    "Models run only on this Mac. A model is checked against its published fingerprint before it’s first used after each launch; a modified file is deleted." : {
+
+    },
+    "Modes" : {
+
+    },
+    "Most accurate" : {
+
+    },
+    "Move LemmeType to the Applications folder to enable Launch at Login." : {
+
+    },
+    "Name" : {
+      "comment" : "Noun: the name of a mode"
+    },
+    "Names and terms you use. LemmeType listens for them and always spells them your way. Add what you hear instead under “sounds like”." : {
+
+    },
+    "Needs a Mac with Apple silicon." : {
+
+    },
+    "Needs a Mac with at least 8 GB of memory." : {
+
+    },
+    "Needs a model download in Settings › Dictation › Models." : {
+
+    },
+    "Needs a newer version of macOS." : {
+
+    },
+    "Needs Speech Recognition access" : {
+
+    },
+    "Needs the %@ model (%@). Download it in Settings › Dictation › Models." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Needs the %1$@ model (%2$@). Download it in Settings › Dictation › Models."
+          }
+        }
+      }
+    },
+    "Needs your decision" : {
+
+    },
+    "Neutral" : {
+      "comment" : "Adjective: no change of tone"
+    },
+    "Never" : {
+
+    },
+    "Never read text in" : {
+
+    },
+    "New Mode…" : {
+
+    },
+    "New Replacement" : {
+
+    },
+    "New Snippet" : {
+
+    },
+    "New Word" : {
+
+    },
+    "No download" : {
+
+    },
+    "no final period" : {
+
+    },
+    "No microphone is available. Connect one and try again." : {
+
+    },
+    "No newer version has been published." : {
+
+    },
+    "No on-device engine can do this. Choose another language or output." : {
+
+    },
+    "No on-device engine is ready yet." : {
+
+    },
+    "No on-device engine is ready. Set one up below." : {
+
+    },
+    "No on-device engine is ready. Set one up in Settings." : {
+
+    },
+    "No On-Device Engine Ready — Set Up…" : {
+
+    },
+    "No sound" : {
+
+    },
+    "No speech was detected." : {
+
+    },
+    "no vocabulary" : {
+
+    },
+    "Not available on this Mac" : {
+
+    },
+    "Not checked yet." : {
+
+    },
+    "Not downloaded" : {
+
+    },
+    "Not enough disk space to record. Free at least 100 MB and try again." : {
+
+    },
+    "Not enough free space: %@ needed, %@ available." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Not enough free space: %1$@ needed, %2$@ available."
+          }
+        }
+      }
+    },
+    "Not granted" : {
+
+    },
+    "Not kept, unless you turn on history." : {
+
+    },
+    "Not Now" : {
+
+    },
+    "Not ready" : {
+
+    },
+    "Not requested" : {
+
+    },
+    "Not rewritten" : {
+
+    },
+    "Not rewritten: %@ Your original text is shown; nothing was lost." : {
+
+    },
+    "Not rewritten: the on-device model declined. Your original text is shown." : {
+
+    },
+    "Not rewritten: the rewrite changed a name, number, date, or commitment, so it was not used. Your original text is shown." : {
+
+    },
+    "Not rewritten: the rewrite didn’t work. Your original text is shown." : {
+
+    },
+    "Not rewritten: the text is too long for the on-device model. Your original text is shown." : {
+
+    },
+    "Nothing is pasted automatically; the overlay offers Copy Text." : {
+
+    },
+    "Nothing recorded during a test is kept." : {
+
+    },
+    "Nothing saved yet. Your next dictation will appear here." : {
+
+    },
+    "Nothing to remove." : {
+
+    },
+    "Off" : {
+      "comment" : "State of a switch: turned off"
+    },
+    "Off. LemmeType keeps no record of what you dictate. If you turn this on, only the text you insert or copy is saved, on this Mac." : {
+
+    },
+    "OK" : {
+      "comment" : "Button label: dismiss a message"
+    },
+    "On this Mac" : {
+
+    },
+    "On-device recognition isn’t installed for this language. Add it in System Settings › Keyboard › Dictation." : {
+
+    },
+    "Open Context Settings" : {
+
+    },
+    "Open Diagnostics…" : {
+
+    },
+    "Open Download Page…" : {
+
+    },
+    "Open Login Items Settings…" : {
+
+    },
+    "Open Permissions" : {
+
+    },
+    "Open System Settings…" : {
+
+    },
+    "Optional. LemmeType rewrites on this Mac and shows you the result before anything is inserted. Neutral, Plain text, and Original change nothing." : {
+
+    },
+    "Original" : {
+      "comment" : "Adjective: the text exactly as recognised, before any rewrite"
+    },
+    "Original language" : {
+
+    },
+    "Original text" : {
+
+    },
+    "Output" : {
+      "comment" : "Noun: what LemmeType does with the finished text"
+    },
+    "Overview" : {
+      "comment" : "Noun: a summary page of how LemmeType uses your data"
+    },
+    "Password fields are never read in any app." : {
+
+    },
+    "password managers and Keychain Access" : {
+
+    },
+    "Paste, then restore my clipboard" : {
+
+    },
+    "Pause" : {
+      "comment" : "Button label (verb): pause a download"
+    },
+    "Paused at %@ of %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Paused at %1$@ of %2$@"
+          }
+        }
+      }
+    },
+    "Performance" : {
+
+    },
+    "Performance is reduced to keep your Mac cool." : {
+
+    },
+    "Permissions" : {
+
+    },
+    "Plain text" : {
+      "comment" : "Noun: text without any special shape"
+    },
+    "Play sounds when recording starts and stops" : {
+
+    },
+    "Prefers Whisper Base, uses the GPU, and starts loading the model while you speak." : {
+
+    },
+    "Prefers Whisper Small when installed, uses the GPU, and loads while you speak." : {
+
+    },
+    "Prefers Whisper Tiny, uses two CPU cores and no GPU, loads only when needed, and frees memory after a minute." : {
+
+    },
+    "Preparing…" : {
+
+    },
+    "Press Esc while dictating to cancel." : {
+
+    },
+    "Press your shortcut to test it." : {
+
+    },
+    "Preview Report…" : {
+
+    },
+    "Privacy" : {
+      "comment" : "Noun: the settings pane about data use"
+    },
+    "Privacy › History, or Delete All Local Data below." : {
+
+    },
+    "Processing…" : {
+
+    },
+    "Professional" : {
+      "comment" : "Adjective: a formal tone for rewritten text"
+    },
+    "Profile" : {
+      "comment" : "Noun: a performance profile such as Balanced"
+    },
+    "Push to Talk — hold to dictate" : {
+
+    },
+    "Quit LemmeType" : {
+
+    },
+    "Quit LemmeType, or Delete All Local Data below." : {
+
+    },
+    "Read the rewrite. Nothing is inserted until you choose Insert or Copy." : {
+
+    },
+    "Read the translation. Nothing is inserted until you choose Insert or Copy." : {
+
+    },
+    "Ready" : {
+      "comment" : "State: the engine or model can be used now"
+    },
+    "Ready · %@ on this Mac" : {
+
+    },
+    "Recognition" : {
+
+    },
+    "Recognition engine" : {
+
+    },
+    "Recommended for this Mac" : {
+
+    },
+    "Recording" : {
+      "comment" : "Noun: the audio captured while dictating"
+    },
+    "Recording cancelled" : {
+
+    },
+    "Recording failed. %@" : {
+
+    },
+    "Recording started" : {
+
+    },
+    "Recording stopped" : {
+
+    },
+    "Recording time" : {
+
+    },
+    "Recording was interrupted. Try again." : {
+
+    },
+    "Recording, speech recognition, cleanup, and rewriting never use the internet. LemmeType connects only to download a model you choose, after you confirm its size, and to look for a new version when you ask." : {
+
+    },
+    "Regenerate" : {
+
+    },
+    "Remove" : {
+      "comment" : "Button label (verb): take a downloaded model off this Mac"
+    },
+    "Remove “um” and “uh”" : {
+
+    },
+    "Remove %@" : {
+
+    },
+    "Remove repeated words" : {
+
+    },
+    "Remove rule for %@" : {
+
+    },
+    "Removes your history, vocabulary, snippets, modes, any leftover recordings, and the diagnostics list from this Mac." : {
+
+    },
+    "Replace Mine" : {
+
+    },
+    "replacements" : {
+
+    },
+    "Replacements" : {
+
+    },
+    "Report a Problem opens a GitHub form with only your version, macOS version, and Mac model filled in. To add more, save a report from the Diagnostics pane and attach it yourself." : {
+
+    },
+    "Report a Problem…" : {
+
+    },
+    "Restore clipboard after" : {
+
+    },
+    "Restricted" : {
+
+    },
+    "Resume" : {
+      "comment" : "Button label (verb): continue a paused download"
+    },
+    "Retry" : {
+      "comment" : "Button label (verb): try the same step again"
+    },
+    "Retry Insert" : {
+
+    },
+    "Review rewrite" : {
+
+    },
+    "Review translation" : {
+
+    },
+    "Rewriting on this Mac…" : {
+
+    },
+    "Rewritten text" : {
+
+    },
+    "Runs on this Mac; more memory recommended" : {
+
+    },
+    "Save" : {
+      "comment" : "Button label (verb): keep the changes"
+    },
+    "Save Audio…" : {
+
+    },
+    "Save…" : {
+
+    },
+    "Saved on this Mac only, in a private file. It holds the text you inserted or copied, with the time. It never holds audio, the app you used, or the text around your cursor. Time Machine backs it up if you use it." : {
+
+    },
+    "Say a phrase and LemmeType writes something else — “my email” can become your address. Whole words only, in every mode." : {
+
+    },
+    "Say only the trigger, and the saved text is inserted exactly as written. A trigger inside a longer sentence never expands." : {
+
+    },
+    "Select text, hold the shortcut, and say what to change — “make this shorter”, “fix the grammar”, “turn this into a list”, or “translate to Spanish”. Only the selection is read, and Apple’s on-device model rewrites it on this Mac." : {
+
+    },
+    "Select the text you want to change, then press the shortcut." : {
+
+    },
+    "Self-corrections (“Tuesday—sorry—Wednesday”)" : {
+
+    },
+    "Send text to" : {
+
+    },
+    "Settings…" : {
+
+    },
+    "Setup summary" : {
+
+    },
+    "Shortcut" : {
+
+    },
+    "Shortcut Unavailable — Choose Another…" : {
+
+    },
+    "Show original" : {
+
+    },
+    "Show rewrite" : {
+
+    },
+    "Show:" : {
+
+    },
+    "Snippet text" : {
+
+    },
+    "snippets" : {
+
+    },
+    "Snippets" : {
+
+    },
+    "Some apps don’t accept typed text. LemmeType then pastes it and puts back what was on your clipboard — unless you copied something new meanwhile." : {
+
+    },
+    "Some features stay unavailable until the missing permissions are granted. You can finish this any time from the LemmeType menu." : {
+
+    },
+    "Sound detected" : {
+
+    },
+    "Sounds like" : {
+
+    },
+    "Sounds like (comma-separated, optional)" : {
+
+    },
+    "Source language and output are separate: you can speak Hindi and get Hindi, or speak Hindi and get English. Everything runs on this Mac." : {
+
+    },
+    "Speak naturally and LemmeType writes the text into whatever app you're using. Setup takes two permissions. You'll see why each is needed before macOS asks." : {
+
+    },
+    "Speech models you chose to download." : {
+
+    },
+    "Speech Recognition" : {
+
+    },
+    "Spoken phrase" : {
+
+    },
+    "Spoken punctuation (“comma”, “new line”)" : {
+
+    },
+    "Start Test Recording" : {
+
+    },
+    "Started" : {
+      "comment" : "Past tense: a download or recording began"
+    },
+    "Started in %@" : {
+
+    },
+    "Starting microphone…" : {
+
+    },
+    "Stop" : {
+      "comment" : "Button label (verb): stop the test recording"
+    },
+    "Stop Recording" : {
+
+    },
+    "Stop Test" : {
+
+    },
+    "Stopped" : {
+      "comment" : "Past tense: a recording ended"
+    },
+    "Style" : {
+      "comment" : "Noun: the tone, format, and length settings"
+    },
+    "System Default" : {
+
+    },
+    "Test" : {
+      "comment" : "Noun: a test recording that is not typed anywhere"
+    },
+    "Test Microphone" : {
+
+    },
+    "Text copied. Press ⌘V to paste it." : {
+
+    },
+    "Text inserted." : {
+
+    },
+    "Text insertion" : {
+
+    },
+    "Text Near Cursor: Off" : {
+
+    },
+    "Text Near Cursor: On" : {
+
+    },
+    "Text near your cursor" : {
+
+    },
+    "Text pasted." : {
+
+    },
+    "Text you get" : {
+
+    },
+    "That item no longer exists." : {
+
+    },
+    "The app didn’t take the pasted text in time. Your clipboard was put back; copy the text to paste it yourself." : {
+
+    },
+    "The download failed. Check your connection and try again." : {
+
+    },
+    "The downloaded file didn’t pass verification and was deleted." : {
+
+    },
+    "The edit didn’t work. Your text is unchanged." : {
+
+    },
+    "The field you were typing in changed, so nothing was inserted. Copy the text or retry." : {
+
+    },
+    "The history couldn’t be exported. Try again." : {
+
+    },
+    "The internet and tracking" : {
+
+    },
+    "The microphone couldn’t be started. Try again or choose another input." : {
+
+    },
+    "The microphone was disconnected. Choose another input and try again." : {
+
+    },
+    "The model couldn’t be saved on this Mac." : {
+
+    },
+    "The on-device model declined this edit. Your text is unchanged." : {
+
+    },
+    "the on-device model doesn’t support this language." : {
+
+    },
+    "The on-device model doesn’t support your dictation language yet." : {
+
+    },
+    "The on-device model is ready." : {
+
+    },
+    "the on-device model isn’t available." : {
+
+    },
+    "The report couldn’t be saved. Choose another location." : {
+
+    },
+    "The rules for %@ are removed." : {
+
+    },
+    "The saved history couldn’t be read, so it was set aside and a new one was started. The old file is still on this Mac." : {
+
+    },
+    "The selected engine isn’t available on this Mac. Your recording is kept." : {
+
+    },
+    "The selected engine isn’t ready for this. Choose another in Settings › Dictation." : {
+
+    },
+    "The selected engine’s model isn’t installed. Your recording is kept." : {
+
+    },
+    "The selected microphone isn’t available. Using the system default." : {
+
+    },
+    "The selected microphone isn’t connected. LemmeType will use the system default." : {
+
+    },
+    "The selection is too long to edit. Select less text." : {
+
+    },
+    "The sound of your voice while you dictate." : {
+
+    },
+    "The text is left on the clipboard for you to paste with ⌘V. Your previous clipboard is replaced." : {
+
+    },
+    "The text you inserted or copied, with the time. Off unless you turn it on." : {
+
+    },
+    "The words LemmeType writes for you." : {
+
+    },
+    "There was no text field to insert into. Copy the text instead." : {
+
+    },
+    "There was nothing left to delete." : {
+
+    },
+    "They are removed from this Mac. Export first if you want a copy." : {
+
+    },
+    "This build has no readable version number, so it can’t compare." : {
+
+    },
+    "This can’t be undone. Export your history or vocabulary first if you want a copy. Your settings and permissions stay as they are." : {
+
+    },
+    "This deletes %lld saved dictations from this Mac. This can’t be undone." : {
+
+    },
+    "This field doesn’t accept inserted text. Copy it instead." : {
+
+    },
+    "This is exactly what will be saved." : {
+
+    },
+    "This isn’t a LemmeType personalization file." : {
+
+    },
+    "This isn’t available on this Mac." : {
+
+    },
+    "This Mac can’t run Apple’s on-device model, so voice editing isn’t available." : {
+
+    },
+    "this Mac can’t run Apple’s on-device model." : {
+
+    },
+    "This Mac doesn’t have enough memory for the model this needs." : {
+
+    },
+    "This Mac runs it, but %@ of memory is recommended for this model." : {
+
+    },
+    "This model can’t be downloaded." : {
+
+    },
+    "This model is already downloading." : {
+
+    },
+    "This needs a Mac with Apple silicon." : {
+
+    },
+    "Toggle — press to start and stop" : {
+
+    },
+    "Tone" : {
+      "comment" : "Noun: how the text sounds, such as friendly or professional"
+    },
+    "Tone and format" : {
+
+    },
+    "Transcribing…" : {
+
+    },
+    "Transcription" : {
+
+    },
+    "Transcription failed. Your recording is kept so you can try again." : {
+
+    },
+    "Translate Again" : {
+
+    },
+    "Translation" : {
+
+    },
+    "Trigger" : {
+
+    },
+    "Try Again" : {
+
+    },
+    "Try it" : {
+
+    },
+    "Turn it off in System Settings › Privacy & Security › Accessibility." : {
+
+    },
+    "Turn it off in System Settings › Privacy & Security › Microphone." : {
+
+    },
+    "Turn it off in System Settings › Privacy & Security › Speech Recognition." : {
+
+    },
+    "Turn it on in System Settings › Privacy & Security." : {
+
+    },
+    "Turn off history?" : {
+
+    },
+    "Turns speech in another language into English on this Mac. You read the translation before anything is inserted." : {
+
+    },
+    "Type a shortcut…" : {
+
+    },
+    "Types exactly the words that were recognised. Only extra spaces are removed." : {
+
+    },
+    "Types what you said, in the language you said it. Nothing is translated." : {
+
+    },
+    "Unavailable" : {
+
+    },
+    "Unavailable microphone" : {
+
+    },
+    "Unload models after" : {
+
+    },
+    "Until I delete it" : {
+
+    },
+    "Until the dictation ends." : {
+
+    },
+    "Until you delete it." : {
+
+    },
+    "Until you quit LemmeType. You can save a report to share." : {
+
+    },
+    "Until you remove them." : {
+
+    },
+    "Updates" : {
+      "comment" : "Noun: new versions of LemmeType"
+    },
+    "Use %@" : {
+
+    },
+    "Use a mode in a specific app" : {
+
+    },
+    "Use a shorter period?" : {
+
+    },
+    "Use Automatic" : {
+
+    },
+    "Use Default (⌥⇧Space)" : {
+
+    },
+    "Use Default (⌥Space)" : {
+
+    },
+    "Use Original" : {
+
+    },
+    "Use text near the cursor to fit dictation in" : {
+
+    },
+    "Use vocabulary and replacements" : {
+
+    },
+    "Uses %@, the only engine ready on this Mac." : {
+
+    },
+    "Uses %@, the recommended engine that is ready on this Mac." : {
+
+    },
+    "Uses macOS dictation languages" : {
+
+    },
+    "Using Low Power because Low Power Mode is on." : {
+
+    },
+    "Using text near the cursor" : {
+
+    },
+    "Verifying…" : {
+
+    },
+    "Version" : {
+
+    },
+    "Vocabulary" : {
+
+    },
+    "vocabulary words" : {
+
+    },
+    "Vocabulary, replacements, snippets, custom modes, and app rules are removed from this Mac. Export first if you want a copy." : {
+
+    },
+    "Vocabulary, replacements, snippets, modes, and app rules you add." : {
+
+    },
+    "Voice editing" : {
+
+    },
+    "Voice editing can’t start." : {
+
+    },
+    "Voice editing is turned off in Settings › Context." : {
+
+    },
+    "Voice editing isn’t available right now." : {
+
+    },
+    "Voice editing needs Accessibility access." : {
+
+    },
+    "Voice editing needs Apple Intelligence. Turn it on in System Settings › Apple Intelligence & Siri." : {
+
+    },
+    "Voice editing shortcut" : {
+
+    },
+    "Welcome to LemmeType" : {
+
+    },
+    "What LemmeType keeps" : {
+
+    },
+    "When text can’t be inserted directly" : {
+
+    },
+    "When you dictate into one of these apps, its mode is used instead of the default. LemmeType only checks which app is in front when you press the shortcut." : {
+
+    },
+    "When you press the dictation shortcut, LemmeType reads up to 240 characters before the cursor and 40 after it, once, to fix spacing, capitals, and periods. It stays on this Mac, is never saved, and is forgotten when the dictation ends." : {
+
+    },
+    "Whisper" : {
+
+    },
+    "Whisper model" : {
+
+    },
+    "Whisper models are downloaded and verified in Models." : {
+
+    },
+    "Whisper needs a model download. Choose one in Models." : {
+
+    },
+    "Word or name" : {
+
+    },
+    "Writing" : {
+      "comment" : "Noun: the way text is written, Exact or Clean"
+    },
+    "Writing mode" : {
+
+    },
+    "Writing Mode: %@" : {
+
+    },
+    "Writing…" : {
+
+    },
+    "Written text" : {
+
+    },
+    "You can keep up to %lld %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You can keep up to %1$lld %2$@."
+          }
+        }
+      }
+    },
+    "You need at least %@ free." : {
+
+    },
+    "You turned off context for this app in Settings › Context." : {
+
+    },
+    "Your clipboard holds something LemmeType can’t put back, so it wasn’t used. Copying the text will replace it." : {
+
+    },
+    "Your recording" : {
+
+    },
+    "Your saved personalization couldn’t be read, so LemmeType started fresh. The old file was kept next to the new one." : {
+
+    },
+    "Your saved personalization was made by a newer LemmeType. It was kept, and LemmeType started fresh." : {
+
+    },
+    "Your words and modes" : {
+
+    }
   },
   "version" : "1.0"
 }

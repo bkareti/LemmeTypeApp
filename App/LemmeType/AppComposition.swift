@@ -11,6 +11,7 @@ import Shortcuts
 import Support
 import SwiftUI
 import UI
+import Updates
 
 #if DEBUG
     import TestSupport
@@ -54,6 +55,10 @@ struct AppComposition {
     var personalizationStore: any PersonalizationStoring
     /// The opt-in dictation history (ADR 0025); records nothing while retention is off.
     var history: any DictationHistoryManaging
+    /// Where the update check reads release metadata (ADR 0026); a fake in UI tests.
+    var updateFeed: any UpdateFeed
+    /// Remembers whether the last run ended normally (E7-S4).
+    var sentinel: LaunchSentinel
     /// Memory pressure, heat, and Low Power Mode (E5-S6).
     var systemConditions: any SystemConditionsMonitoring
     var diagnostics: DiagnosticsBuffer
@@ -123,6 +128,8 @@ struct AppComposition {
             textRewriter: FoundationModelsRewriter(),
             personalizationStore: FilePersonalizationStore.makeDefault(diagnostics: diagnostics),
             history: history,
+            updateFeed: GitHubReleaseFeed(appVersion: buildInfo.version),
+            sentinel: LaunchSentinel.makeDefault(version: buildInfo.version),
             systemConditions: conditions,
             diagnostics: diagnostics,
             loginItems: SystemLoginItemManager(),
@@ -185,6 +192,8 @@ struct AppComposition {
                 personalizationStore: FakePersonalizationStore(),
                 history: DictationHistoryService(
                     store: FakeDictationHistoryStore(), preferences: preferences, diagnostics: diagnostics),
+                updateFeed: FakeUpdateFeed(releases: [FakeUpdateFeed.release("99.0.0")]),
+                sentinel: Self.temporarySentinel(version: buildInfo.version),
                 systemConditions: FakeSystemConditions(),
                 diagnostics: diagnostics,
                 loginItems: FakeLoginItemManager(status: .disabled),
@@ -226,15 +235,20 @@ struct AppComposition {
             speechAuthorizer: speechAuthorizer, diagnostics: diagnostics)
         let modes = makeModes(personalization: personalization, languages: dictation.languageChoices)
         let models = makeModels(dictation: dictation)
+        let updates = makeUpdates(recorder: recorder)
+        let recovery = RecoveryNoticeModel()
         let historySettings = HistorySettingsModel(history: history, copier: textCopier)
         let privacy = PrivacyOverviewModel(
             history: historySettings, personalization: personalization, modes: modes, capture: audioCapture,
             modelAssets: modelAssets, clearDiagnostics: { [diagnostics] in diagnostics.removeAll() })
         let diagnosticsModel = DiagnosticsModel(
-            buffer: diagnostics, permissions: permissions, shortcut: shortcut, buildInfo: buildInfo)
+            buffer: diagnostics, permissions: permissions, shortcut: shortcut, buildInfo: buildInfo,
+            support: { [self] in makeSupportSnapshot(models: models, recovery: recovery) })
         let settings = Self.makeSettingsWindow(
             SettingsView(
                 general: GeneralSettingsModel(loginItems: loginItems, preferences: preferences, buildInfo: buildInfo),
+                updates: updates.model,
+                about: makeAbout(),
                 dictation: dictation,
                 shortcut: shortcut,
                 context: context,
@@ -261,40 +275,14 @@ struct AppComposition {
             modes: modes,
             models: models,
             history: history,
+            updates: updates,
+            sentinel: sentinel,
+            recovery: recovery,
             residency: residency,
             systemConditions: systemConditions,
             navigation: navigation,
             diagnostics: diagnostics,
             settings: settings
-        )
-    }
-
-    /// The dictation shortcut and, when voice editing is on, its shortcut.
-    private func makeActivationController() -> ActivationController {
-        ActivationController(
-            registrar: hotKeyRegistrar,
-            targetCapturer: targetCapturer,
-            shortcut: preferences.dictationShortcut ?? .defaultDictation,
-            editShortcut: preferences.allowsVoiceEditing ? (preferences.voiceEditShortcut ?? .defaultVoiceEdit) : nil,
-            mode: preferences.activationMode,
-            diagnostics: diagnostics
-        )
-    }
-
-    private func makeRecorder(
-        personalization: PersonalizationModel, residency: ModelResidencyController
-    ) -> RecordingCoordinator {
-        RecordingCoordinator(
-            capture: audioCapture,
-            processor: makeDictationProcessor(),
-            feedback: SystemRecordingFeedback(preferences: preferences),
-            preferences: preferences,
-            speechAuthorizer: speechAuthorizer,
-            textCopier: textCopier,
-            history: history,
-            personalization: { [weak personalization] in personalization?.library ?? .empty },
-            residency: residency,
-            diagnostics: diagnostics
         )
     }
 

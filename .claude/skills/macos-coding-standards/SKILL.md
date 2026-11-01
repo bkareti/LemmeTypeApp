@@ -38,6 +38,7 @@ Code lives in the local package `Packages/LemmeTypeKit` plus a thin app target:
 | `ModelAssets` | Model download, verification, removal — the only network code (ADR 0011) | Domain, Support |
 | `Delivery` | Accessibility insertion and clipboard fallback (ADR 0015) | Domain, Support |
 | `Editing` | On-device text rewriting with Apple Foundation Models (ADR 0018) | Domain, Support |
+| `Updates` | The update check: one request for release metadata, user-started (ADR 0026) | Domain, Support |
 | `UI` | SwiftUI views and view models | Domain, Support |
 | App target `LemmeType` | `@main`, `AppComposition` (the only composition root) | everything |
 

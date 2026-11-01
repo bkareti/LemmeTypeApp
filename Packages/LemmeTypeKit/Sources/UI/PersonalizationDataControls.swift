@@ -77,7 +77,11 @@ struct PersonalizationDataControls: View {
         .confirmationDialog(
             String(localized: "Delete all personalization?", bundle: .module), isPresented: $isConfirmingDelete
         ) {
-            Button(String(localized: "Delete All", bundle: .module), role: .destructive) {
+            Button(
+                String(
+                    localized: "Delete All", bundle: .module,
+                    comment: "Button label (verb): remove every item of this kind"), role: .destructive
+            ) {
                 Task {
                     await personalization.deleteAll()
                     modes.refresh()
@@ -97,7 +101,9 @@ struct PersonalizationDataControls: View {
         .alert(
             message ?? "", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })
         ) {
-            Button(String(localized: "OK", bundle: .module)) { message = nil }
+            Button(String(localized: "OK", bundle: .module, comment: "Button label: dismiss a message")) {
+                message = nil
+            }
         }
     }
 

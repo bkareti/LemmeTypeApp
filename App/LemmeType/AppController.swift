@@ -1,5 +1,6 @@
 import AppKit
 import Domain
+import Lifecycle
 import Shortcuts
 import Support
 import SwiftUI
@@ -19,6 +20,12 @@ final class AppController {
     let modes: ModesSettingsModel
     let models: ModelsSettingsModel
     private let history: any DictationHistoryManaging
+    let updates: UpdatesController
+    private let sentinel: LaunchSentinel
+    /// The one-time "closed unexpectedly" notice in the menu (E7-S4).
+    let recovery: RecoveryNoticeModel
+    /// Whether this instance marked the run as started, so only it clears the marker.
+    private var ownsRun = false
     private let residency: any ModelResidencyManaging
     private let systemConditions: any SystemConditionsMonitoring
     private var conditionsTask: Task<Void, Never>?
@@ -56,6 +63,9 @@ final class AppController {
         modes: ModesSettingsModel,
         models: ModelsSettingsModel,
         history: any DictationHistoryManaging,
+        updates: UpdatesController,
+        sentinel: LaunchSentinel,
+        recovery: RecoveryNoticeModel,
         residency: any ModelResidencyManaging,
         systemConditions: any SystemConditionsMonitoring,
         navigation: SettingsNavigation,
@@ -76,6 +86,9 @@ final class AppController {
         self.modes = modes
         self.models = models
         self.history = history
+        self.updates = updates
+        self.sentinel = sentinel
+        self.recovery = recovery
         self.residency = residency
         self.systemConditions = systemConditions
         self.navigation = navigation
@@ -96,6 +109,8 @@ final class AppController {
             openSettings: { [weak self] in self?.showSettings() },
             openDictationSettings: { [weak self] in self?.showSettings(pane: .dictation) },
             showAbout: { [weak self] in self?.showAbout() },
+            checkForUpdates: { [weak self] in self?.checkForUpdates() },
+            openDiagnostics: { [weak self] in self?.showSettings(pane: .diagnostics) },
             quit: { [weak self] in self?.quit() }
         )
     }
@@ -103,10 +118,12 @@ final class AppController {
     /// Deletes recordings left by a crash, registers the dictation shortcut,
     /// and opens onboarding on first launch (or after an unfinished setup).
     func launchFinished() {
+        beginRun()
         Task { [audioCapture = recorder.capture] in await audioCapture.purgeLeftovers() }
         Task { [modelAssets] in await modelAssets.removeUnusableFiles() }
         Task { [personalization] in await personalization.load() }
         Task { [history] in await history.purgeExpired() }
+        updates.startWeeklySchedule()
         watchSystemConditions()
         overlay.start()
         dictation.refreshInBackground()
@@ -161,6 +178,25 @@ final class AppController {
         }
     }
 
+    /// Reads how the last run ended and marks this one as started. Only the
+    /// instance that keeps running calls this; a second launch hands off first.
+    func beginRun() {
+        guard !ownsRun else { return }
+        ownsRun = true
+        if case .endedUnexpectedly(let version) = sentinel.begin() {
+            recovery.show(previousVersion: version)
+            diagnostics.record(
+                .lifecycle, "lifecycle.unclean-exit", ["previousVersion": .id(version ?? "unknown")])
+        }
+    }
+
+    /// A normal quit: the next launch will see nothing to report.
+    func endRun() {
+        guard ownsRun else { return }
+        sentinel.end()
+        ownsRun = false
+    }
+
     /// Stops any recording before the app exits so the microphone is released
     /// and partial audio is deleted.
     /// Memory pressure frees idle models; heat and Low Power Mode change the
@@ -189,9 +225,16 @@ final class AppController {
 
     /// Cancels a recording and pauses downloads, so their progress is kept (E5-S3).
     func prepareToTerminate() async {
+        updates.stop()
         recorder.requestCancel()
         await models.pauseAll()
         await recorder.settle()
+    }
+
+    /// The menu item: shows the Updates section and checks, because the user asked.
+    func checkForUpdates() {
+        showSettings(pane: .general)
+        Task { [model = updates.model] in await model.check() }
     }
 
     func showAbout() {

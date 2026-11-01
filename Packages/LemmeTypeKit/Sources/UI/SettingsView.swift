@@ -3,6 +3,8 @@ import SwiftUI
 /// Root of the settings window.
 public struct SettingsView: View {
     private let general: GeneralSettingsModel
+    private let updates: UpdatesSettingsModel
+    private let about: AboutModel
     private let dictation: DictationSettingsModel
     private let shortcut: ShortcutSettingsModel
     private let context: ContextSettingsModel
@@ -18,6 +20,8 @@ public struct SettingsView: View {
 
     public init(
         general: GeneralSettingsModel,
+        updates: UpdatesSettingsModel,
+        about: AboutModel,
         dictation: DictationSettingsModel,
         shortcut: ShortcutSettingsModel,
         context: ContextSettingsModel,
@@ -32,6 +36,8 @@ public struct SettingsView: View {
         navigation: SettingsNavigation
     ) {
         self.general = general
+        self.updates = updates
+        self.about = about
         self.dictation = dictation
         self.shortcut = shortcut
         self.context = context
@@ -49,7 +55,7 @@ public struct SettingsView: View {
     public var body: some View {
         TabView(selection: $navigation.selectedPane) {
             Tab(String(localized: "General", bundle: .module), systemImage: "gearshape", value: .general) {
-                GeneralSettingsView(model: general)
+                GeneralSettingsView(model: general, updates: updates, about: about)
             }
             Tab(String(localized: "Dictation", bundle: .module), systemImage: "waveform", value: .dictation) {
                 DictationTabView(dictation: dictation, personalization: personalization, modes: modes, models: models)
@@ -71,7 +77,7 @@ public struct SettingsView: View {
                 PermissionsSettingsView(model: permissions)
             }
             Tab(
-                String(localized: "Privacy", bundle: .module),
+                String(localized: "Privacy", bundle: .module, comment: "Noun: the settings pane about data use"),
                 systemImage: "hand.raised",
                 value: SettingsNavigation.Pane.privacy
             ) {
