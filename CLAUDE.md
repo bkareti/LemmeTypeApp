@@ -8,8 +8,8 @@ LemmeType is a privacy-first macOS menu-bar voice-writing app (global shortcut �
 record → local transcription → optional cleanup → insert text at the cursor of
 the previously focused app). Epics 1–3 (foundation, local transcription and delivery, context-aware
 writing and voice editing) are complete; Epics 4 (personalization and modes)
-5 (model management and performance), and 9 (multilingual dictation and
-speech-to-English) are in progress.
+5 (model management and performance), 9 (multilingual dictation and
+speech-to-English), and 10 (tone and style rewriting) are in progress.
 
 ## Project skills — use them
 
@@ -186,6 +186,15 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   (`DictationProcessing.languageIssue`). Non-English text is written Exact; a
   translation ends in `DictationIssue.reviewTranslation` (Insert, Copy,
   Translate Again, Discard) and is never delivered automatically.
+- Tone and style (ADR 0024): `StyleOptions` (tone, format, length; Neutral +
+  Plain text + Original = no rewrite) on `DictationMode`; `effectiveStyle` is
+  none for Exact. `TranscriptionPipeline+Style` runs the fixed
+  `StyleInstruction` through `TextRewriting` after personalization and before
+  context formatting, rejects results that `PreservationChecker` finds changed
+  a fact, and always ends in `DictationOutcome.review` (`DictationReview`:
+  rewrite, original, notice). The recorder holds it in memory only
+  (`reviewText/reviewOriginal`) with Insert, Use Original, Regenerate (no new
+  recognition), Copy, Discard.
 - Engine/mode selection (ADR 0016): `DictationSettingsModel` (UI) backs
   Settings › Dictation and the status menu. Mode, language, and
   `EnginePreference` are captured when recording starts and stored in the
@@ -208,7 +217,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management; 0023 multilingual dictation).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management; 0023 multilingual dictation; 0024 tone and style).
 
 ## Planning documents
 

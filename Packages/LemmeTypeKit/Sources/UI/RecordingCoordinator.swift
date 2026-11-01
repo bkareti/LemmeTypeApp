@@ -79,6 +79,10 @@ public final class RecordingCoordinator {
     var session: DictationSession?
     /// Text kept in memory for Copy / Retry Delivery; never logged.
     var pendingTranscript: String?
+    /// The rewrite under review and the text it came from (E10-S4); never logged.
+    var pendingReview: DictationReview?
+    /// Whether the original is shown instead of the rewrite; Copy copies what is shown (E10-S4).
+    public internal(set) var reviewShowsOriginal = false
 
     public init(
         capture: any AudioCapturing,
@@ -326,7 +330,28 @@ extension RecordingCoordinator {
     /// The translation waiting to be inserted or copied, while it is reviewed
     /// (E9-S5). In memory only; cleared with the session.
     public var reviewText: String? {
-        attention == .reviewTranslation ? pendingTranscript : nil
+        switch attention {
+        case .reviewTranslation, .reviewRewrite: pendingTranscript
+        default: nil
+        }
+    }
+
+    /// The text from before the rewrite, while a rewrite is reviewed (E10-S4).
+    public var reviewOriginal: String? {
+        if case .reviewRewrite = attention, pendingReview?.isRewritten == true { return pendingReview?.original }
+        return nil
+    }
+
+    /// Switches the review between the rewrite and the text it came from.
+    public func toggleReviewOriginal() {
+        guard reviewOriginal != nil else { return }
+        reviewShowsOriginal.toggle()
+    }
+
+    /// The tone, format, and length of the rewrite under review (E10-S4).
+    public var reviewStyle: StyleOptions? {
+        if case .reviewRewrite = attention { return pendingReview?.style }
+        return nil
     }
 
     /// Recording, processing, or holding a recording for a decision.

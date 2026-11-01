@@ -212,6 +212,7 @@ final class RecordingSpy: DictationProcessing {
         var libraries: [PersonalizationLibrary] = []
         var outcomes: [DictationOutcome] = []
         var deliveries: [String] = []
+        var regenerations: [String] = []
         var delay: Duration = .zero
     }
 
@@ -226,6 +227,8 @@ final class RecordingSpy: DictationProcessing {
     var outputs: [SpeechOutput] { state.withLock { $0.outputs } }
     var libraries: [PersonalizationLibrary] { state.withLock { $0.libraries } }
     var deliveries: [String] { state.withLock { $0.deliveries } }
+    /// The texts rewritten again by Regenerate (E10-S4).
+    var regenerations: [String] { state.withLock { $0.regenerations } }
 
     /// Makes every recording start be refused with `issue` (E9-S3).
     func refuseLanguage(with issue: DictationIssue?) {
@@ -269,6 +272,16 @@ final class RecordingSpy: DictationProcessing {
         }
         if case .delivered = outcome { session.discardAudio() }
         return outcome
+    }
+
+    func regenerate(
+        _ original: String, for session: DictationSession,
+        updates: @escaping @Sendable (ProcessingUpdate) -> Void
+    ) async -> DictationOutcome {
+        state.withLock { state in
+            state.regenerations.append(original)
+            return state.outcomes.isEmpty ? DictationOutcome.cancelled : state.outcomes.removeFirst()
+        }
     }
 
     func deliver(_ transcript: String, for session: DictationSession) async -> DictationOutcome {

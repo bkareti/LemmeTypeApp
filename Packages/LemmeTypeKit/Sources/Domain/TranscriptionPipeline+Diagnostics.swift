@@ -32,6 +32,17 @@ extension TranscriptionPipeline {
                     "task": .id(Self.task(for: session).rawValue),
                     "audioSeconds": .seconds(session.audio.duration), "processingSeconds": .seconds(seconds),
                 ])
+        case .review(let review, let engine):
+            diagnostics.record(
+                .recognition, "session.review",
+                [
+                    "style": .id(review.style.identifier), "rewritten": .flag(review.isRewritten),
+                    "notice": .id(review.notice?.identifier ?? "none"),
+                    "engine": .id(engine?.rawValue ?? "none"), "mode": .id(session.mode.rawValue),
+                    "language": .id(Self.languageIdentifier(session.language)),
+                    "rewriteSeconds": .seconds(run.rewriting.map(Self.seconds) ?? 0),
+                    "audioSeconds": .seconds(session.audio.duration), "processingSeconds": .seconds(seconds),
+                ])
         case .cancelled:
             diagnostics.record(.recognition, "session.cancelled", ["processingSeconds": .seconds(seconds)])
         }
