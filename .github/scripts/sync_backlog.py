@@ -24,6 +24,10 @@ EPIC_2_PATH = ROOT / "docs" / "backlog" / "epic-02-local-dictation.md"
 EPIC_3_PATH = ROOT / "docs" / "backlog" / "epic-03-context-aware-writing.md"
 EPIC_4_PATH = ROOT / "docs" / "backlog" / "epic-04-personalization.md"
 EPIC_5_PATH = ROOT / "docs" / "backlog" / "epic-05-model-management.md"
+EPIC_6_PATH = ROOT / "docs" / "backlog" / "epic-06-privacy-security.md"
+EPIC_7_PATH = ROOT / "docs" / "backlog" / "epic-07-quality-release.md"
+EPIC_9_PATH = ROOT / "docs" / "backlog" / "epic-09-multilingual-dictation.md"
+EPIC_10_PATH = ROOT / "docs" / "backlog" / "epic-10-tone-and-style.md"
 # Refined epics: number -> (backlog file, story phase label, expected story count).
 REFINED_EPICS = {
     1: (EPIC_1_PATH, "phase:mvp", 8),
@@ -31,7 +35,14 @@ REFINED_EPICS = {
     3: (EPIC_3_PATH, "phase:post-mvp", 7),
     4: (EPIC_4_PATH, "phase:post-mvp", 9),
     5: (EPIC_5_PATH, "phase:post-mvp", 7),
+    6: (EPIC_6_PATH, "phase:mvp", 8),
+    7: (EPIC_7_PATH, "phase:mvp", 9),
+    9: (EPIC_9_PATH, "phase:post-mvp", 6),
+    10: (EPIC_10_PATH, "phase:post-mvp", 5),
 }
+# Epics 9 and 10 are not in roadmap.md; their title comes from the backlog file heading.
+BACKLOG_ONLY_EPICS = (9, 10)
+EPIC_COUNT = 8 + len(BACKLOG_ONLY_EPICS)
 
 LABELS = {
     "epic": ("5319e7", "Product outcome containing related delivery stories"),
@@ -51,6 +62,10 @@ LABELS = {
     "area:modes": ("d4c5f9", "Dictation modes and per-application mode rules"),
     "area:models": ("f9d0c4", "Model catalog, downloads, verification, and model settings"),
     "area:performance": ("c2e0c6", "Model residency, performance profiles, and system conditions"),
+    "area:privacy": ("0e8a16", "Data inventory, retention, history, and privacy controls"),
+    "area:security": ("b60205", "Network, entitlement, dependency, and threat-model guardrails"),
+    "area:release": ("1d76db", "Packaging, signing, notarization, updates, and rollback"),
+    "area:quality": ("fbca04", "Accessibility, localization, compatibility, and the quality gate"),
 }
 
 EPIC_LABELS = {
@@ -59,9 +74,11 @@ EPIC_LABELS = {
     3: ["epic", "platform:macOS", "phase:post-mvp", "area:context", "area:voice-editing"],
     4: ["epic", "platform:macOS", "phase:post-mvp", "area:personalization", "area:modes"],
     5: ["epic", "platform:macOS", "phase:post-mvp", "area:models", "area:performance"],
-    6: ["epic", "platform:macOS", "phase:mvp"],
-    7: ["epic", "platform:macOS", "phase:mvp"],
+    6: ["epic", "platform:macOS", "phase:mvp", "area:privacy", "area:security"],
+    7: ["epic", "platform:macOS", "phase:mvp", "area:release", "area:quality"],
     8: ["epic", "future"],
+    9: ["epic", "platform:macOS", "phase:post-mvp", "area:transcription"],
+    10: ["epic", "platform:macOS", "phase:post-mvp", "area:voice-editing", "area:modes"],
 }
 
 STORY_AREA_LABELS = {
@@ -106,6 +123,34 @@ STORY_AREA_LABELS = {
     "E5-S5": ["area:performance"],
     "E5-S6": ["area:performance"],
     "E5-S7": ["area:models", "area:performance"],
+    "E6-S1": ["area:privacy"],
+    "E6-S2": ["area:security", "area:privacy"],
+    "E6-S3": ["area:privacy"],
+    "E6-S4": ["area:privacy"],
+    "E6-S5": ["area:privacy"],
+    "E6-S6": ["area:privacy", "area:security"],
+    "E6-S7": ["area:security"],
+    "E6-S8": ["area:security", "area:privacy"],
+    "E7-S1": ["area:release"],
+    "E7-S2": ["area:release"],
+    "E7-S3": ["area:release", "area:privacy"],
+    "E7-S4": ["area:quality", "area:foundation"],
+    "E7-S5": ["area:quality"],
+    "E7-S6": ["area:quality"],
+    "E7-S7": ["area:quality"],
+    "E7-S8": ["area:quality", "area:release"],
+    "E7-S9": ["area:release"],
+    "E9-S1": ["area:transcription"],
+    "E9-S2": ["area:transcription"],
+    "E9-S3": ["area:transcription"],
+    "E9-S4": ["area:transcription"],
+    "E9-S5": ["area:transcription"],
+    "E9-S6": ["area:transcription"],
+    "E10-S1": ["area:voice-editing", "area:modes"],
+    "E10-S2": ["area:voice-editing", "area:modes"],
+    "E10-S3": ["area:voice-editing", "area:modes"],
+    "E10-S4": ["area:voice-editing", "area:modes"],
+    "E10-S5": ["area:voice-editing", "area:modes"],
 }
 
 
@@ -149,6 +194,25 @@ def ensure_labels() -> None:
         )
 
 
+def refined_epic_body(number: int) -> tuple[str, Path]:
+    source_path = REFINED_EPICS[number][0]
+    source = source_path.read_text(encoding="utf-8")
+    body_start = source.index("## Epic issue body") + len("## Epic issue body")
+    first_story = re.search(rf"^## E{number}-S1 —", source, re.MULTILINE)
+    if first_story is None:
+        raise RuntimeError(f"No first story found in {source_path}")
+    body = source[body_start : first_story.start()].strip().removesuffix("---").strip()
+    return body, source_path
+
+
+def with_planning_source(body: str, source_path: Path) -> str:
+    relative = source_path.relative_to(ROOT)
+    return (
+        f"{body}\n\n## Planning source\n\n"
+        f"[`{relative}`](https://github.com/{REPOSITORY}/blob/main/{relative})"
+    )
+
+
 def roadmap_epics() -> list[IssueSpec]:
     text = ROADMAP_PATH.read_text(encoding="utf-8")
     matches = list(re.finditer(r"^## Epic (\d+) — (.+)$", text, re.MULTILINE))
@@ -161,29 +225,43 @@ def roadmap_epics() -> list[IssueSpec]:
             if dependency_order != -1:
                 end = dependency_order
         body = text[match.end() : end].strip()
-        source_path = REFINED_EPICS[number][0] if number in REFINED_EPICS else ROADMAP_PATH
+        source_path = ROADMAP_PATH
         if number in REFINED_EPICS:
-            source = source_path.read_text(encoding="utf-8")
-            body_start = source.index("## Epic issue body") + len("## Epic issue body")
-            first_story = re.search(rf"^## E{number}-S1 —", source, re.MULTILINE)
-            if first_story is None:
-                raise RuntimeError(f"No first story found in {source_path}")
-            body = source[body_start : first_story.start()].strip().removesuffix("---").strip()
-        relative = source_path.relative_to(ROOT)
-        body += (
-            "\n\n## Planning source\n\n"
-            f"[`{relative}`](https://github.com/{REPOSITORY}/blob/main/{relative})"
-        )
+            body, source_path = refined_epic_body(number)
         specs.append(
             IssueSpec(
                 key=f"EPIC-{number}",
                 title=f"[Epic {number}] {match.group(2)}",
-                body=body,
+                body=with_planning_source(body, source_path),
                 labels=EPIC_LABELS[number],
             )
         )
-    if len(specs) != 8:
-        raise RuntimeError(f"Expected 8 epics, found {len(specs)}")
+    specs.extend(backlog_only_epics())
+    if len(specs) != EPIC_COUNT:
+        raise RuntimeError(f"Expected {EPIC_COUNT} epics, found {len(specs)}")
+    return specs
+
+
+def backlog_only_epics() -> list[IssueSpec]:
+    specs: list[IssueSpec] = []
+    for number in BACKLOG_ONLY_EPICS:
+        body, source_path = refined_epic_body(number)
+        heading = re.search(
+            rf"^# Epic {number} — (.+)$",
+            source_path.read_text(encoding="utf-8"),
+            re.MULTILINE,
+        )
+        if heading is None:
+            raise RuntimeError(f"No '# Epic {number} — Title' heading in {source_path}")
+        title = heading.group(1)
+        specs.append(
+            IssueSpec(
+                key=f"EPIC-{number}",
+                title=f"[Epic {number}] {title[0].upper()}{title[1:]}",
+                body=with_planning_source(body, source_path),
+                labels=EPIC_LABELS[number],
+            )
+        )
     return specs
 
 
@@ -341,8 +419,8 @@ def main() -> int:
     known = existing_issues()
 
     epic_issues: dict[int, dict[str, object]] = {}
-    for index, spec in enumerate(roadmap_epics(), start=1):
-        epic_issues[index] = ensure_issue(spec, known)
+    for spec in roadmap_epics():
+        epic_issues[int(spec.key.removeprefix("EPIC-"))] = ensure_issue(spec, known)
 
     story_count = 0
     for number, (path, phase, expected) in REFINED_EPICS.items():
@@ -356,7 +434,7 @@ def main() -> int:
 
     for number, (_, _, expected) in REFINED_EPICS.items():
         verify(epic_issues[number], expected)
-    print(f"Backlog synchronized: 8 epics and {story_count} development stories.")
+    print(f"Backlog synchronized: {EPIC_COUNT} epics and {story_count} development stories.")
     return 0
 
 

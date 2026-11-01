@@ -6,10 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 LemmeType is a privacy-first macOS menu-bar voice-writing app (global shortcut →
 record → local transcription → optional cleanup → insert text at the cursor of
-the previously focused app). Epics 1–3 (foundation, local transcription and delivery, context-aware
-writing and voice editing) are complete; Epics 4 (personalization and modes)
-5 (model management and performance), 9 (multilingual dictation and
-speech-to-English), and 10 (tone and style rewriting) are in progress.
+the previously focused app). Epics 1–5, 9, and 10 are complete: foundation,
+local transcription and delivery, context-aware writing and voice editing,
+personalization and modes, model management and performance, multilingual
+dictation and speech-to-English, and tone and style rewriting. Epics 6
+(privacy, security, and data controls) and 7 (quality, packaging, and release
+readiness) are refined into stories in `docs/backlog/` and in progress. Epic 8
+(iPhone and iPad companion) exists only in `docs/roadmap.md` and has no stories yet.
 
 ## Project skills — use them
 
@@ -222,7 +225,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
 ## Planning documents
 
 - `docs/product-brief.md`, `docs/roadmap.md` — scope, non-goals, epic exit criteria.
-- `docs/backlog/epic-0{1,2,3,4,5}-*.md` — development-ready stories (source of truth
+- `docs/backlog/epic-{01,02,03,04,05,06,07,09,10}-*.md` — development-ready stories (source of truth
   for acceptance criteria). Readiness reviews go in `docs/backlog/reviews/`.
 - `docs/testing/manual-acceptance.md` — checks that cannot run on CI.
 - `docs/testing/insertion-matrix.md` — per-app insertion results and failure evidence.
@@ -256,9 +259,13 @@ sub-issues on `bkareti/LemmeTypeApp` (needs authenticated `gh`).
   8) then `## Dependency order` in `roadmap.md`; backlog files need
   `## Epic issue body`, `## EN-SM — Title` stories separated by `---`, and a
   final `## Epic N story order` section.
+- Epics 9 and 10 are not in `roadmap.md`; they are listed in
+  `BACKLOG_ONLY_EPICS` and take their title from the backlog file's
+  `# Epic N — Title` heading (first letter capitalised), so 10 epics in total.
 - Refined epics are listed in `REFINED_EPICS` (backlog file, story phase
-  label, story count: 8 for Epic 1, 10 for Epic 2, 7 for Epic 3, 9 for Epic 4, 7 for Epic 5). Adding or
-  removing a story requires updating `STORY_AREA_LABELS` and that count.
+  label, story count: 8 for Epic 1, 10 for Epic 2, 7 for Epic 3, 9 for Epic 4,
+  7 for Epic 5, 8 for Epic 6, 9 for Epic 7, 6 for Epic 9, 5 for Epic 10).
+  Adding or removing a story requires updating `STORY_AREA_LABELS` and that count.
 
 ## Product constraints that shape implementation
 
