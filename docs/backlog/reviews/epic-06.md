@@ -82,4 +82,4 @@ its Privacy pane.
 | Diagnostics canaries and schema | `DiagnosticsPrivacyTests`, `DiagnosticsReportSchemaTests` |
 | Entitlements, usage strings, dependencies | `scripts/tests/test-security-config.py`, `make security-check` |
 | Threat model drift | `scripts/tests/test-privacy-docs.py`, `make privacy-docs-check` |
-| Real Mac network monitor, history, Delete All | `docs/testing/manual-acceptance.md` (MA-47 to MA-52) |
+| Real Mac network monitor, history, Delete All | `docs/testing/manual-acceptance.md` (MA-54 to MA-58) |
