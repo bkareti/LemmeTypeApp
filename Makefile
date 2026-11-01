@@ -8,7 +8,7 @@ DESTINATION := platform=macOS,arch=arm64
 XCODEBUILD  := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED)
 SWIFT_DIRS  := App Packages/LemmeTypeKit/Sources Packages/LemmeTypeKit/Tests Packages/LemmeTypeKit/Package.swift
 
-.PHONY: bootstrap generate build test test-unit test-app test-ui lint format privacy-check ci run clean benchmark release-check
+.PHONY: bootstrap generate build test test-unit test-app test-ui lint format privacy-check network-check security-check privacy-docs-check ci run clean benchmark release-check
 
 bootstrap: ## Verify required tools are installed
 	@command -v xcodegen >/dev/null || { echo "Missing xcodegen: brew install xcodegen"; exit 1; }
@@ -41,7 +41,19 @@ lint: ## swift-format lint and SwiftLint, warnings fail
 privacy-check: ## Fail if captured audio was left behind
 	scripts/check-no-captured-audio.sh
 
-ci: lint build test-unit test-app privacy-check ## What CI runs on every pull request
+network-check: ## Fail if a file outside the allowlist uses a network API
+	scripts/tests/test-network-usage.sh
+	scripts/check-network-usage.sh
+
+security-check: ## Fail on an unreviewed entitlement, permission string, dependency, or hardening change
+	python3 -I scripts/tests/test-security-config.py
+	python3 -I scripts/check-security-config.py
+
+privacy-docs-check: ## Fail if the threat model or privacy checklist cites something that does not exist
+	python3 -I scripts/tests/test-privacy-docs.py
+	python3 -I scripts/check-privacy-docs.py
+
+ci: lint build test-unit test-app privacy-check network-check security-check privacy-docs-check ## What CI runs on every pull request
 
 benchmark: ## End-to-end benchmark on this Mac + threshold check (not on CI)
 	scripts/run-e2e-benchmark.sh

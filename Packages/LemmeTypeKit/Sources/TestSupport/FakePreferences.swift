@@ -23,6 +23,7 @@ public final class FakePreferences: AppPreferences {
         var whisperModel: WhisperModelChoice = .automatic
         var performanceProfile: PerformanceProfile = .automatic
         var modelIdleUnload: IdleUnloadPolicy = .default
+        var historyRetention: HistoryRetention = .off
     }
 
     private let values: Mutex<Values>
@@ -60,6 +61,11 @@ public final class FakePreferences: AppPreferences {
                 voiceEditShortcut: nil,
                 contextExcludedApplications: contextExcludedApplications
             ))
+    }
+
+    public var historyRetention: HistoryRetention {
+        get { values.withLock { $0.historyRetention } }
+        set { values.withLock { $0.historyRetention = newValue } }
     }
 
     public var speechOutput: SpeechOutput {

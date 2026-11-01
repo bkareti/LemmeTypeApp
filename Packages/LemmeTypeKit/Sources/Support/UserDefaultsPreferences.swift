@@ -144,6 +144,11 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         set { defaults.set(newValue.identifier, forKey: Key.modelIdleUnload) }
     }
 
+    public var historyRetention: HistoryRetention {
+        get { defaults.string(forKey: Key.historyRetention).flatMap(HistoryRetention.init(rawValue:)) ?? .off }
+        set { defaults.set(newValue.rawValue, forKey: Key.historyRetention) }
+    }
+
     private enum Key {
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let dictationShortcut = "dictationShortcut"
@@ -164,5 +169,6 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         static let whisperModel = "whisperModel"
         static let performanceProfile = "performanceProfile"
         static let modelIdleUnload = "modelIdleUnload"
+        static let historyRetention = "historyRetention"
     }
 }

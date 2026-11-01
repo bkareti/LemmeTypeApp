@@ -12,6 +12,7 @@ import Support
 /// from any other session are ignored (see `RecordingCoordinator+Processing`).
 @MainActor
 @Observable
+// swiftlint:disable:next type_body_length
 public final class RecordingCoordinator {
     public enum RecoveryAction: Equatable, Sendable {
         case openPermissions
@@ -59,6 +60,8 @@ public final class RecordingCoordinator {
     let preferences: any AppPreferences
     let speechAuthorizer: (any SpeechRecognitionAuthorizing)?
     let textCopier: (any TextCopying)?
+    /// Records text the user copies from a review or an issue (E6-S3).
+    let history: any DictationHistoryRecording
     let finishedDisplay: Duration
     let failureDisplay: Duration
     let attentionDisplay: Duration
@@ -91,6 +94,7 @@ public final class RecordingCoordinator {
         preferences: any AppPreferences,
         speechAuthorizer: (any SpeechRecognitionAuthorizing)? = nil,
         textCopier: (any TextCopying)? = nil,
+        history: any DictationHistoryRecording = DiscardingHistory(),
         finishedDisplay: Duration = .seconds(1.5),
         failureDisplay: Duration = .seconds(8),
         attentionDisplay: Duration = .seconds(120),
@@ -108,6 +112,7 @@ public final class RecordingCoordinator {
         self.writingMode = preferences.writingMode
         self.speechAuthorizer = speechAuthorizer
         self.textCopier = textCopier
+        self.history = history
         self.finishedDisplay = finishedDisplay
         self.failureDisplay = failureDisplay
         self.attentionDisplay = attentionDisplay

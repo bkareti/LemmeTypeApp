@@ -32,7 +32,9 @@ publishes, tags, or uploads anything.
 4. **Quality gate** — `make lint`, `make test`, CI green, and every step in
    `docs/testing/manual-acceptance.md` executed on a clean user account, with
    results recorded in the PR.
-5. **Privacy and performance gate** — verify Local mode is network-silent
+5. **Privacy and performance gate** — complete `docs/security/privacy-release-checklist.md`
+   (paste it into the release PR; `make privacy-docs-check` verifies it cites real
+   checks). Verify Local mode is network-silent
    (`scripts/check-network-silence.sh --attach` plus Little Snitch or `nettop`
    during a dictation, MA-31), diagnostics contain no canary content, no new
    entitlements or TCC usage strings since the last release without

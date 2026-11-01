@@ -1,0 +1,10 @@
+# Privacy usage descriptions the app may declare in its Info.plist
+# (Config/LemmeType.xcconfig: INFOPLIST_KEY_<key>).
+# Enforced by scripts/check-security-config.py (make security-check).
+#
+# Format: <Info.plist key>  # <why the app needs it>
+# A new usage string means a new permission prompt for every user: review it
+# with the Privacy pane text (E6-S5) and the threat model.
+
+NSMicrophoneUsageDescription  # Dictation records the microphone while the shortcut is held
+NSSpeechRecognitionUsageDescription  # Only if the user chooses the Apple Speech engine (on-device mode)

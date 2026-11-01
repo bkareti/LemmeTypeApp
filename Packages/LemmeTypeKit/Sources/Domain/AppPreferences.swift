@@ -38,6 +38,8 @@ public protocol AppPreferences: AnyObject, Sendable {
     var performanceProfile: PerformanceProfile { get set }
     /// How long models stay loaded after the last session (E5-S4). Five minutes by default.
     var modelIdleUnload: IdleUnloadPolicy { get set }
+    /// How long accepted dictations are kept (E6-S3). Off by default: nothing is stored.
+    var historyRetention: HistoryRetention { get set }
 }
 
 extension AppPreferences {

@@ -82,7 +82,13 @@ Rules:
 - Never log, persist, or include in errors: audio samples or levels, transcripts,
   text from other apps, clipboard contents, or file contents. User vocabulary,
   replacements, and snippets are persisted only by the personalization store
-  (ADR 0020) and are never logged or put in diagnostics or errors.
+  (ADR 0020) and are never logged or put in diagnostics or errors. The final
+  text of a dictation is persisted only by the opt-in history (ADR 0025), which
+  is off by default and holds no audio, cursor context, or app identity.
+- Network code lives only in the files listed in
+  `docs/security/network-allowlist.txt` (`make network-check`). Entitlements,
+  usage strings, and dependencies are allowlisted in `docs/security/`
+  (`make security-check`); changing one needs a justification and review.
 - Log only through `Support.Log` (wraps `os.Logger`). Interpolated values are
   `.private` unless they are enums, identifiers, counts, or durations.
 - No `print`, `NSLog`, or `debugPrint` in production code.
