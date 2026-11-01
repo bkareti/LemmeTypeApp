@@ -53,6 +53,11 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         set { defaults.set(newValue, forKey: Key.dictationLanguage) }
     }
 
+    public var speechOutput: SpeechOutput {
+        get { defaults.string(forKey: Key.speechOutput).flatMap(SpeechOutput.init(rawValue:)) ?? .original }
+        set { defaults.set(newValue.rawValue, forKey: Key.speechOutput) }
+    }
+
     public var writingMode: WritingMode {
         get { defaults.string(forKey: Key.writingMode).flatMap(WritingMode.init(rawValue:)) ?? .exact }
         set { defaults.set(newValue.rawValue, forKey: Key.writingMode) }
@@ -146,6 +151,7 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         static let audioInput = "audioInput"
         static let playsFeedbackSounds = "playsFeedbackSounds"
         static let dictationLanguage = "dictationLanguage"
+        static let speechOutput = "speechOutput"
         static let writingMode = "writingMode"
         static let dictationMode = "dictationMode"
         static let selectedEngine = "selectedEngine"

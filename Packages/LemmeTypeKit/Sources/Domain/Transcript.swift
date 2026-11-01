@@ -25,8 +25,12 @@ public struct Transcript: Equatable, Sendable {
     public let text: String
     public let segments: [TranscriptSegment]
     public let engine: RecognitionEngineID
-    /// BCP 47 language the engine recognised.
+    /// BCP 47 language of ``text``: the spoken language, or `en` when the
+    /// engine translated.
     public let language: String
+    /// The language that was spoken, when the engine detected or was told it
+    /// (E9-S2). Differs from ``language`` after a translation.
+    public let spokenLanguage: String?
     /// Length of the recording.
     public let audioDuration: TimeInterval
     /// Time the engine spent recognising.
@@ -37,6 +41,7 @@ public struct Transcript: Equatable, Sendable {
         segments: [TranscriptSegment] = [],
         engine: RecognitionEngineID,
         language: String,
+        spokenLanguage: String? = nil,
         audioDuration: TimeInterval,
         processingDuration: TimeInterval
     ) {
@@ -44,6 +49,7 @@ public struct Transcript: Equatable, Sendable {
         self.segments = segments
         self.engine = engine
         self.language = language
+        self.spokenLanguage = spokenLanguage
         self.audioDuration = audioDuration
         self.processingDuration = processingDuration
     }

@@ -13,6 +13,8 @@ final class FakeWhisperRuntime: WhisperRuntime {
     let segments: [TranscriptSegment]
     let loadDelay: Duration
     let inferenceBlocksUntilAborted: Bool
+    /// What detection reports (E9-S2).
+    let probabilities: [LanguageProbability]
 
     init(
         segments: [TranscriptSegment] = [
@@ -20,11 +22,13 @@ final class FakeWhisperRuntime: WhisperRuntime {
             TranscriptSegment(text: " on Wednesday.", start: 0.6, duration: 0.8),
         ],
         loadDelay: Duration = .zero,
-        inferenceBlocksUntilAborted: Bool = false
+        inferenceBlocksUntilAborted: Bool = false,
+        probabilities: [LanguageProbability] = []
     ) {
         self.segments = segments
         self.loadDelay = loadDelay
         self.inferenceBlocksUntilAborted = inferenceBlocksUntilAborted
+        self.probabilities = probabilities
     }
 
     var loadCount: Int { state.withLock { $0.loads } }
@@ -55,6 +59,12 @@ final class FakeWhisperRuntime: WhisperRuntime {
         state.withLock { $0.live -= 1 }
     }
 
+    fileprivate let inferences = Mutex<[WhisperInference]>([])
+    /// Every inference request, in order (E9-S2).
+    var receivedInferences: [WhisperInference] { inferences.withLock { $0 } }
+    fileprivate let detections = Mutex<Int>(0)
+    var detectionCount: Int { detections.withLock { $0 } }
+
     private let prompts = Mutex<[String?]>([])
     var receivedPrompts: [String?] { prompts.withLock { $0 } }
 
@@ -73,12 +83,18 @@ final class FakeWhisperRuntime: WhisperRuntime {
             runtime.released()
         }
 
+        func detectLanguage(_ samples: [Float], threads: Int) throws(RecognitionError) -> [LanguageProbability] {
+            runtime.detections.withLock { $0 += 1 }
+            return runtime.probabilities
+        }
+
         func transcribe(
             _ samples: [Float],
             _ inference: WhisperInference,
             shouldAbort: @escaping @Sendable () -> Bool,
             progress: @escaping @Sendable (Double) -> Void
         ) throws(RecognitionError) -> [TranscriptSegment] {
+            runtime.inferences.withLock { $0.append(inference) }
             runtime.recordPrompt(inference.prompt)
             runtime.threads.withLock { $0.append(inference.threads) }
             progress(0.5)

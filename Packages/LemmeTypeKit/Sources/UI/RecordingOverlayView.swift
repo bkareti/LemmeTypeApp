@@ -64,6 +64,18 @@ struct RecordingOverlayView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("overlay.message")
             }
+            if let review = coordinator.reviewText {
+                Text(review)
+                    .font(.body)
+                    .lineLimit(8)
+                    .textSelection(.enabled)
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
+                    .accessibilityLabel(Text(String(localized: "Translation", bundle: .module)))
+                    .accessibilityValue(Text(review))
+                    .accessibilityIdentifier("overlay.review.text")
+            }
             if coordinator.attention != nil {
                 attentionButtons
             }
@@ -124,7 +136,7 @@ struct RecordingOverlayView: View {
         let primary = Array(actions.filter { $0 != .discard }.prefix(3))
         return HStack {
             ForEach(primary, id: \.identifier) { action in
-                Button(action.title(engineName: \.displayName)) { coordinator.perform(action) }
+                Button(title(of: action)) { coordinator.perform(action) }
                     .accessibilityIdentifier("overlay.action.\(action.identifier)")
             }
             Spacer(minLength: 0)
@@ -134,6 +146,14 @@ struct RecordingOverlayView: View {
             }
         }
         .controlSize(.small)
+    }
+
+    /// Retry reads "Translate Again" while a translation is being reviewed.
+    private func title(of action: DictationAction) -> String {
+        if action == .retry, coordinator.attention == .reviewTranslation {
+            return String(localized: "Translate Again", bundle: .module)
+        }
+        return action.title(engineName: \.displayName)
     }
 
     private var appearance: Appearance {
@@ -154,6 +174,8 @@ struct RecordingOverlayView: View {
             Appearance("xmark.circle", .secondary, String(localized: "Cancelled", bundle: .module))
         case .failed:
             Appearance("exclamationmark.triangle.fill", .yellow, String(localized: "Couldn’t record", bundle: .module))
+        case .needsAttention(.reviewTranslation):
+            Appearance("text.bubble.fill", .blue, String(localized: "Review translation", bundle: .module))
         case .needsAttention:
             Appearance(
                 "exclamationmark.bubble.fill", .orange, String(localized: "Needs your decision", bundle: .module))

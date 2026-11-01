@@ -11,6 +11,7 @@ struct DictationSettingsView: View {
     var body: some View {
         Form {
             writingSection
+            languageSection
             engineSection
             modelSection
             deliverySection
@@ -55,6 +56,72 @@ struct DictationSettingsView: View {
         }
     }
 
+    // MARK: Language and output (E9-S3)
+
+    private var languageSection: some View {
+        Section {
+            Picker(
+                String(localized: "Language you speak", bundle: .module),
+                selection: Binding(get: { model.language }, set: { model.setLanguage($0) })
+            ) {
+                ForEach(model.languageChoices, id: \.self) { language in
+                    Text(DictationSettingsModel.settingLanguageName(language)).tag(language)
+                }
+            }
+            .accessibilityIdentifier("dictation.language")
+
+            if let badge = model.languageStatus?.badge {
+                Text(
+                    String(
+                        localized:
+                            "\(badge): this language is being evaluated. It can be chosen, but its accuracy has not been measured yet.",
+                        bundle: .module)
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("dictation.language.status")
+            }
+
+            Picker(
+                String(localized: "Text you get", bundle: .module),
+                selection: Binding(get: { model.speechOutput }, set: { model.setSpeechOutput($0) })
+            ) {
+                ForEach(SpeechOutput.allCases, id: \.self) { output in
+                    Text(output.displayName).tag(output)
+                }
+            }
+            .accessibilityIdentifier("dictation.output")
+            Text(model.speechOutput.summary)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("dictation.output.summary")
+
+            HStack {
+                Image(systemName: model.readiness.isReady ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                    .foregroundStyle(model.readiness.isReady ? Color.green : Color.orange)
+                    .accessibilityHidden(true)
+                Text(model.readiness.userMessage)
+                    .accessibilityIdentifier("dictation.readiness")
+                Spacer()
+                if case .needsModel = model.readiness {
+                    Button(String(localized: "Manage Models…", bundle: .module), action: showModels)
+                        .accessibilityIdentifier("dictation.readiness.models")
+                }
+            }
+        } header: {
+            Text(String(localized: "Language", bundle: .module))
+        } footer: {
+            Text(
+                String(
+                    localized:
+                        "Source language and output are separate: you can speak Hindi and get Hindi, or speak Hindi and get English. Everything runs on this Mac.",
+                    bundle: .module)
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+    }
+
     // MARK: Engine
 
     private var engineSection: some View {
@@ -92,16 +159,6 @@ struct DictationSettingsView: View {
                 isOn: Binding(get: { model.fallsBackToReadyEngine }, set: { model.setFallsBackToReadyEngine($0) })
             )
             .accessibilityIdentifier("dictation.engine.fallback")
-
-            Picker(
-                String(localized: "Language", bundle: .module),
-                selection: Binding(get: { model.language }, set: { model.setLanguage($0) })
-            ) {
-                ForEach(model.languages, id: \.self) { language in
-                    Text(DictationSettingsModel.languageName(language)).tag(language)
-                }
-            }
-            .accessibilityIdentifier("dictation.language")
         } header: {
             Text(String(localized: "Recognition", bundle: .module))
         } footer: {

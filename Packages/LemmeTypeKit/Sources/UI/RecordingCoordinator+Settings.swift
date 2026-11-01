@@ -6,6 +6,7 @@ import Domain
 struct SessionSettings: Sendable {
     let resolved: ResolvedMode
     let language: String
+    let speechOutput: SpeechOutput
     let enginePreference: EnginePreference
     let personalization: PersonalizationLibrary
 
@@ -13,6 +14,7 @@ struct SessionSettings: Sendable {
         resolved = ModeResolver.resolve(
             bundleIdentifier: target?.bundleIdentifier, defaultMode: preferences.dictationMode, library: library)
         language = resolved.mode.language ?? preferences.dictationLanguage
+        speechOutput = resolved.mode.speechOutput ?? preferences.speechOutput
         enginePreference = EnginePreference(
             selected: resolved.mode.engine ?? preferences.selectedEngine,
             fallsBackAutomatically: preferences.fallsBackToReadyEngine)
@@ -22,7 +24,8 @@ struct SessionSettings: Sendable {
     func session(audio: RecordedAudio, target: ActivationTarget?, purpose: SessionPurpose) -> DictationSession {
         DictationSession(
             audio: audio, target: target, mode: resolved.mode.writingMode, dictationMode: resolved.mode,
-            modeSource: resolved.source, purpose: purpose, language: language, enginePreference: enginePreference,
+            modeSource: resolved.source, purpose: purpose, language: language, speechOutput: speechOutput,
+            enginePreference: enginePreference,
             personalization: personalization)
     }
 }

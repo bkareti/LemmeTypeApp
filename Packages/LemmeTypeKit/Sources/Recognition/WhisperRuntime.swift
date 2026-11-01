@@ -10,15 +10,28 @@ protocol WhisperRuntime: Sendable {
 
 /// Per-call inference settings.
 struct WhisperInference: Equatable, Sendable {
+    /// A concrete two-letter code; detection happens before inference (E9-S2).
     var language: String
+    /// Transcribe, or write English (E9-S2).
+    var task: RecognitionTask = .transcribe
     /// Primes the decoder with expected words (vocabulary, E4-S2).
     var prompt: String?
     /// From the performance plan (E5-S5).
     var threads: Int
 }
 
+/// How likely a spoken language is, as whisper.cpp scores it (E9-S2).
+struct LanguageProbability: Equatable, Sendable {
+    var code: String
+    var probability: Float
+}
+
 /// A loaded model. Memory is released when the last reference goes away.
 protocol WhisperModel: AnyObject, Sendable {
+    /// The probability of each language for the first 30 seconds of `samples`.
+    /// Empty for English-only models, which cannot detect.
+    func detectLanguage(_ samples: [Float], threads: Int) throws(RecognitionError) -> [LanguageProbability]
+
     /// Blocking inference over 16 kHz mono samples. Returns
     /// `RecognitionError.cancelled` soon after `shouldAbort` returns true.
     func transcribe(
@@ -68,6 +81,25 @@ final class WhisperCppModel: WhisperModel, @unchecked Sendable {
         whisper_free(context)
     }
 
+    func detectLanguage(_ samples: [Float], threads: Int) throws(RecognitionError) -> [LanguageProbability] {
+        lock.lock()
+        defer { lock.unlock() }
+        guard whisper_is_multilingual(context) != 0 else { return [] }
+        let threadCount = Int32(max(1, threads))
+        let melStatus = samples.withUnsafeBufferPointer {
+            whisper_pcm_to_mel(context, $0.baseAddress, Int32($0.count), threadCount)
+        }
+        guard melStatus == 0 else { throw .engineFailure(code: Int(melStatus)) }
+        var probabilities = [Float](repeating: 0, count: Int(whisper_lang_max_id()) + 1)
+        let best = whisper_lang_auto_detect(context, 0, threadCount, &probabilities)
+        guard best >= 0 else { throw .engineFailure(code: Int(best)) }
+        return probabilities.indices.compactMap { index in
+            whisper_lang_str(Int32(index)).map {
+                LanguageProbability(code: String(cString: $0), probability: probabilities[index])
+            }
+        }
+    }
+
     func transcribe(
         _ samples: [Float],
         _ inference: WhisperInference,
@@ -85,7 +117,7 @@ final class WhisperCppModel: WhisperModel, @unchecked Sendable {
         parameters.print_realtime = false
         parameters.print_timestamps = false
         parameters.print_special = false
-        parameters.translate = false
+        parameters.translate = inference.task == .translateToEnglish
         parameters.no_context = true
         parameters.n_threads = Int32(max(1, inference.threads))
         parameters.abort_callback = { data in

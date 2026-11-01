@@ -7,8 +7,11 @@ public protocol AppPreferences: AnyObject, Sendable {
     var audioInput: AudioInputSelection { get set }
     /// Start/stop sounds; off by default.
     var playsFeedbackSounds: Bool { get set }
-    /// BCP 47 dictation language; English only in the MVP.
+    /// BCP 47 dictation language, a language code such as `hi`, or
+    /// ``SpokenLanguages/automatic`` (E9-S3). English (`en-US`) by default.
     var dictationLanguage: String { get set }
+    /// Original-language text or English (E9-S3). Original by default.
+    var speechOutput: SpeechOutput { get set }
     /// Exact or Clean (Epic 2). Read only to migrate to ``dictationMode``.
     var writingMode: WritingMode { get set }
     /// The default dictation mode (E4-S5); without a stored value, the

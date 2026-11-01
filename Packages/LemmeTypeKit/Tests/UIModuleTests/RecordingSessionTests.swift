@@ -190,17 +190,17 @@ struct RecordingSessionTests {
 
     @Test func cancelDuringProcessingDeletesAudioAndIgnoresTheLateResult() async throws {
         let coordinator = makeCoordinator(copier: FakeTextDelivery())
-        processor.script([.delivered(.accessibility)], delay: .milliseconds(300))
+        processor.script([.delivered(.accessibility)], delay: .milliseconds(1200))
         coordinator.handle(.start(nil))
         await coordinator.settle()
         source.emitTone(seconds: 0.3)
         coordinator.handle(.stop)
-        try await Task.sleep(for: .milliseconds(50))
+        await waitUntil { coordinator.state == .processing }
         #expect(coordinator.state == .processing)
 
         coordinator.requestCancel()
         await coordinator.settle()
-        try await Task.sleep(for: .milliseconds(400))
+        try await Task.sleep(for: .milliseconds(1400))
 
         #expect(coordinator.state == .cancelled || coordinator.state == .idle)
         #expect(coordinator.lastDelivery == nil)

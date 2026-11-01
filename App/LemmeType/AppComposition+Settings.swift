@@ -52,7 +52,11 @@ extension AppComposition {
         let plan = performancePlan(preferences: preferences, conditions: conditions)
         return WhisperRunSettings(
             choice: preferences.whisperModel, order: plan.whisperModelOrder, threads: plan.inferenceThreads,
-            usesGPU: plan.usesGPU)
+            usesGPU: plan.usesGPU,
+            // Warm up the model the next dictation will need (E9-S2).
+            warmUpNeed: RecognitionNeed(
+                language: preferences.dictationLanguage,
+                task: .required(for: preferences.dictationLanguage, output: preferences.speechOutput)))
     }
 
     /// The plan for the next session: profile, idle setting, and the system now (E5-S5).

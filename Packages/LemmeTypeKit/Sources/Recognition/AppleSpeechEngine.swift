@@ -44,6 +44,13 @@ public final class AppleSpeechEngine: SpeechRecognitionEngine {
         availability(for: language())
     }
 
+    /// Availability for the language a request asks for, not only the one in
+    /// Settings (a mode can override it; E9-S3).
+    public func availability(for need: RecognitionNeed) async -> EngineAvailability {
+        guard descriptor.supports(need) else { return .unsupported(.language) }
+        return availability(for: need.language)
+    }
+
     private func availability(for language: String) -> EngineAvailability {
         guard authorizer.status().isGranted else { return .permissionUnavailable }
         guard descriptor.supports(language: language), backend.hasRecognizer(language: language) else {

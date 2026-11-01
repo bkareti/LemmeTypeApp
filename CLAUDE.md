@@ -8,7 +8,8 @@ LemmeType is a privacy-first macOS menu-bar voice-writing app (global shortcut �
 record → local transcription → optional cleanup → insert text at the cursor of
 the previously focused app). Epics 1–3 (foundation, local transcription and delivery, context-aware
 writing and voice editing) are complete; Epics 4 (personalization and modes)
-and 5 (model management and performance) are in progress.
+5 (model management and performance), and 9 (multilingual dictation and
+speech-to-English) are in progress.
 
 ## Project skills — use them
 
@@ -171,6 +172,20 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   `ModesSettingsModel` backs Settings › Dictation › Modes and the menu picker.
   Export/Import/Delete All (`PersonalizationDataControls`) use the archive;
   `PersonalizationEndToEndTests` covers Epic 4 end to end with canaries.
+- Multilingual dictation (ADR 0023): `SpokenLanguages` (Domain; evaluation
+  languages en/hi/te plus the stored value `auto`) and `LanguageSupportMatrix`
+  (the one source for "validated" vs "evaluation"). Engines declare `tasks`
+  (transcribe, translate to English), the `languageDetection` capability, and
+  `availability(for: RecognitionNeed)`; `RecognitionRequest` carries the task.
+  The catalog has multilingual Whisper Tiny/Base/Small; `WhisperEngine` picks an
+  installed model that serves the request (English-only first for English) and
+  detects language among the evaluation set, failing as `languageUncertain`
+  rather than guessing. Source language and `SpeechOutput` (original/English)
+  are independent settings (and mode overrides). `LanguageReadiness` (pure)
+  feeds Settings, the menu, and a refusal before recording
+  (`DictationProcessing.languageIssue`). Non-English text is written Exact; a
+  translation ends in `DictationIssue.reviewTranslation` (Insert, Copy,
+  Translate Again, Discard) and is never delivered automatically.
 - Engine/mode selection (ADR 0016): `DictationSettingsModel` (UI) backs
   Settings › Dictation and the status menu. Mode, language, and
   `EnginePreference` are captured when recording starts and stored in the
@@ -193,7 +208,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management; 0023 multilingual dictation).
 
 ## Planning documents
 

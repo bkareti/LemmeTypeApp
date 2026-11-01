@@ -533,3 +533,54 @@ Record results per app in `docs/testing/insertion-matrix.md`.
    writes three reports; record load time, memory, real-time factor, and WER
    per model in `performance-thresholds.md` › Recorded runs.
 
+
+## E9 — Multilingual dictation and speech-to-English
+
+These steps need a real multilingual model and real speech. Record results in
+`docs/testing/language-support-matrix.md`; nothing here makes a language
+"validated" until the thresholds there are approved.
+
+**MA-47 Download and offline operation**
+1. Settings › Dictation › Language: choose Hindi. The readiness line says it
+   needs *Whisper Small (Multilingual)* with its size. Press the shortcut: the
+   overlay says dictation can't start and no recording is made (the menu bar
+   microphone indicator never appears).
+2. Settings › Dictation › Models: download Whisper Small (Multilingual). The
+   confirmation shows size, licence, and fit. Readiness turns to *Ready*.
+3. Turn Wi-Fi off. Dictate a Hindi sentence into TextEdit: the Hindi text is
+   inserted once, unchanged ("um", capitals, and full stops are not added).
+4. Run `scripts/check-network-silence.sh` while dictating and translating:
+   no connection is opened by LemmeType.
+
+**MA-48 Translation with review**
+1. Language Hindi (or Telugu), *Text you get* = English. Dictate. The overlay
+   shows *Review translation* with the English text; TextEdit is unchanged.
+2. *Translate Again* shows a new result for the same recording. *Insert* types
+   it once. *Copy* leaves TextEdit unchanged and puts the text on the clipboard.
+   *Discard* removes it. After each choice no recording remains in
+   `$TMPDIR/LemmeType*` (`make privacy-check`).
+3. Click into another app before pressing *Insert*: nothing is typed and *Copy*
+   is offered.
+4. VoiceOver: the review state is announced; the text and every button are
+   reachable and labelled.
+
+**MA-49 Automatic language and mixed speech**
+1. Language Automatic. Speak English, Hindi, then Telugu: each is recognised in
+   its own language (record misses in the matrix).
+2. Speak Tamil or mumble: the overlay says it could not tell which language and
+   offers *Use English / Hindi / Telugu*; nothing is inserted. Choosing one uses
+   the same recording.
+3. Speak a Telugu–English and a Hindi–English sentence with the main language
+   chosen, then with Automatic. Record what happens to the English words
+   (kept, dropped, or transliterated) in the matrix; this is a finding, not a
+   pass or fail.
+
+**MA-50 Quality, speed, and memory**
+1. `LEMMETYPE_BENCHMARK_CORPUS=docs/testing/benchmark-corpus-multilingual.json
+   scripts/run-e2e-benchmark.sh` (Small installed) writes a
+   `whisper-multilingual-hi` report; a Telugu copy of the corpus is produced the
+   same way with the voice Geeta.
+2. Two reviewers score the English output of the corpus with the rubric in
+   `language-support-matrix.md` and record pass rates, real-time factor, and
+   peak memory next to the proposed thresholds.
+3. On an 8 GB Mac, run the same with Base and Tiny and note the quality gap.

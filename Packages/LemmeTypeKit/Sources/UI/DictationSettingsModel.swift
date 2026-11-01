@@ -17,6 +17,8 @@ public final class DictationSettingsModel {
         public let location: ProcessingLocation
         public let languages: [String]
         public let assets: AssetRequirement
+        public let capabilities: EngineCapabilities
+        public let tasks: Set<RecognitionTask>
         public var availability: EngineAvailability
         /// Install state of the engine's downloadable model, if it has one.
         public var model: ModelInstallState?
@@ -37,6 +39,10 @@ public final class DictationSettingsModel {
     /// `nil` means Automatic.
     public private(set) var selectedEngine: RecognitionEngineID?
     public private(set) var language: String
+    /// Original text or English (E9-S3).
+    public private(set) var speechOutput: SpeechOutput
+    /// Whether the chosen language and output can run, for the next dictation.
+    public private(set) var readiness: LanguageReadiness = .noEngine
     public private(set) var fallsBackToReadyEngine: Bool
     public private(set) var clipboardFallback: ClipboardFallbackPolicy
     /// Set while the download confirmation is showing.
@@ -48,6 +54,7 @@ public final class DictationSettingsModel {
     private let preferences: any AppPreferences
     private let speechAuthorizer: (any SpeechRecognitionAuthorizing)?
     private let diagnostics: any DiagnosticsRecording
+    private let hardware: HardwareProfile
     private var downloads: [ModelAssetID: Task<Void, Never>] = [:]
     private var refreshTask: Task<Void, Never>?
 
@@ -57,8 +64,10 @@ public final class DictationSettingsModel {
         modelAssets: any ModelAssetManaging,
         preferences: any AppPreferences,
         speechAuthorizer: (any SpeechRecognitionAuthorizing)? = nil,
-        diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
+        diagnostics: any DiagnosticsRecording = DiscardingDiagnostics(),
+        hardware: HardwareProfile = .current
     ) {
+        self.hardware = hardware
         self.engines = engines
         self.modelAssets = modelAssets
         self.preferences = preferences
@@ -67,12 +76,14 @@ public final class DictationSettingsModel {
         writingMode = preferences.writingMode
         selectedEngine = preferences.selectedEngine
         language = preferences.dictationLanguage
+        speechOutput = preferences.speechOutput
         fallsBackToReadyEngine = preferences.fallsBackToReadyEngine
         clipboardFallback = preferences.clipboardFallback
         rows = engines.map {
             EngineRow(
                 id: $0.descriptor.id, location: $0.descriptor.location, languages: $0.descriptor.supportedLanguages,
-                assets: $0.descriptor.assets, availability: .assetsMissing, model: nil)
+                assets: $0.descriptor.assets, capabilities: $0.descriptor.capabilities, tasks: $0.descriptor.tasks,
+                availability: .assetsMissing, model: nil)
         }
     }
 
@@ -105,15 +116,44 @@ public final class DictationSettingsModel {
         return seen
     }
 
+    /// What Settings asks of an engine for the next dictation (E9-S3).
+    public var need: RecognitionNeed {
+        RecognitionNeed(language: language, task: .required(for: language, output: speechOutput))
+    }
+
+    /// The values the Language menu offers, in order: Automatic (when an
+    /// engine can detect), English (with the regions Apple Speech offers), then
+    /// the other evaluation languages an engine supports.
+    public var languageChoices: [String] {
+        var choices: [String] = []
+        if rows.contains(where: { $0.capabilities.contains(.languageDetection) }) {
+            choices.append(SpokenLanguages.automatic)
+        }
+        let regional = languages.filter { SpokenLanguages.isEnglish($0) && $0.contains("-") }
+        choices += regional.isEmpty ? [SpokenLanguages.english.settingValue] : regional
+        for other in SpokenLanguages.all where !SpokenLanguages.isEnglish(other.code) {
+            if rows.contains(where: { supports($0, other.settingValue) }) { choices.append(other.settingValue) }
+        }
+        // A stored language that is no longer offered stays visible.
+        return choices.contains(language) ? choices : choices + [language]
+    }
+
+    /// The status of the chosen language in the support matrix, if it has one.
+    public var languageStatus: LanguageSupportStatus? {
+        SpokenLanguages.isAutomatic(language) ? nil : LanguageSupportMatrix.status(of: language)
+    }
+
     private var choice: EngineSelector.Choice {
         EngineSelector.choose(
             preferred: selectedEngine, fallsBackAutomatically: fallsBackToReadyEngine,
-            candidates: rows.filter { supports($0, language) }.map { ($0.id, $0.availability) })
+            candidates: rows.filter { supports($0, language, task: need.task) }.map { ($0.id, $0.availability) })
     }
 
-    func supports(_ row: EngineRow, _ language: String) -> Bool {
-        EngineDescriptor(id: row.id, supportedLanguages: row.languages, assets: row.assets, capabilities: [])
-            .supports(language: language)
+    func supports(_ row: EngineRow, _ language: String, task: RecognitionTask = .transcribe) -> Bool {
+        EngineDescriptor(
+            id: row.id, supportedLanguages: row.languages, assets: row.assets, capabilities: row.capabilities,
+            tasks: row.tasks
+        ).supports(RecognitionNeed(language: language, task: task))
     }
 
     // MARK: Refresh
@@ -121,14 +161,19 @@ public final class DictationSettingsModel {
     /// Reads every engine's availability and model state. Cheap; called when
     /// Settings or the menu appears and after anything that can change it.
     public func refresh() async {
+        let need = need
         for (index, engine) in engines.enumerated() {
             var row = rows[index]
-            row.availability = await engine.availability()
+            row.availability = await engine.availability(for: need)
             if case .downloadable(let asset) = engine.descriptor.assets, downloads[asset] == nil {
                 row.model = await modelAssets.state(of: asset)
             }
             rows[index] = row
         }
+        readiness = await LanguageReadiness.evaluate(
+            language: language, output: speechOutput, engines: engines,
+            preference: EnginePreference(selected: selectedEngine, fallsBackAutomatically: fallsBackToReadyEngine),
+            hardware: hardware)
     }
 
     public func refreshInBackground() {
@@ -155,6 +200,16 @@ public final class DictationSettingsModel {
     public func setLanguage(_ language: String) {
         self.language = language
         preferences.dictationLanguage = language
+        diagnostics.record(
+            .recognition, "settings.language",
+            ["language": .id(SpokenLanguages.isAutomatic(language) ? language : SpokenLanguages.code(of: language))])
+        refreshInBackground()
+    }
+
+    public func setSpeechOutput(_ output: SpeechOutput) {
+        speechOutput = output
+        preferences.speechOutput = output
+        diagnostics.record(.recognition, "settings.speech-output", ["output": .id(output.rawValue)])
         refreshInBackground()
     }
 

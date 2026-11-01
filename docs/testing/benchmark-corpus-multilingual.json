@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "name": "multilingual-hi",
+  "task": "translate-to-english",
+  "notes": "Hindi evaluation corpus (E9-S6). Synthetic: audio is generated on the benchmark Mac with the system Hindi voice (Lekha) so it is licence-free and reproducible. Sentences are original, short, and contain no personal data. A human reviewer must confirm the references before any result is recorded in the support matrix. A Telugu copy uses the voice Geeta (te_IN) with Telugu references. Run: scripts/run-e2e-benchmark.sh with LEMMETYPE_BENCHMARK_CORPUS pointing here. Scores the English translation (WER against `english`); remove `task` to score the Hindi text against `text`.",
+  "voices": [
+    {"name": "Lekha", "accent": "hi"}
+  ],
+  "noise": {"snrDecibels": 10, "seed": 7},
+  "utterances": [
+    { "id": "hi-conv-01", "category": "conversational", "text": "कल दोपहर बारह बजे हम मिलते हैं।", "english": "We will meet tomorrow at twelve noon." },
+    { "id": "hi-conv-02", "category": "conversational", "text": "मुझे दस मिनट देर हो जाएगी, कृपया शुरू कर दीजिए।", "english": "I will be ten minutes late, please go ahead and start." },
+    { "id": "hi-num-01", "category": "numeric", "text": "बैठक शुक्रवार को तीन बजे है।", "english": "The meeting is on Friday at three o'clock." },
+    { "id": "hi-neg-01", "category": "negation", "text": "मैं आज दफ्तर नहीं आऊँगा।", "english": "I will not come to the office today." },
+    { "id": "hi-commit-01", "category": "commitment", "text": "मैं शाम तक रिपोर्ट भेज दूँगा।", "english": "I will send the report by the evening." }
+  ]
+}

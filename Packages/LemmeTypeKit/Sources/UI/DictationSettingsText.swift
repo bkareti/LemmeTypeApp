@@ -34,6 +34,18 @@ extension DictationSettingsModel {
     nonisolated static func languageName(_ identifier: String) -> String {
         Locale.current.localizedString(forIdentifier: identifier) ?? identifier
     }
+
+    /// The language and output for the status menu, for example "Hindi → English · Ready".
+    public var menuLanguageSummary: String {
+        let spoken = Self.settingLanguageName(language)
+        let route =
+            speechOutput == .english && !SpokenLanguages.isEnglish(language)
+            ? String(localized: "\(spoken) → English", bundle: .module) : spoken
+        let state =
+            readiness.isReady
+            ? String(localized: "Ready", bundle: .module) : String(localized: "Not ready", bundle: .module)
+        return String(localized: "Language: \(route) · \(state)", bundle: .module)
+    }
 }
 
 extension DictationSettingsModel.EngineRow {

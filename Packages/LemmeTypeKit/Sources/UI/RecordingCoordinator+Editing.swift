@@ -3,14 +3,33 @@ import Support
 
 /// Voice-editing refusals and the start announcement (E3-S5, E3-S6).
 extension RecordingCoordinator {
-    /// Voice editing can't start; nothing was recorded.
+    /// A session can't start; nothing was recorded. Voice editing (E3-S5) and
+    /// an unavailable language or output (E9-S3) are refused this way.
     func refuse(_ issue: DictationIssue) {
         guard machine.handle(.processingNeedsAttention(issue)) else { return }
         attentionActions = issue.actions(alternatives: []).filter(isOffered)
         sync()
-        feedback.announce(String(localized: "Voice editing can’t start. \(issue.userMessage)", bundle: .module))
-        Log.recognition.info("Voice edit refused: \(issue.identifier, privacy: .public)")
+        let lead =
+            if case .languageUnavailable = issue {
+                String(localized: "Dictation can’t start.", bundle: .module)
+            } else {
+                String(localized: "Voice editing can’t start.", bundle: .module)
+            }
+        feedback.announce("\(lead) \(issue.userMessage)")
+        Log.recognition.info("Session refused: \(issue.identifier, privacy: .public)")
         finishSession(displayFor: failureDisplay)
+    }
+
+    /// Refuses a dictation whose language or output can't run, before the user
+    /// speaks (E9-S3). Returns whether it was refused.
+    func refusesLanguage(for purpose: SessionPurpose) async -> Bool {
+        guard purpose == .dictation, let settings = activeSettings,
+            let issue = await processor.languageIssue(
+                language: settings.language, output: settings.speechOutput,
+                enginePreference: settings.enginePreference)
+        else { return false }
+        refuse(issue)
+        return true
     }
 
     func startAnnouncement(purpose: SessionPurpose, context: ContextCapture?) -> String {

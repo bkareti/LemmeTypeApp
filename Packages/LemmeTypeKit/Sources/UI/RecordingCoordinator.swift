@@ -184,11 +184,13 @@ public final class RecordingCoordinator {
         activeContext = target?.context
         // A voice edit that can't run is refused before the user speaks.
         if purpose == .editing,
-            let issue = await processor.editingIssue(for: target, language: preferences.dictationLanguage)
+            let issue = await processor.editingIssue(
+                for: target, language: SpokenLanguages.editingLanguage(for: preferences.dictationLanguage))
         {
             refuse(issue)
             return
         }
+        if await refusesLanguage(for: purpose) { return }
         do {
             let events = try await capture.start(input: preferences.audioInput)
             guard machine.handle(.captureStarted) else {
@@ -319,6 +321,12 @@ extension RecordingCoordinator {
     public var attention: DictationIssue? {
         if case .needsAttention(let issue) = state { return issue }
         return nil
+    }
+
+    /// The translation waiting to be inserted or copied, while it is reviewed
+    /// (E9-S5). In memory only; cleared with the session.
+    public var reviewText: String? {
+        attention == .reviewTranslation ? pendingTranscript : nil
     }
 
     /// Recording, processing, or holding a recording for a decision.

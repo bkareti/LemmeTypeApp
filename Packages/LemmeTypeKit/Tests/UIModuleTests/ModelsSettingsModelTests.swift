@@ -22,9 +22,18 @@ struct ModelsSettingsModelTests {
             assets: FakeModelAssetManager(installed: [.whisperBaseEnglish]),
             hardware: HardwareProfile(isAppleSilicon: true, physicalMemoryBytes: 8 << 30))
         await model.refresh()
-        #expect(model.rows.map(\.id) == [.whisperTinyEnglish, .whisperBaseEnglish, .whisperSmallEnglish])
-        #expect(model.rows.map(\.fit) == [.recommended, .recommended, .supported])
-        #expect(model.rows.map(\.state) == [.notInstalled, .installed, .notInstalled])
+        // English-only models first, then the multilingual ones (E9-S2).
+        #expect(
+            model.rows.map(\.id) == [
+                .whisperTinyEnglish, .whisperBaseEnglish, .whisperSmallEnglish, .whisperTiny, .whisperBase,
+                .whisperSmall,
+            ])
+        #expect(
+            model.rows.map(\.fit) == [.recommended, .recommended, .supported, .recommended, .recommended, .supported])
+        #expect(
+            model.rows.map(\.state) == [
+                .notInstalled, .installed, .notInstalled, .notInstalled, .notInstalled, .notInstalled,
+            ])
         #expect(model.usedBytes == ModelCatalog.whisperBaseEnglish.installedBytes)
         #expect(model.availableBytes == 50_000_000_000)
     }

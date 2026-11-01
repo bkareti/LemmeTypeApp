@@ -103,6 +103,11 @@ public struct MenuBarMenu: View {
         } else {
             Text(dictation.menuEngineSummary)
         }
+        // Only when it differs from plain English dictation (E9-S3).
+        if LanguageReadiness.isBeyondEnglishDictation(language: dictation.language, output: dictation.speechOutput) {
+            Text(dictation.menuLanguageSummary)
+                .accessibilityIdentifier("menu.language")
+        }
         Divider()
         if recorder.state.isCapturing {
             Button(String(localized: "Stop Recording", bundle: .module)) { recorder.requestStop() }

@@ -52,6 +52,8 @@ public struct DictationMode: Identifiable, Equatable, Codable, Sendable {
     // Transcription. `nil` uses Settings › Dictation.
     public var engine: RecognitionEngineID?
     public var language: String?
+    /// Original text or English; `nil` uses Settings › Dictation (E9-S3).
+    public var speechOutput: SpeechOutput?
     // Cleanup.
     public var writingMode: WritingMode
     /// Clean Writing rules that run, in ``CleanupRule/allCases`` order.
@@ -72,6 +74,7 @@ public struct DictationMode: Identifiable, Equatable, Codable, Sendable {
         name: String,
         engine: RecognitionEngineID? = nil,
         language: String? = nil,
+        speechOutput: SpeechOutput? = nil,
         writingMode: WritingMode = .clean,
         cleanupRules: [CleanupRule] = CleanupRule.allCases,
         usesPersonalization: Bool = true,
@@ -84,6 +87,7 @@ public struct DictationMode: Identifiable, Equatable, Codable, Sendable {
         self.name = name
         self.engine = engine
         self.language = language
+        self.speechOutput = speechOutput
         self.writingMode = writingMode
         self.cleanupRules = cleanupRules
         self.usesPersonalization = usesPersonalization
@@ -91,6 +95,24 @@ public struct DictationMode: Identifiable, Equatable, Codable, Sendable {
         self.finalPunctuation = finalPunctuation
         self.output = output
         self.appendsSpace = appendsSpace
+    }
+
+    // Modes saved by earlier versions lack newer keys; they decode with the
+    // defaults those versions behaved as (E9-S3).
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(DictationModeID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        engine = try container.decodeIfPresent(RecognitionEngineID.self, forKey: .engine)
+        language = try container.decodeIfPresent(String.self, forKey: .language)
+        speechOutput = try container.decodeIfPresent(SpeechOutput.self, forKey: .speechOutput)
+        writingMode = try container.decode(WritingMode.self, forKey: .writingMode)
+        cleanupRules = try container.decode([CleanupRule].self, forKey: .cleanupRules)
+        usesPersonalization = try container.decode(Bool.self, forKey: .usesPersonalization)
+        usesSnippets = try container.decode(Bool.self, forKey: .usesSnippets)
+        finalPunctuation = try container.decode(FinalPunctuation.self, forKey: .finalPunctuation)
+        output = try container.decode(OutputAction.self, forKey: .output)
+        appendsSpace = try container.decode(Bool.self, forKey: .appendsSpace)
     }
 
     public var isBuiltIn: Bool { id.isBuiltIn }
@@ -103,7 +125,8 @@ public struct DictationMode: Identifiable, Equatable, Codable, Sendable {
     /// A custom copy with a new identity, for Duplicate.
     public func duplicated(named name: String) -> DictationMode {
         DictationMode(
-            name: name, engine: engine, language: language, writingMode: writingMode, cleanupRules: cleanupRules,
+            name: name, engine: engine, language: language, speechOutput: speechOutput, writingMode: writingMode,
+            cleanupRules: cleanupRules,
             usesPersonalization: usesPersonalization, usesSnippets: usesSnippets, finalPunctuation: finalPunctuation,
             output: output, appendsSpace: appendsSpace)
     }

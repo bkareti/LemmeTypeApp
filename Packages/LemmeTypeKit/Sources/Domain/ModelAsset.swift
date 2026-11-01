@@ -13,6 +13,10 @@ public struct ModelAssetID: RawRepresentable, Hashable, Codable, Sendable, Custo
     public static let whisperBaseEnglish = ModelAssetID(rawValue: "whisper-base-en")
     public static let whisperTinyEnglish = ModelAssetID(rawValue: "whisper-tiny-en")
     public static let whisperSmallEnglish = ModelAssetID(rawValue: "whisper-small-en")
+    /// The multilingual models (E9-S2). They also run English.
+    public static let whisperTiny = ModelAssetID(rawValue: "whisper-tiny")
+    public static let whisperBase = ModelAssetID(rawValue: "whisper-base")
+    public static let whisperSmall = ModelAssetID(rawValue: "whisper-small")
 }
 
 /// Where a model sits between speed and accuracy (E5-S1). Raw values are stable.
@@ -53,6 +57,8 @@ public struct ModelAsset: Equatable, Sendable, Identifiable {
     public let license: String
     public let licenseURL: URL
     public let hardware: HardwareRequirement
+    /// What the model can be asked to do. English-only models cannot translate.
+    public let tasks: Set<RecognitionTask>
     public let tier: ModelTier
     /// Approximate memory in use while loaded (whisper.cpp's published figures).
     public let runtimeMemoryBytes: UInt64
@@ -67,9 +73,11 @@ public struct ModelAsset: Equatable, Sendable, Identifiable {
         license: String,
         licenseURL: URL,
         hardware: HardwareRequirement,
+        tasks: Set<RecognitionTask> = [.transcribe],
         tier: ModelTier = .balanced,
         runtimeMemoryBytes: UInt64 = 0
     ) {
+        self.tasks = tasks
         self.tier = tier
         self.runtimeMemoryBytes = runtimeMemoryBytes
         self.id = id
@@ -81,6 +89,17 @@ public struct ModelAsset: Equatable, Sendable, Identifiable {
         self.license = license
         self.licenseURL = licenseURL
         self.hardware = hardware
+    }
+
+    /// Whether the model can detect the spoken language: it knows more than one.
+    public var detectsLanguage: Bool { languages.count > 1 }
+
+    /// Whether the model can recognise `language` (a BCP 47 identifier, or
+    /// Automatic) for `task`.
+    public func serves(language: String, task: RecognitionTask) -> Bool {
+        guard tasks.contains(task) else { return false }
+        if SpokenLanguages.isAutomatic(language) { return detectsLanguage }
+        return languages.contains(SpokenLanguages.code(of: language))
     }
 
     /// Bytes transferred by a full download.

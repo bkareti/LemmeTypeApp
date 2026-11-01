@@ -4,13 +4,15 @@ import Foundation
 /// through ``RecognitionRunner``, writing mode, and delivery. Uses only Domain
 /// protocols, so it runs unchanged against fakes in tests.
 public actor TranscriptionPipeline: DictationProcessing {
-    private let engines: [any SpeechRecognitionEngine]
+    let engines: [any SpeechRecognitionEngine]
     let write: @Sendable (String, WritingMode) -> String
     let format: @Sendable (String, WritingMode, CursorContext) -> String
     private let delivery: any TextDelivering
     private let rewriter: (any TextRewriting)?
     private let copier: (any TextCopying)?
-    private let diagnostics: any DiagnosticsRecording
+    let diagnostics: any DiagnosticsRecording
+    /// What model fit is judged against (E9-S3); the current Mac in the app.
+    let hardware: HardwareProfile
 
     /// `engines` are in recommendation order (Automatic picks the first ready
     /// one); each session carries the user's ``EnginePreference``; `write`
@@ -25,8 +27,10 @@ public actor TranscriptionPipeline: DictationProcessing {
         delivery: any TextDelivering,
         rewriter: (any TextRewriting)? = nil,
         copier: (any TextCopying)? = nil,
-        diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
+        diagnostics: any DiagnosticsRecording = DiscardingDiagnostics(),
+        hardware: HardwareProfile = .current
     ) {
+        self.hardware = hardware
         self.copier = copier
         self.engines = engines
         self.write = write
@@ -77,8 +81,10 @@ public actor TranscriptionPipeline: DictationProcessing {
         _ session: DictationSession,
         updates: @escaping @Sendable (ProcessingUpdate) -> Void
     ) async -> Run {
+        let task = Self.task(for: session)
+        let need = RecognitionNeed(language: session.language, task: task)
         let engine: any SpeechRecognitionEngine
-        switch await select(for: session) {
+        switch await select(for: session, need: need) {
         case .success(let chosen):
             engine = chosen
         case .failure(let failure):
@@ -91,14 +97,16 @@ public actor TranscriptionPipeline: DictationProcessing {
         let transcript: Transcript
         do {
             transcript = try await RecognitionRunner().run(
-                engine, RecognitionRequest(audio: session.audio, language: session.language, hints: hints(for: session))
+                engine,
+                RecognitionRequest(
+                    audio: session.audio, language: session.language, task: task, hints: hints(for: session))
             ) { update in
                 if case .progress(let fraction) = update { updates(.progress(fraction)) }
             }
         } catch .cancelled {
             return Run(outcome: .cancelled, engine: id)
         } catch {
-            let alternatives = await readyEngines(excluding: engine.descriptor.id)
+            let alternatives = await readyEngines(excluding: engine.descriptor.id, for: need)
             return Run(
                 outcome: .needsAttention(
                     .recognitionFailed(error), engine: id, alternatives: alternatives, transcript: nil),
@@ -112,6 +120,11 @@ public actor TranscriptionPipeline: DictationProcessing {
         // Delivering nothing would replace a selection with nothing.
         guard text.contains(where: { !$0.isWhitespace }) else {
             run.outcome = Self.attention(.recognitionFailed(.noSpeechDetected), engine: id)
+            return run
+        }
+        // A translation is read before it goes anywhere (E9-S5).
+        if session.purpose == .dictation, Self.wasTranslated(transcript, task: task, session: session) {
+            run.outcome = .needsAttention(.reviewTranslation, engine: id, alternatives: [], transcript: text)
             return run
         }
         updates(.phase(.delivering))
@@ -128,11 +141,13 @@ public actor TranscriptionPipeline: DictationProcessing {
         switch session.purpose {
         case .dictation:
             updates(.phase(.writing))
-            return written(transcript.text, session: session, run: &run)
+            return written(transcript.text, language: transcript.language, session: session, run: &run)
         case .editing:
             updates(.phase(.rewriting))
             let rewriteStart = ContinuousClock.now
-            let result = await rewrite(instruction: transcript.text, session: session)
+            let result = await rewrite(
+                instruction: transcript.text, language: transcript.spokenLanguage ?? transcript.language,
+                session: session)
             run.rewriting = ContinuousClock.now - rewriteStart
             switch result {
             case .success(let edited):
@@ -149,7 +164,7 @@ public actor TranscriptionPipeline: DictationProcessing {
     }
 
     /// Applies the spoken instruction to the captured selection (E3-S5).
-    private func rewrite(instruction spoken: String, session: DictationSession) async
+    private func rewrite(instruction spoken: String, language: String, session: DictationSession) async
         -> Result<String, EditingFailure>
     {
         guard let selected = session.editingContext?.selectedText else {
@@ -162,7 +177,7 @@ public actor TranscriptionPipeline: DictationProcessing {
         guard let rewriter else { return .failure(EditingFailure(issue: .rewriterUnavailable(.unavailable))) }
         do {
             let edited = try await TextRewritingRunner().run(
-                rewriter, RewriteRequest(instruction: instruction, text: selected, language: session.language))
+                rewriter, RewriteRequest(instruction: instruction, text: selected, language: language))
             return .success(edited)
         } catch .unavailable(let availability) {
             return .failure(EditingFailure(issue: .rewriterUnavailable(availability)))
@@ -205,13 +220,15 @@ public actor TranscriptionPipeline: DictationProcessing {
         }
     }
 
-    private func select(for session: DictationSession) async -> Result<any SpeechRecognitionEngine, SelectionFailure> {
+    private func select(for session: DictationSession, need: RecognitionNeed) async -> Result<
+        any SpeechRecognitionEngine, SelectionFailure
+    > {
         if let id = session.engine, let engine = engines.first(where: { $0.descriptor.id == id }) {
             return .success(engine)
         }
         var candidates: [(id: RecognitionEngineID, availability: EngineAvailability)] = []
-        for engine in engines where engine.descriptor.supports(language: session.language) {
-            candidates.append((engine.descriptor.id, await engine.availability()))
+        for engine in engines where engine.descriptor.supports(need) {
+            candidates.append((engine.descriptor.id, await engine.availability(for: need)))
         }
         let preference = session.enginePreference
         switch EngineSelector.choose(
@@ -237,53 +254,16 @@ public actor TranscriptionPipeline: DictationProcessing {
     private static let noEngine = DictationOutcome.needsAttention(
         .noEngineAvailable, engine: nil, alternatives: [], transcript: nil)
 
-    private func readyEngines(excluding id: RecognitionEngineID) async -> [RecognitionEngineID] {
+    private func readyEngines(excluding id: RecognitionEngineID, for need: RecognitionNeed) async
+        -> [RecognitionEngineID]
+    {
         var ready: [RecognitionEngineID] = []
-        for engine in engines where engine.descriptor.id != id {
-            if await engine.availability().isReady {
+        for engine in engines where engine.descriptor.id != id && engine.descriptor.supports(need) {
+            if await engine.availability(for: need).isReady {
                 ready.append(engine.descriptor.id)
             }
         }
         return ready
-    }
-
-    /// Session metrics: outcome, engine, durations, error category — no audio
-    /// or text. `processingSeconds` runs from capture stop to delivery (the
-    /// latency the user feels); `recognitionSeconds` is inference alone.
-    private func record(_ run: Run, session: DictationSession, elapsed: Duration) {
-        let seconds = Self.seconds(elapsed)
-        switch run.outcome {
-        case .delivered(let method):
-            diagnostics.record(
-                .recognition, "session.delivered",
-                [
-                    "method": .id(method.rawValue), "mode": .id(session.mode.rawValue),
-                    "engine": .id(run.engine?.rawValue ?? "none"), "context": .id(session.contextIdentifier),
-                    "purpose": .id(session.purpose.rawValue),
-                    "dictationMode": .id(session.dictationMode.id.diagnosticIdentifier),
-                    "modeSource": .id(session.modeSource.rawValue),
-                    "audioSeconds": .seconds(session.audio.duration), "processingSeconds": .seconds(seconds),
-                    "recognitionSeconds": .seconds(run.recognition.map(Self.seconds) ?? 0),
-                    "rewriteSeconds": .seconds(run.rewriting.map(Self.seconds) ?? 0),
-                    "personalizations": .count(run.personalizations), "snippet": .flag(run.usedSnippet),
-                ])
-        case .needsAttention(let issue, let engine, _, _):
-            diagnostics.record(
-                .recognition, "session.needs-attention",
-                [
-                    "issue": .id(issue.identifier), "engine": .id(engine?.rawValue ?? "none"),
-                    "mode": .id(session.mode.rawValue), "purpose": .id(session.purpose.rawValue),
-                    "audioSeconds": .seconds(session.audio.duration), "processingSeconds": .seconds(seconds),
-                ])
-        case .cancelled:
-            diagnostics.record(.recognition, "session.cancelled", ["processingSeconds": .seconds(seconds)])
-        }
-    }
-}
-
-extension TranscriptionPipeline {
-    fileprivate static func seconds(_ duration: Duration) -> Double {
-        Double(duration.components.seconds) + Double(duration.components.attoseconds) / 1e18
     }
 }
 

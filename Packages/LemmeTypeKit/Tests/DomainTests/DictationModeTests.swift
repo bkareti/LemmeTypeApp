@@ -200,4 +200,38 @@ struct ModePipelineTests {
         #expect(event.attributes["modeSource"] == .identifier("app-rule"))
         #expect(!String(describing: diagnostics.events).contains("Secret"))
     }
+
+    // MARK: E9-S3 — modes saved before language output existed
+
+    /// A mode as version 1.0 of the personalization file stored it.
+    private static let storedBeforeSpeechOutput = """
+        {"id":"custom-0a1b","name":"Chat","language":"en-GB","writingMode":"clean",
+         "cleanupRules":["filler-words"],"usesPersonalization":true,"usesSnippets":false,
+         "finalPunctuation":"omit","output":"copy","appendsSpace":true}
+        """
+
+    @Test func modesSavedBeforeSpeechOutputStillDecodeAsOriginal() throws {
+        let mode = try JSONDecoder().decode(DictationMode.self, from: Data(Self.storedBeforeSpeechOutput.utf8))
+        #expect(mode.name == "Chat")
+        #expect(mode.language == "en-GB")
+        #expect(mode.speechOutput == nil, "nil means Settings decides, which defaults to the original language")
+        #expect(mode.finalPunctuation == .omit)
+        #expect(mode.output == .copy)
+        #expect(mode.appendsSpace)
+    }
+
+    @Test func speechOutputSurvivesEncodingAndDuplicate() throws {
+        let mode = DictationMode(name: "Telugu to English", language: "te", speechOutput: .english)
+        let decoded = try JSONDecoder().decode(DictationMode.self, from: JSONEncoder().encode(mode))
+        #expect(decoded == mode)
+        #expect(decoded.duplicated(named: "Copy").speechOutput == .english)
+        #expect(decoded.duplicated(named: "Copy").language == "te")
+    }
+
+    @Test func builtInModesKeepTheirBehaviour() {
+        for mode in DictationMode.builtIns {
+            #expect(mode.speechOutput == nil)
+            #expect(mode.language == nil)
+        }
+    }
 }

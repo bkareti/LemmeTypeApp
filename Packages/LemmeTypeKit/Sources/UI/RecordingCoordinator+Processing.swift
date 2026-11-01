@@ -126,13 +126,18 @@ extension RecordingCoordinator {
             if case .useEngine(let engine) = action { next.engine = engine }
             self.session = next
             retry(next)
-        case .copyText, .retryDelivery:
+        case .useLanguage(let language):
+            var next = session
+            next.language = language
+            self.session = next
+            retry(next)
+        case .copyText, .retryDelivery, .insertText:
             await useTranscript(for: action, session: session)
         case .allowSpeechRecognition:
             await allowSpeechRecognition()
         case .saveAudio:
             await onSaveAudio(session.audio.fileURL)
-        case .chooseEngine, .openPermissions, .openContextSettings, .discard:
+        case .chooseEngine, .chooseLanguage, .openPermissions, .openContextSettings, .discard:
             break  // handled above
         }
     }
@@ -141,7 +146,7 @@ extension RecordingCoordinator {
     /// Returns whether `action` was one of them.
     private func decideWithoutRecording(_ action: DictationAction) -> Bool {
         switch action {
-        case .chooseEngine: onOpenSettings(.dictation)
+        case .chooseEngine, .chooseLanguage: onOpenSettings(.dictation)
         case .openPermissions: onOpenSettings(.permissions)
         case .openContextSettings: onOpenSettings(.context)
         case .discard: dismiss()
@@ -156,7 +161,7 @@ extension RecordingCoordinator {
         if action == .copyText, let textCopier {
             await textCopier.copy(transcript)
             complete(with: .copied)
-        } else if action == .retryDelivery, machine.handle(.retry) {
+        } else if action == .retryDelivery || action == .insertText, machine.handle(.retry) {
             beginRetry()
             startDelivery(transcript, for: session)
         }

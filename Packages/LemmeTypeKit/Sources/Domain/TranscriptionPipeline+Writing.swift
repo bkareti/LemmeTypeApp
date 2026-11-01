@@ -2,8 +2,14 @@
 extension TranscriptionPipeline {
     /// Snippet, or writing mode → mode style → vocabulary and replacements;
     /// then the cursor context and the mode's trailing space (ADR 0020, 0021).
-    func written(_ transcript: String, session: DictationSession, run: inout Run) -> String {
+    ///
+    /// `language` is the language of `transcript`. Clean Writing, the context
+    /// formatter, and the final-period style are English rules, so text in
+    /// any other language is written Exact (spacing only), and the English
+    /// text of a translation gets the full treatment (E9-S4).
+    func written(_ transcript: String, language: String, session: DictationSession, run: inout Run) -> String {
         let mode = session.dictationMode
+        let isEnglish = SpokenLanguages.isEnglish(language)
         if mode.usesSnippets, let snippet = SnippetMatcher.match(transcript, in: session.personalization.snippets) {
             // Delivered as written: only spacing may change around it.
             run.usedSnippet = true
@@ -13,10 +19,14 @@ extension TranscriptionPipeline {
         // The injected writer serves the default rule set; a mode with rules
         // switched off runs its own configuration.
         var text =
-            mode.cleanupRules == CleanupRule.allCases
-            ? write(transcript, session.mode)
-            : TextCleaner(configuration: mode.cleanupConfiguration).apply(transcript, mode: session.mode).text
-        if mode.finalPunctuation == .omit {
+            if !isEnglish {
+                write(transcript, .exact)
+            } else if mode.cleanupRules == CleanupRule.allCases {
+                write(transcript, session.mode)
+            } else {
+                TextCleaner(configuration: mode.cleanupConfiguration).apply(transcript, mode: session.mode).text
+            }
+        if isEnglish, mode.finalPunctuation == .omit {
             text = Self.omittingFinalPeriod(text)
         }
         if mode.usesPersonalization {
@@ -25,7 +35,7 @@ extension TranscriptionPipeline {
             run.personalizations = personalized.transformations.count
         }
         guard text.contains(where: { !$0.isWhitespace }) else { return text }
-        if let context = session.formattingContext {
+        if isEnglish, let context = session.formattingContext {
             text = format(text, session.mode, context)
         }
         return Self.trailingSpace(text, mode: mode, context: session.formattingContext)

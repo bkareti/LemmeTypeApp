@@ -140,7 +140,7 @@ struct RecordingCoordinatorTests {
         await coordinator.settle()
 
         source.emitTone(seconds: 0.2, amplitude: 0.5)
-        try await Task.sleep(for: .milliseconds(50))
+        await waitUntil { coordinator.level > 0.5 }
         #expect(coordinator.level > 0.5)
 
         coordinator.handle(.stop)
@@ -207,6 +207,8 @@ final class RecordingSpy: DictationProcessing {
         var modes: [WritingMode] = []
         var preferences: [EnginePreference] = []
         var languages: [String] = []
+        var outputs: [SpeechOutput] = []
+        var languageIssue: DictationIssue?
         var libraries: [PersonalizationLibrary] = []
         var outcomes: [DictationOutcome] = []
         var deliveries: [String] = []
@@ -221,8 +223,20 @@ final class RecordingSpy: DictationProcessing {
     var modes: [WritingMode] { state.withLock { $0.modes } }
     var preferences: [EnginePreference] { state.withLock { $0.preferences } }
     var languages: [String] { state.withLock { $0.languages } }
+    var outputs: [SpeechOutput] { state.withLock { $0.outputs } }
     var libraries: [PersonalizationLibrary] { state.withLock { $0.libraries } }
     var deliveries: [String] { state.withLock { $0.deliveries } }
+
+    /// Makes every recording start be refused with `issue` (E9-S3).
+    func refuseLanguage(with issue: DictationIssue?) {
+        state.withLock { $0.languageIssue = issue }
+    }
+
+    func languageIssue(language: String, output: SpeechOutput, enginePreference: EnginePreference) async
+        -> DictationIssue?
+    {
+        state.withLock { $0.languageIssue }
+    }
 
     /// Outcomes for successive calls; delivered once they run out.
     func script(_ outcomes: [DictationOutcome], delay: Duration = .zero) {
@@ -242,6 +256,7 @@ final class RecordingSpy: DictationProcessing {
             state.modes.append(session.mode)
             state.preferences.append(session.enginePreference)
             state.languages.append(session.language)
+            state.outputs.append(session.speechOutput)
             state.libraries.append(session.personalization)
             let next =
                 state.outcomes.isEmpty ? DictationOutcome.delivered(.accessibility) : state.outcomes.removeFirst()
