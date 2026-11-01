@@ -119,8 +119,9 @@ network, so that I can trust the "nothing leaves this Mac" promise.
   current process, and a hosted test that runs full fake-OS sessions (Exact,
   Clean, personalization, context formatting, translation review, tone
   rewrite, voice editing) and asserts that none opened.
-- A test that the model downloader is never started by dictation, cleanup,
-  translation, or rewriting.
+- A test that no session type can start a model download: only the two
+  Settings models, behind the confirmation, call the installer, and owning the
+  real model store opens no socket.
 - `make network-check`, added to `make ci` and the CI job.
 - A manual step for a real Mac with a network monitor (extends MA-19 and MA-31).
 
@@ -130,7 +131,8 @@ network, so that I can trust the "nothing leaves this Mac" promise.
   else fails the check (fixture test of the script).
 - The probe sees a deliberately opened local socket (so a silent probe cannot
   pass by being broken), and sees none during the full sessions.
-- A fake downloader records zero calls across all session types.
+- A source check limits callers of the model installer to the two Settings
+  models, and owning the real model store opens no socket.
 - The check runs in `make ci` and in the CI workflow.
 - The manual step lists the tool, the actions to perform, and the expected result.
 
