@@ -24,4 +24,16 @@ extension TranscriptionPipeline {
             hardware: hardware)
         return readiness.isReady ? nil : .languageUnavailable(readiness)
     }
+
+    /// The outcome that holds `text` for the user instead of delivering it: a
+    /// rewrite (E10-S4) or a translation (E9-S5) is read before it goes anywhere.
+    static func heldForReview(
+        _ run: Run, transcript: Transcript, task: RecognitionTask, session: DictationSession, text: String
+    ) -> DictationOutcome? {
+        if let review = run.review { return .review(review, engine: run.engine) }
+        guard session.purpose == .dictation, wasTranslated(transcript, task: task, session: session) else {
+            return nil
+        }
+        return .needsAttention(.reviewTranslation, engine: run.engine, alternatives: [], transcript: text)
+    }
 }

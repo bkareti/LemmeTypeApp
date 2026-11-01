@@ -198,6 +198,7 @@ private struct ModeEditor: View {
                             get: { mode.finalPunctuation == .omit },
                             set: { mode.finalPunctuation = $0 ? .omit : .keep }))
                 }
+                styleSection
                 Section(String(localized: "Output", bundle: .module)) {
                     Picker(String(localized: "Send text to", bundle: .module), selection: $mode.output) {
                         Text(String(localized: "Insert at the cursor", bundle: .module)).tag(OutputAction.insert)
@@ -226,11 +227,50 @@ private struct ModeEditor: View {
             }
             .padding([.horizontal, .bottom], 20)
         }
-        .frame(width: 460, height: 520)
+        .frame(width: 460, height: 600)
         .onChange(of: error) { _, error in
             if let error {
                 AccessibilityNotification.Announcement(error.userMessage).post()
             }
+        }
+    }
+
+    /// Tone, format, and length for newly dictated text (E10-S2). Off for
+    /// Exact Dictation, which never rewrites.
+    private var styleSection: some View {
+        Section {
+            Picker(String(localized: "Tone", bundle: .module), selection: $mode.style.tone) {
+                ForEach(Tone.allCases, id: \.self) { Text($0.displayName).tag($0) }
+            }
+            .accessibilityIdentifier("modes.editor.tone")
+            Picker(String(localized: "Format", bundle: .module), selection: $mode.style.format) {
+                ForEach(WritingFormat.allCases, id: \.self) { Text($0.displayName).tag($0) }
+            }
+            .accessibilityIdentifier("modes.editor.format")
+            Picker(String(localized: "Length", bundle: .module), selection: $mode.style.length) {
+                ForEach(LengthPreference.allCases, id: \.self) { Text($0.displayName).tag($0) }
+            }
+            .accessibilityIdentifier("modes.editor.length")
+        } header: {
+            Text(String(localized: "Tone and format", bundle: .module))
+        } footer: {
+            Text(
+                mode.writingMode == .exact
+                    ? String(
+                        localized: "Exact Dictation never rewrites. Choose Clean Writing to use a tone or format.",
+                        bundle: .module)
+                    : String(
+                        localized:
+                            "Optional. LemmeType rewrites on this Mac and shows you the result before anything is inserted. Neutral, Plain text, and Original change nothing.",
+                        bundle: .module)
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .accessibilityIdentifier("modes.editor.style.explanation")
+        }
+        .disabled(mode.writingMode == .exact)
+        .onChange(of: mode.writingMode) { _, writing in
+            if writing == .exact { mode.style = .none }
         }
     }
 
@@ -252,6 +292,7 @@ extension DictationMode {
         if !usesPersonalization { parts.append(String(localized: "no vocabulary", bundle: .module)) }
         if output == .copy { parts.append(String(localized: "clipboard only", bundle: .module)) }
         if speechOutput == .english { parts.append(String(localized: "English text", bundle: .module)) }
+        if !effectiveStyle.isNone { parts.append(effectiveStyle.summary) }
         if let engine { parts.append(engine.displayName) }
         return parts.joined(separator: " · ")
     }

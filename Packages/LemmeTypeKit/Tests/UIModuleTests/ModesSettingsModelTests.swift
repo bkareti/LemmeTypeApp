@@ -143,4 +143,23 @@ struct ModesSettingsModelTests {
         #expect(saved?.summary.contains("English text") == true)
         #expect(DictationMode.clean.summary.contains("English text") == false)
     }
+
+    @Test func aSavedModeKeepsItsStyleAndSaysSoInItsSummary() {
+        let (model, _) = makeModel()
+        let style = StyleOptions(tone: .professional, format: .email, length: .concise)
+        #expect(model.save(DictationMode(name: "Client email", style: style)) == nil)
+        let saved = model.customModes.first { $0.name == "Client email" }
+        #expect(saved?.style == style)
+        #expect(saved?.summary.contains("Professional · Email · Concise") == true)
+        #expect(DictationMode.clean.summary.contains("Professional") == false)
+    }
+
+    @Test func anExactModeNeverShowsAStyleEvenIfOneWasStored() {
+        let (model, _) = makeModel()
+        let exact = DictationMode(name: "Exact email", writingMode: .exact, style: StyleOptions(tone: .casual))
+        #expect(model.save(exact) == nil)
+        let saved = model.customModes.first { $0.name == "Exact email" }
+        #expect(saved?.effectiveStyle == StyleOptions.none)
+        #expect(saved?.summary.contains("Casual") == false)
+    }
 }

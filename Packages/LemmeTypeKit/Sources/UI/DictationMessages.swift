@@ -38,6 +38,11 @@ extension DictationIssue {
             String(
                 localized: "Read the translation. Nothing is inserted until you choose Insert or Copy.",
                 bundle: .module)
+        case .reviewRewrite(let notice):
+            notice?.userMessage
+                ?? String(
+                    localized: "Read the rewrite. Nothing is inserted until you choose Insert or Copy.",
+                    bundle: .module)
         case .recognitionFailed(.permissionDenied), .engineUnavailable(_, .permissionUnavailable):
             String(
                 localized: "Apple Speech needs Speech Recognition access. Your recording is kept until you decide.",
@@ -169,7 +174,9 @@ extension DictationAction {
         case .saveAudio: String(localized: "Save Audio…", bundle: .module)
         case .copyText: String(localized: "Copy Text", bundle: .module)
         case .retryDelivery: String(localized: "Retry Insert", bundle: .module)
-        case .openPermissions, .openContextSettings, .useLanguage, .chooseLanguage, .insertText: settingsTitle
+        case .openPermissions, .openContextSettings, .useLanguage, .chooseLanguage, .insertText, .useOriginal,
+            .regenerate:
+            settingsTitle
         case .discard: String(localized: "Discard", bundle: .module)
         }
     }
@@ -183,6 +190,8 @@ extension DictationAction {
             String(
                 localized: "Use \(SpokenLanguages.language(for: code)?.englishName ?? code)", bundle: .module)
         case .chooseLanguage: String(localized: "Language Settings…", bundle: .module)
+        case .useOriginal: String(localized: "Use Original", bundle: .module)
+        case .regenerate: String(localized: "Regenerate", bundle: .module)
         default: String(localized: "Insert", bundle: .module)
         }
     }
@@ -202,6 +211,8 @@ extension DictationAction {
         case .useLanguage(let code): "use-language-\(code)"
         case .chooseLanguage: "choose-language"
         case .insertText: "insert-text"
+        case .useOriginal: "use-original"
+        case .regenerate: "regenerate"
         case .discard: "discard"
         }
     }

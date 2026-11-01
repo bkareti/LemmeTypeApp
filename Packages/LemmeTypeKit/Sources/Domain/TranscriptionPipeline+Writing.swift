@@ -8,13 +8,29 @@ extension TranscriptionPipeline {
     /// any other language is written Exact (spacing only), and the English
     /// text of a translation gets the full treatment (E9-S4).
     func written(_ transcript: String, language: String, session: DictationSession, run: inout Run) -> String {
+        let before = writtenBeforeStyle(transcript, language: language, session: session, run: &run)
+        return before.isFinal ? before.text : finished(before.text, language: language, session: session)
+    }
+
+    /// Text that is ready for the optional tone and format step (E10-S3).
+    struct WrittenText {
+        var text: String
+        /// Snippets and empty text skip the style step and the final formatting.
+        var isFinal: Bool
+    }
+
+    /// Everything up to, and not including, the cursor context and trailing space.
+    func writtenBeforeStyle(_ transcript: String, language: String, session: DictationSession, run: inout Run)
+        -> WrittenText
+    {
         let mode = session.dictationMode
         let isEnglish = SpokenLanguages.isEnglish(language)
         if mode.usesSnippets, let snippet = SnippetMatcher.match(transcript, in: session.personalization.snippets) {
             // Delivered as written: only spacing may change around it.
             run.usedSnippet = true
             let text = session.formattingContext.map { format(snippet.expansion, .exact, $0) } ?? snippet.expansion
-            return Self.trailingSpace(text, mode: mode, context: session.formattingContext)
+            return WrittenText(
+                text: Self.trailingSpace(text, mode: mode, context: session.formattingContext), isFinal: true)
         }
         // The injected writer serves the default rule set; a mode with rules
         // switched off runs its own configuration.
@@ -34,11 +50,16 @@ extension TranscriptionPipeline {
             text = personalized.text
             run.personalizations = personalized.transformations.count
         }
-        guard text.contains(where: { !$0.isWhitespace }) else { return text }
-        if isEnglish, let context = session.formattingContext {
+        return WrittenText(text: text, isFinal: !text.contains(where: { !$0.isWhitespace }))
+    }
+
+    /// The cursor context and the mode's trailing space, after any rewrite.
+    func finished(_ text: String, language: String, session: DictationSession) -> String {
+        var text = text
+        if SpokenLanguages.isEnglish(language), let context = session.formattingContext {
             text = format(text, session.mode, context)
         }
-        return Self.trailingSpace(text, mode: mode, context: session.formattingContext)
+        return Self.trailingSpace(text, mode: session.dictationMode, context: session.formattingContext)
     }
 
     /// Drops one final period ("Message" style); `?`, `!`, and an ellipsis stay.

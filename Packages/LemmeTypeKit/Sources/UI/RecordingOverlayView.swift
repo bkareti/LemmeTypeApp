@@ -64,17 +64,35 @@ struct RecordingOverlayView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("overlay.message")
             }
+            if let style = coordinator.reviewStyle?.summary, !style.isEmpty {
+                Label(style, systemImage: "wand.and.stars")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("overlay.review.style")
+            }
             if let review = coordinator.reviewText {
-                Text(review)
+                let original = coordinator.reviewOriginal
+                let showsOriginal = coordinator.reviewShowsOriginal
+                Text(showsOriginal ? (original ?? review) : review)
                     .font(.body)
                     .lineLimit(8)
                     .textSelection(.enabled)
                     .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
-                    .accessibilityLabel(Text(String(localized: "Translation", bundle: .module)))
-                    .accessibilityValue(Text(review))
+                    .accessibilityLabel(Text(reviewLabel(showingOriginal: showsOriginal && original != nil)))
+                    .accessibilityValue(Text(showsOriginal ? (original ?? review) : review))
                     .accessibilityIdentifier("overlay.review.text")
+                if original != nil {
+                    Button(
+                        showsOriginal
+                            ? String(localized: "Show rewrite", bundle: .module)
+                            : String(localized: "Show original", bundle: .module)
+                    ) { coordinator.toggleReviewOriginal() }
+                    .buttonStyle(.link)
+                    .controlSize(.small)
+                    .accessibilityIdentifier("overlay.review.toggle")
+                }
             }
             if coordinator.attention != nil {
                 attentionButtons
@@ -116,7 +134,21 @@ struct RecordingOverlayView: View {
         if coordinator.activePurpose == .editing {
             return String(localized: "Editing selection · On this Mac", bundle: .module)
         }
-        let mode = coordinator.activeDictationMode?.displayName ?? coordinator.writingMode.displayName
+        var mode = coordinator.activeDictationMode?.displayName ?? coordinator.writingMode.displayName
+        // The choices that change the text are always visible while it is processed (E9-S3, E10-S4).
+        if let settings = coordinator.activeSettings,
+            LanguageReadiness.isBeyondEnglishDictation(
+                language: settings.language, output: settings.speechOutput)
+        {
+            let spoken = DictationSettingsModel.settingLanguageName(settings.language)
+            let route =
+                settings.speechOutput == .english && !SpokenLanguages.isEnglish(settings.language)
+                ? "\(spoken) → English" : spoken
+            mode += " · \(route)"
+        }
+        if let style = coordinator.activeDictationMode?.effectiveStyle.summary, !style.isEmpty {
+            mode += " · \(style)"
+        }
         if coordinator.activeModeSource == .appRule {
             return String(localized: "\(mode) for this app · On this Mac", bundle: .module)
         }
@@ -130,22 +162,42 @@ struct RecordingOverlayView: View {
         return nil
     }
 
-    /// Up to three choices plus Discard, which is always last.
+    /// Choices in rows of three, with Discard always last on its own side.
     private var attentionButtons: some View {
         let actions = coordinator.attentionActions
-        let primary = Array(actions.filter { $0 != .discard }.prefix(3))
-        return HStack {
-            ForEach(primary, id: \.identifier) { action in
-                Button(title(of: action)) { coordinator.perform(action) }
-                    .accessibilityIdentifier("overlay.action.\(action.identifier)")
+        let rows = Array(actions.filter { $0 != .discard }).chunked(into: 3)
+        return VStack(alignment: .leading, spacing: 6) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
+                HStack {
+                    ForEach(row, id: \.identifier) { action in
+                        Button(title(of: action)) { coordinator.perform(action) }
+                            .accessibilityIdentifier("overlay.action.\(action.identifier)")
+                    }
+                    Spacer(minLength: 0)
+                    if index == rows.count - 1, actions.contains(.discard) {
+                        discardButton
+                    }
+                }
             }
-            Spacer(minLength: 0)
-            if actions.contains(.discard) {
-                Button(DictationAction.discard.title(engineName: \.displayName)) { coordinator.perform(.discard) }
-                    .accessibilityIdentifier("overlay.action.discard")
+            if rows.isEmpty, actions.contains(.discard) {
+                HStack {
+                    Spacer(minLength: 0)
+                    discardButton
+                }
             }
         }
         .controlSize(.small)
+    }
+
+    private var discardButton: some View {
+        Button(DictationAction.discard.title(engineName: \.displayName)) { coordinator.perform(.discard) }
+            .accessibilityIdentifier("overlay.action.discard")
+    }
+
+    private func reviewLabel(showingOriginal: Bool) -> String {
+        if showingOriginal { return String(localized: "Original text", bundle: .module) }
+        return coordinator.attention == .reviewTranslation
+            ? String(localized: "Translation", bundle: .module) : String(localized: "Rewritten text", bundle: .module)
     }
 
     /// Retry reads "Translate Again" while a translation is being reviewed.
@@ -176,10 +228,20 @@ struct RecordingOverlayView: View {
             Appearance("exclamationmark.triangle.fill", .yellow, String(localized: "Couldn’t record", bundle: .module))
         case .needsAttention(.reviewTranslation):
             Appearance("text.bubble.fill", .blue, String(localized: "Review translation", bundle: .module))
+        case .needsAttention(.reviewRewrite(nil)):
+            Appearance("wand.and.stars", .blue, String(localized: "Review rewrite", bundle: .module))
+        case .needsAttention(.reviewRewrite):
+            Appearance("text.badge.xmark", .orange, String(localized: "Not rewritten", bundle: .module))
         case .needsAttention:
             Appearance(
                 "exclamationmark.bubble.fill", .orange, String(localized: "Needs your decision", bundle: .module))
         }
+    }
+}
+
+extension Array {
+    fileprivate func chunked(into size: Int) -> [[Element]] {
+        stride(from: 0, to: count, by: size).map { Array(self[$0..<Swift.min($0 + size, count)]) }
     }
 }
 

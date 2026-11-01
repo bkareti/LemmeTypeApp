@@ -64,6 +64,9 @@ public struct DictationMode: Identifiable, Equatable, Codable, Sendable {
     /// Snippet triggers (E4-S3).
     public var usesSnippets: Bool
     public var finalPunctuation: FinalPunctuation
+    /// Tone, format, and length applied to newly dictated text (E10-S2).
+    /// Use ``effectiveStyle``: Exact Dictation never rewrites.
+    public var style: StyleOptions
     // Output.
     public var output: OutputAction
     /// Add one space after the text so the next dictation can follow on.
@@ -80,6 +83,7 @@ public struct DictationMode: Identifiable, Equatable, Codable, Sendable {
         usesPersonalization: Bool = true,
         usesSnippets: Bool = true,
         finalPunctuation: FinalPunctuation = .keep,
+        style: StyleOptions = .none,
         output: OutputAction = .insert,
         appendsSpace: Bool = false
     ) {
@@ -93,6 +97,7 @@ public struct DictationMode: Identifiable, Equatable, Codable, Sendable {
         self.usesPersonalization = usesPersonalization
         self.usesSnippets = usesSnippets
         self.finalPunctuation = finalPunctuation
+        self.style = style
         self.output = output
         self.appendsSpace = appendsSpace
     }
@@ -111,11 +116,16 @@ public struct DictationMode: Identifiable, Equatable, Codable, Sendable {
         usesPersonalization = try container.decode(Bool.self, forKey: .usesPersonalization)
         usesSnippets = try container.decode(Bool.self, forKey: .usesSnippets)
         finalPunctuation = try container.decode(FinalPunctuation.self, forKey: .finalPunctuation)
+        style = try container.decodeIfPresent(StyleOptions.self, forKey: .style) ?? .none
         output = try container.decode(OutputAction.self, forKey: .output)
         appendsSpace = try container.decode(Bool.self, forKey: .appendsSpace)
     }
 
     public var isBuiltIn: Bool { id.isBuiltIn }
+
+    /// The style that runs: none for Exact Dictation, which never rewrites
+    /// (E10-S2), otherwise the chosen ``style``.
+    public var effectiveStyle: StyleOptions { writingMode == .exact ? .none : style }
 
     /// The Clean Writing configuration this mode runs.
     public var cleanupConfiguration: CleanupConfiguration {
@@ -128,7 +138,7 @@ public struct DictationMode: Identifiable, Equatable, Codable, Sendable {
             name: name, engine: engine, language: language, speechOutput: speechOutput, writingMode: writingMode,
             cleanupRules: cleanupRules,
             usesPersonalization: usesPersonalization, usesSnippets: usesSnippets, finalPunctuation: finalPunctuation,
-            output: output, appendsSpace: appendsSpace)
+            style: style, output: output, appendsSpace: appendsSpace)
     }
 
     // MARK: Built-ins
