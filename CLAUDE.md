@@ -47,6 +47,7 @@ make release-build REHEARSAL=1 && make release-verify REHEARSAL=1  # ad-hoc rele
 make quality-gate   # every automated check with one summary (UI=1 adds UI tests)
 make benchmark   # end-to-end benchmark on this Mac + threshold check (not CI)
 make release-check APP=<app|zip>  # thresholds + release-artifact scan
+make app-icons   # re-render the Mac and iPhone/iPad app icons from the vector L (needs librsvg)
 make build-ios   # the iPhone and iPad app for the iOS Simulator
 make test-ios    # its unit tests + the portable package tests on the iOS Simulator
 make format      # apply swift-format
@@ -254,6 +255,11 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   on phones; `WhisperEngine(availableMemory:)` refuses a load that does not fit. An App Intent
   leaves a one-time `LaunchRequestInbox` request. `DeviceWords` keeps shared text from saying
   "this Mac" on a phone. `HandheldEndToEndTests` covers the path; device steps are MA-66…MA-72.
+- App icons: `scripts/make-app-icons.py` draws the "L." mark (geometry measured from
+  `Logos/`, jade `#03A58D`) once and renders `Design/AppIcon/*.svg` plus both
+  `Assets.xcassets/AppIcon.appiconset` catalogs (Mac 16–512 pt at 1x/2x; iPhone/iPad
+  light, dark, tinted). Edit the script and run `make app-icons`; never hand-edit the PNGs.
+  The menu-bar glyph is a separate SF Symbol, not part of the icon.
 - Diagnostics: components take `any DiagnosticsRecording` (default
   `DiscardingDiagnostics`); the app shares one `DiagnosticsBuffer`. Event names
   and keys must be literals and values typed (`.id(...)` redacts anything that

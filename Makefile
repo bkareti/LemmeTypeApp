@@ -10,7 +10,7 @@ IOS_XCODEBUILD := xcodebuild -project $(PROJECT) -scheme LemmeTypeiOS -destinati
 XCODEBUILD  := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED)
 SWIFT_DIRS  := App Packages/LemmeTypeKit/Sources Packages/LemmeTypeKit/Tests Packages/LemmeTypeKit/Package.swift
 
-.PHONY: bootstrap generate build build-ios test-ios test test-unit test-app test-ui lint format privacy-check network-check security-check privacy-docs-check l10n-check l10n-update docs-check quality-gate release-build release-verify release-notarize release-script-tests ci run clean benchmark release-check
+.PHONY: bootstrap generate build build-ios test-ios test test-unit test-app test-ui lint format app-icons privacy-check network-check security-check privacy-docs-check l10n-check l10n-update docs-check quality-gate release-build release-verify release-notarize release-script-tests ci run clean benchmark release-check
 
 bootstrap: ## Verify required tools are installed
 	@command -v xcodegen >/dev/null || { echo "Missing xcodegen: brew install xcodegen"; exit 1; }
@@ -96,6 +96,9 @@ benchmark: ## End-to-end benchmark on this Mac + threshold check (not on CI)
 release-check: ## Thresholds and artifact scan; APP=path/to/LemmeType.app or .zip
 	python3 scripts/check-performance-thresholds.py build/benchmarks
 	scripts/check-release-artifact.sh $(APP)
+
+app-icons: ## Re-render the Mac and iPhone/iPad app icons from the vector L (needs: brew install librsvg)
+	python3 scripts/make-app-icons.py
 
 format: ## Apply swift-format
 	xcrun swift-format format --in-place --recursive $(SWIFT_DIRS)

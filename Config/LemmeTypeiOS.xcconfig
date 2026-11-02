@@ -4,6 +4,7 @@
 PRODUCT_NAME = LemmeType
 PRODUCT_MODULE_NAME = LemmeTypeiOS
 PRODUCT_BUNDLE_IDENTIFIER = com.lemmetype.LemmeType.iOS
+ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
 
 SDKROOT = iphoneos
 SUPPORTED_PLATFORMS = iphoneos iphonesimulator
