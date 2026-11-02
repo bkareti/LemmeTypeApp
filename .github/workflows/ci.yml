@@ -5,6 +5,8 @@
 #   the privacy threat model.
 # - ui-tests (non-blocking until proven stable on the hosted runner): XCUITest
 #   smoke tests against fake services.
+# - ios (non-blocking until proven on the hosted runner): the iPhone and iPad app builds
+#   and its tests run on the iOS Simulator (E8-S3, ADR 0027).
 # - release-readiness (non-blocking at first): an ad-hoc rehearsal archive and its
 #   verification (E7-S2).
 # Manual checks that CI cannot do live in docs/testing/manual-acceptance.md.
@@ -114,6 +116,38 @@ jobs:
 
       - name: UI tests (fake services, no microphone or permissions)
         run: make test-ui
+
+      - name: No captured audio left behind
+        run: make privacy-check
+
+  ios:
+    name: iPhone and iPad app (Simulator)
+    runs-on: xcode-27
+    timeout-minutes: 40
+    # The iOS Simulator runtime on the hosted image has not been proven yet. Make this
+    # job required once it has been green for a week (E8-S3, ADR 0027).
+    continue-on-error: true
+    env:
+      XCODE_APP: /Applications/Xcode_27.0.app
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+      HOMEBREW_NO_ANALYTICS: "1"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Select Xcode 27
+        run: sudo xcode-select --switch "$XCODE_APP"
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Build for the iOS Simulator
+        run: make build-ios IOS_DESTINATION='generic/platform=iOS Simulator'
+
+      - name: Tests on the iOS Simulator (fake services, no microphone or pasteboard)
+        run: make test-ios
 
       - name: No captured audio left behind
         run: make privacy-check

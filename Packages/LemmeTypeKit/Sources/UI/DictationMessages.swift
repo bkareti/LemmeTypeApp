@@ -30,6 +30,11 @@ extension DictationIssue {
         switch self {
         case .recognitionFailed(.noSpeechDetected):
             String(localized: "No speech was detected.", bundle: .module)
+        case .recognitionFailed(.silentAudio):
+            String(
+                localized:
+                    "The microphone didn’t pick up any sound. Check that it isn’t muted or in use by a call or another app, then try again.",
+                bundle: .module)
         case .recognitionFailed(.languageUncertain):
             String(
                 localized:
@@ -40,6 +45,10 @@ extension DictationIssue {
         case .reviewTranslation:
             String(
                 localized: "Read the translation. Nothing is inserted until you choose Insert or Copy.",
+                bundle: .module)
+        case .reviewText:
+            String(
+                localized: "Read your dictation. It is copied only when you choose Copy, and never sent.",
                 bundle: .module)
         case .reviewRewrite(let notice):
             notice?.userMessage
@@ -54,7 +63,8 @@ extension DictationIssue {
             String(localized: "The selected engine’s model isn’t installed. Your recording is kept.", bundle: .module)
         case .recognitionFailed(.unsupported), .engineUnavailable(_, .unsupported):
             String(
-                localized: "The selected engine isn’t available on this Mac. Your recording is kept.", bundle: .module)
+                localized: "The selected engine isn’t available on \(DeviceWords.thisDevice). Your recording is kept.",
+                bundle: .module)
         case .recognitionFailed, .engineUnavailable:
             String(localized: "Transcription failed. Your recording is kept so you can try again.", bundle: .module)
         case .noEngineAvailable:
@@ -273,7 +283,7 @@ extension ProcessingPhase {
         case .preparingEngine: String(localized: "Preparing…", bundle: .module)
         case .recognizing: String(localized: "Transcribing…", bundle: .module)
         case .writing: String(localized: "Writing…", bundle: .module)
-        case .rewriting: String(localized: "Rewriting on this Mac…", bundle: .module)
+        case .rewriting: String(localized: "Rewriting on \(DeviceWords.thisDevice)…", bundle: .module)
         case .delivering: String(localized: "Inserting…", bundle: .module)
         }
     }

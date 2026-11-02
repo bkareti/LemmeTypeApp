@@ -12,16 +12,18 @@ extension DictationSettingsModel {
         }
         if ready.count == 1 {
             return String(
-                localized: "Uses \(first.id.displayName), the only engine ready on this Mac.", bundle: .module)
+                localized: "Uses \(first.id.displayName), the only engine ready on \(DeviceWords.thisDevice).",
+                bundle: .module)
         }
         return String(
-            localized: "Uses \(first.id.displayName), the recommended engine that is ready on this Mac.",
+            localized:
+                "Uses \(first.id.displayName), the recommended engine that is ready on \(DeviceWords.thisDevice).",
             bundle: .module)
     }
 
     /// One line for the status menu, for example "Engine: Automatic (Apple Speech) · On this Mac".
     public var menuEngineSummary: String {
-        let location = String(localized: "On this Mac", bundle: .module)
+        let location = String(localized: "On \(DeviceWords.thisDevice)", bundle: .module)
         guard let effective = effectiveEngine else {
             return String(localized: "Engine: not ready", bundle: .module)
         }
@@ -52,7 +54,7 @@ extension DictationSettingsModel {
 extension DictationSettingsModel.EngineRow {
     /// Location, languages, and what has to be installed.
     var detail: String {
-        let location = String(localized: "On this Mac", bundle: .module)
+        let location = String(localized: "On \(DeviceWords.thisDevice)", bundle: .module)
         let languages = ListFormatter.localizedString(byJoining: languages.map(DictationSettingsModel.languageName))
         let download: String
         switch assets {
@@ -75,7 +77,7 @@ extension EngineAvailability {
         case .assetsMissing: String(localized: "Download required", bundle: .module)
         case .permissionUnavailable: String(localized: "Needs Speech Recognition access", bundle: .module)
         case .unsupported(.language): String(localized: "Doesn’t support this language", bundle: .module)
-        case .unsupported: String(localized: "Not available on this Mac", bundle: .module)
+        case .unsupported: String(localized: "Not available on \(DeviceWords.thisDevice)", bundle: .module)
         case .failed: String(localized: "Couldn’t start", bundle: .module)
         }
     }
@@ -85,8 +87,18 @@ extension UnsupportedReason {
     var explanation: String {
         switch self {
         case .operatingSystem: String(localized: "Needs a newer version of macOS.", bundle: .module)
-        case .hardware: String(localized: "Needs a Mac with Apple silicon.", bundle: .module)
-        case .insufficientMemory: String(localized: "Needs a Mac with at least 8 GB of memory.", bundle: .module)
+        case .hardware:
+            if DeviceWords.isHandheld {
+                String(localized: "This model doesn’t run on this device.", bundle: .module)
+            } else {
+                String(localized: "Needs a Mac with Apple silicon.", bundle: .module)
+            }
+        case .insufficientMemory:
+            if DeviceWords.isHandheld {
+                String(localized: "This device doesn’t have enough memory for this model.", bundle: .module)
+            } else {
+                String(localized: "Needs a Mac with at least 8 GB of memory.", bundle: .module)
+            }
         case .language: String(localized: "Doesn’t support the selected language.", bundle: .module)
         case .onDeviceRecognitionUnavailable:
             String(
@@ -133,7 +145,7 @@ extension ModelAssetError {
         case .alreadyInProgress:
             String(localized: "This model is already downloading.", bundle: .module)
         case .storageFailure:
-            String(localized: "The model couldn’t be saved on this Mac.", bundle: .module)
+            String(localized: "The model couldn’t be saved on \(DeviceWords.thisDevice).", bundle: .module)
         case .consentRequired, .unknownAsset, .untrustedSource:
             String(localized: "This model can’t be downloaded.", bundle: .module)
         }
@@ -147,7 +159,7 @@ extension DictationSettingsModel.DownloadOffer {
         let free = availableBytes.formatted(.byteCount(style: .file))
         var message = String(
             localized:
-                "Downloads \(size) from Hugging Face and uses \(storage) on this Mac. Licence: \(asset.license). Free space: \(free). The file is verified before use; dictation itself never uses the network.",
+                "Downloads \(size) from Hugging Face and uses \(storage) on \(DeviceWords.thisDevice). Licence: \(asset.license). Free space: \(free). The file is verified before use; dictation itself never uses the network.",
             bundle: .module)
         if !hasEnoughSpace {
             let required = asset.requiredFreeBytes.formatted(.byteCount(style: .file))

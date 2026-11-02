@@ -13,7 +13,7 @@ let strictSettings: [SwiftSetting] = [
 let package = Package(
     name: "LemmeTypeKit",
     defaultLocalization: "en",
-    platforms: [.macOS(.v26)],
+    platforms: [.macOS(.v26), .iOS(.v26)],
     products: [
         .library(name: "Domain", targets: ["Domain"]),
         .library(name: "Support", targets: ["Support"]),

@@ -96,6 +96,18 @@ public enum ModelCatalog {
         var multilingual = false
     }
 
+    /// iPhone and iPad (E8-S5, Proposed until measured on devices): Tiny and Base on
+    /// 6 GB and up, Small only on iPads with 8 GB and up.
+    private static func handheldRequirements(for tier: ModelTier) -> [DeviceClass: HandheldRequirement] {
+        switch tier {
+        case .fastest, .balanced:
+            let need = HandheldRequirement(minimumGigabytes: 6, recommendedGigabytes: 8)
+            return [.iPhone: need, .iPad: need]
+        case .mostAccurate:
+            return [.iPad: HandheldRequirement(minimumGigabytes: 8, recommendedGigabytes: 16)]
+        }
+    }
+
     private static func whisper(_ spec: WhisperSpec) -> ModelAsset {
         let (id, name, file, sha256, bytes) = (spec.id, spec.name, spec.file, spec.sha256, spec.bytes)
         let (tier, memory, recommendedGigabytes) = (spec.tier, spec.memory, spec.recommendedGigabytes)
@@ -119,7 +131,8 @@ public enum ModelCatalog {
                 ?? URL(fileURLWithPath: "/"),
             hardware: HardwareRequirement(
                 requiresAppleSilicon: true, minimumMemoryBytes: 8 * 1_073_741_824,
-                recommendedMemoryBytes: recommendedGigabytes * 1_073_741_824),
+                recommendedMemoryBytes: recommendedGigabytes * 1_073_741_824,
+                handheld: handheldRequirements(for: tier)),
             tasks: spec.multilingual ? [.transcribe, .translateToEnglish] : [.transcribe],
             tier: tier,
             runtimeMemoryBytes: memory

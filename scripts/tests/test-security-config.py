@@ -23,6 +23,8 @@ FILES = [
     "Config/Base.xcconfig",
     "Config/Debug.xcconfig",
     "Config/LemmeType.xcconfig",
+    "Config/LemmeTypeiOS.xcconfig",
+    "App/LemmeTypeiOS/PrivacyInfo.xcprivacy",
     "Config/Release.xcconfig",
     "Config/Version.xcconfig",
     "Packages/LemmeTypeKit/Package.swift",
@@ -128,6 +130,45 @@ class SecurityConfigTests(unittest.TestCase):
     def test_a_missing_allowlist_fails(self) -> None:
         (self.root / "docs/security/dependencies-allowlist.txt").unlink()
         self.assertIn("missing allowlist", self.errors())
+
+    # The iPhone and iPad app (E8-S4, E8-S9).
+
+    def test_the_iphone_app_may_not_declare_background_modes(self) -> None:
+        self.append("Config/LemmeTypeiOS.xcconfig", "INFOPLIST_KEY_UIBackgroundModes = audio\n")
+        self.assertIn("background modes", self.errors())
+
+    def test_the_iphone_app_may_not_gain_an_entitlement(self) -> None:
+        self.edit(
+            "Config/LemmeTypeiOS.xcconfig", "CODE_SIGN_ENTITLEMENTS =\n",
+            "CODE_SIGN_ENTITLEMENTS = App/LemmeTypeiOS/LemmeTypeiOS.entitlements\n",
+        )  # fmt: skip
+        self.assertIn("no entitlements", self.errors())
+        (self.root / "App/LemmeTypeiOS/LemmeTypeiOS.entitlements").write_text("<plist/>", encoding="utf-8")
+        self.assertIn("LemmeTypeiOS.entitlements", self.errors())
+
+    def test_the_iphone_app_may_not_relax_app_transport_security(self) -> None:
+        self.append("Config/LemmeTypeiOS.xcconfig", "INFOPLIST_KEY_NSAppTransportSecurity = NSAllowsArbitraryLoads\n")
+        self.assertIn("App Transport Security", self.errors())
+
+    def test_a_missing_privacy_manifest_fails(self) -> None:
+        (self.root / "App/LemmeTypeiOS/PrivacyInfo.xcprivacy").unlink()
+        self.assertIn("missing App/LemmeTypeiOS/PrivacyInfo.xcprivacy", self.errors())
+
+    def test_the_privacy_manifest_may_not_declare_tracking(self) -> None:
+        self.edit("App/LemmeTypeiOS/PrivacyInfo.xcprivacy", "<key>NSPrivacyTracking</key>\n\t<false/>", "<key>NSPrivacyTracking</key>\n\t<true/>")
+        self.assertIn("NSPrivacyTracking must be false", self.errors())
+
+    def test_the_privacy_manifest_may_not_declare_collected_data(self) -> None:
+        self.edit(
+            "App/LemmeTypeiOS/PrivacyInfo.xcprivacy", "<key>NSPrivacyCollectedDataTypes</key>\n\t<array/>",
+            "<key>NSPrivacyCollectedDataTypes</key>\n\t<array><dict/></array>",
+        )  # fmt: skip
+        self.assertIn("collects no data", self.errors())
+
+    def test_an_api_that_needs_a_declared_reason_must_be_in_the_manifest(self) -> None:
+        probe = self.root / "App/LemmeTypeiOS/Probe.swift"
+        probe.write_text("import Foundation\nlet uptime = ProcessInfo.processInfo.systemUptime\n", encoding="utf-8")
+        self.assertIn("NSPrivacyAccessedAPICategorySystemBootTime", self.errors())
 
 
 if __name__ == "__main__":

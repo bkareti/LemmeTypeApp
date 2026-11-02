@@ -148,10 +148,13 @@ writing, and personalization logic.
   macOS-only code (Core Audio device selection, Accessibility, AppKit windows
   and panels, the libproc socket probe) behind `#if os(macOS)`, with an iOS
   counterpart only where shared code needs a symbol. No file is duplicated.
-- `Delivery`, `Shortcuts`, `Lifecycle`, and `Updates` stay macOS-only and are
-  not linked by the iOS app.
+- `Shortcuts` is empty on iOS, and `Updates` is not linked. `Delivery` keeps its
+  Accessibility and `NSPasteboard` code on the Mac and gains the iOS pasteboard
+  writer; `Lifecycle` shares its system-conditions monitor and launch sentinel
+  and keeps the login item and single-instance code on the Mac.
 - `make build-ios` and `make test-ios` run on the iOS Simulator, and CI gets a
-  non-blocking job for them. `make ci` is unchanged.
+  non-blocking job for them. `make ci` is unchanged, except that
+  `make l10n-check` now also builds the package for iOS.
 - ADR 0027 holds the portability audit (module, iOS status, reason). The module
   table in `CLAUDE.md` and the coding-standards skill is updated.
 
@@ -192,11 +195,13 @@ background.
 - iOS implementations of the microphone permission protocols, with the denied
   and restricted states and an Open Settings action.
 - `RecordingLimits`: a maximum duration (5 minutes, Proposed). Recording ends
-  on cancel, timeout, interruption, route loss, the scene leaving the
-  foreground, and a memory warning.
-- A recording that ended for a reason the user did not choose is kept in the
-  app's protected temporary directory only until they choose Process or Discard,
-  and is removed at the next launch.
+  on cancel, timeout, interruption, route loss, revoked permission, the app going
+  to the background, and a critical memory warning.
+- Going to the background, the time limit, and a critical memory warning stop
+  the recording and process what was said, so a dictation is not lost.
+  An interruption, route loss, or revoked permission deletes the partial
+  recording and offers Try Again. Leftover recordings are deleted at the next
+  launch.
 
 **Acceptance criteria**
 
@@ -204,9 +209,9 @@ background.
   permission is denied, nothing records and the message offers Open Settings.
   Permission revoked while recording stops the session (tests with a fake
   authorizer).
-- Each ending above leaves the recorder in the documented state, including
-  `needsAttention` for an unrequested stop (tests with a fake audio session
-  and a manual clock).
+- Each ending above leaves the recorder in the documented state (tests with a
+  fake audio source): processed after the background, the time limit, or a
+  critical memory warning; failed with no audio left after an interruption.
 - No session can exceed the maximum duration (test).
 - The Info.plist declares the microphone string and no `UIBackgroundModes`,
   and a change to either fails `make security-check`.
@@ -240,8 +245,7 @@ memory.
   margin; the user sees why and what to do.
 - Model files live in Application Support, excluded from backup, verified by
   SHA-256 exactly as on the Mac. Downloads use the one allowlisted downloader,
-  only in the foreground, with consent and the size shown; on a constrained or
-  expensive network the user is asked again.
+  only in the foreground, with consent and the size shown.
 - Idle unload and memory-warning unload use the existing residency controller.
 - Settings › Models lists size, fit for this device, and install and remove.
 
@@ -278,14 +282,18 @@ clear confirmation so that I can paste it into any app myself.
   It shows the mode, language, and output in use and, when something cannot run,
   the reason (`LanguageReadiness`, rewriter availability).
 - The shared recorder state machine, session, and transcription pipeline are
-  used as they are. Delivery on iOS is an explicit copy: a pasteboard
-  implementation of `TextDelivering` that never inserts into another app and
-  never sends. There is no target capture on iOS.
+  used as they are. Delivery on iOS is an explicit copy: the pipeline holds
+  every result for review (`reviewsEveryResult`), the audio is deleted when the
+  review begins, and the only way out is Copy through an expiring pasteboard
+  writer. Nothing is inserted into another app or sent. There is no target
+  capture on iOS.
 - Copy writes a local-only item that expires (2 minutes, Proposed; choices of 1,
   2, and 10 minutes) and confirms with a visible state, a haptic, and a
   VoiceOver announcement that names the expiry.
-- Translated and restyled results always open in review with the original one
-  tap away (the Epic 9 and 10 review behaviour).
+- Translated and restyled results open in the same review, with Translate Again
+  or Regenerate where offered and the original one tap away (the Epic 9 and 10
+  review behaviour). Insert and Use Original are not offered: there is no field
+  to insert into.
 - The result is hidden in the app-switcher snapshot and cleared on Discard,
   after Copy and Done, on timeout, and on the next session.
 
@@ -295,8 +303,8 @@ clear confirmation so that I can paste it into any app myself.
   (view-model tests over the shared state machine).
 - Copy writes exactly the reviewed text once, with the local-only and
   expiration options (test with a fake pasteboard); a failed copy says so.
-- The completion feedback has a visible, a haptic, and a spoken form (tests of
-  the feedback model; haptic and speech in the manual checklist).
+- The completion feedback has a visible, a haptic, and a spoken form (model
+  tests; the haptic and speech are in the manual checklist).
 - An unavailable combination is refused before recording starts, with the reason.
 - A cancelled or failed session writes nothing to the pasteboard.
 - The result is not logged, not in diagnostics, and not in the snapshot (canary
@@ -334,8 +342,8 @@ or Siri so that I can begin without finding the app.
   (inbox tests with a manual clock).
 - With the microphone denied, or a model missing, the request shows the reason
   and does not record (tests).
-- The intent requires an unlocked device and opens the app; its metadata and
-  shortcut phrases are validated by tests and by `make security-check`.
+- The intent requires an unlocked device and opens the app (checked in the
+  manual checklist).
 - Recording started this way shows the same visible state as a tap on Record.
 - Action Button, Back Tap, Siri, the Shortcuts app, and a locked device are in
   the manual checklist.
@@ -369,7 +377,7 @@ apply to dictation on my phone so that it writes my words the way the Mac does.
 - Vocabulary, replacements, snippets, and the Clean rules change the output
   exactly as on the Mac (the shared corpus tests run on iOS).
 - A Mac archive imports on iOS and exports back unchanged, including mode rules
-  (round-trip test).
+  (the existing archive round-trip tests run on iOS).
 - Invalid entries are rejected with the existing messages.
 - Delete All removes the library file and leaves no copy (test).
 - Personalization is never logged or put in diagnostics (canary test).
@@ -407,8 +415,9 @@ to work for me, and as any user I want the app to show exactly what it keeps.
   and failure are announced (view-model and UI tests on the iOS Simulator).
 - The layout is usable at the largest accessibility text size and at iPad
   compact and regular widths (screenshot checklist).
-- Delete All Local Data removes models, the library, and settings, and the app
-  returns to first run (test).
+- Delete All Local Data removes the vocabulary, snippets, and modes, leftover
+  recordings, diagnostics, and (when chosen) the downloaded models; settings stay
+  (shared privacy-overview tests).
 - The privacy manifest matches the code: the checker fails on an undeclared
   required-reason API (script test).
 - A network API in an iOS file outside the allowlist, an unreviewed Info.plist
@@ -435,10 +444,11 @@ it automatically.
   they work together on real devices and fixes the thresholds. Issue #85 keeps
   its number and title.
 - End-to-end tests with fakes at the iOS edges (audio session, permission,
-  pasteboard, scene phase): Quick Dictation with each built-in mode, a
-  translation with review, a styled result with review, a launch request from
-  the Action Button, a missing model, a revoked permission, an interruption,
-  a memory warning, and cancellation.
+  pasteboard, app lifecycle): Quick Dictation with each built-in mode, a
+  translation with review, a missing model, a revoked permission, an
+  interruption, the time limit, the app leaving the foreground, cancellation,
+  and discard. The shortcut launch request and the review of a rewrite are
+  covered by the Quick Dictation model tests.
 - A network-silence check for the iOS flow and privacy canary tests across
   recording, recognition, translation, styling, review, and copy.
 - A real-device matrix: copy and paste into WhatsApp, Messages, Notes, and

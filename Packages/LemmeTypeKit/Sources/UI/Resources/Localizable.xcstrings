@@ -1,6 +1,16 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "%@ · %@ download and disk · about %@ memory · %@ · Apple silicon, %@+ memory" : {
       "localizations" : {
         "en" : {
@@ -57,6 +67,9 @@
     },
     "%lld downloaded models" : {
 
+    },
+    "%lld min" : {
+      "comment" : "A number of minutes; the unit is abbreviated"
     },
     "%lld minutes" : {
 
@@ -141,6 +154,9 @@
     "Accessibility access is needed to insert text. Copy it for now." : {
 
     },
+    "Action Button" : {
+
+    },
     "Add a key to the modifiers, for example ⌥Space." : {
 
     },
@@ -191,6 +207,12 @@
 
     },
     "Allow Speech Recognition" : {
+
+    },
+    "Allow the microphone?" : {
+
+    },
+    "Allowed" : {
 
     },
     "Also remove downloaded models" : {
@@ -265,10 +287,13 @@
     "Back" : {
       "comment" : "Button label: go to the previous setup step"
     },
+    "Back Tap" : {
+
+    },
     "Balanced" : {
 
     },
-    "Balanced, or Low Power while your Mac is in Low Power Mode." : {
+    "Balanced, or Low Power while %@ is in Low Power Mode." : {
 
     },
     "Best Accuracy" : {
@@ -316,6 +341,9 @@
     "Cleanup" : {
       "comment" : "Noun: automatic fixing of punctuation and filler words"
     },
+    "Clipboard" : {
+
+    },
     "clipboard only" : {
 
     },
@@ -346,8 +374,14 @@
     "Continue" : {
 
     },
+    "Copied text stays on this device only (it does not travel to your other devices) and is removed after this time." : {
+
+    },
     "Copied." : {
 
+    },
+    "Copied. It stays on this device for %lld min. Paste it into any app." : {
+      "comment" : "Shown after Copy; the number is how many minutes the copied text stays available"
     },
     "Copied. Paste it into your message." : {
 
@@ -415,6 +449,9 @@
     "Delete everything" : {
 
     },
+    "Delete everything LemmeType keeps on this device?" : {
+
+    },
     "Delete Mode" : {
 
     },
@@ -439,6 +476,12 @@
     "Diagnostics Report Preview" : {
 
     },
+    "Dictate" : {
+      "comment" : "Title of the main screen"
+    },
+    "Dictate Again" : {
+
+    },
     "Dictate: %@" : {
 
     },
@@ -458,6 +501,9 @@
 
     },
     "Dictation needs your attention. %@" : {
+
+    },
+    "Dictation never uses the network. The only download is a speech model, and only after you confirm it." : {
 
     },
     "Dictation recording" : {
@@ -518,12 +564,12 @@
         }
       }
     },
-    "Downloads %@ from Hugging Face and uses %@ on this Mac. Licence: %@. Free space: %@. The file is verified before use; dictation itself never uses the network." : {
+    "Downloads %@ from Hugging Face and uses %@ on %@. Licence: %@. Free space: %@. The file is verified before use; dictation itself never uses the network." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Downloads %1$@ from Hugging Face and uses %2$@ on this Mac. Licence: %3$@. Free space: %4$@. The file is verified before use; dictation itself never uses the network."
+            "value" : "Downloads %1$@ from Hugging Face and uses %2$@ on %3$@. Licence: %4$@. Free space: %5$@. The file is verified before use; dictation itself never uses the network."
           }
         }
       }
@@ -734,6 +780,9 @@
     "Keep a history of what I dictate" : {
 
     },
+    "Keep copied text for" : {
+
+    },
     "Keep for:" : {
 
     },
@@ -790,6 +839,9 @@
 
     },
     "LemmeType History" : {
+
+    },
+    "LemmeType listens only while you are on this screen and the recording is showing. Your voice is turned into text on this device and never leaves it." : {
 
     },
     "LemmeType needs Accessibility to type your dictated text into the app you were using." : {
@@ -873,10 +925,10 @@
     "Models" : {
 
     },
-    "Models load when you dictate and are removed from memory after this much time without dictation, or at once when your Mac runs short of memory." : {
+    "Models load when you dictate and are removed from memory after this much time without dictation, or at once when %@ runs short of memory." : {
 
     },
-    "Models run only on this Mac. A model is checked against its published fingerprint before it’s first used after each launch; a modified file is deleted." : {
+    "Models run only on %@. A model is checked against its published fingerprint before it’s first used after each launch; a modified file is deleted." : {
 
     },
     "Modes" : {
@@ -979,7 +1031,10 @@
     "no vocabulary" : {
 
     },
-    "Not available on this Mac" : {
+    "Not allowed" : {
+
+    },
+    "Not available on %@" : {
 
     },
     "Not checked yet." : {
@@ -1055,7 +1110,10 @@
     "OK" : {
       "comment" : "Button label: dismiss a message"
     },
-    "On this Mac" : {
+    "On %@" : {
+
+    },
+    "On this device" : {
 
     },
     "On-device recognition isn’t installed for this language. Add it in System Settings › Keyboard › Dictation." : {
@@ -1074,6 +1132,9 @@
 
     },
     "Open Permissions" : {
+
+    },
+    "Open Settings" : {
 
     },
     "Open System Settings…" : {
@@ -1122,7 +1183,7 @@
     "Performance" : {
 
     },
-    "Performance is reduced to keep your Mac cool." : {
+    "Performance is reduced to keep %@ cool." : {
 
     },
     "Permissions" : {
@@ -1143,6 +1204,9 @@
     "Prefers Whisper Tiny, uses two CPU cores and no GPU, loads only when needed, and frees memory after a minute." : {
 
     },
+    "Preparing" : {
+
+    },
     "Preparing…" : {
 
     },
@@ -1159,6 +1223,9 @@
       "comment" : "Noun: the settings pane about data use"
     },
     "Privacy › History, or Delete All Local Data below." : {
+
+    },
+    "Privacy and Data" : {
 
     },
     "Processing…" : {
@@ -1179,17 +1246,33 @@
     "Quit LemmeType, or Delete All Local Data below." : {
 
     },
+    "Read the rewrite. It is copied only when you choose Copy, and never sent." : {
+
+    },
     "Read the rewrite. Nothing is inserted until you choose Insert or Copy." : {
+
+    },
+    "Read the translation. It is copied only when you choose Copy, and never sent." : {
 
     },
     "Read the translation. Nothing is inserted until you choose Insert or Copy." : {
 
     },
+    "Read your dictation. It is copied only when you choose Copy, and never sent." : {
+
+    },
     "Ready" : {
       "comment" : "State: the engine or model can be used now"
     },
-    "Ready · %@ on this Mac" : {
-
+    "Ready · %@ on %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ready · %1$@ on %2$@"
+          }
+        }
+      }
     },
     "Recognition" : {
 
@@ -1197,7 +1280,10 @@
     "Recognition engine" : {
 
     },
-    "Recommended for this Mac" : {
+    "Recommended for %@" : {
+
+    },
+    "Recorded only while the recording is showing, turned into text on this device, and deleted when the text is ready or you cancel." : {
 
     },
     "Recording" : {
@@ -1213,6 +1299,9 @@
 
     },
     "Recording stopped" : {
+
+    },
+    "Recording stopped: time limit reached" : {
 
     },
     "Recording time" : {
@@ -1243,6 +1332,9 @@
 
     },
     "Removes your history, vocabulary, snippets, modes, any leftover recordings, and the diagnostics list from this Mac." : {
+
+    },
+    "Removes your vocabulary, snippets, modes, and downloaded models from this device." : {
 
     },
     "Replace Mine" : {
@@ -1281,13 +1373,16 @@
     "Review translation" : {
 
     },
-    "Rewriting on this Mac…" : {
+    "Rewriting on %@…" : {
 
     },
     "Rewritten text" : {
 
     },
-    "Runs on this Mac; more memory recommended" : {
+    "Rewritten Text" : {
+
+    },
+    "Runs on %@; more memory recommended" : {
 
     },
     "Save" : {
@@ -1320,6 +1415,15 @@
     "Send text to" : {
 
     },
+    "Settings" : {
+
+    },
+    "Settings › Accessibility › Touch › Back Tap, then choose a gesture and the “Start Dictating” shortcut." : {
+
+    },
+    "Settings › Action Button › Shortcut, then choose “Start Dictating” from LemmeType." : {
+
+    },
     "Settings…" : {
 
     },
@@ -1335,10 +1439,19 @@
     "Show original" : {
 
     },
+    "Show Original" : {
+
+    },
     "Show rewrite" : {
 
     },
+    "Show Rewrite" : {
+
+    },
     "Show:" : {
+
+    },
+    "Shown on screen until you copy or discard them. LemmeType keeps no history of what you dictate on iPhone or iPad." : {
 
     },
     "Snippet text" : {
@@ -1371,6 +1484,9 @@
     "Speak naturally and LemmeType writes the text into whatever app you're using. Setup takes two permissions. You'll see why each is needed before macOS asks." : {
 
     },
+    "Speak, then read the text. It is copied only when you choose Copy, and never sent." : {
+
+    },
     "Speech models you chose to download." : {
 
     },
@@ -1381,6 +1497,12 @@
 
     },
     "Spoken punctuation (“comma”, “new line”)" : {
+
+    },
+    "Start Dictating" : {
+
+    },
+    "Start From a Button" : {
 
     },
     "Start Test Recording" : {
@@ -1428,6 +1550,9 @@
     "Text insertion" : {
 
     },
+    "Text is copied only when you choose Copy, stays on this device, and expires. LemmeType never pastes or sends for you." : {
+
+    },
     "Text Near Cursor: Off" : {
 
     },
@@ -1447,6 +1572,12 @@
 
     },
     "The app didn’t take the pasted text in time. Your clipboard was put back; copy the text to paste it yourself." : {
+
+    },
+    "The app opens and recording starts on screen. Your iPhone must be unlocked. Nothing is recorded in the background." : {
+
+    },
+    "The clipboard" : {
 
     },
     "The download failed. Check your connection and try again." : {
@@ -1470,10 +1601,16 @@
     "The microphone couldn’t be started. Try again or choose another input." : {
 
     },
+    "The microphone didn’t pick up any sound. Check that it isn’t muted or in use by a call or another app, then try again." : {
+
+    },
     "The microphone was disconnected. Choose another input and try again." : {
 
     },
-    "The model couldn’t be saved on this Mac." : {
+    "The model couldn’t be saved on %@." : {
+
+    },
+    "The network" : {
 
     },
     "The on-device model declined this edit. Your text is unchanged." : {
@@ -1500,7 +1637,7 @@
     "The saved history couldn’t be read, so it was set aside and a new one was started. The old file is still on this Mac." : {
 
     },
-    "The selected engine isn’t available on this Mac. Your recording is kept." : {
+    "The selected engine isn’t available on %@. Your recording is kept." : {
 
     },
     "The selected engine isn’t ready for this. Choose another in Settings › Dictation." : {
@@ -1542,14 +1679,26 @@
     "This build has no readable version number, so it can’t compare." : {
 
     },
+    "This can’t be undone." : {
+
+    },
     "This can’t be undone. Export your history or vocabulary first if you want a copy. Your settings and permissions stay as they are." : {
 
     },
     "This deletes %lld saved dictations from this Mac. This can’t be undone." : {
 
     },
+    "This device doesn’t have enough memory for this model." : {
+
+    },
     "This field doesn’t accept inserted text. Copy it instead." : {
 
+    },
+    "this iPad" : {
+      "comment" : "The tablet, after a preposition"
+    },
+    "this iPhone" : {
+      "comment" : "The phone, after a preposition"
     },
     "This is exactly what will be saved." : {
 
@@ -1557,8 +1706,14 @@
     "This isn’t a LemmeType personalization file." : {
 
     },
-    "This isn’t available on this Mac." : {
+    "This isn’t available on %@." : {
 
+    },
+    "This isn’t supported on this device." : {
+
+    },
+    "this Mac" : {
+      "comment" : "The computer, after a preposition"
     },
     "This Mac can’t run Apple’s on-device model, so voice editing isn’t available." : {
 
@@ -1573,6 +1728,9 @@
 
     },
     "This model can’t be downloaded." : {
+
+    },
+    "This model doesn’t run on this device." : {
 
     },
     "This model is already downloading." : {
@@ -1629,7 +1787,7 @@
     "Turn off history?" : {
 
     },
-    "Turns speech in another language into English on this Mac. You read the translation before anything is inserted." : {
+    "Turns speech in another language into English on %@. You read the translation before anything is inserted." : {
 
     },
     "Type a shortcut…" : {
@@ -1695,11 +1853,25 @@
     "Use vocabulary and replacements" : {
 
     },
-    "Uses %@, the only engine ready on this Mac." : {
-
+    "Uses %@, the only engine ready on %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Uses %1$@, the only engine ready on %2$@."
+          }
+        }
+      }
     },
-    "Uses %@, the recommended engine that is ready on this Mac." : {
-
+    "Uses %@, the recommended engine that is ready on %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Uses %1$@, the recommended engine that is ready on %2$@."
+          }
+        }
+      }
     },
     "Uses macOS dictation languages" : {
 
@@ -1717,6 +1889,9 @@
 
     },
     "Vocabulary" : {
+
+    },
+    "Vocabulary and Snippets" : {
 
     },
     "vocabulary words" : {
@@ -1779,6 +1954,9 @@
     "Word or name" : {
 
     },
+    "Working…" : {
+
+    },
     "Writing" : {
       "comment" : "Noun: the way text is written, Exact or Clean"
     },
@@ -1813,6 +1991,15 @@
     "Your clipboard holds something LemmeType can’t put back, so it wasn’t used. Copying the text will replace it." : {
 
     },
+    "your iPad" : {
+      "comment" : "The user's tablet"
+    },
+    "your iPhone" : {
+      "comment" : "The user's phone"
+    },
+    "your Mac" : {
+      "comment" : "The user's computer"
+    },
     "Your recording" : {
 
     },
@@ -1820,6 +2007,12 @@
 
     },
     "Your saved personalization was made by a newer LemmeType. It was kept, and LemmeType started fresh." : {
+
+    },
+    "Your voice" : {
+
+    },
+    "Your words" : {
 
     },
     "Your words and modes" : {

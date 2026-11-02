@@ -14,6 +14,10 @@ public actor TranscriptionPipeline: DictationProcessing {
     let diagnostics: any DiagnosticsRecording
     /// What model fit is judged against (E9-S3); the current Mac in the app.
     let hardware: HardwareProfile
+    /// Hold every dictation for the user's decision instead of delivering it
+    /// (E8-S6). Off on the Mac, where text is inserted; on in the iPhone app,
+    /// where the only way out is an explicit copy.
+    private let reviewsEveryResult: Bool
 
     /// `engines` are in recommendation order (Automatic picks the first ready
     /// one); each session carries the user's ``EnginePreference``; `write`
@@ -30,8 +34,10 @@ public actor TranscriptionPipeline: DictationProcessing {
         copier: (any TextCopying)? = nil,
         history: any DictationHistoryRecording = DiscardingHistory(),
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics(),
-        hardware: HardwareProfile = .current
+        hardware: HardwareProfile = .current,
+        reviewsEveryResult: Bool = false
     ) {
+        self.reviewsEveryResult = reviewsEveryResult
         self.hardware = hardware
         self.copier = copier
         self.history = history
@@ -52,8 +58,10 @@ public actor TranscriptionPipeline: DictationProcessing {
         let run = await run(session, updates: updates)
         let outcome = run.outcome
         record(run, session: session, elapsed: ContinuousClock.now - start)
-        if case .delivered = outcome {
-            session.discardAudio()
+        switch outcome {
+        // Nothing can use the audio again: the text is final and only Copy or Discard remain (E8-S6).
+        case .delivered, .needsAttention(.reviewText, _, _, _): session.discardAudio()
+        default: break
         }
         return outcome
     }
@@ -127,13 +135,26 @@ public actor TranscriptionPipeline: DictationProcessing {
             run.outcome = Self.attention(.recognitionFailed(.noSpeechDetected), engine: id)
             return run
         }
-        if let held = Self.heldForReview(run, transcript: transcript, task: task, session: session, text: text) {
+        if let held = held(run, transcript: transcript, task: task, session: session, text: text) {
             run.outcome = held
             return run
         }
         updates(.phase(.delivering))
         run.outcome = await deliver(text, session: session, engine: id)
         return run
+    }
+
+    /// The outcome that holds `text` for the user instead of delivering it: a
+    /// rewrite or translation to read (E9-S5, E10-S4), or, where every result
+    /// is read before it is copied, any dictation (E8-S6).
+    private func held(
+        _ run: Run, transcript: Transcript, task: RecognitionTask, session: DictationSession, text: String
+    ) -> DictationOutcome? {
+        if let held = Self.heldForReview(run, transcript: transcript, task: task, session: session, text: text) {
+            return held
+        }
+        guard reviewsEveryResult, session.purpose == .dictation else { return nil }
+        return Self.attention(.reviewText, engine: run.engine, transcript: text)
     }
 
     /// The text to deliver: the written transcript, or (voice editing) the
@@ -190,8 +211,10 @@ public actor TranscriptionPipeline: DictationProcessing {
         }
     }
 
-    private static func attention(_ issue: DictationIssue, engine: RecognitionEngineID?) -> DictationOutcome {
-        .needsAttention(issue, engine: engine, alternatives: [], transcript: nil)
+    private static func attention(
+        _ issue: DictationIssue, engine: RecognitionEngineID?, transcript: String? = nil
+    ) -> DictationOutcome {
+        .needsAttention(issue, engine: engine, alternatives: [], transcript: transcript)
     }
 
     public func editingIssue(for target: ActivationTarget?, language: String) async -> DictationIssue? {

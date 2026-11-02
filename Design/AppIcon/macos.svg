@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<title>LemmeType app icon</title>
+<defs><filter id="shadow" x="-10%" y="-10%" width="120%" height="125%"><feGaussianBlur in="SourceAlpha" stdDeviation="12"/><feOffset dy="10" result="soft"/><feFlood flood-color="#000" flood-opacity="0.28"/><feComposite in2="soft" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect x="100" y="100" width="824" height="824" rx="185" fill="#03A58D" filter="url(#shadow)"/><g fill="#FFFFFF" transform="translate(168.80 141.84) scale(0.8047)"><path d="M177 272.5A78.5 78.5 0 0 1 334 272.5L334 524A78 78 0 0 0 412 602L552 602L552 726L385 726A208 208 0 0 1 177 518Z"/><path d="M595 568H676V726H595Z"/></g>
+</svg>

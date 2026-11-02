@@ -51,7 +51,7 @@ struct RecognitionEngineContractTests {
     @Test func errorIdentifiersAreStableAndSafe() {
         let errors: [RecognitionError] = [
             .cancelled, .assetsMissing, .unsupported(.language), .permissionDenied, .audioUnreadable,
-            .noSpeechDetected, .modelLoadFailed, .engineFailure(code: 1),
+            .noSpeechDetected, .silentAudio, .modelLoadFailed, .languageUncertain, .engineFailure(code: 1),
         ]
         #expect(Set(errors.map(\.identifier)).count == errors.count)
         #expect(errors.allSatisfy { $0.identifier.hasPrefix("recognition.") })
@@ -151,6 +151,12 @@ struct RecognitionRunnerTests {
         await #expect(throws: RecognitionError.noSpeechDetected) {
             try await RecognitionRunner().run(engine, try RecognitionEngineContractTests.makeRequest())
         }
+    }
+
+    @Test func silentAudioIsNotRetryableAndKeepsAStableIdentifier() {
+        #expect(!RecognitionError.silentAudio.isRetryable)
+        #expect(RecognitionError.silentAudio.identifier == "recognition.silent-audio")
+        #expect(RecognitionError.silentAudio != .noSpeechDetected)
     }
 
     @Test func retryableErrorsAreTheTransientOnes() {

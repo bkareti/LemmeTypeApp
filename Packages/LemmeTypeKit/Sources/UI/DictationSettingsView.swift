@@ -52,7 +52,7 @@ struct DictationSettingsView: View {
                     .accessibilityIdentifier("dictation.mode.\(mode.rawValue)")
                 }
             }
-            .pickerStyle(.radioGroup)
+            .exclusiveChoiceStyle()
             .accessibilityIdentifier("dictation.mode")
         }
     }
@@ -143,7 +143,7 @@ struct DictationSettingsView: View {
                     EngineRowLabel(row: row).tag(Optional(row.id))
                 }
             }
-            .pickerStyle(.radioGroup)
+            .exclusiveChoiceStyle()
             .accessibilityIdentifier("dictation.engine")
 
             if let blocked = model.blockedEngine {

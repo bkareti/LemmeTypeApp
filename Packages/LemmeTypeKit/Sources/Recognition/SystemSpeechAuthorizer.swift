@@ -1,9 +1,14 @@
-import AppKit
 import Domain
 import Speech
 import Support
 
-/// Speech-recognition authorization from macOS.
+#if os(macOS)
+    import AppKit
+#else
+    import UIKit
+#endif
+
+/// Speech-recognition authorization from the system.
 public struct SystemSpeechAuthorizer: SpeechRecognitionAuthorizing {
     public init() {}
 
@@ -21,13 +26,22 @@ public struct SystemSpeechAuthorizer: SpeechRecognitionAuthorizing {
         return status
     }
 
-    public func openSystemSettings() {
-        guard
-            let url = URL(
-                string: "x-apple.systempreferences:com.apple.preference.security?Privacy_SpeechRecognition")
-        else { return }
-        NSWorkspace.shared.open(url)
-    }
+    #if os(macOS)
+        public func openSystemSettings() {
+            guard
+                let url = URL(
+                    string: "x-apple.systempreferences:com.apple.preference.security?Privacy_SpeechRecognition")
+            else { return }
+            NSWorkspace.shared.open(url)
+        }
+    #else
+        public func openSystemSettings() {
+            Task { @MainActor in
+                guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                await UIApplication.shared.open(url)
+            }
+        }
+    #endif
 
     static func status(from authorization: SFSpeechRecognizerAuthorizationStatus) -> PermissionStatus {
         switch authorization {

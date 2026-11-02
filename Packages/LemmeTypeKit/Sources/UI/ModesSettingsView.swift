@@ -37,41 +37,43 @@ struct ModesSettingsView: View {
                 }
                 .accessibilityIdentifier("modes.new")
             }
-            Section(String(localized: "Use a mode in a specific app", bundle: .module)) {
-                ForEach(model.appRules) { row in
-                    HStack {
-                        Picker(
-                            row.applicationName,
-                            selection: Binding(get: { row.rule.mode }, set: { model.setMode($0, for: row.rule) })
-                        ) {
-                            ForEach(model.modes) { mode in
-                                Text(mode.displayName).tag(mode.id)
+            #if os(macOS)
+                Section(String(localized: "Use a mode in a specific app", bundle: .module)) {
+                    ForEach(model.appRules) { row in
+                        HStack {
+                            Picker(
+                                row.applicationName,
+                                selection: Binding(get: { row.rule.mode }, set: { model.setMode($0, for: row.rule) })
+                            ) {
+                                ForEach(model.modes) { mode in
+                                    Text(mode.displayName).tag(mode.id)
+                                }
                             }
+                            Button(
+                                String(
+                                    localized: "Remove", bundle: .module,
+                                    comment: "Button label (verb): take a downloaded model off this Mac")
+                            ) { model.removeRule(row.id) }
+                            .accessibilityLabel(
+                                Text(String(localized: "Remove rule for \(row.applicationName)", bundle: .module)))
                         }
-                        Button(
-                            String(
-                                localized: "Remove", bundle: .module,
-                                comment: "Button label (verb): take a downloaded model off this Mac")
-                        ) { model.removeRule(row.id) }
-                        .accessibilityLabel(
-                            Text(String(localized: "Remove rule for \(row.applicationName)", bundle: .module)))
                     }
-                }
-                Menu(String(localized: "Add App…", bundle: .module)) {
-                    ForEach(model.candidates) { app in
-                        Button(app.name) { model.addRule(for: app, mode: model.currentDefault.id) }
+                    Menu(String(localized: "Add App…", bundle: .module)) {
+                        ForEach(model.candidates) { app in
+                            Button(app.name) { model.addRule(for: app, mode: model.currentDefault.id) }
+                        }
                     }
+                    .accessibilityIdentifier("modes.addApp")
+                    Text(
+                        String(
+                            localized:
+                                "When you dictate into one of these apps, its mode is used instead of the default. LemmeType only checks which app is in front when you press the shortcut.",
+                            bundle: .module)
+                    )
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
                 }
-                .accessibilityIdentifier("modes.addApp")
-                Text(
-                    String(
-                        localized:
-                            "When you dictate into one of these apps, its mode is used instead of the default. LemmeType only checks which app is in front when you press the shortcut.",
-                        bundle: .module)
-                )
-                .font(.callout)
-                .foregroundStyle(.secondary)
-            }
+            #endif
         }
         .formStyle(.grouped)
         .onAppear { model.refresh() }

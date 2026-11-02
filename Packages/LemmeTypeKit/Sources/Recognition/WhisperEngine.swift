@@ -44,14 +44,22 @@ public actor WhisperEngine: SpeechRecognitionEngine {
     private let hardware: HardwareProfile
     private let runtime: any WhisperRuntime
     private let settings: @Sendable () -> WhisperRunSettings
+    /// Memory the app may still use, on a device that limits it (iPhone and
+    /// iPad, E8-S5); `nil` where the system does not (the Mac).
+    private let availableMemory: @Sendable () -> UInt64?
+    /// Left free beyond the model's own estimate so loading it does not get the app ended.
+    static let memoryMargin: UInt64 = 200_000_000
     private var model: (any WhisperModel)?
     private var loaded: (url: URL, usesGPU: Bool)?
 
     public init(
         assets: any ModelAssetManaging, hardware: HardwareProfile = .current,
+        availableMemory: @escaping @Sendable () -> UInt64? = { nil },
         settings: @escaping @Sendable () -> WhisperRunSettings = { WhisperRunSettings() }
     ) {
-        self.init(assets: assets, hardware: hardware, runtime: WhisperCppRuntime(), settings: settings)
+        self.init(
+            assets: assets, hardware: hardware, runtime: WhisperCppRuntime(), settings: settings,
+            availableMemory: availableMemory)
     }
 
     init(
@@ -59,8 +67,10 @@ public actor WhisperEngine: SpeechRecognitionEngine {
         hardware: HardwareProfile,
         runtime: any WhisperRuntime,
         models: [ModelAsset] = ModelCatalog.whisperModels,
-        settings: @escaping @Sendable () -> WhisperRunSettings = { WhisperRunSettings() }
+        settings: @escaping @Sendable () -> WhisperRunSettings = { WhisperRunSettings() },
+        availableMemory: @escaping @Sendable () -> UInt64? = { nil }
     ) {
+        self.availableMemory = availableMemory
         self.models = models
         self.assets = assets
         self.hardware = hardware
@@ -87,7 +97,8 @@ public actor WhisperEngine: SpeechRecognitionEngine {
     public func availability(for need: RecognitionNeed) async -> EngineAvailability {
         guard descriptor.supports(need) else { return .unsupported(.language) }
         switch await resolve(settings(), for: need) {
-        case .success: return .ready
+        case .success(let asset):
+            return lacksMemory(for: asset) ? .unsupported(.insufficientMemory) : .ready
         case .failure(.unsupported(let reason)): return .unsupported(reason)
         case .failure: return .assetsMissing
         }
@@ -127,6 +138,13 @@ public actor WhisperEngine: SpeechRecognitionEngine {
         return .failure(.assetsMissing)
     }
 
+    /// Whether loading `asset` now would leave too little memory. A model that
+    /// is already loaded needs no more.
+    private func lacksMemory(for asset: ModelAsset) -> Bool {
+        guard model == nil, let available = availableMemory() else { return false }
+        return available < asset.runtimeMemoryBytes + Self.memoryMargin
+    }
+
     public func prepare() async throws(RecognitionError) {
         _ = try await load(for: settings().warmUpNeed)
     }
@@ -144,6 +162,8 @@ public actor WhisperEngine: SpeechRecognitionEngine {
         guard let url = await modelFile(asset, verified: true) else { throw .assetsMissing }
         model = nil
         loaded = nil
+        // Refuse before loading rather than be ended by the system halfway through.
+        if lacksMemory(for: asset) { throw .unsupported(.insufficientMemory) }
         let runtime = self.runtime
         let usesGPU = settings.usesGPU
         // Loading cannot be interrupted inside whisper.cpp, so it runs
@@ -180,7 +200,8 @@ public actor WhisperEngine: SpeechRecognitionEngine {
 
         let start = ContinuousClock.now
         let samples = try AudioFileReader.readSamples(from: request.audio.fileURL)
-        guard !samples.isEmpty, !SpeechActivity.isSilent(samples) else { throw .noSpeechDetected }
+        guard !samples.isEmpty else { throw .noSpeechDetected }
+        guard !SpeechActivity.isSilent(samples) else { throw .silentAudio }
         let language = try await Self.spokenLanguage(
             for: request.language, samples: samples, with: model, threads: threads)
         let inference = WhisperInference(

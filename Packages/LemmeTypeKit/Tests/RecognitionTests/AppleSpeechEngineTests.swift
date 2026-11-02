@@ -90,11 +90,20 @@ struct AppleSpeechEngineTests {
         #expect(backend.recognizeCount == 0)
     }
 
-    @Test func silenceIsNoSpeechWithoutCallingTheFramework() async throws {
+    @Test func silenceIsASilentMicrophoneWithoutCallingTheFramework() async throws {
+        defer { fixtures.removeAll() }
+        let (engine, backend) = makeEngine()
+        await #expect(throws: RecognitionError.silentAudio) {
+            try await engine.recognize(try fixtures.make(.silence(seconds: 1))) { _ in }
+        }
+        #expect(backend.recognizeCount == 0)
+    }
+
+    @Test func aRecordingTooShortToHoldSpeechIsNotCalledSilent() async throws {
         defer { fixtures.removeAll() }
         let (engine, backend) = makeEngine()
         await #expect(throws: RecognitionError.noSpeechDetected) {
-            try await engine.recognize(try fixtures.make(.silence(seconds: 1))) { _ in }
+            try await engine.recognize(try fixtures.make(.silence(seconds: 0.1))) { _ in }
         }
         #expect(backend.recognizeCount == 0)
     }
