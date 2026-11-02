@@ -1,0 +1,10 @@
+# Third-party code the app may link.
+# Enforced by scripts/check-security-config.py (make security-check).
+#
+# Format: package:<name> or binaryTarget:<name>  # <why, licence, and network behaviour>
+# A new line needs an ADR (benefit, licence, maintenance, privacy and network
+# behaviour) and an update to THIRD_PARTY_NOTICES.md and Credits.rtf.
+# Analytics, telemetry, advertising, and crash-reporting packages are banned by
+# name in scripts/check-security-config.py; ADR 0025 forbids them.
+
+binaryTarget:whisper  # whisper.cpp v1.9.2, MIT, pinned by checksum; runs on device and has no network code (ADR 0012)

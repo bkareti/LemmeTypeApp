@@ -1,0 +1,10 @@
+# Entitlements the app may carry (App/LemmeType/LemmeType.entitlements).
+# Enforced by scripts/check-security-config.py (make security-check).
+#
+# Format: <entitlement key>  # <why the app needs it>
+# Every line needs a justification. Adding a line is a reviewed change (ADR 0025).
+# Not allowed without a new ADR: get-task-allow, disable-library-validation,
+# allow-unsigned-executable-memory, network client or server, file-access
+# exceptions, Apple Events, camera, location, contacts, calendars.
+
+com.apple.security.device.audio-input  # Hardened Runtime needs it for the microphone (ADR 0001)

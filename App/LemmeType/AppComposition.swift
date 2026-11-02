@@ -52,6 +52,8 @@ struct AppComposition {
     var textRewriter: any TextRewriting
     /// Vocabulary, replacements, and snippets on disk (ADR 0020).
     var personalizationStore: any PersonalizationStoring
+    /// The opt-in dictation history (ADR 0025); records nothing while retention is off.
+    var history: any DictationHistoryManaging
     /// Memory pressure, heat, and Low Power Mode (E5-S6).
     var systemConditions: any SystemConditionsMonitoring
     var diagnostics: DiagnosticsBuffer
@@ -88,6 +90,8 @@ struct AppComposition {
         let speechAuthorizer = SystemSpeechAuthorizer()
         let modelAssets = ModelAssetStore.makeDefault(diagnostics: diagnostics)
         let conditions = SystemConditionsMonitor()
+        let history = DictationHistoryService(
+            store: FileDictationHistoryStore.makeDefault(), preferences: preferences, diagnostics: diagnostics)
         return AppComposition(
             mode: .live,
             permissionChecker: permissionChecker,
@@ -118,6 +122,7 @@ struct AppComposition {
             textCopier: PasteboardTextCopier(),
             textRewriter: FoundationModelsRewriter(),
             personalizationStore: FilePersonalizationStore.makeDefault(diagnostics: diagnostics),
+            history: history,
             systemConditions: conditions,
             diagnostics: diagnostics,
             loginItems: SystemLoginItemManager(),
@@ -148,11 +153,12 @@ struct AppComposition {
                 microphoneAnswer: .granted,
                 grantsAccessibilityOnRequest: true
             )
+            let preferences = FakePreferences(hasCompletedOnboarding: !freshInstall)
             return AppComposition(
                 mode: .uiTesting,
                 permissionChecker: permissions,
                 permissionRequester: permissions,
-                preferences: FakePreferences(hasCompletedOnboarding: !freshInstall),
+                preferences: preferences,
                 audioDeviceLister: FakeAudioDeviceLister(devices: [
                     AudioInputDevice(id: "ui-test-default", name: "UI Test Microphone", isSystemDefault: true),
                     AudioInputDevice(id: "ui-test-usb", name: "UI Test USB Microphone", isSystemDefault: false),
@@ -177,6 +183,8 @@ struct AppComposition {
                 textCopier: delivery,
                 textRewriter: FakeTextRewriter(),
                 personalizationStore: FakePersonalizationStore(),
+                history: DictationHistoryService(
+                    store: FakeDictationHistoryStore(), preferences: preferences, diagnostics: diagnostics),
                 systemConditions: FakeSystemConditions(),
                 diagnostics: diagnostics,
                 loginItems: FakeLoginItemManager(status: .disabled),
@@ -195,10 +203,12 @@ struct AppComposition {
             delivery: textDelivery,
             rewriter: textRewriter,
             copier: textCopier,
+            history: history,
             diagnostics: diagnostics
         )
     }
 
+    // swiftlint:disable:next function_body_length
     func makeAppController() -> AppController {
         let permissions = PermissionsModel(
             checker: permissionChecker, requester: permissionRequester, diagnostics: diagnostics)
@@ -216,6 +226,10 @@ struct AppComposition {
             speechAuthorizer: speechAuthorizer, diagnostics: diagnostics)
         let modes = makeModes(personalization: personalization, languages: dictation.languageChoices)
         let models = makeModels(dictation: dictation)
+        let historySettings = HistorySettingsModel(history: history, copier: textCopier)
+        let privacy = PrivacyOverviewModel(
+            history: historySettings, personalization: personalization, modes: modes, capture: audioCapture,
+            modelAssets: modelAssets, clearDiagnostics: { [diagnostics] in diagnostics.removeAll() })
         let diagnosticsModel = DiagnosticsModel(
             buffer: diagnostics, permissions: permissions, shortcut: shortcut, buildInfo: buildInfo)
         let settings = Self.makeSettingsWindow(
@@ -229,6 +243,8 @@ struct AppComposition {
                 models: models,
                 audio: audio,
                 permissions: permissions,
+                history: historySettings,
+                privacy: privacy,
                 diagnostics: diagnosticsModel,
                 navigation: navigation
             ))
@@ -244,6 +260,7 @@ struct AppComposition {
             personalization: personalization,
             modes: modes,
             models: models,
+            history: history,
             residency: residency,
             systemConditions: systemConditions,
             navigation: navigation,
@@ -274,6 +291,7 @@ struct AppComposition {
             preferences: preferences,
             speechAuthorizer: speechAuthorizer,
             textCopier: textCopier,
+            history: history,
             personalization: { [weak personalization] in personalization?.library ?? .empty },
             residency: residency,
             diagnostics: diagnostics

@@ -31,7 +31,8 @@ struct StyleRewritingEndToEndTests {
 
         init(
             field: FakeTextElement, spoken: String, style: StyleOptions, writing: WritingMode = .clean,
-            rewriter: FakeTextRewriter, language: String = "en-US", output: SpeechOutput = .original
+            rewriter: FakeTextRewriter, language: String = "en-US", output: SpeechOutput = .original,
+            history: any DictationHistoryRecording = DiscardingHistory()
         ) throws {
             engine = FakeRecognitionEngine(
                 id: .whisper, script: .init(text: spoken), supportedLanguages: ["en", "hi", "te"],
@@ -56,8 +57,9 @@ struct StyleRewritingEndToEndTests {
                     source: source, storage: storage,
                     permissions: FakePermissions(statuses: [.microphone: .granted]), diagnostics: diagnostics),
                 processor: TranscriptionPipeline(
-                    engines: [engine], delivery: delivery, rewriter: rewriter, diagnostics: diagnostics),
-                feedback: SilentFeedback(), preferences: preferences, textCopier: copier,
+                    engines: [engine], delivery: delivery, rewriter: rewriter, history: history,
+                    diagnostics: diagnostics),
+                feedback: SilentFeedback(), preferences: preferences, textCopier: copier, history: history,
                 finishedDisplay: .seconds(60), failureDisplay: .seconds(60), attentionDisplay: .seconds(60),
                 personalization: { library }, diagnostics: diagnostics)
         }

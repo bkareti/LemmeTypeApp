@@ -623,3 +623,75 @@ with it off (MA-53).
    support the language and shows the original.
 3. Turn Wi-Fi off and repeat MA-51: everything still works.
 4. VoiceOver reads the review text, the style line, and every button.
+
+## E6 — Privacy, security, and data controls
+
+Needs a team-signed build on a real Mac. MA-54 also needs a network monitor
+(Little Snitch, LuLu, or `nettop`).
+
+**MA-54 Network silence on a real Mac**
+1. Start LemmeType. In a terminal run `scripts/check-network-silence.sh --attach 240`.
+2. In a second terminal run `nettop -m tcp -p $(pgrep -x LemmeType)` (or watch
+   the process in Little Snitch or LuLu).
+3. Dictate with each of: Exact Dictation, Clean Writing, a mode with context
+   formatting on, voice editing of a selection, a mode with a tone and format
+   (review and Insert), and Hindi with *Text output: English* (review and
+   Insert). Turn History on and repeat one. Open every Settings pane. Use
+   Delete All Local Data.
+4. Expected: the script prints *No network socket was opened*; the monitor shows
+   no connection from LemmeType.
+5. Download one model (Settings › Dictation › Models): a connection to
+   `huggingface.co` appears only after you confirm the size, and stops when the
+   download ends. Record the host you saw.
+
+**MA-55 History is off by default, then controlled**
+1. On a clean install (`defaults delete com.lemmetype.LemmeType`; remove
+   `~/Library/Application Support/LemmeType`), open Settings › Privacy › History.
+   The switch is off and the text says nothing is saved. Dictate three times.
+   `ls ~/Library/Application\ Support/LemmeType` shows no `History` folder.
+2. Turn History on (it chooses 1 week). Dictate into TextEdit and press Insert;
+   dictate again and use Copy. Both appear, newest first, with the time.
+3. `ls -le ~/Library/Application\ Support/LemmeType/History` shows `history.json`
+   as `-rw-------` in a `drwx------` folder. `python3 -m json.tool` reads it; it
+   has `entries` with `createdAt`, `delivery`, `id`, `language`, `mode`, `text`,
+   `words` and no audio, app name, or surrounding text.
+4. Dictate in a password manager window or an app you excluded in Settings ›
+   Context, and use voice editing: nothing is added.
+5. Quit and relaunch: the entries are still there. Edit `createdAt` of one entry
+   to three days ago, relaunch, choose *1 day*: the pane says how many entries it
+   deletes; *Cancel* keeps everything, *Delete and Continue* removes only the old one.
+6. Export…: the file is valid JSON with `formatVersion` 1 and is written only
+   where you chose. Delete one entry, then Delete All… (confirm): the list and the
+   file are empty. Turn History off with entries present: it asks first.
+7. VoiceOver reads the switch, the period, each entry, Copy, Delete, and the
+   result announcements.
+
+**MA-56 Delete All Local Data**
+1. Have a history, a vocabulary word, a snippet, a custom mode, a downloaded
+   model, and a leftover `touch "$TMPDIR/LemmeType/Sessions/stale.caf"`.
+2. Settings › Privacy › Overview › Delete All Local Data… (leave *Also remove
+   downloaded models* off). Confirm. The message lists what was deleted.
+3. History, vocabulary, snippets, modes, and the stale file are gone; the model
+   is still installed; Settings and permissions are unchanged. `make privacy-check` passes.
+4. Run it again: *There was nothing left to delete.*
+5. Turn on *Also remove downloaded models* and run it: the model is removed.
+
+**MA-57 Plain-language read-through**
+1. Ask someone who has not seen LemmeType to read Settings › Privacy › Overview
+   and the Permissions pane, without help.
+2. They answer in their own words: What does the microphone permission do? Does
+   LemmeType listen in the background? Is anything sent over the internet? What
+   does it keep, and how do I delete it? Is my typing tracked?
+3. Record their answers and every place they hesitated. Fix wording that caused
+   a wrong answer and repeat with another person.
+
+**MA-58 Files, backups, and unreadable data**
+1. `ls -leO ~/Library/Application\ Support/LemmeType` shows owner-only files and
+   folders for Personalization and History.
+2. Confirm FileVault is on (System Settings › Privacy & Security). Note that Time
+   Machine includes the folder; the Privacy pane says so.
+3. Replace `history.json` with the text `not json` and relaunch: LemmeType starts,
+   the History pane says the file was set aside, `history-unreadable-<time>.json`
+   exists next to a new empty history, and nothing crashes.
+4. Put `"formatVersion": 99` in a copy of the file: it is set aside the same way
+   and never rewritten.

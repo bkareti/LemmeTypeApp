@@ -11,6 +11,8 @@ public struct SettingsView: View {
     private let models: ModelsSettingsModel
     private let audio: AudioSettingsModel
     private let permissions: PermissionsModel
+    private let history: HistorySettingsModel
+    private let privacy: PrivacyOverviewModel
     private let diagnostics: DiagnosticsModel
     @Bindable private var navigation: SettingsNavigation
 
@@ -24,6 +26,8 @@ public struct SettingsView: View {
         models: ModelsSettingsModel,
         audio: AudioSettingsModel,
         permissions: PermissionsModel,
+        history: HistorySettingsModel,
+        privacy: PrivacyOverviewModel,
         diagnostics: DiagnosticsModel,
         navigation: SettingsNavigation
     ) {
@@ -36,6 +40,8 @@ public struct SettingsView: View {
         self.models = models
         self.audio = audio
         self.permissions = permissions
+        self.history = history
+        self.privacy = privacy
         self.diagnostics = diagnostics
         self.navigation = navigation
     }
@@ -63,6 +69,14 @@ public struct SettingsView: View {
                 value: SettingsNavigation.Pane.permissions
             ) {
                 PermissionsSettingsView(model: permissions)
+            }
+            Tab(
+                String(localized: "Privacy", bundle: .module),
+                systemImage: "hand.raised",
+                value: SettingsNavigation.Pane.privacy
+            ) {
+                PrivacySettingsView(
+                    history: history, overview: privacy, openContextSettings: { navigation.selectedPane = .context })
             }
             Tab(
                 String(localized: "Diagnostics", bundle: .module),

@@ -33,4 +33,13 @@ public final class DiagnosticsBuffer: DiagnosticsRecording {
     public func snapshot() -> [DiagnosticEvent] {
         events.withLock { $0 }
     }
+
+    /// Forgets every recorded event; returns how many there were.
+    @discardableResult
+    public func removeAll() -> Int {
+        events.withLock { events in
+            defer { events = [] }
+            return events.count
+        }
+    }
 }

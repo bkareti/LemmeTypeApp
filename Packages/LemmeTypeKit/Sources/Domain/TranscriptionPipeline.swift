@@ -10,6 +10,7 @@ public actor TranscriptionPipeline: DictationProcessing {
     private let delivery: any TextDelivering
     let rewriter: (any TextRewriting)?
     private let copier: (any TextCopying)?
+    private let history: any DictationHistoryRecording
     let diagnostics: any DiagnosticsRecording
     /// What model fit is judged against (E9-S3); the current Mac in the app.
     let hardware: HardwareProfile
@@ -27,11 +28,13 @@ public actor TranscriptionPipeline: DictationProcessing {
         delivery: any TextDelivering,
         rewriter: (any TextRewriting)? = nil,
         copier: (any TextCopying)? = nil,
+        history: any DictationHistoryRecording = DiscardingHistory(),
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics(),
         hardware: HardwareProfile = .current
     ) {
         self.hardware = hardware
         self.copier = copier
+        self.history = history
         self.engines = engines
         self.write = write
         self.format = format
@@ -211,10 +214,13 @@ public actor TranscriptionPipeline: DictationProcessing {
         // Copy only: the target app is never touched (E4-S5).
         if session.purpose == .dictation, session.dictationMode.output == .copy, let copier {
             await copier.copy(text)
+            await history.record(text, for: session, delivery: .copied)
             return .delivered(.copied)
         }
         switch await delivery.deliver(text, to: session.target) {
         case .delivered(let method):
+            // Only text the user received is recorded, and only if history is on (ADR 0025).
+            await history.record(text, for: session, delivery: method == .copied ? .copied : .inserted)
             return .delivered(method)
         case .problem(let problem):
             return .needsAttention(.deliveryFailed(problem), engine: engine, alternatives: [], transcript: text)

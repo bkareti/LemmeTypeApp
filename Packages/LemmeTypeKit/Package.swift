@@ -67,7 +67,7 @@ let package = Package(
         // Shortcut → context → recorder → pipeline → delivery with fakes at the OS edges (E2-S10, E3-S7).
         .testTarget(
             name: "EndToEndTests",
-            dependencies: ["UI", "Audio", "Delivery", "Shortcuts", "Domain", "Support", "TestSupport"]),
+            dependencies: ["UI", "Audio", "Delivery", "ModelAssets", "Shortcuts", "Domain", "Support", "TestSupport"]),
         .testTarget(name: "ShortcutsTests", dependencies: ["Shortcuts", "Domain", "TestSupport"]),
         .testTarget(
             name: "UIModuleTests", dependencies: ["UI", "Domain", "Support", "TestSupport", "Audio", "Shortcuts"]),

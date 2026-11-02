@@ -1,0 +1,8 @@
+# Files allowed to use network APIs (URLSession, URLRequest, NWConnection, ...).
+# Enforced by scripts/check-network-usage.sh (make network-check).
+#
+# Format: <path relative to the repository root>  # <why this file may use the network>
+# Adding a line is a reviewed change (ADR 0025). Local mode (recording,
+# recognition, cleanup, translation, rewriting, history) never uses the network.
+
+Packages/LemmeTypeKit/Sources/ModelAssets/URLSessionModelDownloader.swift  # Downloads a model only after the user confirms the size (ADR 0011)

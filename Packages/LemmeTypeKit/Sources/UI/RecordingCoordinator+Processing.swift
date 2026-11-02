@@ -192,6 +192,7 @@ extension RecordingCoordinator {
         guard let transcript = pendingTranscript else { return }
         if action == .copyText, let textCopier {
             await textCopier.copy(transcript)
+            await history.record(transcript, for: session, delivery: .copied)
             complete(with: .copied)
         } else if action == .retryDelivery || action == .insertText || action == .useOriginal,
             machine.handle(.retry)

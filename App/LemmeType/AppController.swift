@@ -18,6 +18,7 @@ final class AppController {
     let personalization: PersonalizationModel
     let modes: ModesSettingsModel
     let models: ModelsSettingsModel
+    private let history: any DictationHistoryManaging
     private let residency: any ModelResidencyManaging
     private let systemConditions: any SystemConditionsMonitoring
     private var conditionsTask: Task<Void, Never>?
@@ -54,6 +55,7 @@ final class AppController {
         personalization: PersonalizationModel,
         modes: ModesSettingsModel,
         models: ModelsSettingsModel,
+        history: any DictationHistoryManaging,
         residency: any ModelResidencyManaging,
         systemConditions: any SystemConditionsMonitoring,
         navigation: SettingsNavigation,
@@ -73,6 +75,7 @@ final class AppController {
         self.personalization = personalization
         self.modes = modes
         self.models = models
+        self.history = history
         self.residency = residency
         self.systemConditions = systemConditions
         self.navigation = navigation
@@ -103,6 +106,7 @@ final class AppController {
         Task { [audioCapture = recorder.capture] in await audioCapture.purgeLeftovers() }
         Task { [modelAssets] in await modelAssets.removeUnusableFiles() }
         Task { [personalization] in await personalization.load() }
+        Task { [history] in await history.purgeExpired() }
         watchSystemConditions()
         overlay.start()
         dictation.refreshInBackground()

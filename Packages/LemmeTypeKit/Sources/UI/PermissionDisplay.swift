@@ -8,28 +8,10 @@ extension PermissionKind {
         }
     }
 
-    /// Why LemmeType needs the permission. Describes LemmeType's own behaviour,
-    /// never something only macOS could guarantee.
+    /// Why LemmeType needs the permission and what it never does. Describes
+    /// LemmeType's own behaviour, never something only macOS could guarantee.
     var explanation: String {
-        switch self {
-        case .microphone:
-            String(
-                localized: """
-                    LemmeType listens only while you use your dictation shortcut. \
-                    Audio is processed on this Mac and is not kept after transcription.
-                    """,
-                bundle: .module
-            )
-        case .accessibility:
-            String(
-                localized: """
-                    Accessibility lets LemmeType find the text field you were typing in \
-                    and insert your dictated text there. Without it, LemmeType can record \
-                    but cannot insert text.
-                    """,
-                bundle: .module
-            )
-        }
+        PermissionExplanation.explanation(for: self).summary
     }
 }
 

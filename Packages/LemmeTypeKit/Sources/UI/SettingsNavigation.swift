@@ -11,6 +11,7 @@ public final class SettingsNavigation {
         case context
         case audio
         case permissions
+        case privacy
         case diagnostics
     }
 

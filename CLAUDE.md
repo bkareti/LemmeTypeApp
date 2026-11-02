@@ -35,6 +35,9 @@ make test-unit   # fast: swift test on Packages/LemmeTypeKit
 make lint        # swift-format lint --strict + swiftlint --strict
 make ci          # what the required CI job runs
 make privacy-check  # fail if captured audio was left behind
+make network-check  # fail if a file outside docs/security/network-allowlist.txt uses a network API
+make security-check # fail on an unreviewed entitlement, usage string, dependency, or Hardened Runtime change
+make privacy-docs-check  # fail if the threat model or privacy checklist cites something that no longer exists
 make benchmark   # end-to-end benchmark on this Mac + threshold check (not CI)
 make release-check APP=<app|zip>  # thresholds + release-artifact scan
 make format      # apply swift-format
@@ -203,6 +206,22 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   `EnginePreference` are captured when recording starts and stored in the
   session; a not-ready chosen engine is never swapped unless the user turned
   on `fallsBackToReadyEngine`.
+- Privacy and data (ADR 0025): `DictationHistoryService` (Domain actor) records
+  the final text the user accepted (Insert/Copy) only when `HistoryRetention`
+  is on (off by default; with it off the store is never read or written). It is
+  fed by `TranscriptionPipeline` after delivery and by `RecordingCoordinator`'s
+  Copy path through `DictationHistoryRecording`, and skips voice edits, excluded
+  and sensitive apps, empty and oversized results. `FileDictationHistoryStore`
+  (Support) keeps `History/history.json` (0600/0700, versioned, unreadable files
+  moved aside). Settings › Privacy has an Overview (`PrivacyText`,
+  `PermissionExplanation`, Delete All Local Data via `PrivacyOverviewModel`) and
+  History (`HistorySettingsModel`). Guardrails: `scripts/check-network-usage.sh`
+  (allowlist in `docs/security/network-allowlist.txt`), `OpenSocketProbe` /
+  `SocketWatch` (TestSupport) in `NetworkSilenceTests`,
+  `scripts/check-security-config.py` (allowlists in `docs/security/`), and
+  `scripts/check-privacy-docs.py` for `docs/security/threat-model.md` and
+  `privacy-release-checklist.md`. Diagnostics schema changes must update
+  `DiagnosticsReportSchemaTests`.
 - Diagnostics: components take `any DiagnosticsRecording` (default
   `DiscardingDiagnostics`); the app shares one `DiagnosticsBuffer`. Event names
   and keys must be literals and values typed (`.id(...)` redacts anything that
@@ -220,7 +239,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management; 0023 multilingual dictation; 0024 tone and style).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management; 0023 multilingual dictation; 0024 tone and style; 0025 privacy data and history).
 
 ## Planning documents
 
