@@ -41,7 +41,8 @@ struct ShortcutSettingsView: View {
             }
             Section {
                 Picker(
-                    String(localized: "Mode", bundle: .module),
+                    String(
+                        localized: "Mode", bundle: .module, comment: "Noun: a dictation mode, such as Exact or Clean"),
                     selection: Binding(get: { model.mode }, set: { model.setMode($0) })
                 ) {
                     Text(String(localized: "Push to Talk — hold to dictate", bundle: .module))

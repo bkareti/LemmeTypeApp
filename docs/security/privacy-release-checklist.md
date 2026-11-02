@@ -23,6 +23,7 @@ Release: ____  Build: ____  Mac / macOS: ____  Checked by: ____  Date: ____
 - [ ] The built app has no recordings, transcripts, or benchmark output. — `scripts/check-release-artifact.sh`
 - [ ] The built app's entitlements are only the allowlisted ones. — `scripts/check-security-config.py`
 - [ ] The third-party notices list every dependency. — `THIRD_PARTY_NOTICES.md`
+- [ ] Hardened Runtime, entitlements, signature, version, and contents are verified, and the build is notarized and stapled. — `scripts/verify-release.sh`
 
 ## On a real Mac
 
@@ -32,6 +33,8 @@ Release: ____  Build: ____  Mac / macOS: ____  Checked by: ____  Date: ____
 - [ ] A person outside the team understood the Privacy pane. — `MA-57`
 - [ ] Files are owner-only, and unreadable data is set aside. — `MA-58`
 - [ ] Insertion never targets a password field. — `MA-33`
+- [ ] The update check sends only the version, and only when asked. — `MA-60`
+- [ ] A killed app starts cleanly and tells the user once. — `MA-62`
 
 ## Release notes
 

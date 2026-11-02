@@ -110,9 +110,10 @@ struct RecordingOverlayView: View {
     private var buttons: some View {
         switch coordinator.state {
         case .preparing, .recording:
-            Button(String(localized: "Stop", bundle: .module)) { coordinator.requestStop() }
-                .keyboardShortcut(.defaultAction)
-                .accessibilityIdentifier("overlay.stop")
+            Button(String(localized: "Stop", bundle: .module, comment: "Button label (verb): stop the test recording"))
+            { coordinator.requestStop() }
+            .keyboardShortcut(.defaultAction)
+            .accessibilityIdentifier("overlay.stop")
             Button(String(localized: "Cancel", bundle: .module)) { coordinator.requestCancel() }
                 .accessibilityIdentifier("overlay.cancel")
         case .failed:
@@ -120,8 +121,10 @@ struct RecordingOverlayView: View {
                 Button(action.title) { coordinator.perform(action) }
                     .accessibilityIdentifier("overlay.action")
             }
-            Button(String(localized: "Dismiss", bundle: .module)) { coordinator.dismiss() }
-                .accessibilityIdentifier("overlay.dismiss")
+            Button(String(localized: "Dismiss", bundle: .module, comment: "Button label (verb): hide this notice")) {
+                coordinator.dismiss()
+            }
+            .accessibilityIdentifier("overlay.dismiss")
         case .processing:
             Button(String(localized: "Cancel", bundle: .module)) { coordinator.requestCancel() }
                 .accessibilityIdentifier("overlay.cancel")
@@ -213,7 +216,9 @@ struct RecordingOverlayView: View {
         case .idle, .preparing:
             Appearance("mic.circle", .orange, String(localized: "Starting microphone…", bundle: .module))
         case .recording:
-            Appearance("record.circle.fill", .red, String(localized: "Recording", bundle: .module))
+            Appearance(
+                "record.circle.fill", .red,
+                String(localized: "Recording", bundle: .module, comment: "Noun: the audio captured while dictating"))
         case .stopping:
             Appearance("stop.circle", .orange, String(localized: "Finishing…", bundle: .module))
         case .processing:
@@ -221,7 +226,9 @@ struct RecordingOverlayView: View {
                 "hourglass", .blue,
                 coordinator.processingPhase?.title ?? String(localized: "Processing…", bundle: .module))
         case .completed:
-            Appearance("checkmark.circle.fill", .green, String(localized: "Done", bundle: .module))
+            Appearance(
+                "checkmark.circle.fill", .green,
+                String(localized: "Done", bundle: .module, comment: "Button label: finish setup"))
         case .cancelled:
             Appearance("xmark.circle", .secondary, String(localized: "Cancelled", bundle: .module))
         case .failed:

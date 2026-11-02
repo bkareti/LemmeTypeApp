@@ -69,7 +69,7 @@ extension ModelsSettingsView {
     var performanceSection: some View {
         Section(String(localized: "Performance", bundle: .module)) {
             Picker(
-                String(localized: "Profile", bundle: .module),
+                String(localized: "Profile", bundle: .module, comment: "Noun: a performance profile such as Balanced"),
                 selection: Binding(get: { model.profile }, set: { model.setProfile($0) })
             ) {
                 ForEach(PerformanceProfile.allCases, id: \.self) { profile in
@@ -187,7 +187,7 @@ private struct ModelCatalogRow: View {
             HStack {
                 Text(row.state.statusTitle)
                     .accessibilityIdentifier("models.\(row.id.rawValue).status")
-                Text("·")
+                Text(verbatim: "·")
                 Text(row.fit.title)
                     .foregroundStyle(row.fit.canRun ? Color.secondary : Color.orange)
                     .accessibilityIdentifier("models.\(row.id.rawValue).fit")
@@ -222,11 +222,15 @@ private struct ModelCatalogRow: View {
             .accessibilityIdentifier("models.\(id).download")
             .accessibilityLabel(Text(String(localized: "Download \(row.asset.displayName)", bundle: .module)))
         case .downloading:
-            Button(String(localized: "Pause", bundle: .module)) { Task { await model.pauseDownload(of: row.id) } }
-                .accessibilityIdentifier("models.\(id).pause")
+            Button(String(localized: "Pause", bundle: .module, comment: "Button label (verb): pause a download")) {
+                Task { await model.pauseDownload(of: row.id) }
+            }
+            .accessibilityIdentifier("models.\(id).pause")
         case .paused:
-            Button(String(localized: "Resume", bundle: .module)) { model.resumeDownload(of: row.id) }
-                .accessibilityIdentifier("models.\(id).resume")
+            Button(
+                String(localized: "Resume", bundle: .module, comment: "Button label (verb): continue a paused download")
+            ) { model.resumeDownload(of: row.id) }
+            .accessibilityIdentifier("models.\(id).resume")
             removeButton
         case .verifying:
             ProgressView().controlSize(.small)
@@ -236,7 +240,11 @@ private struct ModelCatalogRow: View {
     }
 
     private var removeButton: some View {
-        Button(String(localized: "Remove", bundle: .module), role: .destructive) {
+        Button(
+            String(
+                localized: "Remove", bundle: .module,
+                comment: "Button label (verb): take a downloaded model off this Mac"), role: .destructive
+        ) {
             Task { await model.removeModel(row.id) }
         }
         .accessibilityIdentifier("models.\(row.id.rawValue).remove")

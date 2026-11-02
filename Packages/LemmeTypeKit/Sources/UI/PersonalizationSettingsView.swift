@@ -13,7 +13,9 @@ struct PersonalizationSettingsView: View {
                 Section {
                     Label(issue.userMessage, systemImage: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
-                    Button(String(localized: "OK", bundle: .module)) { model.dismissLoadIssue() }
+                    Button(String(localized: "OK", bundle: .module, comment: "Button label: dismiss a message")) {
+                        model.dismissLoadIssue()
+                    }
                 }
             }
             if let error = model.saveError {
@@ -83,10 +85,14 @@ struct PersonalizationSettingsView: View {
                 }
             }
             Spacer()
-            Button(String(localized: "Edit", bundle: .module)) { draft = row.draft }
-                .accessibilityLabel(Text(String(localized: "Edit \(row.title)", bundle: .module)))
-            Button(String(localized: "Delete", bundle: .module), role: .destructive) { delete(row) }
-                .accessibilityLabel(Text(String(localized: "Delete \(row.title)", bundle: .module)))
+            Button(String(localized: "Edit", bundle: .module, comment: "Button label (verb): change an existing item"))
+            { draft = row.draft }
+            .accessibilityLabel(Text(String(localized: "Edit \(row.title)", bundle: .module)))
+            Button(
+                String(localized: "Delete", bundle: .module, comment: "Button label (verb): remove one item"),
+                role: .destructive
+            ) { delete(row) }
+            .accessibilityLabel(Text(String(localized: "Delete \(row.title)", bundle: .module)))
         }
     }
 
@@ -181,7 +187,7 @@ private struct PersonalizationEditor: View {
                 Spacer()
                 Button(String(localized: "Cancel", bundle: .module), role: .cancel, action: dismiss)
                     .keyboardShortcut(.cancelAction)
-                Button(String(localized: "Save", bundle: .module)) {
+                Button(String(localized: "Save", bundle: .module, comment: "Button label (verb): keep the changes")) {
                     error = draft.save(in: model)
                     if error == nil { dismiss() }
                 }

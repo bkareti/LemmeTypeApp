@@ -5,11 +5,10 @@ description: Version, changelog, archive, sign, notarize, and publish LemmeType 
 
 # Release management
 
-Distribution channel (direct download vs Mac App Store) is still an open
-Epic 7 decision. Until an ADR records it, releases are **internal builds**:
-Developer ID–signed, notarized, distributed as a zip/DMG through GitHub
-Releases on `bkareti/LemmeTypeApp`. Confirm with the user before any step that
-publishes, tags, or uploads anything.
+Distribution is direct download from GitHub Releases (Developer ID signed and
+notarized), recorded in `docs/decisions/0026-distribution-and-updates.md`
+(status *Proposed* until the product owner approves it). Confirm with the user
+before any step that publishes, tags, or uploads anything.
 
 ## Versioning
 
@@ -41,30 +40,25 @@ publishes, tags, or uploads anything.
    justification. Run `make benchmark` on the minimum hardware; the threshold
    check (`docs/testing/performance-thresholds.json`) must pass and the
    thresholds must be *Approved* by a product owner.
-6. **Archive & sign** (requires a Developer ID Application certificate and the
-   team ID in `Config/Signing.local.xcconfig`, which is gitignored):
+6. **Archive, sign, notarize** — follow `docs/release/runbook.md`. In short
+   (needs a Developer ID Application certificate and the team id in
+   `Config/Signing.local.xcconfig`, which is gitignored; notary credentials live
+   in your Keychain, never in the repo or chat):
    ```bash
-   xcodebuild archive -project LemmeType.xcodeproj -scheme LemmeType \
-     -configuration Release -archivePath build/LemmeType.xcarchive
-   xcodebuild -exportArchive -archivePath build/LemmeType.xcarchive \
-     -exportOptionsPlist Config/ExportOptions-DeveloperID.plist -exportPath build/export
+   make release-build                                   # archive, export, zip, dmg, SHA256SUMS
+   NOTARY_PROFILE=<profile> make release-notarize      # submit, staple, repackage, verify
    ```
-   Hardened Runtime must be on for Release.
-7. **Notarize & staple** (credentials stored once with
-   `xcrun notarytool store-credentials`; never put them in the repo or chat):
-   ```bash
-   ditto -c -k --keepParent build/export/LemmeType.app build/LemmeType.zip
-   xcrun notarytool submit build/LemmeType.zip --keychain-profile <profile> --wait
-   xcrun stapler staple build/export/LemmeType.app
-   spctl --assess --type execute --verbose build/export/LemmeType.app
-   scripts/check-release-artifact.sh build/LemmeType.zip
-   ```
-   The artifact check fails if the app contains recordings, transcripts, or
-   benchmark output.
+   `make release-build REHEARSAL=1 && make release-verify REHEARSAL=1` rehearses
+   the pipeline without a certificate; a rehearsal build is never shipped.
+7. **Verify** — `scripts/verify-release.sh` (run by `release-notarize`) fails on a
+   wrong version, missing Hardened Runtime, an entitlement outside
+   `docs/security/entitlements-allowlist.txt`, `get-task-allow`, an unsigned
+   embedded item, bundled recordings, or a missing stapled ticket. Then open the
+   zip on a clean Mac (MA-59).
 8. **Tag & publish** (after user confirmation): merge the release branch,
    `git tag -a vX.Y.Z -m "LemmeType X.Y.Z"`, push the tag, and
-   `gh release create vX.Y.Z build/LemmeType-X.Y.Z.zip --notes-file <notes>`
-   (`--prerelease` for betas). Attach SHA-256 checksums.
+   `gh release create vX.Y.Z build/release/LemmeType-X.Y.Z.zip build/release/LemmeType-X.Y.Z.dmg build/release/SHA256SUMS --notes-file <notes>`
+   (`--prerelease` for betas).
 9. **Post-release** — merge the release branch back to `main`, close the
    milestone, and record known issues.
 
@@ -74,7 +68,9 @@ publishes, tags, or uploads anything.
 - Mark the bad GitHub release as pre-release/withdrawn and point the "latest"
   release back to the previous good build.
 - Ship the fix as a new PATCH version with a higher build number.
-- Once an updater exists (Epic 7), document how to stop the update feed here.
+- Follow `docs/release/rollback.md`. The in-app update check reads the GitHub
+  release list, so marking a release as a pre-release or deleting it stops it
+  being offered; copies users already installed stay until they update.
 
 ## Release notes
 

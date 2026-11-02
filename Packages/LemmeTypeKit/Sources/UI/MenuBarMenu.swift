@@ -8,6 +8,8 @@ public struct MenuBarActions {
     public var openSettings: @MainActor () -> Void
     public var openDictationSettings: @MainActor () -> Void
     public var showAbout: @MainActor () -> Void
+    public var checkForUpdates: @MainActor () -> Void
+    public var openDiagnostics: @MainActor () -> Void
     public var quit: @MainActor () -> Void
 
     public init(
@@ -16,6 +18,8 @@ public struct MenuBarActions {
         openSettings: @escaping @MainActor () -> Void,
         openDictationSettings: @escaping @MainActor () -> Void,
         showAbout: @escaping @MainActor () -> Void,
+        checkForUpdates: @escaping @MainActor () -> Void = {},
+        openDiagnostics: @escaping @MainActor () -> Void = {},
         quit: @escaping @MainActor () -> Void
     ) {
         self.finishSetup = finishSetup
@@ -23,6 +27,8 @@ public struct MenuBarActions {
         self.openSettings = openSettings
         self.openDictationSettings = openDictationSettings
         self.showAbout = showAbout
+        self.checkForUpdates = checkForUpdates
+        self.openDiagnostics = openDiagnostics
         self.quit = quit
     }
 }
@@ -36,6 +42,7 @@ public struct MenuBarMenu: View {
     private let dictation: DictationSettingsModel
     private let context: ContextSettingsModel?
     private let modes: ModesSettingsModel?
+    private let recovery: RecoveryNoticeModel?
 
     public init(
         actions: MenuBarActions,
@@ -44,8 +51,10 @@ public struct MenuBarMenu: View {
         recorder: RecordingCoordinator,
         dictation: DictationSettingsModel,
         context: ContextSettingsModel? = nil,
-        modes: ModesSettingsModel? = nil
+        modes: ModesSettingsModel? = nil,
+        recovery: RecoveryNoticeModel? = nil
     ) {
+        self.recovery = recovery
         self.modes = modes
         self.actions = actions
         self.permissions = permissions
@@ -56,6 +65,18 @@ public struct MenuBarMenu: View {
     }
 
     public var body: some View {
+        if let recovery, recovery.isVisible {
+            Text(String(localized: "LemmeType closed unexpectedly last time.", bundle: .module))
+                .accessibilityIdentifier("menu.recovery")
+            Button(String(localized: "Open Diagnostics…", bundle: .module)) {
+                recovery.dismiss()
+                actions.openDiagnostics()
+            }
+            Button(String(localized: "Dismiss", bundle: .module, comment: "Button label (verb): hide this notice")) {
+                recovery.dismiss()
+            }
+            Divider()
+        }
         if !permissions.allGranted {
             Button(String(localized: "Finish Setup…", bundle: .module)) { actions.finishSetup() }
         }
@@ -120,6 +141,8 @@ public struct MenuBarMenu: View {
         Button(String(localized: "Settings…", bundle: .module)) { actions.openSettings() }
             .keyboardShortcut(",")
         Button(String(localized: "About LemmeType", bundle: .module)) { actions.showAbout() }
+        Button(String(localized: "Check for Updates…", bundle: .module)) { actions.checkForUpdates() }
+            .accessibilityIdentifier("menu.checkForUpdates")
         Divider()
         Button(String(localized: "Quit LemmeType", bundle: .module)) { actions.quit() }
             .keyboardShortcut("q")

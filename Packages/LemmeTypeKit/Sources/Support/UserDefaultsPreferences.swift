@@ -149,6 +149,16 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         set { defaults.set(newValue.rawValue, forKey: Key.historyRetention) }
     }
 
+    public var checksForUpdatesWeekly: Bool {
+        get { defaults.bool(forKey: Key.checksForUpdatesWeekly) }
+        set { defaults.set(newValue, forKey: Key.checksForUpdatesWeekly) }
+    }
+
+    public var lastUpdateCheck: Date? {
+        get { defaults.object(forKey: Key.lastUpdateCheck) as? Date }
+        set { defaults.set(newValue, forKey: Key.lastUpdateCheck) }
+    }
+
     private enum Key {
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let dictationShortcut = "dictationShortcut"
@@ -170,5 +180,7 @@ public final class UserDefaultsPreferences: AppPreferences, @unchecked Sendable 
         static let performanceProfile = "performanceProfile"
         static let modelIdleUnload = "modelIdleUnload"
         static let historyRetention = "historyRetention"
+        static let checksForUpdatesWeekly = "checksForUpdatesWeekly"
+        static let lastUpdateCheck = "lastUpdateCheck"
     }
 }

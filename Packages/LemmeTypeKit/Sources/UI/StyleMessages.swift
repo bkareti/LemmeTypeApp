@@ -6,10 +6,13 @@ import Foundation
 extension Tone {
     var displayName: String {
         switch self {
-        case .neutral: String(localized: "Neutral", bundle: .module)
-        case .professional: String(localized: "Professional", bundle: .module)
-        case .friendly: String(localized: "Friendly", bundle: .module)
-        case .casual: String(localized: "Casual", bundle: .module)
+        case .neutral: String(localized: "Neutral", bundle: .module, comment: "Adjective: no change of tone")
+        case .professional:
+            String(localized: "Professional", bundle: .module, comment: "Adjective: a formal tone for rewritten text")
+        case .friendly:
+            String(localized: "Friendly", bundle: .module, comment: "Adjective: a warm tone for rewritten text")
+        case .casual:
+            String(localized: "Casual", bundle: .module, comment: "Adjective: a relaxed tone for rewritten text")
         }
     }
 }
@@ -17,10 +20,15 @@ extension Tone {
 extension WritingFormat {
     var displayName: String {
         switch self {
-        case .plainText: String(localized: "Plain text", bundle: .module)
-        case .message: String(localized: "Message", bundle: .module)
-        case .email: String(localized: "Email", bundle: .module)
-        case .bulletList: String(localized: "Bullet list", bundle: .module)
+        case .plainText:
+            String(localized: "Plain text", bundle: .module, comment: "Noun: text without any special shape")
+        case .message:
+            String(
+                localized: "Message", bundle: .module,
+                comment: "Noun: a short chat-style message format and a built-in mode name")
+        case .email: String(localized: "Email", bundle: .module, comment: "Noun: an email-shaped text format")
+        case .bulletList:
+            String(localized: "Bullet list", bundle: .module, comment: "Noun: text turned into a bulleted list")
         }
     }
 }
@@ -28,8 +36,11 @@ extension WritingFormat {
 extension LengthPreference {
     var displayName: String {
         switch self {
-        case .original: String(localized: "Original", bundle: .module)
-        case .concise: String(localized: "Concise", bundle: .module)
+        case .original:
+            String(
+                localized: "Original", bundle: .module,
+                comment: "Adjective: the text exactly as recognised, before any rewrite")
+        case .concise: String(localized: "Concise", bundle: .module, comment: "Adjective: shorter rewritten text")
         }
     }
 }

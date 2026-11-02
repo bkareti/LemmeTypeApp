@@ -1,4 +1,5 @@
 import Domain
+import Foundation
 import Synchronization
 
 /// In-memory `AppPreferences`.
@@ -24,6 +25,8 @@ public final class FakePreferences: AppPreferences {
         var performanceProfile: PerformanceProfile = .automatic
         var modelIdleUnload: IdleUnloadPolicy = .default
         var historyRetention: HistoryRetention = .off
+        var checksForUpdatesWeekly = false
+        var lastUpdateCheck: Date?
     }
 
     private let values: Mutex<Values>
@@ -66,6 +69,16 @@ public final class FakePreferences: AppPreferences {
     public var historyRetention: HistoryRetention {
         get { values.withLock { $0.historyRetention } }
         set { values.withLock { $0.historyRetention = newValue } }
+    }
+
+    public var checksForUpdatesWeekly: Bool {
+        get { values.withLock { $0.checksForUpdatesWeekly } }
+        set { values.withLock { $0.checksForUpdatesWeekly = newValue } }
+    }
+
+    public var lastUpdateCheck: Date? {
+        get { values.withLock { $0.lastUpdateCheck } }
+        set { values.withLock { $0.lastUpdateCheck = newValue } }
     }
 
     public var speechOutput: SpeechOutput {

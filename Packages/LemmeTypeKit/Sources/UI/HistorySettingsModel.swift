@@ -123,6 +123,11 @@ public final class HistorySettingsModel {
         }
     }
 
+    /// When an entry was made, in the reader's locale (dates are never built by hand).
+    public static func when(_ date: Date, locale: Locale = .autoupdatingCurrent) -> String {
+        date.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened).locale(locale))
+    }
+
     public func showMessage(_ text: String) {
         message = text
     }

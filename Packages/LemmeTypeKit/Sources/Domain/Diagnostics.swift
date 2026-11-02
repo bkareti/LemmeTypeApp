@@ -101,14 +101,28 @@ public struct DiscardingDiagnostics: DiagnosticsRecording {
 }
 
 /// The exportable report. Only fields listed here can ever leave the app.
+/// Schema 2 (E7-S5) added the support fields; every one is an identifier or a flag.
 public struct DiagnosticsReport: Codable, Equatable, Sendable {
+    public static let currentSchemaVersion = 2
+    /// A report with a full event buffer stays under 1 MB (E7-S5), small enough to attach anywhere.
+    public static let maximumEncodedBytes = 1_048_576
+
+    public let schemaVersion: Int
     public let generatedAt: Date
     public let appVersion: String
     public let appBuild: String
+    public let distributionChannel: String
     public let osVersion: String
     public let hardwareModel: String
     public let permissions: [String: String]
     public let activationMode: String
+    public let previousRunEndedUnexpectedly: Bool
+    public let installedModels: [String]
+    public let dictationLanguage: String
+    public let speechOutput: String
+    public let performanceProfile: String
+    public let historyRetention: String
+    public let updateChecksWeekly: Bool
     public let events: [DiagnosticEvent]
 
     public init(
@@ -119,15 +133,25 @@ public struct DiagnosticsReport: Codable, Equatable, Sendable {
         hardwareModel: String,
         permissions: [String: String],
         activationMode: String,
-        events: [DiagnosticEvent]
+        events: [DiagnosticEvent],
+        support: SupportSnapshot = .empty
     ) {
+        self.schemaVersion = Self.currentSchemaVersion
         self.generatedAt = generatedAt
         self.appVersion = appVersion
         self.appBuild = appBuild
+        self.distributionChannel = support.channel.rawValue
         self.osVersion = osVersion
         self.hardwareModel = hardwareModel
         self.permissions = permissions
         self.activationMode = activationMode
+        self.previousRunEndedUnexpectedly = support.previousRunEndedUnexpectedly
+        self.installedModels = support.installedModels
+        self.dictationLanguage = support.dictationLanguage
+        self.speechOutput = support.speechOutput
+        self.performanceProfile = support.performanceProfile
+        self.historyRetention = support.historyRetention
+        self.updateChecksWeekly = support.updateChecksWeekly
         self.events = events
     }
 }

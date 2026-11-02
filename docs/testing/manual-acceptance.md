@@ -695,3 +695,64 @@ Needs a team-signed build on a real Mac. MA-54 also needs a network monitor
    exists next to a new empty history, and nothing crashes.
 4. Put `"formatVersion": 99` in a copy of the file: it is set aside the same way
    and never rewritten.
+
+## E7 — Quality, packaging, and release readiness
+
+**MA-59 A real signed and notarized build** (the maintainer's Mac, Developer ID certificate, notary profile)
+1. `make release-script-tests`, then `make release-build` (no `REHEARSAL`). It prints
+   `Signed with: Developer ID Application: …`.
+2. `NOTARY_PROFILE=<profile> make release-notarize`. Expected last line:
+   `Notarized, stapled, repackaged, and verified.` Record Apple's submission id.
+3. On a Mac that has never run LemmeType, download the zip with Safari, unzip, move to
+   Applications, open it. No warning appears beyond the first-open confirmation, and
+   onboarding starts. `spctl --assess --type execute -v /Applications/LemmeType.app` says
+   *accepted, source=Notarized Developer ID*.
+4. `shasum -a 256` of the zip matches `SHA256SUMS`.
+
+**MA-60 The update check against the real feed** (needs at least one published release)
+1. Settings › General › Updates shows *Not checked yet.* and *Check once a week* off.
+2. With a network monitor on (as MA-54), click *Check for Updates…*: exactly one request to
+   `api.github.com`, nothing else. If a newer release exists, *Open Download Page…* opens its
+   page in the browser; the app downloads nothing.
+3. Turn the network off and click again: *Couldn’t reach GitHub…*, no crash.
+4. Mark the newer release as a pre-release on GitHub and check again from a stable build: it is
+   no longer offered. Restore it afterwards.
+5. Start a dictation and, while it is processing, use the menu's *Check for Updates…*: the pane
+   says a dictation is in progress and no request is made.
+
+**MA-61 App Sandbox experiment** (decides whether the Mac App Store path is closed; ADR 0026)
+1. Build a throwaway variant with `com.apple.security.app-sandbox` and the audio-input and
+   network-client entitlements. Do not commit it.
+2. Grant it Accessibility and try Dictation into TextEdit and Notes (AX insertion, target capture).
+3. Record in ADR 0026 whether insertion works. If it does not, mark the Store path closed.
+
+**MA-62 Crash recovery**
+1. Start a dictation and, while recording, `kill -9 $(pgrep -x LemmeType)`.
+2. `ls "$TMPDIR/LemmeType/Sessions"` may show the recording. Relaunch LemmeType: it opens
+   normally, the menu starts with *LemmeType closed unexpectedly last time.*, the folder is
+   empty, and Settings › Diagnostics › Preview shows `lifecycle.unclean-exit`.
+3. *Dismiss* hides the notice. Quit normally and relaunch: no notice.
+4. Launch a second copy while the first runs: the first comes forward, and quitting the second
+   does not remove the first one's marker (`ls ~/Library/Application\ Support/LemmeType/State`).
+
+**MA-63 VoiceOver, keyboard, and Reduce Motion**
+1. Turn VoiceOver on (⌘F5). Walk onboarding, then each Settings pane with Tab and Control-Option
+   arrows: every control is named and its state spoken.
+2. Dictate into TextEdit: VoiceOver announces recording started, the processing state, and the
+   outcome. Make a rewrite with a style: the review text, the style line, and each button are read.
+3. Trigger an error (revoke Accessibility, dictate): the problem and the recovery actions are read.
+4. With *Reduce Motion* on, the overlay does not pulse. With full keyboard access on, every
+   control in Settings can be reached with Tab and activated with Space.
+5. Run `AccessibilityUITests` (`make test-ui`) and attach the result.
+
+**MA-64 Pseudo-language and right-to-left**
+1. `defaults write com.lemmetype.LemmeType NSDoubleLocalizedStrings -bool YES`, relaunch, open every
+   Settings pane: nothing is cut off so a control is unusable, and nothing overlaps.
+2. Remove the key. Launch with `-AppleTextDirection YES -NSForceRightToLeftWritingDirection YES`:
+   panes mirror and stay usable.
+3. Run `PseudoLocalizationUITests` and attach the result.
+
+**MA-65 Minimum macOS and the real-app matrix**
+1. On a Mac on macOS 26.0, run the rehearsal build and MA-6, MA-28, and MA-31.
+2. Fill the *Result* columns of [insertion-matrix.md](insertion-matrix.md) for the apps in
+   [compatibility-matrix.md](compatibility-matrix.md) that the release claims to support.

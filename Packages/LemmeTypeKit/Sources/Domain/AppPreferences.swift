@@ -1,3 +1,5 @@
+import Foundation
+
 /// Small, non-sensitive app preferences persisted between launches.
 public protocol AppPreferences: AnyObject, Sendable {
     var hasCompletedOnboarding: Bool { get set }
@@ -40,6 +42,10 @@ public protocol AppPreferences: AnyObject, Sendable {
     var modelIdleUnload: IdleUnloadPolicy { get set }
     /// How long accepted dictations are kept (E6-S3). Off by default: nothing is stored.
     var historyRetention: HistoryRetention { get set }
+    /// Check for a newer version about once a week (E7-S3). Off by default.
+    var checksForUpdatesWeekly: Bool { get set }
+    /// When the update check last finished (any outcome).
+    var lastUpdateCheck: Date? { get set }
 }
 
 extension AppPreferences {

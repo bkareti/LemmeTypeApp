@@ -26,6 +26,14 @@ struct DiagnosticsSettingsView: View {
                         bundle: .module)
                 )
                 .foregroundStyle(.secondary)
+                Text(
+                    String(
+                        localized:
+                            "If LemmeType ever crashes, macOS saves its own crash report on this Mac (Console › Crash Reports). LemmeType never reads or sends it. You can attach it to a bug report if you choose.",
+                        bundle: .module)
+                )
+                .font(.callout)
+                .foregroundStyle(.secondary)
                 Button(String(localized: "Preview Report…", bundle: .module)) { model.preparePreview() }
                     .accessibilityIdentifier("diagnostics.preview")
             }

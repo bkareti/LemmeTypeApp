@@ -29,7 +29,9 @@ struct AudioSettingsView: View {
                         .accessibilityIdentifier("audio.notice")
                 }
             }
-            Section(String(localized: "Test", bundle: .module)) {
+            Section(
+                String(localized: "Test", bundle: .module, comment: "Noun: a test recording that is not typed anywhere")
+            ) {
                 HStack {
                     Button(
                         model.isTesting
@@ -73,7 +75,7 @@ struct LevelMeter: View {
     }
 
     private var stateDescription: String {
-        if !isActive { return String(localized: "Off", bundle: .module) }
+        if !isActive { return String(localized: "Off", bundle: .module, comment: "State of a switch: turned off") }
         return level > 0.1
             ? String(localized: "Sound detected", bundle: .module)
             : String(localized: "No sound", bundle: .module)

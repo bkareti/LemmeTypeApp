@@ -25,8 +25,10 @@ struct DiagnosticsReportSchemaTests {
         let data = try DiagnosticsReportEncoder.encode(report)
         #expect(
             try Self.keys(of: data) == [
-                "generatedAt", "appVersion", "appBuild", "osVersion", "hardwareModel", "permissions",
-                "activationMode", "events",
+                "schemaVersion", "generatedAt", "appVersion", "appBuild", "distributionChannel", "osVersion",
+                "hardwareModel", "permissions", "activationMode", "previousRunEndedUnexpectedly", "installedModels",
+                "dictationLanguage", "speechOutput", "performanceProfile", "historyRetention", "updateChecksWeekly",
+                "events",
             ])
     }
 

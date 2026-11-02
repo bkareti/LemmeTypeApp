@@ -58,6 +58,9 @@ manual steps in backticks; the checker resolves every one.
 | T-13 | Delete All Local Data misses something | One model removes history, personalization, leftover audio, and diagnostics; reports what it removed | `PrivacyOverviewModelTests`, `PrivacyEndToEndTests`, `MA-56` | Copies in backups and exported files stay; the Privacy pane says so |
 | T-14 | The privacy text misleads the user | Plain-language checks (short sentences, no jargon) and a person reads it | `PrivacyTextTests`, `MA-57` | A reading check is a floor, not proof of understanding |
 | T-15 | An unreadable or newer data file is overwritten | The file is moved aside and reported, never overwritten | `FileDictationHistoryStoreTests`, `FilePersonalizationStoreTests`, `MA-58` | None known |
+| T-16 | The update check is spoofed, misleads the user, or runs attacker code | The app reads release metadata only and never downloads or runs code; one anonymous request, user-started or opt-in weekly, never during a session; redirects and links limited to the project's GitHub pages; size capped; no downgrade offer | `GitHubReleaseFeedTests`, `UpdateCheckerTests`, `UpdatesSettingsModelTests`, `MA-60` | GitHub, or someone who controls the user's network and TLS trust, can show a false "new version" message; it only opens a GitHub page in the browser, where the download is notarized and checksummed |
+| T-17 | A crash or force-quit leaves a recording or hides that something went wrong | Leftover audio is deleted at the next launch; a marker shows a one-time notice and a diagnostic; nothing about the crash is sent | `LaunchSentinelTests`, `CrashRecoveryEndToEndTests`, `MA-62` | A power cut during a paste fallback can leave dictated text on the clipboard |
+| T-18 | A release artifact carries a debug entitlement, an unsigned part, or bundled test data | The release scripts check Hardened Runtime, entitlements, signature, and contents; notarization is required for a shipped build | `scripts/verify-release.sh`, `scripts/tests/test-verify-release.sh`, `MA-59` | Notarization and the first real signed build need the maintainer's credentials and are checked by hand |
 
 ## Accepted risks
 
@@ -72,5 +75,4 @@ manual steps in backticks; the checker resolves every one.
 ## Open items
 
 1. App-level encryption or a lock for the history (owner: product).
-2. Epic 7 adds the update check as the second network file; its threats (spoofed
-   feed, downgrade, malicious download link) are added with that story.
+2. The update check (Epic 7) is the second network file; its threat is T-16.

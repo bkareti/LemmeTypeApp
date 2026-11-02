@@ -55,8 +55,12 @@ struct ContextSettingsView: View {
                     HStack {
                         Text(app.name)
                         Spacer()
-                        Button(String(localized: "Remove", bundle: .module)) { model.include(app.bundleIdentifier) }
-                            .accessibilityLabel(Text(String(localized: "Remove \(app.name)", bundle: .module)))
+                        Button(
+                            String(
+                                localized: "Remove", bundle: .module,
+                                comment: "Button label (verb): take a downloaded model off this Mac")
+                        ) { model.include(app.bundleIdentifier) }
+                        .accessibilityLabel(Text(String(localized: "Remove \(app.name)", bundle: .module)))
                     }
                 }
                 Menu(String(localized: "Add App…", bundle: .module)) {

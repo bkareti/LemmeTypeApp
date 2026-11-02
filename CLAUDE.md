@@ -38,6 +38,10 @@ make privacy-check  # fail if captured audio was left behind
 make network-check  # fail if a file outside docs/security/network-allowlist.txt uses a network API
 make security-check # fail on an unreviewed entitlement, usage string, dependency, or Hardened Runtime change
 make privacy-docs-check  # fail if the threat model or privacy checklist cites something that no longer exists
+make l10n-check     # string catalog is complete and commented; no literal bypasses the module bundle (l10n-update refreshes it)
+make docs-check     # release and support docs point at files and make targets that exist
+make release-build REHEARSAL=1 && make release-verify REHEARSAL=1  # ad-hoc release archive + checks (see docs/release/runbook.md)
+make quality-gate   # every automated check with one summary (UI=1 adds UI tests)
 make benchmark   # end-to-end benchmark on this Mac + threshold check (not CI)
 make release-check APP=<app|zip>  # thresholds + release-artifact scan
 make format      # apply swift-format
@@ -60,7 +64,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
 - Feature code lives in the local package `Packages/LemmeTypeKit`, one target per
   module: `Domain` (models, protocols, state, no OS frameworks), `Support`
   (`Log`, `BuildInfo`, `UserDefaultsPreferences`; depends on Domain), platform modules `Audio` / `Permissions` / `Shortcuts` /
-  `Lifecycle` / `Recognition` / `ModelAssets` / `Delivery` / `Editing` (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
+  `Lifecycle` / `Recognition` / `ModelAssets` / `Delivery` / `Editing` / `Updates` (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
   and `TestSupport` (fakes, plus the Debug-only `DictationBenchmark`).
   `EndToEndTests` drives recorder → pipeline → cleaner → delivery (and, for
   Epic 3, shortcut → context reader → formatter/rewriter → delivery) with
@@ -222,6 +226,16 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   `scripts/check-privacy-docs.py` for `docs/security/threat-model.md` and
   `privacy-release-checklist.md`. Diagnostics schema changes must update
   `DiagnosticsReportSchemaTests`.
+- Release and recovery (ADR 0026, Epic 7): `scripts/build-release.sh` →
+  `verify-release.sh` → `notarize-release.sh` (needs the maintainer's Developer ID and
+  `NOTARY_PROFILE`; a `--rehearsal` build is ad hoc and never shipped);
+  `docs/release/{runbook,beta-program,rollback}.md`. The `Updates` module is the only
+  other network code: `GitHubReleaseFeed` makes one anonymous GET for release metadata
+  (user-started or opt-in weekly, never during a session); `UpdateChecker` decides what
+  it means; the app never downloads or runs a release. `LaunchSentinel` (Lifecycle)
+  leaves a marker that a normal quit removes, so `AppController.beginRun/endRun` can show
+  a one-time notice after a crash. `AboutModel` copies support info or opens a prefilled
+  issue; `DiagnosticsReport` schema 2 adds `SupportSnapshot` fields.
 - Diagnostics: components take `any DiagnosticsRecording` (default
   `DiscardingDiagnostics`); the app shares one `DiagnosticsBuffer`. Event names
   and keys must be literals and values typed (`.id(...)` redacts anything that
@@ -239,7 +253,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management; 0023 multilingual dictation; 0024 tone and style; 0025 privacy data and history).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management; 0023 multilingual dictation; 0024 tone and style; 0025 privacy data and history; 0026 distribution and updates).
 
 ## Planning documents
 

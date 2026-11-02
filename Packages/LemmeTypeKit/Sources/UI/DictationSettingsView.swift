@@ -34,7 +34,8 @@ struct DictationSettingsView: View {
     // MARK: Writing
 
     private var writingSection: some View {
-        Section(String(localized: "Writing", bundle: .module)) {
+        Section(String(localized: "Writing", bundle: .module, comment: "Noun: the way text is written, Exact or Clean"))
+        {
             Picker(
                 String(localized: "Writing mode", bundle: .module),
                 selection: Binding(get: { model.writingMode }, set: { model.setWritingMode($0) })
@@ -109,7 +110,7 @@ struct DictationSettingsView: View {
                 }
             }
         } header: {
-            Text(String(localized: "Language", bundle: .module))
+            Text(String(localized: "Language", bundle: .module, comment: "Noun: the language you speak"))
         } footer: {
             Text(
                 String(

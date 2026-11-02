@@ -17,8 +17,16 @@ struct PrivacySettingsView: View {
     var body: some View {
         VStack(spacing: 0) {
             Picker(String(localized: "Show:", bundle: .module), selection: $section) {
-                Text(String(localized: "Overview", bundle: .module)).tag(Section.overview)
-                Text(String(localized: "History", bundle: .module)).tag(Section.history)
+                Text(
+                    String(
+                        localized: "Overview", bundle: .module,
+                        comment: "Noun: a summary page of how LemmeType uses your data")
+                ).tag(Section.overview)
+                Text(
+                    String(
+                        localized: "History", bundle: .module,
+                        comment: "Noun: the list of dictations the user chose to keep")
+                ).tag(Section.history)
             }
             .pickerStyle(.menu)
             .fixedSize()

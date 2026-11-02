@@ -134,11 +134,12 @@ public final class ShortcutSettingsModel {
             switch command {
             case .start(let target):
                 target?.applicationName.map { String(localized: "Started in \($0)", bundle: .module) }
-                    ?? String(localized: "Started", bundle: .module)
+                    ?? String(
+                        localized: "Started", bundle: .module, comment: "Past tense: a download or recording began")
             case .startEditing(let target):
                 target?.applicationName.map { String(localized: "Editing in \($0)", bundle: .module) }
                     ?? String(localized: "Editing", bundle: .module)
-            case .stop: String(localized: "Stopped", bundle: .module)
+            case .stop: String(localized: "Stopped", bundle: .module, comment: "Past tense: a recording ended")
             case .cancel: String(localized: "Cancelled", bundle: .module)
             }
     }

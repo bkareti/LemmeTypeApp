@@ -15,7 +15,10 @@ extension DictationMode {
         switch id {
         case .exact: WritingMode.exact.displayName
         case .clean: WritingMode.clean.displayName
-        case .message: String(localized: "Message", bundle: .module)
+        case .message:
+            String(
+                localized: "Message", bundle: .module,
+                comment: "Noun: a short chat-style message format and a built-in mode name")
         default: name
         }
     }
@@ -167,7 +170,8 @@ extension RewriterAvailability {
 extension DictationAction {
     func title(engineName: (RecognitionEngineID) -> String) -> String {
         switch self {
-        case .retry: String(localized: "Retry", bundle: .module)
+        case .retry:
+            String(localized: "Retry", bundle: .module, comment: "Button label (verb): try the same step again")
         case .useEngine(let engine): String(localized: "Use \(engineName(engine))", bundle: .module)
         case .allowSpeechRecognition: String(localized: "Allow Speech Recognition", bundle: .module)
         case .chooseEngine: String(localized: "Choose Engine…", bundle: .module)
@@ -177,7 +181,10 @@ extension DictationAction {
         case .openPermissions, .openContextSettings, .useLanguage, .chooseLanguage, .insertText, .useOriginal,
             .regenerate:
             settingsTitle
-        case .discard: String(localized: "Discard", bundle: .module)
+        case .discard:
+            String(
+                localized: "Discard", bundle: .module,
+                comment: "Button label (verb): throw away the text without using it")
         }
     }
 
@@ -192,7 +199,10 @@ extension DictationAction {
         case .chooseLanguage: String(localized: "Language Settings…", bundle: .module)
         case .useOriginal: String(localized: "Use Original", bundle: .module)
         case .regenerate: String(localized: "Regenerate", bundle: .module)
-        default: String(localized: "Insert", bundle: .module)
+        default:
+            String(
+                localized: "Insert", bundle: .module,
+                comment: "Button label (verb): type the text into the app that was in front")
         }
     }
 

@@ -6,3 +6,4 @@
 # recognition, cleanup, translation, rewriting, history) never uses the network.
 
 Packages/LemmeTypeKit/Sources/ModelAssets/URLSessionModelDownloader.swift  # Downloads a model only after the user confirms the size (ADR 0011)
+Packages/LemmeTypeKit/Sources/Updates/GitHubReleaseFeed.swift  # The update check: one GET for release metadata, only when the user asks or turned on the weekly check (ADR 0026)

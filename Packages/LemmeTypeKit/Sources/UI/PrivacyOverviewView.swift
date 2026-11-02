@@ -52,9 +52,11 @@ struct PrivacyOverviewView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(item.name).font(.headline)
                                 Text(item.what)
-                                Text(
-                                    "\(item.location) \(item.duration) \(item.removal)"
-                                )
+                                Group {
+                                    Text(item.location)
+                                    Text(item.duration)
+                                    Text(item.removal)
+                                }
                                 .foregroundStyle(.secondary)
                             }
                             .font(.callout)
@@ -70,6 +72,7 @@ struct PrivacyOverviewView: View {
                 GroupBox(String(localized: "The internet and tracking", bundle: .module)) {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(PrivacyText.network).accessibilityIdentifier("privacy.network")
+                        Text(PrivacyText.updates).accessibilityIdentifier("privacy.updates")
                         Text(PrivacyText.analytics).accessibilityIdentifier("privacy.analytics")
                         Text(PrivacyText.backups)
                     }

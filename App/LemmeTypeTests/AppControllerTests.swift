@@ -1,5 +1,6 @@
 import AppKit
 import Domain
+import Lifecycle
 import TestSupport
 import Testing
 import UI
@@ -25,6 +26,96 @@ struct AppControllerTests {
         #expect(first.isVisible)
         #expect(first.identifier?.rawValue == "settings")
         first.close()
+    }
+
+    /// E7-S3: the menu item shows Settings and makes exactly one request, because the user asked.
+    @Test func checkForUpdatesFromTheMenuAsksOnceAndShowsTheResult() async throws {
+        var composition = AppComposition.uiTesting(buildInfo: .init(version: "0.1.0", build: "1"))
+        let feed = FakeUpdateFeed(releases: [FakeUpdateFeed.release("0.2.0")])
+        composition.updateFeed = feed
+        let controller = composition.makeAppController()
+        #expect(feed.calls == 0, "building the app asks nothing")
+
+        controller.menuActions.checkForUpdates()
+        for _ in 0..<200 where controller.updates.model.availableRelease == nil {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+
+        #expect(feed.calls == 1)
+        #expect(controller.updates.model.availableRelease?.version.description == "0.2.0")
+        let window = try #require(controller.settings.currentWindow)
+        #expect(window.isVisible)
+        window.close()
+    }
+
+    @Test func launchingDoesNotCheckForUpdatesUnlessTheWeeklyCheckIsOn() async throws {
+        var composition = AppComposition.uiTesting(buildInfo: .init(version: "0.1.0", build: "1"))
+        let feed = FakeUpdateFeed(releases: [FakeUpdateFeed.release("0.2.0")])
+        composition.updateFeed = feed
+        let controller = composition.makeAppController()
+
+        controller.launchFinished()
+        try await Task.sleep(for: .milliseconds(200))
+
+        #expect(feed.calls == 0)
+        controller.updates.stop()
+    }
+
+    // MARK: Crash recovery (E7-S4)
+
+    private func stateDirectory() -> URL {
+        FileManager.default.temporaryDirectory
+            .appendingPathComponent("LemmeTypeTests-AppState-\(UUID().uuidString)", isDirectory: true)
+    }
+
+    @Test func aNormalLaunchShowsNoRecoveryNotice() {
+        let directory = stateDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        var composition = AppComposition.uiTesting(buildInfo: .init(version: "0.2.0", build: "1"))
+        composition.sentinel = LaunchSentinel(directory: directory, version: "0.2.0")
+        let controller = composition.makeAppController()
+
+        controller.beginRun()
+
+        #expect(!controller.recovery.isVisible)
+        #expect(!composition.diagnostics.snapshot().contains { $0.name == "lifecycle.unclean-exit" })
+    }
+
+    @Test func aLeftoverMarkerShowsTheNoticeAndIsRecordedOnce() {
+        let directory = stateDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        _ = LaunchSentinel(directory: directory, version: "0.1.0").begin()  // the previous run never ended
+        var composition = AppComposition.uiTesting(buildInfo: .init(version: "0.2.0", build: "1"))
+        composition.sentinel = LaunchSentinel(directory: directory, version: "0.2.0")
+        let controller = composition.makeAppController()
+
+        controller.beginRun()
+        controller.beginRun()  // a second call changes nothing
+
+        #expect(controller.recovery.isVisible)
+        #expect(controller.recovery.previousVersion == "0.1.0")
+        let events = composition.diagnostics.snapshot().filter { $0.name == "lifecycle.unclean-exit" }
+        #expect(events.count == 1)
+        #expect(events.first?.attributes["previousVersion"] == .identifier("0.1.0"))
+
+        controller.recovery.dismiss()
+        #expect(!controller.recovery.isVisible)
+        controller.endRun()
+        #expect(LaunchSentinel(directory: directory, version: "0.2.0").begin() == .endedNormally)
+    }
+
+    @Test func aSecondInstanceNeverClearsTheRunningInstancesMarker() {
+        let directory = stateDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let sentinel = LaunchSentinel(directory: directory, version: "0.2.0")
+        _ = sentinel.begin()  // the first instance is running
+        var composition = AppComposition.uiTesting(buildInfo: .init(version: "0.2.0", build: "1"))
+        composition.sentinel = sentinel
+        let secondInstance = composition.makeAppController()
+
+        secondInstance.endRun()  // it never began a run, so quitting must not touch the marker
+
+        #expect(FileManager.default.fileExists(atPath: sentinel.markerURL.path))
     }
 
     @Test func menuSettingsActionOpensTheSettingsWindow() throws {

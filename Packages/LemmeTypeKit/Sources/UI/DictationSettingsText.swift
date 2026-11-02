@@ -43,7 +43,8 @@ extension DictationSettingsModel {
             ? String(localized: "\(spoken) → English", bundle: .module) : spoken
         let state =
             readiness.isReady
-            ? String(localized: "Ready", bundle: .module) : String(localized: "Not ready", bundle: .module)
+            ? String(localized: "Ready", bundle: .module, comment: "State: the engine or model can be used now")
+            : String(localized: "Not ready", bundle: .module)
         return String(localized: "Language: \(route) · \(state)", bundle: .module)
     }
 }
@@ -70,7 +71,7 @@ extension DictationSettingsModel.EngineRow {
 extension EngineAvailability {
     var statusTitle: String {
         switch self {
-        case .ready: String(localized: "Ready", bundle: .module)
+        case .ready: String(localized: "Ready", bundle: .module, comment: "State: the engine or model can be used now")
         case .assetsMissing: String(localized: "Download required", bundle: .module)
         case .permissionUnavailable: String(localized: "Needs Speech Recognition access", bundle: .module)
         case .unsupported(.language): String(localized: "Doesn’t support this language", bundle: .module)
