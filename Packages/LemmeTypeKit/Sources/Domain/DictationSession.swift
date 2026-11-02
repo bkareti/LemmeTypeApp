@@ -215,7 +215,7 @@ extension DictationIssue {
         switch self {
         case .recognitionFailed(.permissionDenied), .engineUnavailable(_, .permissionUnavailable):
             return [.allowSpeechRecognition, .retry] + switchEngine + [.saveAudio, .discard]
-        case .recognitionFailed(.noSpeechDetected):
+        case .recognitionFailed(.noSpeechDetected), .recognitionFailed(.silentAudio):
             return [.discard]
         case .recognitionFailed(.languageUncertain), .languageUnavailable, .reviewTranslation:
             return languageActions

@@ -225,6 +225,21 @@ struct HandheldEndToEndTests {
         #expect(harness.leftoverAudio.isEmpty)
     }
 
+    @Test func aSilentRecordingTellsTheUserToCheckTheMicrophoneAndCopiesNothing() async {
+        let harness = Harness(script: .init(error: .silentAudio))
+        defer { harness.cleanUp() }
+
+        await harness.dictate()
+
+        #expect(harness.model.screen == .attention(.recognitionFailed(.silentAudio)))
+        #expect(harness.model.screen != .attention(.recognitionFailed(.noSpeechDetected)))
+        #expect(harness.pasteboard.writes.isEmpty)
+        #expect(harness.diagnosticsText.contains("recognition.silent-audio"))
+        harness.model.discard()
+        await harness.coordinator.settle()
+        #expect(harness.leftoverAudio.isEmpty)
+    }
+
     @Test func aDeniedMicrophoneNeverRecords() async {
         let harness = Harness(microphone: .denied)
         defer { harness.cleanUp() }

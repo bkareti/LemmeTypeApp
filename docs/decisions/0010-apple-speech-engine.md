@@ -21,8 +21,11 @@
   chooses Allow/Retry or discards it (E2-S5). It is never requested during
   onboarding. `NSSpeechRecognitionUsageDescription` is set in
   `Config/LemmeType.xcconfig`.
-- **Empty and silent audio** (shorter than 0.2 s, or no 50 ms window above
-  −50 dBFS) fail with `noSpeechDetected` before the framework is called.
+- **Empty and silent audio** fail before the framework is called: a recording
+  shorter than 0.2 s fails with `noSpeechDetected`, and one of normal length
+  with no 50 ms window above −50 dBFS fails with `silentAudio`, so the user is
+  told to check the microphone (muted, or held by a call or another app)
+  instead of being told to speak again. Both engines do this.
 - **Errors** are mapped from `(domain, code)` only; framework messages are
   never kept or logged.
 - **Languages**: English locales only for the MVP (`AppleSpeechEngine.languages`),

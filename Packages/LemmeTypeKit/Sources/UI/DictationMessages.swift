@@ -30,6 +30,11 @@ extension DictationIssue {
         switch self {
         case .recognitionFailed(.noSpeechDetected):
             String(localized: "No speech was detected.", bundle: .module)
+        case .recognitionFailed(.silentAudio):
+            String(
+                localized:
+                    "The microphone didn’t pick up any sound. Check that it isn’t muted or in use by a call or another app, then try again.",
+                bundle: .module)
         case .recognitionFailed(.languageUncertain):
             String(
                 localized:

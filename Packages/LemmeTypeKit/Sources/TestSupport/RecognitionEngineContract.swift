@@ -62,8 +62,9 @@ public enum RecognitionEngineContract {
         do {
             transcript = try await engine.recognize(request) { _ in }
         } catch {
-            // A recording without speech is a valid outcome.
-            return error == .noSpeechDetected ? [] : ["ready engine failed with \(error.identifier)"]
+            // A recording without speech, or without any sound, is a valid outcome.
+            let withoutSpeech: [RecognitionError] = [.noSpeechDetected, .silentAudio]
+            return withoutSpeech.contains(error) ? [] : ["ready engine failed with \(error.identifier)"]
         }
         var issues: [String] = []
         if transcript.engine != engine.descriptor.id {

@@ -200,7 +200,8 @@ public actor WhisperEngine: SpeechRecognitionEngine {
 
         let start = ContinuousClock.now
         let samples = try AudioFileReader.readSamples(from: request.audio.fileURL)
-        guard !samples.isEmpty, !SpeechActivity.isSilent(samples) else { throw .noSpeechDetected }
+        guard !samples.isEmpty else { throw .noSpeechDetected }
+        guard !SpeechActivity.isSilent(samples) else { throw .silentAudio }
         let language = try await Self.spokenLanguage(
             for: request.language, samples: samples, with: model, threads: threads)
         let inference = WhisperInference(

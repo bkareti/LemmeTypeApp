@@ -75,7 +75,8 @@ public final class AppleSpeechEngine: SpeechRecognitionEngine {
         if let error = availability(for: request.language).recognitionError { throw error }
         guard request.audio.duration >= SpeechActivity.minimumDuration else { throw .noSpeechDetected }
         let samples = try AudioFileReader.readSamples(from: request.audio.fileURL)
-        guard !samples.isEmpty, !SpeechActivity.isSilent(samples) else { throw .noSpeechDetected }
+        guard !samples.isEmpty else { throw .noSpeechDetected }
+        guard !SpeechActivity.isSilent(samples) else { throw .silentAudio }
         try checkCancellation()
 
         let start = ContinuousClock.now

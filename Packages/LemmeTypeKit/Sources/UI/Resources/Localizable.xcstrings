@@ -1601,6 +1601,9 @@
     "The microphone couldn’t be started. Try again or choose another input." : {
 
     },
+    "The microphone didn’t pick up any sound. Check that it isn’t muted or in use by a call or another app, then try again." : {
+
+    },
     "The microphone was disconnected. Choose another input and try again." : {
 
     },

@@ -309,10 +309,10 @@ struct WhisperEngineTests {
         #expect(ContinuousClock.now - start < .seconds(3))
     }
 
-    @Test func silenceNeverReachesTheModel() async throws {
+    @Test func silenceNeverReachesTheModelAndIsReportedAsASilentMicrophone() async throws {
         defer { fixtures.removeAll() }
         let engine = makeEngine()
-        await #expect(throws: RecognitionError.noSpeechDetected) {
+        await #expect(throws: RecognitionError.silentAudio) {
             try await engine.recognize(try fixtures.make(.silence(seconds: 1))) { _ in }
         }
     }

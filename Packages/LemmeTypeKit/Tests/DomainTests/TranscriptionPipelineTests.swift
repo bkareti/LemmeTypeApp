@@ -202,6 +202,10 @@ struct TranscriptionPipelineTests {
 
     @Test func actionsForEachIssue() {
         #expect(DictationIssue.recognitionFailed(.noSpeechDetected).actions(alternatives: []) == [.discard])
+        // Recognising a silent recording again cannot help, so only Discard is offered.
+        #expect(DictationIssue.recognitionFailed(.silentAudio).actions(alternatives: [.whisper]) == [.discard])
+        #expect(
+            DictationIssue.recognitionFailed(.silentAudio).identifier == "recognition.silent-audio")
         #expect(
             DictationIssue.recognitionFailed(.permissionDenied).actions(alternatives: [])
                 == [.allowSpeechRecognition, .retry, .saveAudio, .discard])
