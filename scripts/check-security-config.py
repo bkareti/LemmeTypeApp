@@ -23,6 +23,20 @@ CONFIG_DIR = "Config"
 RELEASE_CONFIG = "Config/Release.xcconfig"
 PACKAGE_MANIFEST = "Packages/LemmeTypeKit/Package.swift"
 PROJECT_SPEC = "project.yml"
+IOS_CONFIG = "Config/LemmeTypeiOS.xcconfig"
+IOS_APP_DIR = "App/LemmeTypeiOS"
+IOS_PRIVACY_MANIFEST = "App/LemmeTypeiOS/PrivacyInfo.xcprivacy"
+SOURCE_DIRS = ("Packages/LemmeTypeKit/Sources", "App")
+
+# Required-reason APIs (Apple's privacy manifest rules): the source tokens that
+# use them, and the manifest category that must declare them.
+REQUIRED_REASON_APIS = {
+    "NSPrivacyAccessedAPICategoryUserDefaults": r"\bUserDefaults\b",
+    "NSPrivacyAccessedAPICategoryDiskSpace": r"volumeAvailableCapacity|systemFreeSize|NSFileSystemFreeSize|volumeTotalCapacity",
+    "NSPrivacyAccessedAPICategoryFileTimestamp": r"creationDate|modificationDate|contentModificationDate|fileModificationDate|getattrlist|\bf?stat\(",
+    "NSPrivacyAccessedAPICategorySystemBootTime": r"systemUptime|mach_absolute_time|mach_continuous_time|clock_gettime_nsec_np",
+    "NSPrivacyAccessedAPICategoryActiveKeyboards": r"activeInputModes",
+}  # fmt: skip
 
 # Packages that collect usage or crash data. Banned by name, whatever the allowlist says.
 BANNED_NAMES = (
@@ -153,6 +167,47 @@ def check_hardened_runtime(root: Path, report: Report) -> None:
         report.error(f"{RELEASE_CONFIG}: the App Sandbox setting changes the platform baseline (ADR 0001)")
 
 
+def check_ios_target(root: Path, report: Report) -> None:
+    """The iPhone and iPad app has no entitlements or background modes, no ATS
+    exceptions, and a privacy manifest that matches the code (E8-S4, E8-S9, ADR 0027)."""
+    config = root / IOS_CONFIG
+    if not config.is_file():
+        return  # no iOS target in this tree
+    text = config.read_text(encoding="utf-8")
+    if re.search(r"INFOPLIST_KEY_UIBackgroundModes", text):
+        report.error(f"{IOS_CONFIG}: the iPhone app must not declare background modes; recording stops with the screen (ADR 0027)")
+    if re.search(r"^\s*CODE_SIGN_ENTITLEMENTS\s*=\s*\S", text, re.MULTILINE):
+        report.error(f"{IOS_CONFIG}: the iPhone app has no entitlements; adding one needs a new ADR")
+    app_dir = root / IOS_APP_DIR
+    for entitlements in sorted(app_dir.rglob("*.entitlements")):
+        report.error(f"{entitlements.relative_to(root)}: the iPhone app has no entitlements; adding one needs a new ADR")
+    plist_text = text + "".join(p.read_text(encoding="utf-8", errors="ignore") for p in sorted(app_dir.rglob("*.plist")))
+    if re.search(r"NSAppTransportSecurity|NSAllowsArbitraryLoads", plist_text):
+        report.error("the iPhone app must not relax App Transport Security: its only download is HTTPS")
+
+    manifest = root / IOS_PRIVACY_MANIFEST
+    if not manifest.is_file():
+        report.error(f"missing {IOS_PRIVACY_MANIFEST}")
+        return
+    with manifest.open("rb") as handle:
+        data = plistlib.load(handle)
+    if data.get("NSPrivacyTracking") is not False:
+        report.error(f"{IOS_PRIVACY_MANIFEST}: NSPrivacyTracking must be false")
+    if data.get("NSPrivacyTrackingDomains"):
+        report.error(f"{IOS_PRIVACY_MANIFEST}: the app contacts no tracking domains")
+    if data.get("NSPrivacyCollectedDataTypes"):
+        report.error(f"{IOS_PRIVACY_MANIFEST}: the app collects no data; nothing leaves the device")
+    declared = {item.get("NSPrivacyAccessedAPIType") for item in data.get("NSPrivacyAccessedAPITypes", [])}
+    sources = "".join(
+        path.read_text(encoding="utf-8", errors="ignore")
+        for folder in SOURCE_DIRS for path in sorted((root / folder).rglob("*.swift"))
+        if "Tests" not in path.parts and "LemmeTypeiOSUITests" not in path.parts
+    )  # fmt: skip
+    for category, pattern in REQUIRED_REASON_APIS.items():
+        if re.search(pattern, sources) and category not in declared:
+            report.error(f"{IOS_PRIVACY_MANIFEST}: the code uses an API that needs {category}, which is not declared")
+
+
 def run(root: Path) -> list[str]:
     report = Report()
     security = root / "docs" / "security"
@@ -160,6 +215,7 @@ def run(root: Path) -> list[str]:
     check_usage_strings(root, read_allowlist(security / "usage-strings-allowlist.txt", report), report)
     check_dependencies(root, read_allowlist(security / "dependencies-allowlist.txt", report), report)
     check_hardened_runtime(root, report)
+    check_ios_target(root, report)
     return report.errors
 
 

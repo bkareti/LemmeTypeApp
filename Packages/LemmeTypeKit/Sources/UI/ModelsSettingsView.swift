@@ -22,7 +22,7 @@ struct ModelsSettingsView: View {
                 Text(
                     String(
                         localized:
-                            "Models run only on this Mac. A model is checked against its published fingerprint before it’s first used after each launch; a modified file is deleted.",
+                            "Models run only on \(DeviceWords.thisDevice). A model is checked against its published fingerprint before it’s first used after each launch; a modified file is deleted.",
                         bundle: .module)
                 )
                 .font(.callout)
@@ -101,7 +101,7 @@ extension ModelsSettingsView {
             Text(
                 String(
                     localized:
-                        "Models load when you dictate and are removed from memory after this much time without dictation, or at once when your Mac runs short of memory.",
+                        "Models load when you dictate and are removed from memory after this much time without dictation, or at once when \(DeviceWords.yourDevice) runs short of memory.",
                     bundle: .module)
             )
             .font(.callout)
@@ -123,7 +123,9 @@ extension PerformanceProfile {
     var summary: String {
         switch self {
         case .automatic:
-            String(localized: "Balanced, or Low Power while your Mac is in Low Power Mode.", bundle: .module)
+            String(
+                localized: "Balanced, or Low Power while \(DeviceWords.yourDevice) is in Low Power Mode.",
+                bundle: .module)
         case .balanced:
             String(
                 localized: "Prefers Whisper Base, uses the GPU, and starts loading the model while you speak.",
@@ -146,7 +148,7 @@ extension PerformancePlan.Reduction {
         switch self {
         case .lowPowerMode: String(localized: "Using Low Power because Low Power Mode is on.", bundle: .module)
         case .thermal:
-            String(localized: "Performance is reduced to keep your Mac cool.", bundle: .module)
+            String(localized: "Performance is reduced to keep \(DeviceWords.yourDevice) cool.", bundle: .module)
         }
     }
 }
@@ -265,8 +267,9 @@ extension ModelTier {
 extension ModelFit {
     var title: String {
         switch self {
-        case .recommended: String(localized: "Recommended for this Mac", bundle: .module)
-        case .supported: String(localized: "Runs on this Mac; more memory recommended", bundle: .module)
+        case .recommended: String(localized: "Recommended for \(DeviceWords.thisDevice)", bundle: .module)
+        case .supported:
+            String(localized: "Runs on \(DeviceWords.thisDevice); more memory recommended", bundle: .module)
         case .unsupported(let reason): reason.explanation
         }
     }

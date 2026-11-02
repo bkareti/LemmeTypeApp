@@ -58,7 +58,8 @@ extension DictationIssue {
             String(localized: "The selected engine’s model isn’t installed. Your recording is kept.", bundle: .module)
         case .recognitionFailed(.unsupported), .engineUnavailable(_, .unsupported):
             String(
-                localized: "The selected engine isn’t available on this Mac. Your recording is kept.", bundle: .module)
+                localized: "The selected engine isn’t available on \(DeviceWords.thisDevice). Your recording is kept.",
+                bundle: .module)
         case .recognitionFailed, .engineUnavailable:
             String(localized: "Transcription failed. Your recording is kept so you can try again.", bundle: .module)
         case .noEngineAvailable:
@@ -277,7 +278,7 @@ extension ProcessingPhase {
         case .preparingEngine: String(localized: "Preparing…", bundle: .module)
         case .recognizing: String(localized: "Transcribing…", bundle: .module)
         case .writing: String(localized: "Writing…", bundle: .module)
-        case .rewriting: String(localized: "Rewriting on this Mac…", bundle: .module)
+        case .rewriting: String(localized: "Rewriting on \(DeviceWords.thisDevice)…", bundle: .module)
         case .delivering: String(localized: "Inserting…", bundle: .module)
         }
     }

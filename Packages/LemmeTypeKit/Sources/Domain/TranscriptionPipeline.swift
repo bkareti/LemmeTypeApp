@@ -58,8 +58,10 @@ public actor TranscriptionPipeline: DictationProcessing {
         let run = await run(session, updates: updates)
         let outcome = run.outcome
         record(run, session: session, elapsed: ContinuousClock.now - start)
-        if case .delivered = outcome {
-            session.discardAudio()
+        switch outcome {
+        // Nothing can use the audio again: the text is final and only Copy or Discard remain (E8-S6).
+        case .delivered, .needsAttention(.reviewText, _, _, _): session.discardAudio()
+        default: break
         }
         return outcome
     }

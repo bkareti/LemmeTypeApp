@@ -67,7 +67,7 @@ public final class RecordingCoordinator {
     let attentionDisplay: Duration
     let diagnostics: any DiagnosticsRecording
     /// How long a recording may run (E8-S4); none on the Mac.
-    let limits: RecordingLimits
+    public let limits: RecordingLimits
     var limitTask: Task<Void, Never>?
     /// The personalization library to capture when a recording starts (E4-S2).
     let personalization: @MainActor () -> PersonalizationLibrary

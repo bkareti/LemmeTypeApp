@@ -36,7 +36,7 @@ extension SpeechOutput {
         case .english:
             String(
                 localized:
-                    "Turns speech in another language into English on this Mac. You read the translation before anything is inserted.",
+                    "Turns speech in another language into English on \(DeviceWords.thisDevice). You read the translation before anything is inserted.",
                 bundle: .module)
         }
     }
@@ -47,7 +47,7 @@ extension LanguageReadiness {
     var userMessage: String {
         switch self {
         case .ready(let engine):
-            String(localized: "Ready · \(engine.displayName) on this Mac", bundle: .module)
+            String(localized: "Ready · \(engine.displayName) on \(DeviceWords.thisDevice)", bundle: .module)
         case .needsModel(let id):
             if let model = ModelCatalog.asset(id) {
                 String(
@@ -60,9 +60,13 @@ extension LanguageReadiness {
         case .unsupportedOnThisMac(.insufficientMemory):
             String(localized: "This Mac doesn’t have enough memory for the model this needs.", bundle: .module)
         case .unsupportedOnThisMac(.hardware):
-            String(localized: "This needs a Mac with Apple silicon.", bundle: .module)
+            if DeviceWords.isHandheld {
+                String(localized: "This isn’t supported on this device.", bundle: .module)
+            } else {
+                String(localized: "This needs a Mac with Apple silicon.", bundle: .module)
+            }
         case .unsupportedOnThisMac:
-            String(localized: "This isn’t available on this Mac.", bundle: .module)
+            String(localized: "This isn’t available on \(DeviceWords.thisDevice).", bundle: .module)
         case .noEngine:
             String(
                 localized: "No on-device engine can do this. Choose another language or output.", bundle: .module)

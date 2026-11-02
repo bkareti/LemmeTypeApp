@@ -9,6 +9,14 @@ public enum CopiedTextLifetime: Int, CaseIterable, Codable, Sendable {
 
     public static let `default` = CopiedTextLifetime.twoMinutes
 
+    /// The preference key the choice is stored under.
+    public static let storageKey = "copiedTextLifetime"
+
+    /// The stored choice, or the default when nothing valid is stored.
+    public static func stored(in defaults: UserDefaults) -> CopiedTextLifetime {
+        CopiedTextLifetime(rawValue: defaults.integer(forKey: storageKey)) ?? .default
+    }
+
     public var seconds: TimeInterval { TimeInterval(rawValue) }
 }
 

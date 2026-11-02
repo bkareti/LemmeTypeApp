@@ -91,13 +91,6 @@ struct CopiedTextTests {
     }
 }
 
-/// A date the test moves by hand.
-final class TestNow: Sendable {
-    private let value = Mutex(Date(timeIntervalSince1970: 1_000))
-    var date: Date { value.withLock { $0 } }
-    func advance(by seconds: TimeInterval) { value.withLock { $0 = $0.addingTimeInterval(seconds) } }
-}
-
 struct LaunchRequestInboxTests {
     private func inbox(_ clock: TestNow, lifetime: TimeInterval = 10) -> LaunchRequestInbox {
         LaunchRequestInbox(lifetime: lifetime, now: { clock.date })
@@ -168,8 +161,7 @@ struct ReviewEveryResultPipelineTests {
         #expect(
             outcome == .needsAttention(.reviewText, engine: .whisper, alternatives: [], transcript: "Ship it"))
         #expect(delivery.delivered.isEmpty)
-        #expect(TranscriptionPipelineTests.exists(session))  // kept until Copy or Discard
-        session.discardAudio()
+        #expect(!TranscriptionPipelineTests.exists(session))  // the text is final; nothing can use the audio
     }
 
     @Test func theReviewOffersCopyAndDiscardOnly() {

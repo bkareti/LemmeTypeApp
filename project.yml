@@ -5,6 +5,7 @@ options:
   bundleIdPrefix: com.lemmetype
   deploymentTarget:
     macOS: "26.0"
+    iOS: "26.0"
   createIntermediateGroups: true
   groupSortPosition: top
 configFiles:
@@ -50,7 +51,70 @@ targets:
         TEST_TARGET_NAME: LemmeType
     dependencies:
       - target: LemmeType
+  # The iPhone and iPad app (ADR 0027). It links only the portable package modules.
+  LemmeTypeiOS:
+    type: application
+    platform: iOS
+    configFiles:
+      Debug: Config/LemmeTypeiOS.xcconfig
+      Release: Config/LemmeTypeiOS.xcconfig
+    sources:
+      - path: App/LemmeTypeiOS
+    dependencies:
+      - package: LemmeTypeKit
+        products: [Domain, Support, Audio, Permissions, Lifecycle, Recognition, ModelAssets, Delivery, Editing, UI, TestSupport]
+  LemmeTypeiOSTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - App/LemmeTypeiOSTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lemmetype.LemmeTypeiOSTests
+        # Base.xcconfig sets the Mac platform for the whole project; the iOS tests override it.
+        SDKROOT: iphoneos
+        SUPPORTED_PLATFORMS: iphoneos iphonesimulator
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        # The app's product is LemmeType.app (its name is the same as the Mac app's).
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/LemmeType.app/LemmeType
+        BUNDLE_LOADER: $(TEST_HOST)
+    dependencies:
+      - target: LemmeTypeiOS
+  LemmeTypeiOSUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - App/LemmeTypeiOSUITests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lemmetype.LemmeTypeiOSUITests
+        # Base.xcconfig sets the Mac platform for the whole project; the iOS tests override it.
+        SDKROOT: iphoneos
+        SUPPORTED_PLATFORMS: iphoneos iphonesimulator
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: LemmeTypeiOS
+    dependencies:
+      - target: LemmeTypeiOS
 schemes:
+  LemmeTypeiOS:
+    build:
+      targets:
+        LemmeTypeiOS: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - LemmeTypeiOSTests
+        - LemmeTypeiOSUITests
+        - package: LemmeTypeKit/DomainTests
+        - package: LemmeTypeKit/SupportTests
+        - package: LemmeTypeKit/ModelAssetsTests
+        - package: LemmeTypeKit/EditingTests
+    archive:
+      config: Release
   LemmeType:
     build:
       targets:
