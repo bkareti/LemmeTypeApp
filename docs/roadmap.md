@@ -1,8 +1,9 @@
 # Product roadmap and epics
 
-The roadmap is organized as GitHub epics. Epics 1–5 are fully refined and
-ready for development. Later epics remain outcome-level until the technical
-prototype validates the core workflow.
+The roadmap is organized as GitHub epics. Epics 1–7 are fully refined and
+ready for development. Epic 8 remains outcome-level until the macOS core is
+validated. Epics 9 and 10 (multilingual dictation and tone and style) were added
+later and live only in their backlog files.
 
 ## Epic 1 — macOS foundation, permissions, and audio capture
 
@@ -96,6 +97,8 @@ marketing claim.
 - Permission use and context collection are explained in plain language.
 - A privacy threat model and release checklist are maintained.
 
+Detailed stories: [Epic 6 backlog](backlog/epic-06-privacy-security.md)
+
 ## Epic 7 — quality, packaging, and release readiness
 
 Prepare LemmeType for dependable installation and daily use across the supported
@@ -108,6 +111,8 @@ macOS and application matrix.
 - Accessibility, localization readiness, crash recovery, and support diagnostics are verified.
 - App Store versus direct distribution has a recorded decision and validated prototype.
 - Beta feedback and release rollback processes are documented.
+
+Detailed stories: [Epic 7 backlog](backlog/epic-07-quality-release.md)
 
 ## Epic 8 — iPhone and iPad companion
 
