@@ -6,8 +6,10 @@ import Testing
 /// The report the harness writes and `scripts/evaluation-report.py` reads. The
 /// fixture is shared with the Python tests, so both sides agree on the format.
 struct EvaluationReportTests {
-    static let fixture = CorpusManifestTests.repositoryRoot
-        .appendingPathComponent("scripts/tests/fixtures/evaluation-report.json")
+    static let fixtures = CorpusManifestTests.repositoryRoot.appendingPathComponent("scripts/tests/fixtures")
+    static let fixture = fixtures.appendingPathComponent("evaluation-report.json")
+    static let translationFixture = fixtures.appendingPathComponent("evaluation-report-translation.json")
+    static let styleFixture = fixtures.appendingPathComponent("evaluation-report-style.json")
     private let root = FileManager.default.temporaryDirectory
         .appendingPathComponent("LemmeTypeTests-EvaluationReport-\(UUID().uuidString)", isDirectory: true)
 
@@ -70,6 +72,68 @@ struct EvaluationReportTests {
         #expect(report.runs.count == 9)
         #expect(report.runs.first { $0.id == "noise-loud@te" }?.result.score.textWithoutSpeech == true)
         #expect(report.runs.first { $0.id == "fleurs-hi_in-1~noise-snr10" }?.variantID == "noise-snr10")
+        #expect(report.mode == "clean")
+
+        let translation = try EvaluationReport.load(from: Self.translationFixture)
+        let negation = try #require(translation.runs.first { $0.id == "fleurs-hi_in-2" }?.result.translation)
+        #expect(negation.violations == ["negation-changed"])
+        #expect(
+            abs(
+                (translation.runs.first { $0.id == "fleurs-hi_in-1" }?.result.translation?.chrF ?? 0)
+                    - 100 * (5.0 / 6 + 3.0 / 5 + 1.0 / 4) / 6) < 1e-9)
+
+        let style = try EvaluationReport.load(from: Self.styleFixture)
+        #expect(style.style == "neutral-bullet-list-concise")
+        #expect(style.runs.first { $0.id == "fleurs-te_in-2" }?.result.style?.notice == "rewrite.failed")
+    }
+
+    /// Runs the fake engine over a small corpus and checks the written report has exactly `fixture`'s keys.
+    private func expectSameKeys(
+        as fixture: URL, task: RecognitionTask = .transcribe, mode: DictationMode = .clean,
+        rewriter: (any TextRewriting)? = nil
+    ) async throws -> EvaluationReport {
+        let selections = [
+            CorpusEvaluation.Selection(manifestURL: try manifest("recordings.json", try recordings()), root: root),
+            CorpusEvaluation.Selection(
+                manifestURL: try manifest(
+                    "edge.json",
+                    CorpusManifest(
+                        name: "edge",
+                        generated: [
+                            .init(id: "quiet", kind: .silence, seconds: 1, languages: ["hi"], category: "no-speech")
+                        ])),
+                root: root),
+        ]
+        let report = try await CorpusEvaluation.run(
+            engine: engine(), selections: selections, task: task, mode: mode, label: "fake",
+            workDirectory: root.appendingPathComponent("work"), rewriter: rewriter)
+        let written = try report.write(to: root.appendingPathComponent("out"))
+        let ours = try JSONSerialization.jsonObject(with: Data(contentsOf: written))
+        let theirs = try JSONSerialization.jsonObject(with: Data(contentsOf: fixture))
+        let (mine, expected) = (Self.keyPaths(ours), Self.keyPaths(theirs))
+        #expect(
+            mine == expected,
+            "only written: \(mine.subtracting(expected)), only in fixture: \(expected.subtracting(mine))")
+        return report
+    }
+
+    @Test func aTranslationRunWritesExactlyTheTranslationFixturesKeys() async throws {
+        defer { try? FileManager.default.removeItem(at: root) }
+        let report = try await expectSameKeys(as: Self.translationFixture, task: .translateToEnglish)
+        #expect(report.runs.allSatisfy { $0.result.translation != nil })
+    }
+
+    @Test func aStyleRunWritesExactlyTheStyleFixturesKeys() async throws {
+        defer { try? FileManager.default.removeItem(at: root) }
+        // The second answer adds a number, so that rewrite is refused and offers the original with a notice.
+        let rewriter = FakeTextRewriter(script: .sequence(["- I will come", "- I will come at 9"]))
+        let mode = DictationMode(
+            id: DictationModeID(rawValue: "style-neutral-bullet-list-concise"), name: "Bullets", writingMode: .clean,
+            style: StyleOptions(format: .bulletList, length: .concise))
+        let report = try await expectSameKeys(as: Self.styleFixture, mode: mode, rewriter: rewriter)
+        #expect(report.style == "neutral-bullet-list-concise")
+        #expect(report.runs.contains { $0.result.style?.applied == true })
+        #expect(report.runs.contains { $0.result.style?.notice != nil })
     }
 
     @Test func aRealRunWritesExactlyTheFixturesKeys() async throws {

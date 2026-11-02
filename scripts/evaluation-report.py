@@ -29,8 +29,8 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = REPO / "build" / "evaluation" / "report"
-REPORT_KEYS = {"schema", "label", "task", "writingMode", "runs"}
-SCHEMA = 1
+REPORT_KEYS = {"schema", "label", "task", "mode", "runs"}
+SCHEMA = 2
 MINIMUM_GROUP_RUNS = 10
 LATENCY_TOLERANCE = 0.2  # a fifth slower at p95, and at least LATENCY_FLOOR seconds
 LATENCY_FLOOR = 0.2
@@ -53,7 +53,7 @@ def load_reports(paths: list[Path]) -> list[dict]:
 
 
 def key(report: dict) -> tuple[str, str, str]:
-    return report["label"], report["task"], report["writingMode"]
+    return report["label"], report["task"], report["mode"]
 
 
 def variant(run: dict) -> str:
@@ -66,6 +66,40 @@ def language(run: dict) -> str:
 
 def has_speech(run: dict) -> bool:
     return run["result"]["score"]["words"]["referenceLength"] > 0
+
+
+# MARK: chrF (the same definition as CharacterNGramStatistics in Swift)
+
+CHRF_ORDER = 6
+CHRF_BETA = 2.0
+
+
+def chrf(statistics: dict) -> float:
+    total, orders = 0.0, 0
+    for order in range(CHRF_ORDER):
+        hypothesis, reference, matches = (statistics[name][order] for name in ("hypothesis", "reference", "matches"))
+        if hypothesis > 0 and reference > 0:
+            precision, recall = matches / hypothesis, matches / reference
+            factor = CHRF_BETA * CHRF_BETA
+            denominator = factor * precision + recall
+            total += (1 + factor) * precision * recall / denominator if denominator > 0 else 0.0
+            orders += 1
+    if orders == 0:
+        empty = all(value == 0 for name in ("hypothesis", "reference") for value in statistics[name])
+        return 100.0 if empty else 0.0
+    return 100 * total / orders
+
+
+def pooled_statistics(runs: list[dict]) -> dict:
+    pooled = {name: [0] * CHRF_ORDER for name in ("hypothesis", "reference", "matches")}
+    for run in runs:
+        for name in pooled:
+            pooled[name] = [a + b for a, b in zip(pooled[name], run["result"]["translation"]["characterNGrams"][name])]
+    return pooled
+
+
+CRITICAL_TRANSLATION = {"number-changed": "translation changed a number", "negation-changed": "translation changed a negation"}
+VIOLATIONS = ["number-changed", "date-changed", "name-changed", "negation-changed", "commitment-changed", "link-changed"]
 
 
 # MARK: Aggregation
@@ -93,18 +127,24 @@ def aggregate(runs: list[dict]) -> dict:
         edits = sum(run["result"]["score"][kind][part] for run in speech for part in parts)
         return rate(edits, total)
 
+    def pooled_normalized() -> float | None:
+        words = [run["result"]["score"]["numberNormalizedWords"] for run in speech]
+        total = sum(item["referenceLength"] for item in words)
+        return rate(sum(item["substitutions"] + item["deletions"] + item["insertions"] for item in words), total)
+
     latencies = [run["result"]["stopToDeliverySeconds"] for run in runs]
     factors = [
         run["result"]["inferenceSeconds"] / run["result"]["audioSeconds"]
         for run in runs
         if run["result"]["audioSeconds"] > 0
     ]
-    return {
+    stats = {
         "runs": len(runs),
         "speechRuns": len(speech),
         "noSpeechRuns": len(silent),
         "audioMinutes": round(sum(run["result"]["audioSeconds"] for run in runs) / 60, 2),
         "wordErrorRate": pooled("words"),
+        "wordErrorRateNumbersNormalized": pooled_normalized(),
         "characterErrorRate": pooled("characters"),
         "insertionRate": pooled("words", "insertions"),
         "noTextRate": rate(sum(not run["result"]["producedText"] for run in speech), len(speech)),
@@ -114,6 +154,40 @@ def aggregate(runs: list[dict]) -> dict:
         "latencyP95Seconds": percentile(latencies, 0.95),
         "realTimeFactorMean": sum(factors) / len(factors) if factors else None,
     }
+    translated = [run for run in speech if run["result"].get("translation")]
+    if translated:
+        stats["translation"] = {
+            "runs": len(translated),
+            "chrF": chrf(pooled_statistics(translated)),
+            "violationRates": {
+                name: rate(sum(name in run["result"]["translation"]["violations"] for run in translated), len(translated))
+                for name in VIOLATIONS
+            },
+            "criticalViolationRate": rate(
+                sum(bool(CRITICAL_TRANSLATION.keys() & set(run["result"]["translation"]["violations"])) for run in translated),
+                len(translated)),
+        }
+    styled = [run for run in runs if run["result"].get("style")]
+    if styled:
+        applied = [run for run in styled if run["result"]["style"]["applied"]]
+
+        def followed(field: str) -> float | None:
+            checked = [run["result"]["style"][field] for run in applied if run["result"]["style"][field] != "not-checked"]
+            return rate(sum(value == "followed" for value in checked), len(checked))
+
+        notices: dict[str, int] = {}
+        for run in styled:
+            if run["result"]["style"]["notice"]:
+                notices[run["result"]["style"]["notice"]] = notices.get(run["result"]["style"]["notice"], 0) + 1
+        stats["style"] = {
+            "runs": len(styled),
+            "appliedRate": rate(len(applied), len(styled)),
+            "formatFollowedRate": followed("format"),
+            "lengthFollowedRate": followed("length"),
+            "violationRate": rate(sum(bool(run["result"]["style"]["violations"]) for run in applied), len(applied)),
+            "notices": dict(sorted(notices.items())),
+        }
+    return stats
 
 
 def grouped(runs: list[dict], by) -> dict[str, dict]:
@@ -144,6 +218,11 @@ def problem(run: dict) -> str | None:
         return "text from audio without speech"
     if result["score"]["repetitionLoop"]:
         return "repetition loop"
+    for violation, message in CRITICAL_TRANSLATION.items():
+        if has_speech(run) and result.get("translation") and violation in result["translation"]["violations"]:
+            return message
+    if result.get("style") and result["style"]["applied"] and result["style"]["violations"]:
+        return "an applied rewrite changed " + ", ".join(result["style"]["violations"])
     return None
 
 
@@ -159,7 +238,9 @@ def summarize(report: dict, runs: list[dict] | None = None) -> dict:
         "label": report["label"],
         "engine": report.get("engine"),
         "task": report["task"],
+        "mode": report["mode"],
         "writingMode": report["writingMode"],
+        "style": report.get("style", "none"),
         "date": report.get("date"),
         "hardwareModel": report.get("hardwareModel"),
         "physicalMemoryGB": report.get("physicalMemoryGB"),
@@ -176,7 +257,8 @@ def summarize(report: dict, runs: list[dict] | None = None) -> dict:
         "byNumbers": grouped(speech, lambda run: "has digits" if "numbers" in run["tags"] else "no digits"),
         "worst": [
             {"id": run["id"], "language": language(run), "variant": variant(run), "wordErrorRate": run_wer(run),
-             "characterErrorRate": run_cer(run), "outcome": run["result"]["outcome"]}
+             "characterErrorRate": run_cer(run), "outcome": run["result"]["outcome"],
+             "chrF": chrf(run["result"]["translation"]["characterNGrams"]) if run["result"].get("translation") else None}
             for run in worst
         ],
         "problems": [{"id": run["id"], "problem": problem(run)} for run in runs if problem(run)],
@@ -186,7 +268,7 @@ def summarize(report: dict, runs: list[dict] | None = None) -> dict:
 # MARK: Baseline comparison
 
 
-def compare(current: dict, baseline: dict, wer_tolerance: float) -> dict:
+def compare(current: dict, baseline: dict, wer_tolerance: float, chrf_tolerance: float = 2.0) -> dict:
     """Like for like: only case ids in both reports, so a corpus change cannot look like a regression."""
     now = {run["id"]: run for run in ground_truth(current)}
     then = {run["id"]: run for run in ground_truth(baseline)}
@@ -216,6 +298,17 @@ def compare(current: dict, baseline: dict, wer_tolerance: float) -> dict:
             if old[metric] is not None and new[metric] is not None:
                 check(scope, metric, old[metric], new[metric], new[metric] > old[metric],
                       f"{(new[metric] - old[metric]) * 100:+.1f} points (any rise fails)")
+        if old.get("translation") and new.get("translation"):
+            change = new["translation"]["chrF"] - old["translation"]["chrF"]
+            check(scope, "chrF", old["translation"]["chrF"], new["translation"]["chrF"], change < -chrf_tolerance,
+                  f"{change:+.1f} (tolerance {chrf_tolerance:.1f})")
+            before_rate, after_rate = old["translation"]["criticalViolationRate"], new["translation"]["criticalViolationRate"]
+            check(scope, "criticalViolationRate", before_rate, after_rate, after_rate > before_rate,
+                  f"{(after_rate - before_rate) * 100:+.1f} points (any rise fails)")
+        if old.get("style") and new.get("style") and old["style"]["appliedRate"] is not None:
+            change = new["style"]["appliedRate"] - old["style"]["appliedRate"]
+            check(scope, "styleAppliedRate", old["style"]["appliedRate"], new["style"]["appliedRate"],
+                  change < -wer_tolerance, f"{change * 100:+.1f} points (tolerance {wer_tolerance * 100:.1f})")
         if old["latencyP95Seconds"] and new["latencyP95Seconds"]:
             change = new["latencyP95Seconds"] - old["latencyP95Seconds"]
             check(scope, "latencyP95Seconds", old["latencyP95Seconds"], new["latencyP95Seconds"],
@@ -227,7 +320,7 @@ def compare(current: dict, baseline: dict, wer_tolerance: float) -> dict:
     corpora_match = {corpus.get("sha256") for corpus in current.get("corpora", [])} == {
         corpus.get("sha256") for corpus in baseline.get("corpora", [])}
     return {
-        "label": current["label"], "task": current["task"], "writingMode": current["writingMode"],
+        "label": current["label"], "task": current["task"], "mode": current["mode"],
         "baselineDate": baseline.get("date"), "commonRuns": len(common),
         "onlyInCurrent": len(now.keys() - then.keys()), "onlyInBaseline": len(then.keys() - now.keys()),
         "corporaMatch": corpora_match, "regressions": sum(item["regressed"] for item in checks), "checks": checks,
@@ -241,27 +334,29 @@ def junit(reports: list[dict], comparisons: list[dict]) -> str:
     suites = ElementTree.Element("testsuites", name="LemmeType evaluation")
     for report in reports:
         runs = ground_truth(report)
-        suite = ElementTree.SubElement(suites, "testsuite", name=f"{report['label']} {report['task']} {report['writingMode']}")
+        suite = ElementTree.SubElement(suites, "testsuite", name=f"{report['label']} {report['task']} {report['mode']}")
         properties = ElementTree.SubElement(suite, "properties")
         for name in ("engine", "hardwareModel", "operatingSystem", "date"):
             ElementTree.SubElement(properties, "property", name=name, value=str(report.get(name, "")))
         failures = 0
         for run in runs:
             case = ElementTree.SubElement(
-                suite, "testcase", classname=f"{report['label']}.{report['task']}.{language(run)}.{variant(run)}",
+                suite, "testcase", classname=f"{report['label']}.{report['task']}.{report['mode']}.{language(run)}.{variant(run)}",
                 name=run["id"], time=f"{run['result']['stopToDeliverySeconds']:.3f}")
             reason = problem(run)
             if reason:
                 failures += 1
                 ElementTree.SubElement(case, "failure", message=reason, type=run["result"]["outcome"])
             else:
+                chr_f = (f" chrF {chrf(run['result']['translation']['characterNGrams']):.1f}"
+                         if run["result"].get("translation") else "")
                 ElementTree.SubElement(case, "system-out").text = (
-                    f"WER {run_wer(run):.3f} CER {run_cer(run):.3f}")
+                    f"WER {run_wer(run):.3f} CER {run_cer(run):.3f}{chr_f}")
         suite.set("tests", str(len(runs)))
         suite.set("failures", str(failures))
     for comparison in comparisons:
         suite = ElementTree.SubElement(
-            suites, "testsuite", name=f"regressions {comparison['label']} {comparison['task']} {comparison['writingMode']}")
+            suites, "testsuite", name=f"regressions {comparison['label']} {comparison['task']} {comparison['mode']}")
         for item in comparison["checks"]:
             case = ElementTree.SubElement(suite, "testcase", classname=item["scope"], name=item["metric"])
             if item["regressed"]:
@@ -283,6 +378,9 @@ METRIC_NAMES = {
     "repetitionLoopRate": "Repetition loops",
     "latencyP95Seconds": "p95 latency",
     "problem": "Newly failing case",
+    "chrF": "chrF",
+    "criticalViolationRate": "Numbers or negation changed",
+    "styleAppliedRate": "Rewrites applied",
 }
 
 
@@ -308,16 +406,25 @@ def status(ok: bool, good: str, bad: str) -> str:
 
 
 def group_table(title: str, groups: dict[str, dict]) -> str:
+    translated = any(stats.get("translation") for stats in groups.values())
+
+    def chrf_cell(stats: dict) -> str:
+        value = stats.get("translation", {}).get("chrF")
+        return f"<td class=num>{'—' if value is None else f'{value:.1f}'}</td>" if translated else ""
+
     rows = "".join(
         f"<tr><th scope=row>{html.escape(name)}</th><td>{stats['runs']}</td>"
         f"<td class=num>{percent(stats['wordErrorRate'])}</td><td>{bar(stats['wordErrorRate'])}</td>"
+        f"<td class=num>{percent(stats['wordErrorRateNumbersNormalized'])}</td>"
         f"<td class=num>{percent(stats['characterErrorRate'])}</td><td>{bar(stats['characterErrorRate'])}</td>"
+        f"{chrf_cell(stats)}"
         f"<td class=num>{percent(stats['noTextRate'])}</td><td class=num>{percent(stats['textWithoutSpeechRate'])}</td>"
         f"<td class=num>{seconds(stats['latencyP95Seconds'])}</td></tr>"
         for name, stats in groups.items())
     return (f"<h3>{html.escape(title)}</h3><div class=scroll><table><thead><tr><th scope=col>Group</th>"
-            "<th scope=col>Runs</th><th scope=col colspan=2>WER</th><th scope=col colspan=2>CER</th>"
-            "<th scope=col>No text</th><th scope=col>Text from silence</th><th scope=col>p95 latency</th>"
+            "<th scope=col>Runs</th><th scope=col colspan=2>WER</th><th scope=col>WER, numbers normalized</th>"
+            "<th scope=col colspan=2>CER</th>" + ("<th scope=col>chrF</th>" if translated else "")
+            + "<th scope=col>No text</th><th scope=col>Text from silence</th><th scope=col>p95 latency</th>"
             f"</tr></thead><tbody>{rows}</tbody></table></div>")
 
 
@@ -333,13 +440,14 @@ def report_section(summary: dict, comparison: dict | None) -> str:
     skipped = ", ".join(f"{name}: {count}" for name, count in sorted(summary["skipped"].items()) if count) or "none"
     parts = [
         f"<section><h2>{html.escape(summary['label'])} · {html.escape(summary['task'])} · "
-        f"{html.escape(summary['writingMode'])}</h2>",
+        f"{html.escape(summary['mode'])}</h2>",
         f"<p class=meta>{html.escape(str(summary['date']))} · {html.escape(str(summary['hardwareModel']))} · "
         f"{summary['physicalMemoryGB']} GB · {html.escape(str(summary['operatingSystem']))}<br>"
         f"Corpus: {html.escape(corpus)} · skipped: {html.escape(skipped)} · "
         f"unverified runs left out: {summary['unverifiedRuns']}</p>",
         "<div class=tiles>",
         tile("Word error rate", percent(overall["wordErrorRate"]), f"{overall['speechRuns']} speech runs"),
+        tile("WER, numbers normalized", percent(overall["wordErrorRateNumbersNormalized"]), "digits and number words"),
         tile("Character error rate", percent(overall["characterErrorRate"]), "pooled"),
         tile("Runs with a problem", str(problems), "none" if problems == 0 else "listed below"),
         tile("Text from silence", percent(overall["textWithoutSpeechRate"]), f"{overall['noSpeechRuns']} no-speech runs"),
@@ -348,6 +456,31 @@ def report_section(summary: dict, comparison: dict | None) -> str:
              f"warm-up {seconds(summary['warmUpSeconds'])} · +{summary['peakMemoryIncreaseMB'] or 0:.0f} MB"),
         "</div>",
     ]
+    if overall.get("translation"):
+        translation = overall["translation"]
+        rates = translation["violationRates"]
+        parts += [
+            "<h3>Translation to English</h3><div class=tiles>",
+            tile("chrF", f"{translation['chrF']:.1f}", f"{translation['runs']} translated runs, pooled"),
+            tile("Numbers or negation changed", percent(translation["criticalViolationRate"]), "counted as problems"),
+            tile("Names changed", percent(rates["name-changed"]), "includes spelling differences"),
+            tile("Dates changed", percent(rates["date-changed"]), ""),
+            tile("Commitments changed", percent(rates["commitment-changed"]), "will, must, might …"),
+            "</div><p class=meta>Rule-based proxies against the human English reference. Meaning itself is judged "
+            "with the human review rubric.</p>",
+        ]
+    if overall.get("style"):
+        style = overall["style"]
+        notices = ", ".join(f"{name}: {count}" for name, count in style["notices"].items()) or "none"
+        parts += [
+            f"<h3>Style · {html.escape(summary['style'])}</h3><div class=tiles>",
+            tile("Rewrites applied", percent(style["appliedRate"]), f"{style['runs']} runs"),
+            tile("Format followed", percent(style["formatFollowedRate"]), "bullets or plain text only"),
+            tile("Length followed", percent(style["lengthFollowedRate"]), "concise only"),
+            tile("Facts changed in applied rewrites", percent(style["violationRate"]), "should be 0"),
+            f"</div><p class=meta>Not applied, by reason: {html.escape(notices)}. Tone is not checked by rule; "
+            "it needs the human review in <code>docs/testing/style-rewriting.md</code>.</p>",
+        ]
     if comparison:
         regressions = comparison["regressions"]
         parts.append(
@@ -377,11 +510,13 @@ def report_section(summary: dict, comparison: dict | None) -> str:
     rows = "".join(
         f"<tr><th scope=row><code>{html.escape(item['id'])}</code></th><td>{html.escape(item['language'])}</td>"
         f"<td>{html.escape(item['variant'])}</td><td class=num>{percent(item['wordErrorRate'])}</td>"
-        f"<td class=num>{percent(item['characterErrorRate'])}</td><td>{html.escape(item['outcome'])}</td></tr>"
+        f"<td class=num>{percent(item['characterErrorRate'])}</td>"
+        f"<td class=num>{'—' if item['chrF'] is None else format(item['chrF'], '.1f')}</td>"
+        f"<td>{html.escape(item['outcome'])}</td></tr>"
         for item in summary["worst"])
     parts.append("<h3>Highest word error rate</h3><div class=scroll><table><thead><tr><th scope=col>Case</th>"
                  "<th scope=col>Language</th><th scope=col>Variant</th><th scope=col>WER</th><th scope=col>CER</th>"
-                 f"<th scope=col>Outcome</th></tr></thead><tbody>{rows}</tbody></table></div></section>")
+                 f"<th scope=col>chrF</th><th scope=col>Outcome</th></tr></thead><tbody>{rows}</tbody></table></div></section>")
     return "".join(parts)
 
 
@@ -413,9 +548,9 @@ code{font:12px ui-monospace,SFMono-Regular,Menlo,monospace}
 
 
 def dashboard(summaries: list[dict], comparisons: list[dict]) -> str:
-    by_key = {(c["label"], c["task"], c["writingMode"]): c for c in comparisons}
+    by_key = {(c["label"], c["task"], c["mode"]): c for c in comparisons}
     sections = "".join(
-        report_section(summary, by_key.get((summary["label"], summary["task"], summary["writingMode"])))
+        report_section(summary, by_key.get((summary["label"], summary["task"], summary["mode"])))
         for summary in summaries)
     return (
         "<!doctype html><html lang=en><head><meta charset=utf-8>"
@@ -435,6 +570,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--baseline", type=Path)
     parser.add_argument("--wer-tolerance", type=float, default=0.02, help="WER/CER rise that counts (0.02 = 2 points)")
+    parser.add_argument("--chrf-tolerance", type=float, default=2.0, help="chrF drop that counts")
     parser.add_argument("--fail-on-regression", action="store_true")
     args = parser.parse_args(argv)
 
@@ -443,7 +579,7 @@ def main(argv: list[str]) -> int:
         print("error: no evaluation reports found", file=sys.stderr)
         return 1
     baselines = {key(report): report for report in load_reports([args.baseline])} if args.baseline else {}
-    comparisons = [compare(report, baselines[key(report)], args.wer_tolerance)
+    comparisons = [compare(report, baselines[key(report)], args.wer_tolerance, args.chrf_tolerance)
                    for report in reports if key(report) in baselines]
     summaries = [summarize(report) for report in reports]
 
@@ -456,7 +592,7 @@ def main(argv: list[str]) -> int:
 
     for summary in summaries:
         overall = summary["overall"]
-        print(f"{summary['label']} {summary['task']} {summary['writingMode']}: {overall['runs']} runs, "
+        print(f"{summary['label']} {summary['task']} {summary['mode']}: {overall['runs']} runs, "
               f"WER {percent(overall['wordErrorRate'])}, CER {percent(overall['characterErrorRate'])}, "
               f"{len(summary['problems'])} with a problem")
     regressions = sum(comparison["regressions"] for comparison in comparisons)

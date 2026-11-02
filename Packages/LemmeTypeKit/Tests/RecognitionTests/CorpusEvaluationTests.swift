@@ -1,4 +1,5 @@
 import Domain
+import Editing
 import Foundation
 import TestSupport
 import Testing
@@ -15,6 +16,9 @@ import Testing
 /// - `LEMMETYPE_EVALUATION_MODEL`: a model id such as `whisper-small` (default: every installed multilingual model).
 /// - `LEMMETYPE_EVALUATION_TASK`: `transcribe` (default) or `translate-to-english`.
 /// - `LEMMETYPE_EVALUATION_LANGUAGES`: such as `hi,te` (default: all).
+/// - `LEMMETYPE_EVALUATION_MODE`: `exact`, `clean` (default), or `message`.
+/// - `LEMMETYPE_EVALUATION_STYLE`: a style such as `professional-email-concise` (tone-format-length) on
+///   top of Clean Writing, rewritten by the on-device model; needs Apple Intelligence.
 @Suite(.enabled(if: ProcessInfo.processInfo.environment["LEMMETYPE_EVALUATION"] == "1"), .serialized)
 struct CorpusEvaluationTests {
     static let environment = ProcessInfo.processInfo.environment
@@ -37,6 +41,7 @@ struct CorpusEvaluationTests {
             Set($0.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) })
         }
         try #require(!Self.models.isEmpty, "Install the Whisper model to evaluate first")
+        let mode = try Self.mode()
         let corpus = RecognitionBenchmarkTests.repositoryRoot.appendingPathComponent("docs/testing/corpus")
         let selections = ["fleurs.json", "edge-cases.json"].map {
             CorpusEvaluation.Selection(manifestURL: corpus.appendingPathComponent($0), root: root)
@@ -48,9 +53,11 @@ struct CorpusEvaluationTests {
                 runtime: WhisperCppRuntime(), settings: { WhisperRunSettings(choice: .specific(asset.id)) })
             let watch = SocketWatch()
             let report = try await CorpusEvaluation.run(
-                engine: engine, selections: selections, task: task, label: asset.id.rawValue, languages: languages,
+                engine: engine, selections: selections, task: task, mode: mode, label: asset.id.rawValue,
+                languages: languages,
                 workDirectory: FileManager.default.temporaryDirectory
-                    .appendingPathComponent("LemmeTypeTests-Evaluation-\(UUID().uuidString)", isDirectory: true))
+                    .appendingPathComponent("LemmeTypeTests-Evaluation-\(UUID().uuidString)", isDirectory: true),
+                rewriter: mode.effectiveStyle.isNone ? nil : FoundationModelsRewriter())
             let sockets = watch.stop()
 
             #expect(sockets.isEmpty, "the evaluation opened \(sockets)")
@@ -58,5 +65,21 @@ struct CorpusEvaluationTests {
                 to: RecognitionBenchmarkTests.repositoryRoot.appendingPathComponent("build/evaluation"))
             #expect(!report.runs.isEmpty)
         }
+    }
+
+    /// The built-in mode, or Clean Writing with the requested style.
+    static func mode() throws -> DictationMode {
+        let builtIn = environment["LEMMETYPE_EVALUATION_MODE"] ?? "clean"
+        let base = try #require(DictationMode.builtIns.first { $0.id.rawValue == builtIn }, "unknown mode \(builtIn)")
+        guard let style = environment["LEMMETYPE_EVALUATION_STYLE"] else { return base }
+        let parts = style.split(separator: "-").map(String.init)
+        try #require(parts.count >= 3, "a style is tone-format-length")
+        let options = StyleOptions(
+            tone: try #require(Tone(rawValue: parts[0])),
+            format: try #require(WritingFormat(rawValue: parts[1..<(parts.count - 1)].joined(separator: "-"))),
+            length: try #require(LengthPreference(rawValue: parts[parts.count - 1])))
+        return DictationMode(
+            id: DictationModeID(rawValue: "style-\(options.identifier)"), name: "Style \(options.identifier)",
+            writingMode: .clean, style: options)
     }
 }

@@ -60,7 +60,7 @@
         /// changed), runs it, and deletes what it made.
         public func run(
             with runner: EvaluationRunner, workDirectory: URL, task: RecognitionTask = .transcribe,
-            writingMode: WritingMode = .clean
+            mode: DictationMode = .clean
         ) async throws -> EvaluationResult {
             let audioURL: URL
             var made: URL?
@@ -79,7 +79,7 @@
                 EvaluationCase(
                     id: id, audioURL: audioURL, language: language, reference: reference,
                     englishReference: englishReference, category: category),
-                task: task, writingMode: writingMode)
+                task: task, mode: mode)
         }
 
         private func write(_ clip: AudioClip, in directory: URL) throws -> URL {

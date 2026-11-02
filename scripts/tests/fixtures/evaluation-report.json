@@ -15,6 +15,7 @@
   "engine": "fake",
   "hardwareModel": "Fixture1,1",
   "label": "fixture",
+  "mode": "clean",
   "operatingSystem": "Fixture OS",
   "peakMemoryIncreaseMB": 120.5,
   "physicalMemoryGB": 16,
@@ -28,6 +29,7 @@
         "id": "fleurs-hi_in-1",
         "inferenceSeconds": 1.5,
         "language": "hi",
+        "mode": "clean",
         "outcome": "delivered",
         "producedText": true,
         "score": {
@@ -36,6 +38,12 @@
             "insertions": 0,
             "referenceLength": 40,
             "substitutions": 2
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 1
           },
           "repetitionLoop": false,
           "textWithoutSpeech": false,
@@ -47,7 +55,9 @@
           }
         },
         "stopToDeliverySeconds": 1.8,
+        "style": null,
         "task": "transcribe",
+        "translation": null,
         "writingMode": "clean"
       },
       "review": "dataset-human",
@@ -68,6 +78,7 @@
         "id": "fleurs-hi_in-2",
         "inferenceSeconds": 1.5,
         "language": "hi",
+        "mode": "clean",
         "outcome": "delivered",
         "producedText": true,
         "score": {
@@ -76,6 +87,12 @@
             "insertions": 0,
             "referenceLength": 40,
             "substitutions": 6
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 1
           },
           "repetitionLoop": false,
           "textWithoutSpeech": false,
@@ -87,7 +104,9 @@
           }
         },
         "stopToDeliverySeconds": 1.8,
+        "style": null,
         "task": "transcribe",
+        "translation": null,
         "writingMode": "clean"
       },
       "review": "dataset-human",
@@ -109,6 +128,7 @@
         "id": "fleurs-te_in-1",
         "inferenceSeconds": 1.5,
         "language": "te",
+        "mode": "clean",
         "outcome": "delivered",
         "producedText": true,
         "score": {
@@ -117,6 +137,12 @@
             "insertions": 0,
             "referenceLength": 50,
             "substitutions": 4
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 6,
+            "substitutions": 2
           },
           "repetitionLoop": false,
           "textWithoutSpeech": false,
@@ -128,7 +154,9 @@
           }
         },
         "stopToDeliverySeconds": 1.8,
+        "style": null,
         "task": "transcribe",
+        "translation": null,
         "writingMode": "clean"
       },
       "review": "dataset-human",
@@ -149,6 +177,7 @@
         "id": "fleurs-te_in-2",
         "inferenceSeconds": 1.0,
         "language": "te",
+        "mode": "clean",
         "outcome": "recognition.no-speech",
         "producedText": false,
         "score": {
@@ -156,6 +185,12 @@
             "deletions": 30,
             "insertions": 0,
             "referenceLength": 30,
+            "substitutions": 0
+          },
+          "numberNormalizedWords": {
+            "deletions": 5,
+            "insertions": 0,
+            "referenceLength": 5,
             "substitutions": 0
           },
           "repetitionLoop": false,
@@ -168,7 +203,9 @@
           }
         },
         "stopToDeliverySeconds": 1.1,
+        "style": null,
         "task": "transcribe",
+        "translation": null,
         "writingMode": "clean"
       },
       "review": "dataset-human",
@@ -189,6 +226,7 @@
         "id": "fleurs-te_in-3",
         "inferenceSeconds": 1.5,
         "language": "te",
+        "mode": "clean",
         "outcome": "delivered",
         "producedText": true,
         "score": {
@@ -197,6 +235,12 @@
             "insertions": 30,
             "referenceLength": 25,
             "substitutions": 2
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 8,
+            "referenceLength": 4,
+            "substitutions": 0
           },
           "repetitionLoop": true,
           "textWithoutSpeech": false,
@@ -208,7 +252,9 @@
           }
         },
         "stopToDeliverySeconds": 3.9,
+        "style": null,
         "task": "transcribe",
+        "translation": null,
         "writingMode": "clean"
       },
       "review": "dataset-human",
@@ -229,6 +275,7 @@
         "id": "fleurs-hi_in-1~noise-snr10",
         "inferenceSeconds": 1.5,
         "language": "hi",
+        "mode": "clean",
         "outcome": "delivered",
         "producedText": true,
         "score": {
@@ -237,6 +284,12 @@
             "insertions": 0,
             "referenceLength": 40,
             "substitutions": 5
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 2
           },
           "repetitionLoop": false,
           "textWithoutSpeech": false,
@@ -248,7 +301,9 @@
           }
         },
         "stopToDeliverySeconds": 1.8,
+        "style": null,
         "task": "transcribe",
+        "translation": null,
         "writingMode": "clean"
       },
       "review": "dataset-human",
@@ -270,10 +325,17 @@
         "id": "silence-2s@hi",
         "inferenceSeconds": 0.0,
         "language": "hi",
+        "mode": "clean",
         "outcome": "recognition.silent-audio",
         "producedText": false,
         "score": {
           "characters": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 0,
+            "substitutions": 0
+          },
+          "numberNormalizedWords": {
             "deletions": 0,
             "insertions": 0,
             "referenceLength": 0,
@@ -289,7 +351,9 @@
           }
         },
         "stopToDeliverySeconds": 0.05,
+        "style": null,
         "task": "transcribe",
+        "translation": null,
         "writingMode": "clean"
       },
       "review": "by-construction",
@@ -308,12 +372,19 @@
         "id": "noise-loud@te",
         "inferenceSeconds": 0.8,
         "language": "te",
+        "mode": "clean",
         "outcome": "delivered",
         "producedText": true,
         "score": {
           "characters": {
             "deletions": 0,
             "insertions": 14,
+            "referenceLength": 0,
+            "substitutions": 0
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 3,
             "referenceLength": 0,
             "substitutions": 0
           },
@@ -327,7 +398,9 @@
           }
         },
         "stopToDeliverySeconds": 0.9,
+        "style": null,
         "task": "transcribe",
+        "translation": null,
         "writingMode": "clean"
       },
       "review": "by-construction",
@@ -346,6 +419,7 @@
         "id": "model-guess-1",
         "inferenceSeconds": 1.5,
         "language": "hi",
+        "mode": "clean",
         "outcome": "delivered",
         "producedText": true,
         "score": {
@@ -354,6 +428,12 @@
             "insertions": 0,
             "referenceLength": 40,
             "substitutions": 40
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 8
           },
           "repetitionLoop": false,
           "textWithoutSpeech": false,
@@ -365,7 +445,9 @@
           }
         },
         "stopToDeliverySeconds": 1.8,
+        "style": null,
         "task": "transcribe",
+        "translation": null,
         "writingMode": "clean"
       },
       "review": "unverified",
@@ -376,10 +458,11 @@
       "variantID": null
     }
   ],
-  "schema": 1,
+  "schema": 2,
   "skipped": {
     "already-english": 0
   },
+  "style": "none",
   "task": "transcribe",
   "warmUpSeconds": 0.75,
   "writingMode": "clean"

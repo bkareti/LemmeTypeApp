@@ -93,11 +93,37 @@ make evaluation
 That needs a multilingual Whisper model installed in LemmeType. None is installed on the
 maintainer's Mac as of 2026-11-02, so **no real report exists yet** (Phase 8).
 
+## Modes, translation, and style (Phase 4)
+
+| Part | What it does |
+|---|---|
+| `EvaluationRunner(mode:)` | Runs any `DictationMode`: Exact, Clean, Message, or a mode with a style. A style mode needs a `rewriter`; without one the pipeline offers the original, as the app does. |
+| `NumberNormalizer` | Digits of any script to ASCII, thousands separators dropped, English number words to digits ("nineteen eleven" → 1911). Every score also carries `numberNormalizedWords`, so reports show WER with and without it. Hindi, Telugu, Kannada, and Tamil number words are **not** converted. |
+| `CharacterNGramStatistics` | chrF (character 1–6-grams, β = 2, whitespace removed), pooled across runs. Defined in the type's documentation; not checked against sacreBLEU. |
+| `TranslationScore` | For translation runs: chrF against the human English reference and `PreservationChecker` (numbers, dates, names, negation, commitments, links) after number normalization. A changed number or negation is a **problem** (a JUnit failure); the others are reported as rates. |
+| `StyleResult` | For style modes: whether the rewrite applied (and the notice when not), facts it changed, whether bullets or plain text were followed, and whether a concise rewrite was shorter. Style runs score accuracy on the text **before** the rewrite. |
+
+What the rules cannot judge, and stays with people:
+
+- Translation meaning beyond numbers, negation, names, dates, commitments, and links: the
+  human review rubric in [language-support-matrix.md](language-support-matrix.md).
+- Tone ("professional", "friendly", "casual") and the shape of message and email formats:
+  [style-rewriting.md](style-rewriting.md).
+
+The opt-in real run takes `LEMMETYPE_EVALUATION_MODE` (`exact`, `clean`, `message`) and
+`LEMMETYPE_EVALUATION_STYLE` (`tone-format-length`, such as `professional-email-concise`,
+which needs Apple Intelligence). Each mode or style is its own report; recognition runs
+again for each, so run Exact and Message on a language subset when time matters.
+
+Report schema 2 adds `mode` and `style` to the report and `numberNormalizedWords`,
+`translation`, and `style` to each run. `scripts/evaluation-report.py` reads schema 2 only;
+reports are keyed by label, task, and mode. The three fixtures in `scripts/tests/fixtures/`
+are made by `make-evaluation-fixtures.py` and are test data, not measurements.
+
 ## Next phases
 
 | Phase | Scope |
 |---|---|
-| 4. Modes and translation | Exact, Clean, Message, translation (chrF against the human English reference, plus number and negation checks), and style. |
 | 5. iOS | XCUITests for permission denial, interruptions, background, time limit, copy, and settings, and an on-device benchmark entry point. |
 | 6. CI and gates | A PR smoke job, a nightly full run, a release workflow, and `release-gates.json`. |
 | 7. TestFlight readiness | Export settings, encryption declaration, privacy label draft, tester guide. Nothing is uploaded without the maintainer's approval. |
