@@ -60,11 +60,43 @@ review statuses, how to fetch and build it, and what it does not cover yet.
 Tests: `CorpusManifestTests` (EndToEndTests) and `scripts/tests/test-corpus.py`
 (`make corpus-check`).
 
+## Reports (Phase 3)
+
+| Part | What it does |
+|---|---|
+| `CorpusEvaluation` | Runs every item of the chosen manifests through one engine (optionally only some languages), times warm-up and peak memory, and returns an `EvaluationReport`. For translation it skips items that cannot be scored and counts why (`already-english`, `no-english-reference`). |
+| `EvaluationReport` | The run as JSON in `build/evaluation/<label>-<task>-<mode>.json`: device, corpus manifests by SHA-256, and each run's metrics. No text. |
+| `scripts/evaluation-report.py` | Reads reports and writes `summary.json`, `junit.xml`, and a self-contained `index.html` dashboard (no scripts, no external requests, light and dark). With `--baseline`, compares like for like on the case ids both runs share. |
+| `CorpusEvaluationTests` (RecognitionTests) | Opt-in: real Whisper models on the fetched corpus, with a socket watch that fails the run on any network socket. |
+| `scripts/run-evaluation.sh` (`make evaluation`) | Verifies the corpus, runs `CorpusEvaluationTests`, writes the reports, and checks no audio was left behind. |
+
+How the numbers are made:
+
+- Word and character error rates are **pooled**: total edits ÷ total reference length
+  over the group, not an average of per-run rates. Only human references count.
+- A run **fails on its own** (JUnit failure) when speech produced no text, when audio
+  without speech produced text, or when the output loops. Accuracy alone never fails a
+  run: there are no approved thresholds yet (Phase 6 adds the release gates).
+- **Regressions** against a baseline: word or character error rate up by more than the
+  tolerance (default 2 points); any rise in no-text, text-from-silence, or loop rates;
+  p95 latency up by more than 20 % and 0.2 s; or a case that passed and now fails.
+  Groups under 10 runs are not compared. If the corpus changed, only shared case ids count.
+
+Tests: `EvaluationReportTests` (EndToEndTests) and `scripts/tests/test-evaluation-report.py`
+(`make evaluation-check`) share `scripts/tests/fixtures/evaluation-report.json`, a
+hand-made fixture (label `fixture`): its numbers are test data, not measurements.
+
+```bash
+make evaluation
+```
+
+That needs a multilingual Whisper model installed in LemmeType. None is installed on the
+maintainer's Mac as of 2026-11-02, so **no real report exists yet** (Phase 8).
+
 ## Next phases
 
 | Phase | Scope |
 |---|---|
-| 3. Reports | Per-case JSON, JUnit XML, a self-contained HTML dashboard, and a baseline comparison. |
 | 4. Modes and translation | Exact, Clean, Message, translation (chrF against the human English reference, plus number and negation checks), and style. |
 | 5. iOS | XCUITests for permission denial, interruptions, background, time limit, copy, and settings, and an on-device benchmark entry point. |
 | 6. CI and gates | A PR smoke job, a nightly full run, a release workflow, and `release-gates.json`. |
