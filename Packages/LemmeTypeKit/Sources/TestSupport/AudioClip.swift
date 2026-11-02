@@ -87,6 +87,24 @@
             AudioClip(samples: Array(samples.prefix(Self.frames(seconds, at: sampleRate))), sampleRate: sampleRate)
         }
 
+        /// Plays `factor` times as fast — tempo and pitch together, like a tape
+        /// run faster or slower (speed perturbation). Linear interpolation, no
+        /// anti-alias filter: meant for factors near 1, such as 0.9 and 1.1.
+        public func speed(_ factor: Double) -> AudioClip {
+            guard factor > 0, factor != 1, let last = samples.indices.last else { return self }
+            let count = Int((Double(samples.count) / factor).rounded())
+            var changed: [Float] = []
+            changed.reserveCapacity(count)
+            for index in 0..<count {
+                let position = Double(index) * factor
+                let lower = min(Int(position), last)
+                let upper = min(lower + 1, last)
+                let fraction = Float(position - Double(lower))
+                changed.append(samples[lower] + (samples[upper] - samples[lower]) * fraction)
+            }
+            return AudioClip(samples: changed, sampleRate: sampleRate)
+        }
+
         /// `count` copies with `gap` seconds of silence between them; the
         /// reference is the source's reference `count` times.
         public func repeated(_ count: Int, gap: Double = 0) -> AudioClip {
