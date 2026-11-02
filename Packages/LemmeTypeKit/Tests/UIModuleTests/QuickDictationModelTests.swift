@@ -53,6 +53,8 @@ struct QuickDictationModelTests {
         #expect(model.screen == .review(text: "Ship it Friday"))
         #expect(copier.copied.isEmpty)
         #expect(model.copiedFor == nil)
+        model.discard()  // the fake processor keeps the audio until a decision, unlike the real pipeline
+        await model.recorder.settle()
     }
 
     @Test func copyPutsExactlyTheReviewedTextOnTheClipboardOnceAndConfirms() async {
