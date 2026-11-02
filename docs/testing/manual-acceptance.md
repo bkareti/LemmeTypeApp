@@ -782,7 +782,7 @@ Use a physical iPhone and iPad with the app installed from Xcode. Record results
 4. Run the shortcut, wait a minute without unlocking the app, then open it by hand: it does **not** start recording.
 
 **MA-69 Interruptions and limits**
-1. During a recording: receive a call, ask Siri, sound an alarm, remove a headset, lock the screen, switch apps. Each stops the recording; the screen says why; no audio is left (`make privacy-check` after running the simulator is not enough: check Files › LemmeType is empty).
+1. During a recording: receive a call, ask Siri, sound an alarm, remove a headset, lock the screen, switch apps. Each stops the recording; the screen says why; no audio is left. Check with Xcode › Window › Devices and Simulators › your device › Installed Apps › LemmeType › ⋯ › Download Container, then open the container (Show Package Contents): `AppData/tmp/LemmeType/Sessions` must be empty or absent.
 2. Let a recording run to five minutes: it stops by itself, is processed, and the user is told.
 3. Force-quit during processing and relaunch: the app starts clean.
 
