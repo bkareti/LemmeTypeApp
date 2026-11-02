@@ -15,17 +15,27 @@ enum AudioFileReader {
         guard format.sampleRate == AudioCaptureFormat.speech.sampleRate, format.channelCount == 1 else {
             throw .audioUnreadable
         }
-        let frames = AVAudioFrameCount(file.length)
-        guard frames > 0 else { return [] }
-        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frames) else {
+        guard file.length > 0 else { return [] }
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: chunkFrames) else {
             throw .audioUnreadable
         }
-        do {
-            try file.read(into: buffer)
-        } catch {
-            throw .audioUnreadable
+        // One read returns whole 1,024-frame blocks only, which would drop up
+        // to 64 ms from the end of the dictation; read until the file ends.
+        var samples: [Float] = []
+        samples.reserveCapacity(Int(file.length))
+        while file.framePosition < file.length {
+            do {
+                try file.read(into: buffer)
+            } catch {
+                throw .audioUnreadable
+            }
+            guard buffer.frameLength > 0 else { break }
+            guard let channel = buffer.floatChannelData?[0] else { throw .audioUnreadable }
+            samples.append(contentsOf: UnsafeBufferPointer(start: channel, count: Int(buffer.frameLength)))
         }
-        guard let channel = buffer.floatChannelData?[0] else { throw .audioUnreadable }
-        return Array(UnsafeBufferPointer(start: channel, count: Int(buffer.frameLength)))
+        return samples
     }
+
+    /// About 4 s of speech per read.
+    private static let chunkFrames: AVAudioFrameCount = 65_536
 }
