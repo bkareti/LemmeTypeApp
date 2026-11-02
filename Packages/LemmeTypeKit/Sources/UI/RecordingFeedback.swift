@@ -17,6 +17,8 @@ public protocol RecordingFeedback: AnyObject {
 public enum FeedbackSound: Sendable {
     case start
     case stop
+    /// The reviewed text was copied (iPhone and iPad).
+    case copied
 }
 
 #if os(macOS)

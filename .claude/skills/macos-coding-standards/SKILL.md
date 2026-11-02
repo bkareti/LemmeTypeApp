@@ -41,8 +41,12 @@ Code lives in the local package `Packages/LemmeTypeKit` plus a thin app target:
 | `Updates` | The update check: one request for release metadata, user-started (ADR 0026) | Domain, Support |
 | `UI` | SwiftUI views and view models | Domain, Support |
 | App target `LemmeType` | `@main`, `AppComposition` (the only composition root) | everything |
+| App target `LemmeTypeiOS` | `@main`, `IOSComposition`, the App Intent (ADR 0027) | the portable modules |
 
 Rules:
+- Code that exists on one platform only is behind `#if os(macOS)` or `#if os(iOS)` inside the module
+  that owns its role (ADR 0027); `Domain` and `Support` contain no platform conditionals, and a file
+  is never copied between platforms. iPhone and iPad views live in `UI/Mobile`.
 - `Domain` never imports AppKit, SwiftUI, AVFoundation, or any OS-service
   framework. Every OS capability is a protocol in `Domain` with a concrete
   implementation in a platform module and a fake in tests.

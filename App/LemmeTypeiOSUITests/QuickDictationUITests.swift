@@ -2,6 +2,7 @@ import XCTest
 
 /// Quick Dictation on the iOS Simulator against fake services: no microphone,
 /// no speech engine, and no pasteboard are touched (E8-S6, E8-S9).
+@MainActor
 final class QuickDictationUITests: XCTestCase {
     private let app = XCUIApplication()
 

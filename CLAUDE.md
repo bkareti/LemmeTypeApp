@@ -13,7 +13,9 @@ dictation and speech-to-English, and tone and style rewriting. Epics 6
 (privacy, security, and data controls) and 7 (quality, packaging, and release
 readiness) are refined into stories in `docs/backlog/` and in progress. Epic 8
 (iPhone and iPad companion) is refined into nine stories in
-`docs/backlog/epic-08-ios-companion.md`; its first story is a device-evidence gate.
+`docs/backlog/epic-08-ios-companion.md` and its main-app baseline is built (ADR 0027:
+Quick Dictation, Copy, Action Button and Shortcuts, `LemmeTypeiOS`); real-device evidence
+(E8-S1, E8-S2) and approved thresholds are still pending.
 
 ## Project skills — use them
 
@@ -45,6 +47,8 @@ make release-build REHEARSAL=1 && make release-verify REHEARSAL=1  # ad-hoc rele
 make quality-gate   # every automated check with one summary (UI=1 adds UI tests)
 make benchmark   # end-to-end benchmark on this Mac + threshold check (not CI)
 make release-check APP=<app|zip>  # thresholds + release-artifact scan
+make build-ios   # the iPhone and iPad app for the iOS Simulator
+make test-ios    # its unit tests + the portable package tests on the iOS Simulator
 make format      # apply swift-format
 make run         # build and launch
 ```
@@ -237,6 +241,19 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   leaves a marker that a normal quit removes, so `AppController.beginRun/endRun` can show
   a one-time notice after a crash. `AboutModel` copies support info or opens a prefilled
   issue; `DiagnosticsReport` schema 2 adds `SupportSnapshot` fields.
+- iPhone and iPad (ADR 0027, Epic 8): one app target `LemmeTypeiOS` (`App/LemmeTypeiOS`,
+  composition root `IOSComposition`) in the same package. macOS-only code is behind
+  `#if os(macOS)` (`Domain` and `Support` have no platform conditionals; `Shortcuts` is empty
+  on iOS). iOS adds `AVAudioSessionSource` (Audio), `UIPasteboardWriter` (Delivery), and the
+  views under `UI/Mobile` (`QuickDictationModel`, `QuickDictationView`, `MobileSettingsView`).
+  Delivery is an explicit expiring local-only **Copy** after a review: `TranscriptionPipeline`'s
+  `reviewsEveryResult` ends every dictation in `DictationIssue.reviewText` (audio is deleted
+  then), with `NoTargetDelivery` as its delivery. `RecordingLimits.handheld` stops a recording
+  at five minutes; `RecordingCoordinator.stopForSystemReason()` ends it when the app leaves the
+  foreground. `HardwareProfile.deviceClass` and `HardwareRequirement.handheld` judge model fit
+  on phones; `WhisperEngine(availableMemory:)` refuses a load that does not fit. An App Intent
+  leaves a one-time `LaunchRequestInbox` request. `DeviceWords` keeps shared text from saying
+  "this Mac" on a phone. `HandheldEndToEndTests` covers the path; device steps are MA-66…MA-72.
 - Diagnostics: components take `any DiagnosticsRecording` (default
   `DiscardingDiagnostics`); the app shares one `DiagnosticsBuffer`. Event names
   and keys must be literals and values typed (`.id(...)` redacts anything that

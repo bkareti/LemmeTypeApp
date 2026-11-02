@@ -150,12 +150,23 @@
 
         private func review(_ text: String) -> some View {
             VStack(alignment: .leading, spacing: 16) {
+                if let title = reviewTitle {
+                    Text(title).font(.headline).accessibilityAddTraits(.isHeader)
+                }
                 Text(text)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
                     .background(.quaternary, in: RoundedRectangle(cornerRadius: 12))
                     .accessibilityIdentifier("quick.result")
+                if model.canCompareWithOriginal {
+                    Button(
+                        model.showsOriginal
+                            ? String(localized: "Show Rewrite", bundle: .module)
+                            : String(localized: "Show Original", bundle: .module), action: model.toggleOriginal
+                    )
+                    .accessibilityIdentifier("quick.compare")
+                }
                 Button {
                     Task { await model.copy() }
                 } label: {
@@ -165,15 +176,41 @@
                 .buttonStyle(.borderedProminent)
                 .accessibilityIdentifier("quick.copy")
                 HStack {
+                    if let retry = model.reviewRetryAction {
+                        Button(retry.title(engineName: { $0.displayName })) { model.perform(retry) }
+                            .accessibilityIdentifier("quick.action.\(retry.identifier)")
+                    }
                     Button(String(localized: "Dictate Again", bundle: .module), action: model.dictateAgain)
                         .accessibilityIdentifier("quick.again")
                     Spacer()
                     Button(String(localized: "Discard", bundle: .module), role: .destructive, action: model.discard)
                         .accessibilityIdentifier("quick.discard")
                 }
-                Text(DictationIssue.reviewText.userMessage)
+                Text(reviewFootnote)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+            }
+        }
+
+        private var reviewTitle: String? {
+            switch model.reviewKind {
+            case .translation: String(localized: "Translation", bundle: .module)
+            case .rewrite: String(localized: "Rewritten Text", bundle: .module)
+            case .dictation, nil: nil
+            }
+        }
+
+        private var reviewFootnote: String {
+            switch model.reviewKind {
+            case .translation:
+                String(
+                    localized: "Read the translation. It is copied only when you choose Copy, and never sent.",
+                    bundle: .module)
+            case .rewrite:
+                String(
+                    localized: "Read the rewrite. It is copied only when you choose Copy, and never sent.",
+                    bundle: .module)
+            case .dictation, nil: DictationIssue.reviewText.userMessage
             }
         }
 

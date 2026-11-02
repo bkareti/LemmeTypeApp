@@ -16,6 +16,8 @@ Release: ____  Build: ____  Mac / macOS: ____  Checked by: ____  Date: ____
 - [ ] History is off by default and writes nothing when off. — `PrivacyEndToEndTests`
 - [ ] Delete All Local Data leaves nothing behind. — `PrivacyOverviewModelTests`
 - [ ] No captured audio is left behind by the tests. — `make privacy-check`
+- [ ] The iPhone and iPad app has no background modes, entitlements, or ATS exceptions, and its privacy manifest matches the code. — `make security-check`
+- [ ] On iPhone and iPad, a dictation is copied only on request, and Cancel and Discard never touch the clipboard. — `HandheldEndToEndTests`
 - [ ] The threat model and this checklist still match the code. — `make privacy-docs-check`
 
 ## Release artifact
@@ -35,6 +37,8 @@ Release: ____  Build: ____  Mac / macOS: ____  Checked by: ____  Date: ____
 - [ ] Insertion never targets a password field. — `MA-33`
 - [ ] The update check sends only the version, and only when asked. — `MA-60`
 - [ ] A killed app starts cleanly and tells the user once. — `MA-62`
+- [ ] On an iPhone and an iPad, recording stops on interruption and in the background, and copied text expires. — `MA-69`, `MA-67`
+- [ ] The iPhone app works in Airplane Mode and makes no connection while dictating. — `MA-70`
 
 ## Release notes
 

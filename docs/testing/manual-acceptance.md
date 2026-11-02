@@ -756,3 +756,49 @@ Needs a team-signed build on a real Mac. MA-54 also needs a network monitor
 1. On a Mac on macOS 26.0, run the rehearsal build and MA-6, MA-28, and MA-31.
 2. Fill the *Result* columns of [insertion-matrix.md](insertion-matrix.md) for the apps in
    [compatibility-matrix.md](compatibility-matrix.md) that the release claims to support.
+
+## E8 — iPhone and iPad companion
+
+Use a physical iPhone and iPad with the app installed from Xcode. Record results in
+`docs/testing/ios-feasibility.md`. Synthetic speech and test text only.
+
+**MA-66 First run and the microphone prompt**
+1. Delete the app, install it, open it. The *Dictate* screen shows no prompt yet.
+2. Tap *Start Dictating*. An explanation appears first; *Continue* shows the system prompt.
+3. Choose *Don't Allow*. Tap *Start Dictating* again: the screen says the microphone is off and offers *Open Settings*; nothing records.
+4. Allow it in Settings and return: *Start Dictating* records. Revoke it in Settings while recording: recording stops.
+
+**MA-67 Copy and paste into other apps**
+1. Install a model (Settings › Models) or allow Apple Speech. Say one sentence; read the result.
+2. Tap *Copy*. The screen says it was copied and for how long; VoiceOver speaks it; a light haptic plays.
+3. Paste into Messages, WhatsApp, Notes, and Safari's address bar. Do not send. Try a secure field and a phone-pad field.
+4. After the chosen time, paste again: the text is gone. On a second device signed in to the same Apple Account, Universal Clipboard does **not** offer it.
+5. Tap *Discard* instead of *Copy*, then paste: the clipboard has whatever it had before.
+
+**MA-68 Action Button, Back Tap, Siri, Shortcuts**
+1. Assign *Start Dictating* to the Action Button; with the phone unlocked, press it: the app opens and recording shows at once.
+2. Do the same with Back Tap (Settings › Accessibility › Touch), Siri ("Dictate with LemmeType"), and the Shortcuts app.
+3. Lock the phone and press the Action Button: it asks to unlock before anything records.
+4. Run the shortcut, wait a minute without unlocking the app, then open it by hand: it does **not** start recording.
+
+**MA-69 Interruptions and limits**
+1. During a recording: receive a call, ask Siri, sound an alarm, remove a headset, lock the screen, switch apps. Each stops the recording; the screen says why; no audio is left (`make privacy-check` after running the simulator is not enough: check Files › LemmeType is empty).
+2. Let a recording run to five minutes: it stops by itself, is processed, and the user is told.
+3. Force-quit during processing and relaunch: the app starts clean.
+
+**MA-70 Offline use and downloads**
+1. Install a model with network on: the size is shown first and a confirmation is required.
+2. Turn on Airplane Mode and dictate: it works. With a network monitor attached, no connection is made during dictation, review, or copy.
+3. Settings › Models › *Remove*: the model is gone and its space is returned. Models are not in an iCloud backup (Settings › iCloud › Manage Storage shows no LemmeType models).
+
+**MA-71 Accessibility and layout**
+1. With VoiceOver: every control is reachable and named; start, stop, processing, result, and copy are announced.
+2. At the largest accessibility text size, every screen scrolls and nothing is cut off. With Reduce Motion on, nothing relies on animation.
+3. On an iPad: portrait, landscape, Split View, and Stage Manager all lay out; the sidebar appears in wide windows.
+4. Switch to the app switcher while a result is on screen: the snapshot is blank.
+
+**MA-72 Memory, speed, and battery per device**
+1. On each device class, record 10 dictations of 10 seconds with Base. Note capture-stop-to-text time, peak memory (Xcode memory gauge), and the battery change.
+2. Open many apps first, then dictate with Small on an iPad and with Base on a 6 GB iPhone: a model that does not fit is refused with a reason, and the app is not ended.
+3. Compare with the proposed thresholds in `docs/testing/ios-feasibility.md`. A product owner approves them.
+

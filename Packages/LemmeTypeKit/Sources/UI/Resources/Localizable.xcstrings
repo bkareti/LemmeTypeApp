@@ -1246,7 +1246,13 @@
     "Quit LemmeType, or Delete All Local Data below." : {
 
     },
+    "Read the rewrite. It is copied only when you choose Copy, and never sent." : {
+
+    },
     "Read the rewrite. Nothing is inserted until you choose Insert or Copy." : {
+
+    },
+    "Read the translation. It is copied only when you choose Copy, and never sent." : {
 
     },
     "Read the translation. Nothing is inserted until you choose Insert or Copy." : {
@@ -1373,6 +1379,9 @@
     "Rewritten text" : {
 
     },
+    "Rewritten Text" : {
+
+    },
     "Runs on %@; more memory recommended" : {
 
     },
@@ -1430,7 +1439,13 @@
     "Show original" : {
 
     },
+    "Show Original" : {
+
+    },
     "Show rewrite" : {
+
+    },
+    "Show Rewrite" : {
 
     },
     "Show:" : {

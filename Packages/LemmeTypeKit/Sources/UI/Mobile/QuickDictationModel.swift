@@ -16,7 +16,8 @@ public final class QuickDictationModel {
         case preparing
         case recording
         case processing
-        /// Text waiting to be copied; nothing has left the app.
+        /// Text waiting to be copied; nothing has left the app. A translation or a
+        /// rewrite is reviewed the same way, and the original is one tap away.
         case review(text: String)
         /// A decision other than copying (no engine, language unavailable, …).
         case attention(DictationIssue)
@@ -54,6 +55,13 @@ public final class QuickDictationModel {
         self.launchRequests = launchRequests
     }
 
+    /// What kind of text is under review.
+    public enum ReviewKind: Equatable, Sendable {
+        case dictation
+        case translation
+        case rewrite
+    }
+
     public var screen: Screen {
         switch recorder.state {
         case .idle, .completed, .cancelled: .ready
@@ -61,9 +69,37 @@ public final class QuickDictationModel {
         case .recording: .recording
         case .stopping, .processing: .processing
         case .failed(let error): .failed(error)
-        case .needsAttention(.reviewText): .review(text: recorder.reviewText ?? "")
+        case .needsAttention(let issue) where reviewKind(of: issue) != nil:
+            .review(text: (recorder.reviewShowsOriginal ? recorder.reviewOriginal : recorder.reviewText) ?? "")
         case .needsAttention(let issue): .attention(issue)
         }
+    }
+
+    public var reviewKind: ReviewKind? { recorder.attention.flatMap(reviewKind(of:)) }
+
+    private func reviewKind(of issue: DictationIssue) -> ReviewKind? {
+        switch issue {
+        case .reviewText: .dictation
+        case .reviewTranslation: .translation
+        case .reviewRewrite: .rewrite
+        default: nil
+        }
+    }
+
+    /// A rewrite can be compared with the words that were said.
+    public var canCompareWithOriginal: Bool { recorder.reviewOriginal != nil || recorder.reviewShowsOriginal }
+
+    public var showsOriginal: Bool { recorder.reviewShowsOriginal }
+
+    public func toggleOriginal() { recorder.toggleReviewOriginal() }
+
+    /// Regenerate and Translate Again, when the review offers them. Insert and Use Original
+    /// are not offered here: there is no field to insert into on a phone.
+    public var reviewRetryAction: DictationAction? {
+        let offered = recorder.attentionActions
+        if offered.contains(.regenerate) { return .regenerate }
+        if reviewKind == .translation, offered.contains(.retry) { return .retry }
+        return nil
     }
 
     // MARK: Recording
@@ -112,7 +148,7 @@ public final class QuickDictationModel {
         guard recorder.lastDelivery == .copied else { return }
         copiedFor = chosen
         feedback.announce(Self.copiedMessage(for: chosen))
-        feedback.play(.stop)
+        feedback.play(.copied)
     }
 
     public func discard() { recorder.perform(.discard) }

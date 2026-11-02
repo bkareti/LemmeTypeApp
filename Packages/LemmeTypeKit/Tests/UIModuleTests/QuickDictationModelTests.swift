@@ -65,7 +65,7 @@ struct QuickDictationModelTests {
         #expect(copier.copied == ["Ship it Friday"])
         #expect(model.copiedFor == .tenMinutes)
         #expect(feedback.announcements.contains(QuickDictationModel.copiedMessage(for: .tenMinutes)))
-        #expect(feedback.sounds.last == .stop)
+        #expect(feedback.sounds.last == .copied)
     }
 
     @Test func discardCopiesNothingAndReturnsToReady() async throws {
@@ -164,5 +164,69 @@ struct QuickDictationModelTests {
 
         #expect(copier.copied.isEmpty)
         #expect(model.screen == .ready)
+    }
+}
+
+/// E8-S6: a translation or a rewrite is reviewed like any dictation, and offers Copy, not Insert.
+@MainActor
+struct QuickDictationReviewKindTests {
+    private let source = FakeAudioSource()
+    private let feedback = FakeFeedback()
+    private let processor = RecordingSpy()
+    private let copier = FakeTextDelivery()
+    private let storage = AudioSessionStorage(
+        directory: FileManager.default.temporaryDirectory
+            .appendingPathComponent("LemmeTypeTests-QuickReview-\(UUID().uuidString)", isDirectory: true))
+
+    private func review(
+        _ outcome: DictationOutcome
+    ) async -> QuickDictationModel {
+        processor.script([outcome])
+        let recorder = RecordingCoordinator(
+            capture: AudioCaptureService(
+                source: source, storage: storage, permissions: FakePermissions(statuses: [.microphone: .granted])),
+            processor: processor, feedback: feedback, preferences: FakePreferences(), textCopier: copier,
+            finishedDisplay: .milliseconds(50), failureDisplay: .milliseconds(50))
+        let model = QuickDictationModel(
+            recorder: recorder, feedback: feedback, microphoneStatus: { .granted },
+            requestMicrophone: { .granted }, openSettings: {})
+        model.start()
+        await recorder.settle()
+        source.emitTone(seconds: 0.3)
+        model.stop()
+        await recorder.settle()
+        return model
+    }
+
+    @Test func aTranslationIsReviewedAndOffersTranslateAgainButNotInsert() async {
+        let model = await review(
+            .needsAttention(.reviewTranslation, engine: .whisper, alternatives: [], transcript: "see you at three"))
+
+        #expect(model.screen == .review(text: "see you at three"))
+        #expect(model.reviewKind == .translation)
+        #expect(model.reviewRetryAction == .retry)
+        #expect(!model.recorder.attentionActions.isEmpty)
+        #expect(!model.canCompareWithOriginal)
+        model.discard()
+        await model.recorder.settle()
+    }
+
+    @Test func aRewriteCanBeComparedWithTheOriginalAndCopyCopiesWhatIsShown() async {
+        let rewrite = DictationReview(
+            text: "Could we meet at three?", original: "meet at three", language: "en",
+            style: StyleOptions(tone: .professional, format: .plainText, length: .original))
+        let model = await review(.review(rewrite, engine: .whisper))
+
+        #expect(model.screen == .review(text: "Could we meet at three?"))
+        #expect(model.reviewKind == .rewrite)
+        #expect(model.canCompareWithOriginal)
+        #expect(model.reviewRetryAction == .regenerate)
+
+        model.toggleOriginal()
+        #expect(model.screen == .review(text: "meet at three"))
+        #expect(model.showsOriginal)
+
+        await model.copy()
+        #expect(copier.copied == ["meet at three"])
     }
 }
