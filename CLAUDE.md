@@ -12,7 +12,8 @@ personalization and modes, model management and performance, multilingual
 dictation and speech-to-English, and tone and style rewriting. Epics 6
 (privacy, security, and data controls) and 7 (quality, packaging, and release
 readiness) are refined into stories in `docs/backlog/` and in progress. Epic 8
-(iPhone and iPad companion) exists only in `docs/roadmap.md` and has no stories yet.
+(iPhone and iPad companion) is refined into nine stories in
+`docs/backlog/epic-08-ios-companion.md`; its first story is a device-evidence gate.
 
 ## Project skills — use them
 
@@ -258,7 +259,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
 ## Planning documents
 
 - `docs/product-brief.md`, `docs/roadmap.md` — scope, non-goals, epic exit criteria.
-- `docs/backlog/epic-{01,02,03,04,05,06,07,09,10}-*.md` — development-ready stories (source of truth
+- `docs/backlog/epic-{01,02,03,04,05,06,07,08,09,10}-*.md` — development-ready stories (source of truth
   for acceptance criteria). Readiness reviews go in `docs/backlog/reviews/`.
 - `docs/testing/manual-acceptance.md` — checks that cannot run on CI.
 - `docs/testing/insertion-matrix.md` — per-app insertion results and failure evidence.
@@ -297,7 +298,9 @@ sub-issues on `bkareti/LemmeTypeApp` (needs authenticated `gh`).
   `# Epic N — Title` heading (first letter capitalised), so 10 epics in total.
 - Refined epics are listed in `REFINED_EPICS` (backlog file, story phase
   label, story count: 8 for Epic 1, 10 for Epic 2, 7 for Epic 3, 9 for Epic 4,
-  7 for Epic 5, 8 for Epic 6, 9 for Epic 7, 6 for Epic 9, 5 for Epic 10).
+  7 for Epic 5, 8 for Epic 6, 9 for Epic 7, 9 for Epic 8, 6 for Epic 9, 5 for Epic 10).
+  Epic 8's two original issues are E8-S1 and E8-S2; E8-S2 is the last story in the file.
+  Stories carry `platform:macOS` unless the epic is in `EPIC_PLATFORM_LABELS`.
   Adding or removing a story requires updating `STORY_AREA_LABELS` and that count.
 
 ## Product constraints that shape implementation

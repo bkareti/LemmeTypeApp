@@ -1,9 +1,9 @@
 # Product roadmap and epics
 
-The roadmap is organized as GitHub epics. Epics 1–7 are fully refined and
-ready for development. Epic 8 remains outcome-level until the macOS core is
-validated. Epics 9 and 10 (multilingual dictation and tone and style) were added
-later and live only in their backlog files.
+The roadmap is organized as GitHub epics. Epics 1–8 are fully refined and
+ready for development; Epic 8 starts with a feasibility story that gates the rest
+of its delivery. Epics 9 and 10 (multilingual dictation and tone and style) were
+added later and live only in their backlog files.
 
 ## Epic 1 — macOS foundation, permissions, and audio capture
 
@@ -126,6 +126,8 @@ optional custom keyboard after validating demand.
 - Results can be copied and pasted with clear completion feedback.
 - Shared product concepts such as modes, vocabulary, and cleanup reuse common code.
 - Keyboard-extension tradeoffs are validated before requesting Full Access.
+
+Detailed stories: [Epic 8 backlog](backlog/epic-08-ios-companion.md)
 
 ## Dependency order
 
