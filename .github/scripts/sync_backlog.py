@@ -26,6 +26,7 @@ EPIC_4_PATH = ROOT / "docs" / "backlog" / "epic-04-personalization.md"
 EPIC_5_PATH = ROOT / "docs" / "backlog" / "epic-05-model-management.md"
 EPIC_6_PATH = ROOT / "docs" / "backlog" / "epic-06-privacy-security.md"
 EPIC_7_PATH = ROOT / "docs" / "backlog" / "epic-07-quality-release.md"
+EPIC_8_PATH = ROOT / "docs" / "backlog" / "epic-08-ios-companion.md"
 EPIC_9_PATH = ROOT / "docs" / "backlog" / "epic-09-multilingual-dictation.md"
 EPIC_10_PATH = ROOT / "docs" / "backlog" / "epic-10-tone-and-style.md"
 # Refined epics: number -> (backlog file, story phase label, expected story count).
@@ -37,6 +38,7 @@ REFINED_EPICS = {
     5: (EPIC_5_PATH, "phase:post-mvp", 7),
     6: (EPIC_6_PATH, "phase:mvp", 8),
     7: (EPIC_7_PATH, "phase:mvp", 9),
+    8: (EPIC_8_PATH, "phase:post-mvp", 9),
     9: (EPIC_9_PATH, "phase:post-mvp", 6),
     10: (EPIC_10_PATH, "phase:post-mvp", 5),
 }
@@ -49,6 +51,7 @@ LABELS = {
     "user-story": ("0e8a16", "User-centered unit of product delivery"),
     "ready-for-development": ("1d76db", "Refined, testable, and ready to implement"),
     "platform:macOS": ("c5def5", "Applies to the macOS application"),
+    "platform:iOS": ("c5def5", "Applies to the iPhone and iPad application"),
     "phase:mvp": ("fbca04", "Required for the first usable product release"),
     "phase:post-mvp": ("f9e79f", "Refined work that follows the first usable release"),
     "future": ("d9d9d9", "Planned after core MVP validation"),
@@ -62,6 +65,7 @@ LABELS = {
     "area:modes": ("d4c5f9", "Dictation modes and per-application mode rules"),
     "area:models": ("f9d0c4", "Model catalog, downloads, verification, and model settings"),
     "area:performance": ("c2e0c6", "Model residency, performance profiles, and system conditions"),
+    "area:mobile": ("d4c5f9", "iPhone and iPad app, App Intents, and iOS platform work"),
     "area:privacy": ("0e8a16", "Data inventory, retention, history, and privacy controls"),
     "area:security": ("b60205", "Network, entitlement, dependency, and threat-model guardrails"),
     "area:release": ("1d76db", "Packaging, signing, notarization, updates, and rollback"),
@@ -78,10 +82,13 @@ EPIC_LABELS = {
     5: ["epic", "platform:macOS", "phase:post-mvp", "area:models", "area:performance"],
     6: ["epic", "platform:macOS", "phase:mvp", "area:privacy", "area:security"],
     7: ["epic", "platform:macOS", "phase:mvp", "area:release", "area:quality"],
-    8: ["epic", "future"],
+    8: ["epic", "platform:iOS", "phase:post-mvp", "area:mobile"],
     9: ["epic", "platform:macOS", "phase:post-mvp", "area:transcription"],
     10: ["epic", "platform:macOS", "phase:post-mvp", "area:voice-editing", "area:modes"],
 }
+
+# Stories carry the macOS label unless their epic is listed here.
+EPIC_PLATFORM_LABELS = {8: "platform:iOS"}
 
 STORY_AREA_LABELS = {
     "E1-S1": ["area:foundation"],
@@ -142,6 +149,15 @@ STORY_AREA_LABELS = {
     "E7-S7": ["area:quality"],
     "E7-S8": ["area:quality", "area:release"],
     "E7-S9": ["area:release"],
+    "E8-S1": ["area:mobile"],
+    "E8-S2": ["area:mobile", "area:quality"],
+    "E8-S3": ["area:mobile", "area:foundation"],
+    "E8-S4": ["area:mobile", "area:audio"],
+    "E8-S5": ["area:mobile", "area:models", "area:transcription"],
+    "E8-S6": ["area:mobile", "area:text-delivery"],
+    "E8-S7": ["area:mobile"],
+    "E8-S8": ["area:mobile", "area:personalization", "area:modes"],
+    "E8-S9": ["area:mobile", "area:privacy", "area:quality"],
     "E9-S1": ["area:transcription"],
     "E9-S2": ["area:transcription"],
     "E9-S3": ["area:transcription"],
@@ -286,7 +302,7 @@ def stories(path: Path, epic_number: int, parent_number: int, phase: str) -> lis
         labels = [
             "user-story",
             "ready-for-development",
-            "platform:macOS",
+            EPIC_PLATFORM_LABELS.get(epic_number, "platform:macOS"),
             phase,
             *STORY_AREA_LABELS[key],
         ]
