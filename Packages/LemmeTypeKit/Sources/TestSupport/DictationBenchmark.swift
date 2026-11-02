@@ -1,9 +1,7 @@
 #if DEBUG && os(macOS)
-    import AVFoundation
     import Darwin
     import Domain
     import Foundation
-    import Synchronization
 
     /// The versioned benchmark corpus (`docs/testing/benchmark-corpus.json`).
     public struct BenchmarkCorpus: Decodable, Sendable {
@@ -46,8 +44,8 @@
     ///
     /// Synthesises every corpus sentence with `say` for every voice (plus a
     /// noisy copy for the first voice), runs each recording through the real
-    /// ``TranscriptionPipeline`` — recognition, Clean Writing, delivery to a
-    /// discarding target — and measures latency, warm-up, inference, memory,
+    /// ``TranscriptionPipeline`` with ``EvaluationRunner`` — recognition, Clean
+    /// Writing, delivery to a discarding target — and measures latency, warm-up, inference, memory,
     /// and word error rate. Transcripts are compared in memory and dropped;
     /// audio is deleted by the pipeline as each session completes. Only
     /// metrics leave this type.
@@ -125,8 +123,9 @@
             try await engine.prepare()
             let warmUp = (ContinuousClock.now - warmUpStart).benchmarkSeconds
 
-            let delivery = MeasuringDelivery()
-            let pipeline = TranscriptionPipeline(engines: [engine], write: TextCleaner.write, delivery: delivery)
+            let runner = EvaluationRunner(
+                engine: engine, workDirectory: workDirectory.appendingPathComponent("sessions", isDirectory: true))
+            let task: RecognitionTask = corpus.translatesToEnglish ? .translateToEnglish : .transcribe
             var measurements: [Measurement] = []
             for utterance in corpus.utterances {
                 for (index, voice) in corpus.voices.enumerated() {
@@ -137,15 +136,23 @@
                             "\(utterance.id)-\(voice.name)\(noisy ? "-noisy" : "").wav")
                         try synthesize(utterance.text, voice: voice.name, to: url)
                         if noisy {
-                            try addNoise(to: url, snrDecibels: corpus.noise.snrDecibels, seed: corpus.noise.seed)
+                            try AudioClip.load(from: url)
+                                .withNoise(snrDecibels: corpus.noise.snrDecibels, seed: corpus.noise.seed)
+                                .write(to: url)
                         }
-                        let measurement = try await measure(
-                            utterance, voice: voice, noisy: noisy, url: url,
-                            run: Run(
-                                pipeline: pipeline, engine: engine.descriptor.id, delivery: delivery,
-                                translates: corpus.translatesToEnglish))
-                        measurements.append(measurement)
-                        try? FileManager.default.removeItem(at: url)  // already gone after delivery
+                        let result = try await runner.run(
+                            EvaluationCase(
+                                id: utterance.id, audioURL: url, language: voice.accent, reference: utterance.text,
+                                englishReference: utterance.english, category: utterance.category),
+                            task: task)
+                        try? FileManager.default.removeItem(at: url)
+                        measurements.append(
+                            Measurement(
+                                id: utterance.id, category: utterance.category, accent: voice.accent, noisy: noisy,
+                                audioSeconds: result.audioSeconds, inferenceSeconds: result.inferenceSeconds,
+                                stopToDeliverySeconds: result.stopToDeliverySeconds,
+                                wordErrorRate: result.producedText ? result.score.wordErrorRate : 1,
+                                delivered: result.producedText))
                     }
                 }
             }
@@ -155,55 +162,6 @@
             return report(
                 engine: reportName, corpus: corpus, warmUp: warmUp,
                 peakMemory: peakMemoryBytes() - memoryBefore, measurements: measurements)
-        }
-
-        /// What every measurement in one run shares.
-        private struct Run {
-            let pipeline: TranscriptionPipeline
-            let engine: RecognitionEngineID
-            let delivery: MeasuringDelivery
-            /// Score the English translation (E9-S6).
-            let translates: Bool
-        }
-
-        private static func measure(
-            _ utterance: BenchmarkCorpus.Utterance, voice: BenchmarkCorpus.Voice, noisy: Bool, url: URL, run: Run
-        ) async throws -> Measurement {
-            let (pipeline, engine, delivery) = (run.pipeline, run.engine, run.delivery)
-            let file = try AVAudioFile(forReading: url)
-            let seconds = Double(file.length) / file.processingFormat.sampleRate
-            let session = DictationSession(
-                audio: RecordedAudio(fileURL: url, duration: seconds, format: .speech), target: nil, mode: .clean,
-                language: voice.accent, speechOutput: run.translates ? .english : .original,
-                enginePreference: EnginePreference(selected: engine))
-            let phases = Mutex<[ProcessingPhase: ContinuousClock.Instant]>([:])
-            delivery.expect(reference: run.translates ? (utterance.english ?? utterance.text) : utterance.text)
-            let start = ContinuousClock.now
-            let outcome = await pipeline.process(session) { update in
-                if case .phase(let phase) = update { phases.withLock { $0[phase] = ContinuousClock.now } }
-            }
-            let end = ContinuousClock.now
-            session.discardAudio()
-            let marks = phases.withLock { $0 }
-            let inference =
-                marks[.recognizing].map { recognizing in ((marks[.writing] ?? end) - recognizing).benchmarkSeconds }
-                ?? 0
-            let delivered: Bool
-            switch outcome {
-            case .delivered:
-                delivered = true
-            case .needsAttention(.reviewTranslation, _, _, let text?):
-                // A translation waits for the user; score it as if inserted.
-                _ = await delivery.deliver(text, to: nil)
-                delivered = true
-            default:
-                delivered = false
-            }
-            return Measurement(
-                id: utterance.id, category: utterance.category, accent: voice.accent, noisy: noisy,
-                audioSeconds: seconds, inferenceSeconds: inference,
-                stopToDeliverySeconds: (end - start).benchmarkSeconds,
-                wordErrorRate: delivered ? delivery.takeWordErrorRate() : 1, delivered: delivered)
         }
 
         static func report(
@@ -293,29 +251,6 @@
             guard process.terminationStatus == 0 else { throw BenchmarkError.synthesisFailed(voice) }
         }
 
-        /// Mixes deterministic white noise into the file at `snrDecibels`.
-        static func addNoise(to url: URL, snrDecibels: Double, seed: UInt64) throws {
-            let input = try AVAudioFile(forReading: url)
-            let format = input.processingFormat
-            guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(input.length))
-            else { return }
-            try input.read(into: buffer)
-            guard let samples = buffer.floatChannelData?[0] else { return }
-            let count = Int(buffer.frameLength)
-            var power = 0.0
-            for index in 0..<count { power += Double(samples[index] * samples[index]) }
-            let signal = power / Double(max(count, 1))
-            let noiseAmplitude = Float((signal / pow(10, snrDecibels / 10) * 3).squareRoot())
-            var generator = SeededGenerator(seed: seed)
-            for index in 0..<count {
-                samples[index] += Float.random(in: -1...1, using: &generator) * noiseAmplitude
-            }
-            let output = try AVAudioFile(
-                forWriting: url, settings: input.fileFormat.settings, commonFormat: format.commonFormat,
-                interleaved: format.isInterleaved)
-            try output.write(from: buffer)
-        }
-
         static func peakMemoryBytes() -> Int {
             var usage = rusage()
             getrusage(RUSAGE_SELF, &usage)
@@ -328,54 +263,6 @@
             var model = [CChar](repeating: 0, count: max(size, 1))
             sysctlbyname("hw.model", &model, &size, nil, 0)
             return String(bytes: model.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, encoding: .utf8) ?? "unknown"
-        }
-    }
-
-    /// A delivery target that scores the text against the reference and
-    /// immediately forgets it.
-    final class MeasuringDelivery: TextDelivering {
-        private struct State {
-            var reference = ""
-            var wordErrorRate = 1.0
-        }
-
-        private let state = Mutex(State())
-
-        func expect(reference: String) {
-            state.withLock {
-                $0.reference = reference
-                $0.wordErrorRate = 1
-            }
-        }
-
-        func takeWordErrorRate() -> Double { state.withLock { $0.wordErrorRate } }
-
-        func deliver(_ text: String, to target: ActivationTarget?) async -> DeliveryOutcome {
-            state.withLock { $0.wordErrorRate = WordErrorRate.of(reference: $0.reference, hypothesis: text) }
-            return .delivered(.accessibility)
-        }
-    }
-
-    /// SplitMix64, so noisy audio is identical on every run.
-    struct SeededGenerator: RandomNumberGenerator {
-        private var state: UInt64
-
-        init(seed: UInt64) {
-            state = seed
-        }
-
-        mutating func next() -> UInt64 {
-            state &+= 0x9E37_79B9_7F4A_7C15
-            var value = state
-            value = (value ^ (value >> 30)) &* 0xBF58_476D_1CE4_E5B9
-            value = (value ^ (value >> 27)) &* 0x94D0_49BB_1331_11EB
-            return value ^ (value >> 31)
-        }
-    }
-
-    extension Duration {
-        var benchmarkSeconds: Double {
-            Double(components.seconds) + Double(components.attoseconds) / 1e18
         }
     }
 #endif

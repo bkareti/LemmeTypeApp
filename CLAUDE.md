@@ -71,7 +71,9 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   module: `Domain` (models, protocols, state, no OS frameworks), `Support`
   (`Log`, `BuildInfo`, `UserDefaultsPreferences`; depends on Domain), platform modules `Audio` / `Permissions` / `Shortcuts` /
   `Lifecycle` / `Recognition` / `ModelAssets` / `Delivery` / `Editing` / `Updates` (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
-  and `TestSupport` (fakes, plus the Debug-only `DictationBenchmark`).
+  and `TestSupport` (fakes, plus the Debug-only `DictationBenchmark` and evaluation
+  harness: `EvaluationRunner`, `FileAudioSource`, `AudioClip`, `TranscriptScore`; see
+  `docs/testing/evaluation-harness.md`).
   `EndToEndTests` drives recorder → pipeline → cleaner → delivery (and, for
   Epic 3, shortcut → context reader → formatter/rewriter → delivery) with
   fakes only at the OS edges.

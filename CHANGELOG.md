@@ -32,6 +32,11 @@ completed epic or user-visible feature set, a patch version for fixes). Story id
 - The release pipeline verifies Hardened Runtime, entitlements, version, and contents of
   every build (E7-S2).
 
+### Fixed
+
+- Speech recognition now hears the whole recording. The last 8–64 ms of every dictation
+  was dropped before it reached Whisper or Apple Speech.
+
 ## [0.1.0] - not released
 
 The development build described by Epics 1 to 5, 9, and 10: menu-bar app, local
