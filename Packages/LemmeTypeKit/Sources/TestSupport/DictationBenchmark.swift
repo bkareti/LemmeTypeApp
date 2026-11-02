@@ -1,5 +1,4 @@
 #if DEBUG && os(macOS)
-    import Darwin
     import Domain
     import Foundation
 
@@ -118,7 +117,7 @@
             try FileManager.default.createDirectory(at: workDirectory, withIntermediateDirectories: true)
             defer { try? FileManager.default.removeItem(at: workDirectory) }
 
-            let memoryBefore = peakMemoryBytes()
+            let memoryBefore = EvaluationHost.peakResidentBytes()
             let warmUpStart = ContinuousClock.now
             try await engine.prepare()
             let warmUp = (ContinuousClock.now - warmUpStart).benchmarkSeconds
@@ -161,7 +160,7 @@
                 label ?? [engine.descriptor.id.rawValue, corpus.name].compactMap(\.self).joined(separator: "-")
             return report(
                 engine: reportName, corpus: corpus, warmUp: warmUp,
-                peakMemory: peakMemoryBytes() - memoryBefore, measurements: measurements)
+                peakMemory: EvaluationHost.peakResidentBytes() - memoryBefore, measurements: measurements)
         }
 
         static func report(
@@ -175,8 +174,8 @@
             }
             return Report(
                 engine: engine, corpusVersion: corpus.version, date: Date(),
-                operatingSystem: ProcessInfo.processInfo.operatingSystemVersionString,
-                hardwareModel: hardwareModel(), physicalMemoryGB: Int(ProcessInfo.processInfo.physicalMemory >> 30),
+                operatingSystem: EvaluationHost.operatingSystem,
+                hardwareModel: EvaluationHost.hardwareModel(), physicalMemoryGB: EvaluationHost.physicalMemoryGB,
                 warmUpSeconds: warmUp, peakMemoryIncreaseMB: Double(peakMemory) / 1_048_576,
                 audioSeconds: Summary(measurements.map(\.audioSeconds)),
                 inferenceSeconds: Summary(measurements.map(\.inferenceSeconds)),
@@ -249,20 +248,6 @@
             try process.run()
             process.waitUntilExit()
             guard process.terminationStatus == 0 else { throw BenchmarkError.synthesisFailed(voice) }
-        }
-
-        static func peakMemoryBytes() -> Int {
-            var usage = rusage()
-            getrusage(RUSAGE_SELF, &usage)
-            return usage.ru_maxrss  // bytes on macOS
-        }
-
-        static func hardwareModel() -> String {
-            var size = 0
-            sysctlbyname("hw.model", nil, &size, nil, 0)
-            var model = [CChar](repeating: 0, count: max(size, 1))
-            sysctlbyname("hw.model", &model, &size, nil, 0)
-            return String(bytes: model.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, encoding: .utf8) ?? "unknown"
         }
     }
 #endif

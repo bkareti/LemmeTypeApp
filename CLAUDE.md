@@ -44,6 +44,8 @@ make privacy-docs-check  # fail if the threat model or privacy checklist cites s
 make l10n-check     # string catalog is complete and commented; no literal bypasses the module bundle (l10n-update refreshes it)
 make docs-check     # release and support docs point at files and make targets that exist
 make corpus-check   # corpus script tests and the committed corpus manifests (no audio needed)
+make evaluation-check  # evaluation report script tests (fixtures only)
+make evaluation     # real Whisper models on the fetched corpus → build/evaluation/report (not CI)
 make release-build REHEARSAL=1 && make release-verify REHEARSAL=1  # ad-hoc release archive + checks (see docs/release/runbook.md)
 make quality-gate   # every automated check with one summary (UI=1 adds UI tests)
 make benchmark   # end-to-end benchmark on this Mac + threshold check (not CI)
@@ -74,7 +76,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   `Lifecycle` / `Recognition` / `ModelAssets` / `Delivery` / `Editing` / `Updates` (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
   and `TestSupport` (fakes, plus the Debug-only `DictationBenchmark` and evaluation
   harness: `EvaluationRunner`, `FileAudioSource`, `AudioClip`, `TranscriptScore`, and the
-  corpus `CorpusManifest`/`CorpusItem`; see `docs/testing/evaluation-harness.md`. Corpus
+  corpus `CorpusManifest`/`CorpusItem`, and `CorpusEvaluation` → `EvaluationReport`; see `docs/testing/evaluation-harness.md`. Corpus
   audio is never committed: `scripts/corpus.py` fetches it to `~/Library/Caches/LemmeTypeCorpus`).
   `EndToEndTests` drives recorder → pipeline → cleaner → delivery (and, for
   Epic 3, shortcut → context reader → formatter/rewriter → delivery) with

@@ -10,7 +10,7 @@ IOS_XCODEBUILD := xcodebuild -project $(PROJECT) -scheme LemmeTypeiOS -destinati
 XCODEBUILD  := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED)
 SWIFT_DIRS  := App Packages/LemmeTypeKit/Sources Packages/LemmeTypeKit/Tests Packages/LemmeTypeKit/Package.swift
 
-.PHONY: bootstrap generate build build-ios test-ios test test-unit test-app test-ui lint format app-icons privacy-check network-check security-check privacy-docs-check l10n-check l10n-update docs-check corpus-check quality-gate release-build release-verify release-notarize release-script-tests ci run clean benchmark release-check
+.PHONY: bootstrap generate build build-ios test-ios test test-unit test-app test-ui lint format app-icons privacy-check network-check security-check privacy-docs-check l10n-check l10n-update docs-check corpus-check evaluation-check evaluation quality-gate release-build release-verify release-notarize release-script-tests ci run clean benchmark release-check
 
 bootstrap: ## Verify required tools are installed
 	@command -v xcodegen >/dev/null || { echo "Missing xcodegen: brew install xcodegen"; exit 1; }
@@ -75,6 +75,12 @@ docs-check: ## Fail if the release and support documents point at something that
 corpus-check: ## Corpus script tests and the committed corpus manifests (no audio needed)
 	python3 -I scripts/tests/test-corpus.py
 	python3 -I scripts/corpus.py verify docs/testing/corpus/*.json
+
+evaluation-check: ## Evaluation report script tests (fixtures only; no engine or audio needed)
+	python3 -I scripts/tests/test-evaluation-report.py
+
+evaluation: ## Corpus evaluation with real Whisper models + reports (not CI; BASELINE=path compares)
+	scripts/run-evaluation.sh $(if $(BASELINE),--baseline $(BASELINE))
 
 quality-gate: ## Every automated check with one summary (UI=1 adds the UI tests)
 	scripts/tests/test-quality-gate.sh
