@@ -110,29 +110,44 @@ public struct ModelAsset: Equatable, Sendable, Identifiable {
     public var requiredFreeBytes: Int64 { downloadBytes + max(downloadBytes / 10, 100_000_000) }
 }
 
-/// What a Mac needs to run a model well.
+/// What a device needs to run a model well. A Mac is judged by bytes of
+/// physical memory; an iPhone or iPad by the table in ``handheld``, where a
+/// device class missing from it cannot run the model at all.
 public struct HardwareRequirement: Equatable, Sendable {
     public let requiresAppleSilicon: Bool
     public let minimumMemoryBytes: UInt64
     /// Below this the model runs but competes with other apps for memory.
     public let recommendedMemoryBytes: UInt64
+    /// Requirements on iPhone and iPad (E8-S5); empty means not offered there.
+    public let handheld: [DeviceClass: HandheldRequirement]
 
-    public init(requiresAppleSilicon: Bool, minimumMemoryBytes: UInt64, recommendedMemoryBytes: UInt64? = nil) {
+    public init(
+        requiresAppleSilicon: Bool, minimumMemoryBytes: UInt64, recommendedMemoryBytes: UInt64? = nil,
+        handheld: [DeviceClass: HandheldRequirement] = [:]
+    ) {
         self.requiresAppleSilicon = requiresAppleSilicon
         self.minimumMemoryBytes = minimumMemoryBytes
         self.recommendedMemoryBytes = max(minimumMemoryBytes, recommendedMemoryBytes ?? minimumMemoryBytes)
+        self.handheld = handheld
     }
 
-    /// The reason this Mac cannot run the model, if any.
+    /// The reason this device cannot run the model, if any.
     public func unsupportedReason(for hardware: HardwareProfile) -> UnsupportedReason? {
+        if hardware.deviceClass.isHandheld {
+            guard let need = handheld[hardware.deviceClass] else { return .hardware }
+            return hardware.nominalMemoryGigabytes < need.minimumGigabytes ? .insufficientMemory : nil
+        }
         if requiresAppleSilicon && !hardware.isAppleSilicon { return .hardware }
         if hardware.physicalMemoryBytes < minimumMemoryBytes { return .insufficientMemory }
         return nil
     }
 
-    /// How well this Mac suits the model (E5-S1).
+    /// How well this device suits the model (E5-S1, E8-S5).
     public func fit(for hardware: HardwareProfile) -> ModelFit {
         if let reason = unsupportedReason(for: hardware) { return .unsupported(reason) }
+        if hardware.deviceClass.isHandheld, let need = handheld[hardware.deviceClass] {
+            return hardware.nominalMemoryGigabytes < need.recommendedGigabytes ? .supported : .recommended
+        }
         return hardware.physicalMemoryBytes < recommendedMemoryBytes ? .supported : .recommended
     }
 }
@@ -160,14 +175,25 @@ public enum ModelFit: Equatable, Sendable {
     }
 }
 
-/// The facts about this Mac that model compatibility depends on.
+/// The facts about this device that model compatibility depends on.
 public struct HardwareProfile: Equatable, Sendable {
     public let isAppleSilicon: Bool
     public let physicalMemoryBytes: UInt64
+    public let deviceClass: DeviceClass
 
-    public init(isAppleSilicon: Bool, physicalMemoryBytes: UInt64) {
+    public init(isAppleSilicon: Bool, physicalMemoryBytes: UInt64, deviceClass: DeviceClass = .mac) {
         self.isAppleSilicon = isAppleSilicon
         self.physicalMemoryBytes = physicalMemoryBytes
+        self.deviceClass = deviceClass
+    }
+
+    /// The memory the device is sold with. iPhones and iPads report a little
+    /// less than that (a "6 GB" phone shows about 5.6 GiB), so the reported
+    /// amount snaps to the next standard size within a 3 % tolerance.
+    public var nominalMemoryGigabytes: Int {
+        let reported = Double(physicalMemoryBytes) / 1_073_741_824
+        let standard = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256]
+        return standard.first { Double($0) >= reported * 0.97 } ?? Int(reported.rounded(.up))
     }
 
     public static var current: HardwareProfile {
@@ -177,7 +203,8 @@ public struct HardwareProfile: Equatable, Sendable {
             let appleSilicon = false
         #endif
         return HardwareProfile(
-            isAppleSilicon: appleSilicon, physicalMemoryBytes: ProcessInfo.processInfo.physicalMemory)
+            isAppleSilicon: appleSilicon, physicalMemoryBytes: ProcessInfo.processInfo.physicalMemory,
+            deviceClass: .detect(machineIdentifier: DeviceClass.currentMachineIdentifier()))
     }
 }
 

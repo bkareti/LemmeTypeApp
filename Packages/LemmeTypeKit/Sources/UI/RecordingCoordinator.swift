@@ -66,6 +66,9 @@ public final class RecordingCoordinator {
     let failureDisplay: Duration
     let attentionDisplay: Duration
     let diagnostics: any DiagnosticsRecording
+    /// How long a recording may run (E8-S4); none on the Mac.
+    let limits: RecordingLimits
+    var limitTask: Task<Void, Never>?
     /// The personalization library to capture when a recording starts (E4-S2).
     let personalization: @MainActor () -> PersonalizationLibrary
     /// Loads and unloads models around sessions (E5-S4); see `RecordingCoordinator+Residency`.
@@ -100,8 +103,10 @@ public final class RecordingCoordinator {
         attentionDisplay: Duration = .seconds(120),
         personalization: @escaping @MainActor () -> PersonalizationLibrary = { .empty },
         residency: (any ModelResidencyManaging)? = nil,
-        diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
+        diagnostics: any DiagnosticsRecording = DiscardingDiagnostics(),
+        limits: RecordingLimits = .none
     ) {
+        self.limits = limits
         self.residency = residency
         self.diagnostics = diagnostics
         self.personalization = personalization
@@ -208,6 +213,7 @@ public final class RecordingCoordinator {
             }
             recordingStartedAt = Date()
             markResidencyBusy(warmingUp: true)
+            startLimitTimer()
             sync()
             feedback.play(.start)
             feedback.announce(startAnnouncement(purpose: purpose, context: target?.context))
@@ -234,6 +240,7 @@ public final class RecordingCoordinator {
 
     private func stop() async {
         guard machine.handle(.stopRequested) else { return }
+        cancelLimitTimer()
         level = 0
         sync()
         do {
@@ -254,6 +261,7 @@ public final class RecordingCoordinator {
 
     private func cancel() async {
         guard machine.handle(.cancel) else { return }
+        cancelLimitTimer()
         stopProcessing()
         await capture.cancel()
         discardSession()
@@ -265,6 +273,7 @@ public final class RecordingCoordinator {
 
     private func fail(_ error: AudioCaptureError) async {
         guard machine.handle(.fail(error)) else { return }
+        cancelLimitTimer()
         stopProcessing()
         await capture.cancel()  // releases the microphone and deletes partial audio
         discardSession()
@@ -336,7 +345,7 @@ extension RecordingCoordinator {
     /// (E9-S5). In memory only; cleared with the session.
     public var reviewText: String? {
         switch attention {
-        case .reviewTranslation, .reviewRewrite: pendingTranscript
+        case .reviewTranslation, .reviewRewrite, .reviewText: pendingTranscript
         default: nil
         }
     }

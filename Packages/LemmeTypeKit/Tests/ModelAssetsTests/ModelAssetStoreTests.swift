@@ -376,3 +376,22 @@ final class CountingDiagnostics: DiagnosticsRecording {
 
     func count(of name: String) -> Int { names.withLock { $0.filter { $0 == name }.count } }
 }
+
+/// E8-S5: downloaded models are never part of an iCloud or device backup.
+struct ModelBackupExclusionTests {
+    @Test func modelDirectoriesAreExcludedFromBackup() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("LemmeTypeTests-ModelBackup-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let layout = ModelStorageLayout(root: root)
+        let asset = try #require(ModelCatalog.asset(.whisperBaseEnglish))
+
+        try layout.createDirectory(layout.stagingDirectory(asset))
+        try layout.createDirectory(layout.activeDirectory(asset))
+
+        for directory in [layout.stagingDirectory(asset), layout.activeDirectory(asset)] {
+            let values = try directory.resourceValues(forKeys: [.isExcludedFromBackupKey])
+            #expect(values.isExcludedFromBackup == true)
+        }
+    }
+}

@@ -1,102 +1,106 @@
-import SwiftUI
+#if os(macOS)
+    import SwiftUI
 
-/// Root of the settings window.
-public struct SettingsView: View {
-    private let general: GeneralSettingsModel
-    private let updates: UpdatesSettingsModel
-    private let about: AboutModel
-    private let dictation: DictationSettingsModel
-    private let shortcut: ShortcutSettingsModel
-    private let context: ContextSettingsModel
-    private let personalization: PersonalizationModel
-    private let modes: ModesSettingsModel
-    private let models: ModelsSettingsModel
-    private let audio: AudioSettingsModel
-    private let permissions: PermissionsModel
-    private let history: HistorySettingsModel
-    private let privacy: PrivacyOverviewModel
-    private let diagnostics: DiagnosticsModel
-    @Bindable private var navigation: SettingsNavigation
+    /// Root of the settings window.
+    public struct SettingsView: View {
+        private let general: GeneralSettingsModel
+        private let updates: UpdatesSettingsModel
+        private let about: AboutModel
+        private let dictation: DictationSettingsModel
+        private let shortcut: ShortcutSettingsModel
+        private let context: ContextSettingsModel
+        private let personalization: PersonalizationModel
+        private let modes: ModesSettingsModel
+        private let models: ModelsSettingsModel
+        private let audio: AudioSettingsModel
+        private let permissions: PermissionsModel
+        private let history: HistorySettingsModel
+        private let privacy: PrivacyOverviewModel
+        private let diagnostics: DiagnosticsModel
+        @Bindable private var navigation: SettingsNavigation
 
-    public init(
-        general: GeneralSettingsModel,
-        updates: UpdatesSettingsModel,
-        about: AboutModel,
-        dictation: DictationSettingsModel,
-        shortcut: ShortcutSettingsModel,
-        context: ContextSettingsModel,
-        personalization: PersonalizationModel,
-        modes: ModesSettingsModel,
-        models: ModelsSettingsModel,
-        audio: AudioSettingsModel,
-        permissions: PermissionsModel,
-        history: HistorySettingsModel,
-        privacy: PrivacyOverviewModel,
-        diagnostics: DiagnosticsModel,
-        navigation: SettingsNavigation
-    ) {
-        self.general = general
-        self.updates = updates
-        self.about = about
-        self.dictation = dictation
-        self.shortcut = shortcut
-        self.context = context
-        self.personalization = personalization
-        self.modes = modes
-        self.models = models
-        self.audio = audio
-        self.permissions = permissions
-        self.history = history
-        self.privacy = privacy
-        self.diagnostics = diagnostics
-        self.navigation = navigation
-    }
+        public init(
+            general: GeneralSettingsModel,
+            updates: UpdatesSettingsModel,
+            about: AboutModel,
+            dictation: DictationSettingsModel,
+            shortcut: ShortcutSettingsModel,
+            context: ContextSettingsModel,
+            personalization: PersonalizationModel,
+            modes: ModesSettingsModel,
+            models: ModelsSettingsModel,
+            audio: AudioSettingsModel,
+            permissions: PermissionsModel,
+            history: HistorySettingsModel,
+            privacy: PrivacyOverviewModel,
+            diagnostics: DiagnosticsModel,
+            navigation: SettingsNavigation
+        ) {
+            self.general = general
+            self.updates = updates
+            self.about = about
+            self.dictation = dictation
+            self.shortcut = shortcut
+            self.context = context
+            self.personalization = personalization
+            self.modes = modes
+            self.models = models
+            self.audio = audio
+            self.permissions = permissions
+            self.history = history
+            self.privacy = privacy
+            self.diagnostics = diagnostics
+            self.navigation = navigation
+        }
 
-    public var body: some View {
-        TabView(selection: $navigation.selectedPane) {
-            Tab(String(localized: "General", bundle: .module), systemImage: "gearshape", value: .general) {
-                GeneralSettingsView(model: general, updates: updates, about: about)
+        public var body: some View {
+            TabView(selection: $navigation.selectedPane) {
+                Tab(String(localized: "General", bundle: .module), systemImage: "gearshape", value: .general) {
+                    GeneralSettingsView(model: general, updates: updates, about: about)
+                }
+                Tab(String(localized: "Dictation", bundle: .module), systemImage: "waveform", value: .dictation) {
+                    DictationTabView(
+                        dictation: dictation, personalization: personalization, modes: modes, models: models)
+                }
+                Tab(String(localized: "Shortcut", bundle: .module), systemImage: "keyboard", value: .shortcut) {
+                    ShortcutSettingsView(model: shortcut)
+                }
+                Tab(String(localized: "Context", bundle: .module), systemImage: "text.cursor", value: .context) {
+                    ContextSettingsView(model: context, shortcut: shortcut)
+                }
+                Tab(String(localized: "Audio", bundle: .module), systemImage: "mic", value: .audio) {
+                    AudioSettingsView(model: audio)
+                }
+                Tab(
+                    String(localized: "Permissions", bundle: .module),
+                    systemImage: "lock.shield",
+                    value: SettingsNavigation.Pane.permissions
+                ) {
+                    PermissionsSettingsView(model: permissions)
+                }
+                Tab(
+                    String(localized: "Privacy", bundle: .module, comment: "Noun: the settings pane about data use"),
+                    systemImage: "hand.raised",
+                    value: SettingsNavigation.Pane.privacy
+                ) {
+                    PrivacySettingsView(
+                        history: history, overview: privacy, openContextSettings: { navigation.selectedPane = .context }
+                    )
+                }
+                Tab(
+                    String(localized: "Diagnostics", bundle: .module),
+                    systemImage: "stethoscope",
+                    value: SettingsNavigation.Pane.diagnostics
+                ) {
+                    DiagnosticsSettingsView(model: diagnostics)
+                }
             }
-            Tab(String(localized: "Dictation", bundle: .module), systemImage: "waveform", value: .dictation) {
-                DictationTabView(dictation: dictation, personalization: personalization, modes: modes, models: models)
-            }
-            Tab(String(localized: "Shortcut", bundle: .module), systemImage: "keyboard", value: .shortcut) {
-                ShortcutSettingsView(model: shortcut)
-            }
-            Tab(String(localized: "Context", bundle: .module), systemImage: "text.cursor", value: .context) {
-                ContextSettingsView(model: context, shortcut: shortcut)
-            }
-            Tab(String(localized: "Audio", bundle: .module), systemImage: "mic", value: .audio) {
-                AudioSettingsView(model: audio)
-            }
-            Tab(
-                String(localized: "Permissions", bundle: .module),
-                systemImage: "lock.shield",
-                value: SettingsNavigation.Pane.permissions
-            ) {
-                PermissionsSettingsView(model: permissions)
-            }
-            Tab(
-                String(localized: "Privacy", bundle: .module, comment: "Noun: the settings pane about data use"),
-                systemImage: "hand.raised",
-                value: SettingsNavigation.Pane.privacy
-            ) {
-                PrivacySettingsView(
-                    history: history, overview: privacy, openContextSettings: { navigation.selectedPane = .context })
-            }
-            Tab(
-                String(localized: "Diagnostics", bundle: .module),
-                systemImage: "stethoscope",
-                value: SettingsNavigation.Pane.diagnostics
-            ) {
-                DiagnosticsSettingsView(model: diagnostics)
+            .frame(width: 560, height: 460)
+            .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                general.refresh()
+                permissions.refresh()
+                dictation.refreshInBackground()
             }
         }
-        .frame(width: 560, height: 460)
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            general.refresh()
-            permissions.refresh()
-            dictation.refreshInBackground()
-        }
     }
-}
+#endif

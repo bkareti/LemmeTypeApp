@@ -236,3 +236,20 @@ struct AudioLevelMeterTests {
         #expect(AudioLevelMeter.level(of: [Float](repeating: 0.001, count: 10)) == 0)  // −60 dBFS
     }
 }
+
+/// E8-S4: recordings are never part of an iCloud or device backup.
+struct RecordingBackupExclusionTests {
+    @Test func theSessionDirectoryIsExcludedFromBackupAndPrivate() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("LemmeTypeTests-RecordingBackup-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let writer = try AudioSessionStorage(directory: directory).makeWriter()
+        writer.discard()
+
+        let values = try directory.resourceValues(forKeys: [.isExcludedFromBackupKey])
+        #expect(values.isExcludedFromBackup == true)
+        let permissions = try FileManager.default.attributesOfItem(atPath: directory.path)[.posixPermissions] as? Int
+        #expect(permissions == 0o700)
+    }
+}

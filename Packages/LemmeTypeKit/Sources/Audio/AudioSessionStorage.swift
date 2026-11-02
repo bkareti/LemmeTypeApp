@@ -27,12 +27,22 @@ public struct AudioSessionStorage: Sendable {
                 attributes: [.posixPermissions: 0o700]
             )
             try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.path)
+            Self.excludeFromBackup(directory)
             let url = directory.appendingPathComponent(UUID().uuidString).appendingPathExtension("caf")
             return try AudioSessionWriter(url: url)
         } catch {
             Log.audio.error("Could not create session recording")
             throw .storageFailure
         }
+    }
+
+    /// Recordings are never worth backing up; excluding the directory keeps them out of
+    /// iCloud and device backups (E8-S4). Best effort: a failure leaves the default.
+    private static func excludeFromBackup(_ directory: URL) {
+        var url = directory
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try? url.setResourceValues(values)
     }
 
     /// Deletes every leftover recording.

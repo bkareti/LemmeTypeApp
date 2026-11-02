@@ -41,6 +41,10 @@ extension DictationIssue {
             String(
                 localized: "Read the translation. Nothing is inserted until you choose Insert or Copy.",
                 bundle: .module)
+        case .reviewText:
+            String(
+                localized: "Read your dictation. It is copied only when you choose Copy, and never sent.",
+                bundle: .module)
         case .reviewRewrite(let notice):
             notice?.userMessage
                 ?? String(

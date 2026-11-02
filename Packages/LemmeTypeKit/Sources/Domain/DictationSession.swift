@@ -152,6 +152,9 @@ public enum DictationIssue: Equatable, Sendable {
     /// A rewrite in the chosen tone and format to read before it is inserted
     /// or copied; `notice` is set when the rewrite did not apply (E10-S4).
     case reviewRewrite(RewriteNotice?)
+    /// Plain dictated text to read before it is copied; only on a platform that
+    /// cannot insert into other apps (E8-S6).
+    case reviewText
 
     /// Stable lowercase name for diagnostics.
     public var identifier: String {
@@ -166,6 +169,7 @@ public enum DictationIssue: Equatable, Sendable {
         case .languageUnavailable(let readiness): "language.\(readiness.identifier)"
         case .reviewTranslation: "review.translation"
         case .reviewRewrite(let notice): notice.map { "review.\($0.identifier)" } ?? "review.rewrite"
+        case .reviewText: "review.text"
         }
     }
 }
@@ -215,8 +219,8 @@ extension DictationIssue {
             return [.discard]
         case .recognitionFailed(.languageUncertain), .languageUnavailable, .reviewTranslation:
             return languageActions
-        case .reviewRewrite(let notice):
-            return Self.rewriteReviewActions(notice)
+        case .reviewRewrite, .reviewText:
+            return reviewActions
         case .recognitionFailed(let error) where error.isRetryable:
             return [.retry] + switchEngine + [.saveAudio, .discard]
         case .recognitionFailed, .engineUnavailable, .noEngineAvailable:
@@ -230,6 +234,12 @@ extension DictationIssue {
         case .editingUnavailable, .rewriterUnavailable, .rewriteFailed:
             return editingActions
         }
+    }
+
+    /// Choices for a review of rewritten (E10-S4) or plain (E8-S6) text.
+    private var reviewActions: [DictationAction] {
+        if case .reviewRewrite(let notice) = self { return Self.rewriteReviewActions(notice) }
+        return [.copyText, .discard]
     }
 
     /// Choices for a rewrite review (E10-S4): Regenerate only when trying again can help.

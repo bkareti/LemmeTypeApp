@@ -74,6 +74,16 @@ struct ModelStorageLayout: Sendable {
         } catch {
             throw .storageFailure
         }
+        Self.excludeFromBackup(url)
+    }
+
+    /// Models are large and can be downloaded again, so they stay out of iCloud
+    /// and device backups (E8-S5). Best effort: a failure leaves the default.
+    static func excludeFromBackup(_ directory: URL) {
+        var url = directory
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try? url.setResourceValues(values)
     }
 
     func saveResumeData(_ data: Data?, for asset: ModelAsset, _ file: ModelFile) {
