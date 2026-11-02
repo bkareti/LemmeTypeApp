@@ -68,6 +68,8 @@ public final class RecordingCoordinator {
     let diagnostics: any DiagnosticsRecording
     /// How long a recording may run (E8-S4); none on the Mac.
     public let limits: RecordingLimits
+    /// The clock the time limit runs on; a test drives it by hand.
+    let limitClock: any Clock<Duration>
     var limitTask: Task<Void, Never>?
     /// The personalization library to capture when a recording starts (E4-S2).
     let personalization: @MainActor () -> PersonalizationLibrary
@@ -104,9 +106,11 @@ public final class RecordingCoordinator {
         personalization: @escaping @MainActor () -> PersonalizationLibrary = { .empty },
         residency: (any ModelResidencyManaging)? = nil,
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics(),
-        limits: RecordingLimits = .none
+        limits: RecordingLimits = .none,
+        limitClock: any Clock<Duration> = ContinuousClock()
     ) {
         self.limits = limits
+        self.limitClock = limitClock
         self.residency = residency
         self.diagnostics = diagnostics
         self.personalization = personalization

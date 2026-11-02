@@ -18,8 +18,9 @@ extension RecordingCoordinator {
     /// Stops the recording when it reaches its maximum duration (E8-S4).
     func startLimitTimer() {
         guard let maximum = limits.maximumDuration else { return }
+        let clock = limitClock
         limitTask = Task { [weak self] in
-            try? await Task.sleep(for: maximum)
+            try? await clock.sleep(for: maximum)
             guard !Task.isCancelled, let self, self.state == .recording else { return }
             self.feedback.announce(String(localized: "Recording stopped: time limit reached", bundle: .module))
             self.requestStop()
