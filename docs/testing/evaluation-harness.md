@@ -45,11 +45,25 @@ returns whole 1,024-frame blocks only. The last 8–64 ms of every dictation nev
 Whisper or Apple Speech. It now reads until the file ends; `AudioFileReaderTests` fails
 on the old code.
 
+## Corpus (Phase 2)
+
+The corpus is described in [corpus/README.md](corpus/README.md): sources and licences,
+review statuses, how to fetch and build it, and what it does not cover yet.
+
+| Part | What it does |
+|---|---|
+| `CorpusManifest` | Decodes `docs/testing/corpus/*.json`, reports every broken rule (`problems()`), and turns a manifest into `CorpusItem`s after checking every recording's SHA-256. `unverified` cases are skipped unless asked for. |
+| `CorpusVariant` | Noise, clipping, padding, speed, and repeat, applied at run time to every n-th recording; the reference carries over. |
+| `CorpusItem` | One run: a recording, a generated no-speech clip in one language, or a variant. `run(with:workDirectory:)` makes its audio, runs it through `EvaluationRunner`, and deletes what it made. |
+| `scripts/corpus.py` | `fetch` (pinned FLEURS revision and checksums; prints the plan unless `--yes`), `build-fleurs` (200 per language, English references joined by sentence id), and `verify`. |
+
+Tests: `CorpusManifestTests` (EndToEndTests) and `scripts/tests/test-corpus.py`
+(`make corpus-check`).
+
 ## Next phases
 
 | Phase | Scope |
 |---|---|
-| 2. Corpus | A manifest in the repository (id, licence, source, SHA-256, human references, review status) and a fetch-and-verify script that keeps audio outside the repository. Candidate source: Google FLEURS (CC BY 4.0) for English, Hindi, Telugu, Kannada, and Tamil. Each licence is confirmed before use. |
 | 3. Reports | Per-case JSON, JUnit XML, a self-contained HTML dashboard, and a baseline comparison. |
 | 4. Modes and translation | Exact, Clean, Message, translation (chrF against the human English reference, plus number and negation checks), and style. |
 | 5. iOS | XCUITests for permission denial, interruptions, background, time limit, copy, and settings, and an on-device benchmark entry point. |

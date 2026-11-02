@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "name": "variants",
+  "variants": [
+    { "id": "noise-snr20", "transform": "noise", "snrDecibels": 20, "seed": 7, "sampleEvery": 4 },
+    { "id": "noise-snr10", "transform": "noise", "snrDecibels": 10, "seed": 8, "sampleEvery": 4 },
+    { "id": "noise-snr5", "transform": "noise", "snrDecibels": 5, "seed": 9, "sampleEvery": 8 },
+    { "id": "clipped", "transform": "clip", "gain": 8, "sampleEvery": 8 },
+    { "id": "late-start-long-pause", "transform": "pad", "leading": 1, "trailing": 3, "sampleEvery": 8 },
+    { "id": "slower", "transform": "speed", "factor": 0.9, "sampleEvery": 8 },
+    { "id": "faster", "transform": "speed", "factor": 1.1, "sampleEvery": 8 },
+    { "id": "long-dictation", "transform": "repeat", "count": 3, "gap": 1, "sampleEvery": 20 }
+  ]
+}
