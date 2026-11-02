@@ -18,12 +18,14 @@
             }
         }
 
+        /// - `mode`: a built-in dictation mode or one with a style (which needs `rewriter`).
         /// - `languages`: only items in these languages (BCP 47 base, such as `hi`), or all when `nil`.
         /// - `progress`: called after each item with the number done and the total.
         public static func run(
             engine: any SpeechRecognitionEngine, selections: [Selection], task: RecognitionTask = .transcribe,
-            writingMode: WritingMode = .clean, label: String? = nil, languages: Set<String>? = nil,
+            mode: DictationMode = .clean, label: String? = nil, languages: Set<String>? = nil,
             workDirectory: URL, hardware: HardwareProfile = .current, reviewsEveryResult: Bool = false,
+            rewriter: (any TextRewriting)? = nil,
             progress: @Sendable (Int, Int) -> Void = { _, _ in }
         ) async throws -> EvaluationReport {
             var corpora: [EvaluationReport.Corpus] = []
@@ -55,13 +57,13 @@
             let warmUp = (ContinuousClock.now - warmUpStart).benchmarkSeconds
             let runner = EvaluationRunner(
                 engine: engine, workDirectory: workDirectory.appendingPathComponent("sessions", isDirectory: true),
-                hardware: hardware, reviewsEveryResult: reviewsEveryResult)
+                hardware: hardware, reviewsEveryResult: reviewsEveryResult, rewriter: rewriter)
 
             var runs: [EvaluationRun] = []
             runs.reserveCapacity(items.count)
             for (index, item) in items.enumerated() {
                 let result = try await item.run(
-                    with: runner, workDirectory: workDirectory, task: task, writingMode: writingMode)
+                    with: runner, workDirectory: workDirectory, task: task, mode: mode)
                 runs.append(
                     EvaluationRun(
                         id: item.id, baseID: item.baseID, variantID: item.variantID, source: item.source,
@@ -72,7 +74,8 @@
 
             return EvaluationReport(
                 schema: EvaluationReport.schemaVersion, label: label ?? engine.descriptor.id.rawValue,
-                engine: engine.descriptor.id.rawValue, task: task.rawValue, writingMode: writingMode.rawValue,
+                engine: engine.descriptor.id.rawValue, task: task.rawValue, mode: mode.id.rawValue,
+                writingMode: mode.writingMode.rawValue, style: mode.effectiveStyle.identifier,
                 date: Date(), operatingSystem: EvaluationHost.operatingSystem,
                 hardwareModel: EvaluationHost.hardwareModel(), physicalMemoryGB: EvaluationHost.physicalMemoryGB,
                 warmUpSeconds: warmUp,

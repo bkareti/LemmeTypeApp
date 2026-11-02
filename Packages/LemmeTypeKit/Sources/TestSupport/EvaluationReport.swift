@@ -8,7 +8,8 @@
     /// Metrics and identifiers only: no audio, no transcripts, no references.
     /// Case ids point into the committed corpus manifests.
     public struct EvaluationReport: Codable, Equatable, Sendable {
-        public static let schemaVersion = 1
+        /// 2: modes (`mode`, `style`), number-normalized words, translation and style scores.
+        public static let schemaVersion = 2
 
         /// Which manifest the runs came from, so a comparison knows it is like for like.
         public struct Corpus: Codable, Equatable, Sendable {
@@ -24,8 +25,12 @@
         public let engine: String
         /// `RecognitionTask` raw value.
         public let task: String
-        /// `WritingMode` raw value.
+        /// `DictationModeID` raw value.
+        public let mode: String
+        /// `WritingMode` raw value of the mode.
         public let writingMode: String
+        /// `StyleOptions.identifier` the mode runs (`none` for no rewrite).
+        public let style: String
         public let date: Date
         public let operatingSystem: String
         public let hardwareModel: String
@@ -38,7 +43,7 @@
         public let skipped: [String: Int]
         public let runs: [EvaluationRun]
 
-        public var fileName: String { "\(label)-\(task)-\(writingMode).json" }
+        public var fileName: String { "\(label)-\(task)-\(mode).json" }
 
         public func write(to directory: URL) throws -> URL {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

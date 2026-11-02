@@ -63,7 +63,8 @@ let package = Package(
         .testTarget(name: "AudioTests", dependencies: ["Audio", "Domain", "TestSupport"]),
         .testTarget(name: "PermissionsTests", dependencies: ["Permissions", "Domain"]),
         .testTarget(name: "LifecycleTests", dependencies: ["Lifecycle", "Domain"]),
-        .testTarget(name: "RecognitionTests", dependencies: ["Recognition", "Domain", "TestSupport"]),
+        // Editing: the opt-in corpus evaluation runs style modes with the on-device rewriter.
+        .testTarget(name: "RecognitionTests", dependencies: ["Recognition", "Editing", "Domain", "TestSupport"]),
         .testTarget(name: "ModelAssetsTests", dependencies: ["ModelAssets", "Domain"]),
         .testTarget(name: "DeliveryTests", dependencies: ["Delivery", "Domain", "TestSupport"]),
         .testTarget(name: "UpdatesTests", dependencies: ["Updates", "Domain", "Support", "TestSupport"]),

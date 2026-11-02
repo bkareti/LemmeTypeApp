@@ -4,6 +4,8 @@
 /// be written to a report.
 public struct TranscriptScore: Codable, Equatable, Sendable {
     public let words: EditAlignment
+    /// Words again after ``NumberNormalizer`` on both sides, so "1911" and "nineteen eleven" match.
+    public let numberNormalizedWords: EditAlignment
     public let characters: EditAlignment
     /// The reference has no speech (silence, noise only) but text came out.
     public let textWithoutSpeech: Bool
@@ -17,13 +19,18 @@ public struct TranscriptScore: Codable, Equatable, Sendable {
     static let longestLoopPhrase = 4
 
     public var wordErrorRate: Double { words.errorRate }
+    public var numberNormalizedWordErrorRate: Double { numberNormalizedWords.errorRate }
     public var characterErrorRate: Double { characters.errorRate }
     /// Words that were never said ÷ reference words.
     public var insertionRate: Double { words.insertionRate }
     public var hallucinated: Bool { textWithoutSpeech || repetitionLoop }
 
-    public init(words: EditAlignment, characters: EditAlignment, textWithoutSpeech: Bool, repetitionLoop: Bool) {
+    public init(
+        words: EditAlignment, numberNormalizedWords: EditAlignment, characters: EditAlignment,
+        textWithoutSpeech: Bool, repetitionLoop: Bool
+    ) {
         self.words = words
+        self.numberNormalizedWords = numberNormalizedWords
         self.characters = characters
         self.textWithoutSpeech = textWithoutSpeech
         self.repetitionLoop = repetitionLoop
@@ -36,6 +43,8 @@ public struct TranscriptScore: Codable, Equatable, Sendable {
         let hypothesisRepeats = longestRepeat(in: actual)
         return TranscriptScore(
             words: EditAlignment.align(reference: expected, hypothesis: actual),
+            numberNormalizedWords: WordErrorRate.alignment(
+                reference: NumberNormalizer.normalize(reference), hypothesis: NumberNormalizer.normalize(hypothesis)),
             characters: CharacterErrorRate.alignment(reference: reference, hypothesis: hypothesis),
             textWithoutSpeech: expected.isEmpty && !actual.isEmpty,
             repetitionLoop: hypothesisRepeats >= minimumLoopRepeats && hypothesisRepeats > longestRepeat(in: expected))

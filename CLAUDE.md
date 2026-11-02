@@ -76,7 +76,8 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   `Lifecycle` / `Recognition` / `ModelAssets` / `Delivery` / `Editing` / `Updates` (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
   and `TestSupport` (fakes, plus the Debug-only `DictationBenchmark` and evaluation
   harness: `EvaluationRunner`, `FileAudioSource`, `AudioClip`, `TranscriptScore`, and the
-  corpus `CorpusManifest`/`CorpusItem`, and `CorpusEvaluation` → `EvaluationReport`; see `docs/testing/evaluation-harness.md`. Corpus
+  corpus `CorpusManifest`/`CorpusItem`, `CorpusEvaluation` → `EvaluationReport`, and the
+  mode scores `NumberNormalizer`, `TranslationScore` (chrF + `PreservationChecker`), `StyleResult`; see `docs/testing/evaluation-harness.md`. Corpus
   audio is never committed: `scripts/corpus.py` fetches it to `~/Library/Caches/LemmeTypeCorpus`).
   `EndToEndTests` drives recorder → pipeline → cleaner → delivery (and, for
   Epic 3, shortcut → context reader → formatter/rewriter → delivery) with
