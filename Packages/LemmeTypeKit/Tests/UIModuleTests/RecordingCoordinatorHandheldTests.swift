@@ -12,6 +12,8 @@ struct RecordingCoordinatorHandheldTests {
     private let source = FakeAudioSource()
     private let feedback = FakeFeedback()
     private let processor = RecordingSpy()
+    /// The time limit runs on this clock, so no test waits on real time.
+    private let clock = ManualClock()
     private let storage = AudioSessionStorage(
         directory: FileManager.default.temporaryDirectory
             .appendingPathComponent("LemmeTypeTests-HandheldCoordinator-\(UUID().uuidString)", isDirectory: true))
@@ -25,7 +27,8 @@ struct RecordingCoordinatorHandheldTests {
             preferences: FakePreferences(),
             finishedDisplay: .milliseconds(50),
             failureDisplay: .milliseconds(50),
-            limits: limits
+            limits: limits,
+            limitClock: clock
         )
     }
 
@@ -33,14 +36,19 @@ struct RecordingCoordinatorHandheldTests {
         (try? FileManager.default.contentsOfDirectory(at: storage.directory, includingPropertiesForKeys: nil)) ?? []
     }
 
-    @Test func recordingStopsAndIsProcessedWhenTheTimeLimitIsReached() async throws {
-        let coordinator = makeCoordinator(limits: RecordingLimits(maximumDuration: .milliseconds(80)))
+    @Test func recordingStopsAndIsProcessedWhenTheTimeLimitIsReached() async {
+        let coordinator = makeCoordinator(limits: RecordingLimits(maximumDuration: .seconds(300)))
         coordinator.handle(.start(nil))
         await coordinator.settle()
         #expect(coordinator.state == .recording)
         source.emitTone(seconds: 0.3)
+        await clock.waitForSleepers()
+        let timer = coordinator.limitTask
 
-        try await Task.sleep(for: .milliseconds(250))
+        clock.advance(by: .seconds(299))
+        #expect(coordinator.state == .recording)
+        clock.advance(by: .seconds(1))
+        await timer?.value
         await coordinator.settle()
 
         #expect(!source.isRunning)
@@ -48,28 +56,32 @@ struct RecordingCoordinatorHandheldTests {
         #expect(feedback.announcements.contains("Recording stopped: time limit reached"))
     }
 
-    @Test func noLimitMeansTheRecordingKeepsRunning() async throws {
+    @Test func noLimitMeansTheRecordingKeepsRunning() async {
         let coordinator = makeCoordinator()
         coordinator.handle(.start(nil))
         await coordinator.settle()
 
-        try await Task.sleep(for: .milliseconds(150))
-
+        #expect(coordinator.limitTask == nil)
+        #expect(clock.sleeperCount == 0)
         #expect(coordinator.state == .recording)
         #expect(source.isRunning)
         coordinator.requestCancel()
         await coordinator.settle()
     }
 
-    @Test func stoppingBeforeTheLimitDoesNotStopAgain() async throws {
-        let coordinator = makeCoordinator(limits: RecordingLimits(maximumDuration: .milliseconds(150)))
+    @Test func stoppingBeforeTheLimitDoesNotStopAgain() async {
+        let coordinator = makeCoordinator(limits: RecordingLimits(maximumDuration: .seconds(300)))
         coordinator.handle(.start(nil))
         await coordinator.settle()
+        await clock.waitForSleepers()
+        let timer = coordinator.limitTask
         source.emitTone(seconds: 0.2)
         coordinator.requestStop()
         await coordinator.settle()
 
-        try await Task.sleep(for: .milliseconds(250))
+        #expect(clock.sleeperCount == 0)  // stopping cancelled the timer
+        clock.advance(by: .seconds(600))
+        await timer?.value
         await coordinator.settle()
 
         #expect(processor.consumed.count == 1)
