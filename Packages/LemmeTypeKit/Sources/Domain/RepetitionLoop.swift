@@ -1,7 +1,7 @@
 import Foundation
 
 /// The decoding loop speech models fall into: the same phrase written again
-/// and again, far more often than anyone says it (#136). Pure.
+/// and again, far more often than anyone says it (ADR 0028). Pure.
 ///
 /// Words are compared without case and without the punctuation around them,
 /// so "Thank you. Thank you. Thank you." is one phrase repeated.

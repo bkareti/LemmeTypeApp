@@ -184,6 +184,39 @@ iPhone by the catalog (it is offered on iPads with 8 GB or more), so use Tiny or
 The device path (`--device`) uses `xcrun devicectl` and the signing set up in Xcode. It has not
 been run yet; only the Simulator path has (see the PR).
 
+## Decoding diagnostics
+
+`WhisperDecodingDiagnosticsTests` (RecognitionTests, opt-in, macOS) explains *why* a run
+scored as it did. It runs corpus cases through the real pipeline with one or more
+`WhisperDecoding` settings and writes one JSON line per run to
+`build/evaluation/diagnostics/<model>-<setting>.jsonl`: the run's scores plus what
+whisper.cpp did — segments, text tokens, the most tokens in one segment, whisper.cpp's and
+the start-of-transcript no-speech probability per window, mean log probability, the share
+of letters in the expected script and in Latin, the detected language and the requested
+language's probability, the longest run of a repeated phrase, decode time, and the word
+and character errors again after folding Hindi spelling variants (nukta, chandrabindu).
+Numbers only; the decoded text is held in memory to score it and never written.
+
+```bash
+LEMMETYPE_WHISPER_DIAGNOSTICS=1 LEMMETYPE_CORPUS_ROOT=… \
+LEMMETYPE_EVALUATION_LANGUAGES=hi,te LEMMETYPE_DIAGNOSTICS_MANIFESTS=fleurs.json \
+LEMMETYPE_DIAGNOSTICS_EVERY=10 LEMMETYPE_DIAGNOSTICS_DECODING=shipped,whisper.cpp \
+swift test --package-path Packages/LemmeTypeKit --filter WhisperDecodingDiagnosticsTests
+```
+
+| Variable | Meaning |
+|---|---|
+| `LEMMETYPE_DIAGNOSTICS_DECODING` | Settings to compare: `shipped` (default), `whisper.cpp` (the library's defaults), `no-fallback`, `suppress-nst`, `no-fallback-nst`, `nst-inc4`, `nst-best5`, `nst-beam5` |
+| `LEMMETYPE_DIAGNOSTICS_MANIFESTS` | `fleurs.json`, `edge-cases.json`, or both (default) |
+| `LEMMETYPE_DIAGNOSTICS_EVERY` | Every n-th item only, for a quick sample |
+| `LEMMETYPE_DIAGNOSTICS_MATCH` | Only ids containing this text, such as `long-dictation` |
+| `LEMMETYPE_DIAGNOSTICS_ENGLISH=1` | Also run the English benchmark (synthesized with `say`) with the same numbers |
+| `LEMMETYPE_EVALUATION_MODEL`, `LEMMETYPE_EVALUATION_LANGUAGES` | As for the evaluation |
+
+What it found on 2026-11-03 is in [ADR 0028](../decisions/0028-whisper-decoding-safeguards.md)
+(decoding safeguards) and the [language support matrix](language-support-matrix.md)
+(Telugu and Hindi with Whisper Small).
+
 ## Next phases
 
 | Phase | Scope |

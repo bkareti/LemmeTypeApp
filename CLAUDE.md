@@ -121,6 +121,12 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   `base.en`, Apple silicon with ≥ 8 GB only). Third-party notices live in
   `THIRD_PARTY_NOTICES.md` and `App/LemmeType/Credits.rtf` — update both.
   `scripts/run-recognition-benchmark.sh` runs the opt-in benchmark.
+  Decoding safeguards (ADR 0028): `WhisperDecoding` holds the whisper.cpp
+  settings (non-speech tokens suppressed, fallback at 0.4 and 0.8);
+  `NoSpeechGate` uses the start-of-transcript no-speech probability per window
+  (`WhisperModel.noSpeechProbabilities`; whisper.cpp's own is ~0 for multilingual
+  models); `RepetitionLoop` (Domain) cuts 4+ copies of a phrase.
+  `WhisperDecodingDiagnosticsTests` (opt-in) writes per-run decoding metrics.
 - Models: `ModelCatalog` (Domain) pins every downloadable file by URL, size,
   and SHA-256. `ModelAssetStore` (ModelAssets) stages, verifies, activates,
   and removes them; `URLSessionModelDownloader` is the only network code in
@@ -289,7 +295,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management; 0023 multilingual dictation; 0024 tone and style; 0025 privacy data and history; 0026 distribution and updates).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management; 0023 multilingual dictation; 0024 tone and style; 0025 privacy data and history; 0026 distribution and updates; 0027 iPhone and iPad companion; 0028 Whisper decoding safeguards).
 
 ## Planning documents
 

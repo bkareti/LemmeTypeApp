@@ -202,13 +202,24 @@ public actor WhisperEngine: SpeechRecognitionEngine {
         let samples = try AudioFileReader.readSamples(from: request.audio.fileURL)
         guard !samples.isEmpty else { throw .noSpeechDetected }
         guard !SpeechActivity.isSilent(samples) else { throw .silentAudio }
+        // Noise and tones end here rather than as invented text (ADR 0028, #135).
+        let noSpeech = try await Self.noSpeechProbabilities(samples, with: model, threads: threads)
+        if NoSpeechGate.skipsDecoding(noSpeech) {
+            Log.recognition.info("Whisper found no speech; windows=\(noSpeech.count, privacy: .public)")
+            throw .noSpeechDetected
+        }
         let language = try await Self.spokenLanguage(
             for: request.language, samples: samples, with: model, threads: threads)
         let inference = WhisperInference(
             language: language, task: request.task, prompt: Self.prompt(for: request.hints), threads: threads)
-        let segments = try await Self.transcribe(samples, with: model, inference: inference, updates: updates)
+        let decoded = try await Self.transcribe(samples, with: model, inference: inference, updates: updates)
         if Task.isCancelled { throw .cancelled }
-        // A decoding loop is cut back to one copy (#136).
+        if NoSpeechGate.dropsDecoded(decoded, windows: noSpeech) {
+            Log.recognition.info("Whisper text dropped as no speech; segments=\(decoded.count, privacy: .public)")
+            throw .noSpeechDetected
+        }
+        let segments = decoded.map(\.transcriptSegment)
+        // A decoding loop is cut back to one copy (ADR 0028, #136).
         let (text, loopCopies) = RepetitionLoop.collapse(
             segments.map(\.text).joined(separator: " ").split(whereSeparator: \.isWhitespace).joined(separator: " "))
         guard !text.isEmpty else { throw .noSpeechDetected }
@@ -312,7 +323,7 @@ public actor WhisperEngine: SpeechRecognitionEngine {
         with model: any WhisperModel,
         inference: WhisperInference,
         updates: @escaping @Sendable (RecognitionUpdate) -> Void
-    ) async throws(RecognitionError) -> [TranscriptSegment] {
+    ) async throws(RecognitionError) -> [WhisperSegment] {
         let abort = AbortFlag()
         let inference = Task.detached {
             try model.transcribe(
@@ -329,6 +340,24 @@ public actor WhisperEngine: SpeechRecognitionEngine {
         } catch {
             if Task.isCancelled || abort.isSet { throw .cancelled }
             throw error as? RecognitionError ?? .engineFailure(code: -1)
+        }
+    }
+}
+
+extension WhisperEngine {
+    /// The no-speech probability of each window, computed off the actor.
+    fileprivate static func noSpeechProbabilities(
+        _ samples: [Float], with model: any WhisperModel, threads: Int
+    ) async throws(RecognitionError) -> [Float] {
+        let check = Task.detached { try model.noSpeechProbabilities(samples, threads: threads) }
+        do {
+            return try await withTaskCancellationHandler {
+                try await check.value
+            } onCancel: {
+                check.cancel()
+            }
+        } catch {
+            throw Task.isCancelled ? .cancelled : (error as? RecognitionError ?? .engineFailure(code: -1))
         }
     }
 }
