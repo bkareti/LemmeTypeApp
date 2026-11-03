@@ -37,29 +37,32 @@ struct RecognitionBenchmarkTests {
         asset.id == .whisperBaseEnglish ? RecognitionEngineID.whisper.rawValue : asset.id.rawValue
     }
 
-    /// Every installed Whisper model: load time (`warmUpSeconds`), real-time
-    /// factor, memory (`peakMemoryIncreaseMB`), latency, and accuracy.
-    @Test func everyInstalledWhisperModel() async throws {
-        let installed = ModelCatalog.whisperModels.filter {
-            FileManager.default.fileExists(atPath: Self.modelURL(for: $0).path)
+    // `DictationBenchmark` speaks its corpus with `say`, so it runs on the Mac only.
+    #if os(macOS)
+        /// Every installed Whisper model: load time (`warmUpSeconds`), real-time
+        /// factor, memory (`peakMemoryIncreaseMB`), latency, and accuracy.
+        @Test func everyInstalledWhisperModel() async throws {
+            let installed = ModelCatalog.whisperModels.filter {
+                FileManager.default.fileExists(atPath: Self.modelURL(for: $0).path)
+            }
+            try #require(!installed.isEmpty, "Install a Whisper model first")
+            let corpus = try BenchmarkCorpus.load(
+                from: Self.repositoryRoot.appendingPathComponent("docs/testing/benchmark-corpus.json"))
+            for asset in installed {
+                let engine = WhisperEngine(
+                    assets: FixedModelLocation(url: Self.modelURL(for: asset)), hardware: .current,
+                    runtime: WhisperCppRuntime(),
+                    settings: { WhisperRunSettings(choice: .specific(asset.id)) })
+                let report = try await DictationBenchmark.run(
+                    engine: engine, corpus: corpus,
+                    workDirectory: FileManager.default.temporaryDirectory
+                        .appendingPathComponent("LemmeTypeTests-Benchmark-\(UUID().uuidString)", isDirectory: true),
+                    label: Self.label(for: asset))
+                try DictationBenchmark.write(report, to: Self.repositoryRoot.appendingPathComponent("build/benchmarks"))
+                #expect(report.sessions > 0)
+            }
         }
-        try #require(!installed.isEmpty, "Install a Whisper model first")
-        let corpus = try BenchmarkCorpus.load(
-            from: Self.repositoryRoot.appendingPathComponent("docs/testing/benchmark-corpus.json"))
-        for asset in installed {
-            let engine = WhisperEngine(
-                assets: FixedModelLocation(url: Self.modelURL(for: asset)), hardware: .current,
-                runtime: WhisperCppRuntime(),
-                settings: { WhisperRunSettings(choice: .specific(asset.id)) })
-            let report = try await DictationBenchmark.run(
-                engine: engine, corpus: corpus,
-                workDirectory: FileManager.default.temporaryDirectory
-                    .appendingPathComponent("LemmeTypeTests-Benchmark-\(UUID().uuidString)", isDirectory: true),
-                label: Self.label(for: asset))
-            try DictationBenchmark.write(report, to: Self.repositoryRoot.appendingPathComponent("build/benchmarks"))
-            #expect(report.sessions > 0)
-        }
-    }
+    #endif
 }
 
 /// Points an engine at a model file outside the managed store.

@@ -54,32 +54,35 @@ struct DiagnosticsCanaryTests {
 
     // MARK: Sessions
 
-    @Test func contextFormattingAndVoiceEditingLeaveNoCanary() async throws {
-        let sentence = FakeTextElement(
-            text: "\(Self.field) ", selection: TextSelection(location: Self.field.utf16.count + 1, length: 0))
-        let formatting = ContextEndToEndTests.Harness(
-            field: sentence, spoken: Self.spoken, bundleIdentifier: "com.example.canary-app-e5b7")
-        defer { formatting.cleanUp() }
-        await formatting.press(.defaultDictation)
-        #expect(sentence.text.contains(Self.spoken.lowercased()) || sentence.text.contains(Self.spoken))
-        let formattingEvents = formatting.diagnostics.snapshot()
-        Self.expectClean(formatting.report, "context formatting")
-        Self.expectClean(try Self.report(formattingEvents), "context formatting report")
-        Self.expectSafeNames(formattingEvents)
+    // macOS only: built on the Mac's shortcut and cursor-context harness.
+    #if os(macOS)
+        @Test func contextFormattingAndVoiceEditingLeaveNoCanary() async throws {
+            let sentence = FakeTextElement(
+                text: "\(Self.field) ", selection: TextSelection(location: Self.field.utf16.count + 1, length: 0))
+            let formatting = ContextEndToEndTests.Harness(
+                field: sentence, spoken: Self.spoken, bundleIdentifier: "com.example.canary-app-e5b7")
+            defer { formatting.cleanUp() }
+            await formatting.press(.defaultDictation)
+            #expect(sentence.text.contains(Self.spoken.lowercased()) || sentence.text.contains(Self.spoken))
+            let formattingEvents = formatting.diagnostics.snapshot()
+            Self.expectClean(formatting.report, "context formatting")
+            Self.expectClean(try Self.report(formattingEvents), "context formatting report")
+            Self.expectSafeNames(formattingEvents)
 
-        let selected = FakeTextElement(
-            text: "Please \(Self.selection) today.",
-            selection: TextSelection(location: 7, length: Self.selection.utf16.count))
-        let editing = ContextEndToEndTests.Harness(
-            field: selected, spoken: Self.spoken, rewriter: FakeTextRewriter(script: .text(Self.rewritten)))
-        defer { editing.cleanUp() }
-        await editing.press(.defaultVoiceEdit)
-        #expect(selected.text.contains(Self.rewritten), "the edit ran, so the canary was in play")
-        let editingEvents = editing.diagnostics.snapshot()
-        Self.expectClean(editing.report, "voice editing")
-        Self.expectClean(try Self.report(editingEvents), "voice editing report")
-        Self.expectSafeNames(editingEvents)
-    }
+            let selected = FakeTextElement(
+                text: "Please \(Self.selection) today.",
+                selection: TextSelection(location: 7, length: Self.selection.utf16.count))
+            let editing = ContextEndToEndTests.Harness(
+                field: selected, spoken: Self.spoken, rewriter: FakeTextRewriter(script: .text(Self.rewritten)))
+            defer { editing.cleanUp() }
+            await editing.press(.defaultVoiceEdit)
+            #expect(selected.text.contains(Self.rewritten), "the edit ran, so the canary was in play")
+            let editingEvents = editing.diagnostics.snapshot()
+            Self.expectClean(editing.report, "voice editing")
+            Self.expectClean(try Self.report(editingEvents), "voice editing report")
+            Self.expectSafeNames(editingEvents)
+        }
+    #endif
 
     @Test func rewriteTranslationAndHistoryLeaveNoCanary() async throws {
         let preferences = FakePreferences()
@@ -123,25 +126,30 @@ struct DiagnosticsCanaryTests {
 
     // MARK: Failure paths
 
-    @Test func failuresReportIdentifiersNotText() async throws {
-        let refusedField = FakeTextElement(
-            text: "Keep \(Self.selection).", selection: TextSelection(location: 5, length: Self.selection.utf16.count))
-        let refusal = ContextEndToEndTests.Harness(
-            field: refusedField, spoken: Self.spoken, rewriter: FakeTextRewriter(script: .failure(.refused)))
-        defer { refusal.cleanUp() }
-        await refusal.press(.defaultVoiceEdit)
-        #expect(refusal.coordinator.state == .needsAttention(.rewriteFailed(.refused)))
-        Self.expectClean(refusal.report, "rewriter refusal")
-        Self.expectClean(try Self.report(refusal.diagnostics.snapshot()), "refusal report")
+    // macOS only: built on the Mac's shortcut and cursor-context harness.
+    #if os(macOS)
+        @Test func failuresReportIdentifiersNotText() async throws {
+            let refusedField = FakeTextElement(
+                text: "Keep \(Self.selection).",
+                selection: TextSelection(location: 5, length: Self.selection.utf16.count))
+            let refusal = ContextEndToEndTests.Harness(
+                field: refusedField, spoken: Self.spoken, rewriter: FakeTextRewriter(script: .failure(.refused)))
+            defer { refusal.cleanUp() }
+            await refusal.press(.defaultVoiceEdit)
+            #expect(refusal.coordinator.state == .needsAttention(.rewriteFailed(.refused)))
+            Self.expectClean(refusal.report, "rewriter refusal")
+            Self.expectClean(try Self.report(refusal.diagnostics.snapshot()), "refusal report")
 
-        let moving = FakeTextElement(
-            text: "Alpha \(Self.field) gamma", selection: TextSelection(location: 6, length: Self.field.utf16.count))
-        let changed = ContextEndToEndTests.Harness(field: moving, spoken: Self.spoken)
-        defer { changed.cleanUp() }
-        await changed.press(.defaultVoiceEdit) { moving.select(TextSelection(location: 0, length: 5)) }
-        Self.expectClean(changed.report, "changed selection")
-        Self.expectClean(try Self.report(changed.diagnostics.snapshot()), "changed selection report")
-    }
+            let moving = FakeTextElement(
+                text: "Alpha \(Self.field) gamma", selection: TextSelection(location: 6, length: Self.field.utf16.count)
+            )
+            let changed = ContextEndToEndTests.Harness(field: moving, spoken: Self.spoken)
+            defer { changed.cleanUp() }
+            await changed.press(.defaultVoiceEdit) { moving.select(TextSelection(location: 0, length: 5)) }
+            Self.expectClean(changed.report, "changed selection")
+            Self.expectClean(try Self.report(changed.diagnostics.snapshot()), "changed selection report")
+        }
+    #endif
 
     @Test func errorIdentifiersAreSafe() {
         let identifiers = [

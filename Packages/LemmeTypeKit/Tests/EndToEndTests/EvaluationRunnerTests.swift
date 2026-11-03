@@ -54,19 +54,22 @@ struct EvaluationRunnerTests {
         #expect(workFiles().isEmpty)
     }
 
-    @Test(arguments: [WritingMode.exact, .clean])
-    func runsEachWritingMode(mode: WritingMode) async throws {
+    @Test(arguments: DictationMode.builtIns)
+    func runsEachBuiltInMode(mode: DictationMode) async throws {
         defer { try? FileManager.default.removeItem(at: root) }
         let url = try clip("m.wav")
         let runner = EvaluationRunner(engine: engine(.init(text: "um ship it")), workDirectory: work)
 
         let result = try await runner.run(
             EvaluationCase(id: "m", audioURL: url, language: "en-US", reference: "ship it", category: "filler"),
-            writingMode: mode)
+            mode: mode)
 
-        #expect(result.writingMode == mode.rawValue)
-        // Clean Writing removes the filler; Exact never changes words.
-        #expect(result.score.words.insertions == (mode == .exact ? 1 : 0))
+        #expect(result.mode == mode.id.rawValue)
+        #expect(result.writingMode == mode.writingMode.rawValue)
+        #expect(result.style == nil)
+        #expect(result.translation == nil)
+        // Clean Writing and Message remove the filler; Exact never changes words.
+        #expect(result.score.words.insertions == (mode.writingMode == .exact ? 1 : 0))
     }
 
     @Test func aTranslationIsScoredAgainstTheHumanEnglishReference() async throws {
@@ -82,11 +85,55 @@ struct EvaluationRunnerTests {
         #expect(result.outcome == "review.translation")
         #expect(result.producedText)
         #expect(result.score.wordErrorRate == 0)
+        let translation = try #require(result.translation)
+        #expect(translation.violations.isEmpty)
+        #expect(translation.chrF > 80)
         await #expect(throws: EvaluationError.missingEnglishReference(caseID: "hi-2")) {
             _ = try await runner.run(
                 EvaluationCase(id: "hi-2", audioURL: url, language: "hi", reference: "कल", category: "short"),
                 task: .translateToEnglish)
         }
+    }
+
+    @Test func aStyleModeIsScoredOnTheTextBeforeTheRewriteAndChecksTheStyle() async throws {
+        defer { try? FileManager.default.removeItem(at: root) }
+        let url = try clip("s.wav")
+        let rewriter = FakeTextRewriter(script: .text("- Ship it today"))
+        let runner = EvaluationRunner(
+            engine: engine(.init(text: "ship it today")), workDirectory: work, rewriter: rewriter)
+        let mode = DictationMode(
+            id: DictationModeID(rawValue: "style-bullets"), name: "Bullets", writingMode: .clean,
+            style: StyleOptions(format: .bulletList))
+
+        let result = try await runner.run(
+            EvaluationCase(id: "s", audioURL: url, language: "en-US", reference: "Ship it today.", category: "style"),
+            mode: mode)
+
+        #expect(result.outcome == "review")
+        #expect(result.mode == "style-bullets")
+        #expect(result.score.wordErrorRate == 0)
+        let style = try #require(result.style)
+        #expect(style.applied)
+        #expect(style.format == .followed)
+        #expect(rewriter.rewriteCount == 1)
+    }
+
+    @Test func aStyleModeWithoutARewriterOffersTheOriginal() async throws {
+        defer { try? FileManager.default.removeItem(at: root) }
+        let url = try clip("n.wav")
+        let runner = EvaluationRunner(engine: engine(.init(text: "ship it")), workDirectory: work)
+        let mode = DictationMode(
+            id: DictationModeID(rawValue: "style-casual"), name: "Casual", writingMode: .clean,
+            style: StyleOptions(tone: .casual))
+
+        let result = try await runner.run(
+            EvaluationCase(id: "n", audioURL: url, language: "en-US", reference: "ship it", category: "style"),
+            mode: mode)
+
+        let style = try #require(result.style)
+        #expect(!style.applied)
+        #expect(style.notice != nil)
+        #expect(result.score.wordErrorRate == 0)
     }
 
     @Test func textFromSilenceIsFlaggedAsAHallucination() async throws {

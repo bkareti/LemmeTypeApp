@@ -36,7 +36,9 @@
         public let language: String
         /// `RecognitionTask` raw value.
         public let task: String
-        /// `WritingMode` raw value.
+        /// `DictationModeID` raw value: `exact`, `clean`, `message`, or a custom mode.
+        public let mode: String
+        /// `WritingMode` raw value of that mode.
         public let writingMode: String
         /// `delivered`, `review`, `cancelled`, or the `DictationIssue` identifier.
         public let outcome: String
@@ -48,7 +50,12 @@
         /// Processing start to text ready.
         public let stopToDeliverySeconds: Double
         /// Against the reference for the task; no text counts as an empty hypothesis.
+        /// For a style rewrite, the text before the rewrite: recognition accuracy.
         public let score: TranscriptScore
+        /// Translations only: chrF and meaning checks against the English reference.
+        public let translation: TranslationScore?
+        /// Style modes only: what the rewrite did.
+        public let style: StyleResult?
     }
 
     public enum EvaluationError: Error, Equatable {
@@ -73,19 +80,21 @@
         private let workDirectory: URL
 
         /// `reviewsEveryResult` is the iPhone and iPad flow (ADR 0027): every result ends in a review.
+        /// `rewriter` runs the tone, format, and length of style modes; without one they offer the original.
         public init(
             engine: any SpeechRecognitionEngine, workDirectory: URL, hardware: HardwareProfile = .current,
-            reviewsEveryResult: Bool = false
+            reviewsEveryResult: Bool = false, rewriter: (any TextRewriting)? = nil
         ) {
             self.engine = engine.descriptor.id
             self.workDirectory = workDirectory
             pipeline = TranscriptionPipeline(
-                engines: [engine], write: TextCleaner.write, delivery: delivery, hardware: hardware,
-                reviewsEveryResult: reviewsEveryResult)
+                engines: [engine], write: TextCleaner.write, delivery: delivery, rewriter: rewriter,
+                hardware: hardware, reviewsEveryResult: reviewsEveryResult)
         }
 
+        /// `mode` is any dictation mode: a built-in (Exact, Clean, Message) or one with a style.
         public func run(
-            _ testCase: EvaluationCase, task: RecognitionTask = .transcribe, writingMode: WritingMode = .clean
+            _ testCase: EvaluationCase, task: RecognitionTask = .transcribe, mode: DictationMode = .clean
         ) async throws -> EvaluationResult {
             let reference: String
             switch task {
@@ -106,7 +115,7 @@
             try clip.write(to: url)
             let session = DictationSession(
                 audio: RecordedAudio(fileURL: url, duration: clip.duration, format: .speech), target: nil,
-                mode: writingMode, language: testCase.language,
+                mode: mode.writingMode, dictationMode: mode, language: testCase.language,
                 speechOutput: task == .translateToEnglish ? .english : .original,
                 enginePreference: EnginePreference(selected: engine))
             defer { session.discardAudio() }
@@ -123,16 +132,22 @@
                 marks[.recognizing].map { recognizing in ((marks[.writing] ?? end) - recognizing).benchmarkSeconds }
                 ?? 0
             let (name, text) = Self.describe(outcome, delivered: delivery.take())
+            var style: StyleResult?
+            if case .review(let review, _) = outcome { style = StyleResult.of(review) }
             return EvaluationResult(
                 id: testCase.id, category: testCase.category, language: testCase.language, task: task.rawValue,
-                writingMode: writingMode.rawValue, outcome: name, producedText: text != nil,
-                audioSeconds: clip.duration, inferenceSeconds: inference,
+                mode: mode.id.rawValue, writingMode: mode.writingMode.rawValue, outcome: name,
+                producedText: text != nil, audioSeconds: clip.duration, inferenceSeconds: inference,
                 stopToDeliverySeconds: (end - start).benchmarkSeconds,
-                score: TranscriptScore.score(reference: reference, hypothesis: text ?? ""))
+                score: TranscriptScore.score(reference: reference, hypothesis: text ?? ""),
+                translation: task == .translateToEnglish
+                    ? TranslationScore.score(englishReference: reference, translation: text ?? "") : nil,
+                style: style)
         }
 
-        /// The outcome's name and the text the user would get from it. A result
-        /// waiting for review is scored as if the user inserted it.
+        /// The outcome's name and the text to score. A result waiting for review is
+        /// scored as if the user inserted it; a style rewrite by its text before the
+        /// rewrite, so accuracy measures recognition, not the style.
         static func describe(_ outcome: DictationOutcome, delivered: String?) -> (String, String?) {
             switch outcome {
             case .delivered:
@@ -143,7 +158,7 @@
                 default: (issue.identifier, nil)
                 }
             case .review(let review, _):
-                ("review", review.text)
+                ("review", review.original)
             case .cancelled:
                 ("cancelled", nil)
             }

@@ -1,0 +1,469 @@
+{
+  "corpora": [
+    {
+      "name": "fleurs-test",
+      "runs": 7,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "name": "edge-cases",
+      "runs": 2,
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  ],
+  "date": "2026-11-02T12:00:00Z",
+  "engine": "fake",
+  "hardwareModel": "Fixture1,1",
+  "label": "fixture",
+  "mode": "clean",
+  "operatingSystem": "Fixture OS",
+  "peakMemoryIncreaseMB": 120.5,
+  "physicalMemoryGB": 16,
+  "runs": [
+    {
+      "baseID": "fleurs-hi_in-1",
+      "id": "fleurs-hi_in-1",
+      "result": {
+        "audioSeconds": 6.0,
+        "category": "read",
+        "id": "fleurs-hi_in-1",
+        "inferenceSeconds": 1.5,
+        "language": "hi",
+        "mode": "clean",
+        "outcome": "delivered",
+        "producedText": true,
+        "score": {
+          "characters": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 40,
+            "substitutions": 2
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 1
+          },
+          "repetitionLoop": false,
+          "textWithoutSpeech": false,
+          "words": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 1
+          }
+        },
+        "stopToDeliverySeconds": 1.8,
+        "style": null,
+        "task": "transcribe",
+        "translation": null,
+        "writingMode": "clean"
+      },
+      "review": "dataset-human",
+      "source": "fleurs",
+      "tags": [
+        "fleurs",
+        "read-speech",
+        "female"
+      ],
+      "variantID": null
+    },
+    {
+      "baseID": "fleurs-hi_in-2",
+      "id": "fleurs-hi_in-2",
+      "result": {
+        "audioSeconds": 6.0,
+        "category": "read",
+        "id": "fleurs-hi_in-2",
+        "inferenceSeconds": 1.5,
+        "language": "hi",
+        "mode": "clean",
+        "outcome": "delivered",
+        "producedText": true,
+        "score": {
+          "characters": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 40,
+            "substitutions": 6
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 1
+          },
+          "repetitionLoop": false,
+          "textWithoutSpeech": false,
+          "words": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 3
+          }
+        },
+        "stopToDeliverySeconds": 1.8,
+        "style": null,
+        "task": "transcribe",
+        "translation": null,
+        "writingMode": "clean"
+      },
+      "review": "dataset-human",
+      "source": "fleurs",
+      "tags": [
+        "fleurs",
+        "read-speech",
+        "male",
+        "numbers"
+      ],
+      "variantID": null
+    },
+    {
+      "baseID": "fleurs-te_in-1",
+      "id": "fleurs-te_in-1",
+      "result": {
+        "audioSeconds": 6.0,
+        "category": "read",
+        "id": "fleurs-te_in-1",
+        "inferenceSeconds": 1.5,
+        "language": "te",
+        "mode": "clean",
+        "outcome": "delivered",
+        "producedText": true,
+        "score": {
+          "characters": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 50,
+            "substitutions": 4
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 6,
+            "substitutions": 2
+          },
+          "repetitionLoop": false,
+          "textWithoutSpeech": false,
+          "words": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 6,
+            "substitutions": 2
+          }
+        },
+        "stopToDeliverySeconds": 1.8,
+        "style": null,
+        "task": "transcribe",
+        "translation": null,
+        "writingMode": "clean"
+      },
+      "review": "dataset-human",
+      "source": "fleurs",
+      "tags": [
+        "fleurs",
+        "read-speech",
+        "male"
+      ],
+      "variantID": null
+    },
+    {
+      "baseID": "fleurs-te_in-2",
+      "id": "fleurs-te_in-2",
+      "result": {
+        "audioSeconds": 6.0,
+        "category": "read",
+        "id": "fleurs-te_in-2",
+        "inferenceSeconds": 1.0,
+        "language": "te",
+        "mode": "clean",
+        "outcome": "recognition.no-speech",
+        "producedText": false,
+        "score": {
+          "characters": {
+            "deletions": 30,
+            "insertions": 0,
+            "referenceLength": 30,
+            "substitutions": 0
+          },
+          "numberNormalizedWords": {
+            "deletions": 5,
+            "insertions": 0,
+            "referenceLength": 5,
+            "substitutions": 0
+          },
+          "repetitionLoop": false,
+          "textWithoutSpeech": false,
+          "words": {
+            "deletions": 5,
+            "insertions": 0,
+            "referenceLength": 5,
+            "substitutions": 0
+          }
+        },
+        "stopToDeliverySeconds": 1.1,
+        "style": null,
+        "task": "transcribe",
+        "translation": null,
+        "writingMode": "clean"
+      },
+      "review": "dataset-human",
+      "source": "fleurs",
+      "tags": [
+        "fleurs",
+        "read-speech",
+        "male"
+      ],
+      "variantID": null
+    },
+    {
+      "baseID": "fleurs-te_in-3",
+      "id": "fleurs-te_in-3",
+      "result": {
+        "audioSeconds": 6.0,
+        "category": "read",
+        "id": "fleurs-te_in-3",
+        "inferenceSeconds": 1.5,
+        "language": "te",
+        "mode": "clean",
+        "outcome": "delivered",
+        "producedText": true,
+        "score": {
+          "characters": {
+            "deletions": 0,
+            "insertions": 30,
+            "referenceLength": 25,
+            "substitutions": 2
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 8,
+            "referenceLength": 4,
+            "substitutions": 0
+          },
+          "repetitionLoop": true,
+          "textWithoutSpeech": false,
+          "words": {
+            "deletions": 0,
+            "insertions": 8,
+            "referenceLength": 4,
+            "substitutions": 0
+          }
+        },
+        "stopToDeliverySeconds": 3.9,
+        "style": null,
+        "task": "transcribe",
+        "translation": null,
+        "writingMode": "clean"
+      },
+      "review": "dataset-human",
+      "source": "fleurs",
+      "tags": [
+        "fleurs",
+        "read-speech",
+        "female"
+      ],
+      "variantID": null
+    },
+    {
+      "baseID": "fleurs-hi_in-1",
+      "id": "fleurs-hi_in-1~noise-snr10",
+      "result": {
+        "audioSeconds": 6.0,
+        "category": "read",
+        "id": "fleurs-hi_in-1~noise-snr10",
+        "inferenceSeconds": 1.5,
+        "language": "hi",
+        "mode": "clean",
+        "outcome": "delivered",
+        "producedText": true,
+        "score": {
+          "characters": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 40,
+            "substitutions": 5
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 2
+          },
+          "repetitionLoop": false,
+          "textWithoutSpeech": false,
+          "words": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 2
+          }
+        },
+        "stopToDeliverySeconds": 1.8,
+        "style": null,
+        "task": "transcribe",
+        "translation": null,
+        "writingMode": "clean"
+      },
+      "review": "dataset-human",
+      "source": "fleurs",
+      "tags": [
+        "fleurs",
+        "read-speech",
+        "female",
+        "variant:noise"
+      ],
+      "variantID": "noise-snr10"
+    },
+    {
+      "baseID": "silence-2s",
+      "id": "silence-2s@hi",
+      "result": {
+        "audioSeconds": 2.0,
+        "category": "no-speech",
+        "id": "silence-2s@hi",
+        "inferenceSeconds": 0.0,
+        "language": "hi",
+        "mode": "clean",
+        "outcome": "recognition.silent-audio",
+        "producedText": false,
+        "score": {
+          "characters": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 0,
+            "substitutions": 0
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 0,
+            "substitutions": 0
+          },
+          "repetitionLoop": false,
+          "textWithoutSpeech": false,
+          "words": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 0,
+            "substitutions": 0
+          }
+        },
+        "stopToDeliverySeconds": 0.05,
+        "style": null,
+        "task": "transcribe",
+        "translation": null,
+        "writingMode": "clean"
+      },
+      "review": "by-construction",
+      "source": null,
+      "tags": [
+        "generated:silence"
+      ],
+      "variantID": null
+    },
+    {
+      "baseID": "noise-loud",
+      "id": "noise-loud@te",
+      "result": {
+        "audioSeconds": 3.0,
+        "category": "no-speech",
+        "id": "noise-loud@te",
+        "inferenceSeconds": 0.8,
+        "language": "te",
+        "mode": "clean",
+        "outcome": "delivered",
+        "producedText": true,
+        "score": {
+          "characters": {
+            "deletions": 0,
+            "insertions": 14,
+            "referenceLength": 0,
+            "substitutions": 0
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 3,
+            "referenceLength": 0,
+            "substitutions": 0
+          },
+          "repetitionLoop": false,
+          "textWithoutSpeech": true,
+          "words": {
+            "deletions": 0,
+            "insertions": 3,
+            "referenceLength": 0,
+            "substitutions": 0
+          }
+        },
+        "stopToDeliverySeconds": 0.9,
+        "style": null,
+        "task": "transcribe",
+        "translation": null,
+        "writingMode": "clean"
+      },
+      "review": "by-construction",
+      "source": null,
+      "tags": [
+        "generated:noise"
+      ],
+      "variantID": null
+    },
+    {
+      "baseID": "model-guess-1",
+      "id": "model-guess-1",
+      "result": {
+        "audioSeconds": 6.0,
+        "category": "read",
+        "id": "model-guess-1",
+        "inferenceSeconds": 1.5,
+        "language": "hi",
+        "mode": "clean",
+        "outcome": "delivered",
+        "producedText": true,
+        "score": {
+          "characters": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 40,
+            "substitutions": 40
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 8
+          },
+          "repetitionLoop": false,
+          "textWithoutSpeech": false,
+          "words": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 8
+          }
+        },
+        "stopToDeliverySeconds": 1.8,
+        "style": null,
+        "task": "transcribe",
+        "translation": null,
+        "writingMode": "clean"
+      },
+      "review": "unverified",
+      "source": "fleurs",
+      "tags": [
+        "fleurs"
+      ],
+      "variantID": null
+    }
+  ],
+  "schema": 2,
+  "skipped": {
+    "already-english": 0
+  },
+  "style": "none",
+  "task": "transcribe",
+  "warmUpSeconds": 0.75,
+  "writingMode": "clean"
+}

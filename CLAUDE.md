@@ -43,6 +43,9 @@ make security-check # fail on an unreviewed entitlement, usage string, dependenc
 make privacy-docs-check  # fail if the threat model or privacy checklist cites something that no longer exists
 make l10n-check     # string catalog is complete and commented; no literal bypasses the module bundle (l10n-update refreshes it)
 make docs-check     # release and support docs point at files and make targets that exist
+make corpus-check   # corpus script tests and the committed corpus manifests (no audio needed)
+make evaluation-check  # evaluation report script tests (fixtures only)
+make evaluation     # real Whisper models on the fetched corpus → build/evaluation/report (not CI)
 make release-build REHEARSAL=1 && make release-verify REHEARSAL=1  # ad-hoc release archive + checks (see docs/release/runbook.md)
 make quality-gate   # every automated check with one summary (UI=1 adds UI tests)
 make benchmark   # end-to-end benchmark on this Mac + threshold check (not CI)
@@ -50,6 +53,8 @@ make release-check APP=<app|zip>  # thresholds + release-artifact scan
 make app-icons   # re-render the Mac and iPhone/iPad app icons from the vector L (needs librsvg)
 make build-ios   # the iPhone and iPad app for the iOS Simulator
 make test-ios    # its unit tests + the portable package tests on the iOS Simulator
+make test-ui-ios # its UI tests on the iOS Simulator, against fakes and scenarios
+make evaluation-ios MODEL=whisper-base  # corpus evaluation inside the iPhone app (Simulator or DEVICE=…; not CI)
 make format      # apply swift-format
 make run         # build and launch
 ```
@@ -72,8 +77,10 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   (`Log`, `BuildInfo`, `UserDefaultsPreferences`; depends on Domain), platform modules `Audio` / `Permissions` / `Shortcuts` /
   `Lifecycle` / `Recognition` / `ModelAssets` / `Delivery` / `Editing` / `Updates` (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
   and `TestSupport` (fakes, plus the Debug-only `DictationBenchmark` and evaluation
-  harness: `EvaluationRunner`, `FileAudioSource`, `AudioClip`, `TranscriptScore`; see
-  `docs/testing/evaluation-harness.md`).
+  harness: `EvaluationRunner`, `FileAudioSource`, `AudioClip`, `TranscriptScore`, and the
+  corpus `CorpusManifest`/`CorpusItem`, `CorpusEvaluation` → `EvaluationReport`, and the
+  mode scores `NumberNormalizer`, `TranslationScore` (chrF + `PreservationChecker`), `StyleResult`; see `docs/testing/evaluation-harness.md`. Corpus
+  audio is never committed: `scripts/corpus.py` fetches it to `~/Library/Caches/LemmeTypeCorpus`).
   `EndToEndTests` drives recorder → pipeline → cleaner → delivery (and, for
   Epic 3, shortcut → context reader → formatter/rewriter → delivery) with
   fakes only at the OS edges.
@@ -270,7 +277,10 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   fakes; `-LemmeTypeFreshInstall` (with it) starts with onboarding pending and
   nothing granted; `-LemmeTypeShowSettings` opens Settings at launch;
   `-LemmeTypeBenchmark <corpus> <dir>` runs the end-to-end benchmark in the
-  live app and quits (`App/LemmeType/AppComposition+Benchmark.swift`). XCUITest cannot
+  live app and quits (`App/LemmeType/AppComposition+Benchmark.swift`). On iOS, `-LemmeTypeUITesting` takes
+  scenario arguments (`IOSComposition.UITestScenario`: microphone, interruption, limit, no speech,
+  shortcut) and `-LemmeTypeEvaluation <model>` runs the corpus evaluation in the app
+  (`IOSComposition+Evaluation.swift`, `scripts/run-ios-evaluation.sh`). XCUITest cannot
   click status-menu items, so UI tests check menu contents only and use these.
 - `LemmeTypeTests` is hosted in the app and must not link package products
   (duplicate type copies break `is` checks); Debug disables dead-code stripping

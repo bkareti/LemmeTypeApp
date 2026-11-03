@@ -17,7 +17,16 @@ struct LemmeTypeiOSApp: App {
     var body: some Scene {
         WindowGroup {
             composition.rootView()
-                .task { await composition.start() }
+                .task {
+                    #if DEBUG
+                        // `scripts/run-ios-evaluation.sh`: evaluate the corpus on this device, then quit.
+                        if let request = IOSComposition.EvaluationRequest(arguments: ProcessInfo.processInfo.arguments)
+                        {
+                            exit(await IOSComposition.runEvaluation(request))
+                        }
+                    #endif
+                    await composition.start()
+                }
         }
     }
 }

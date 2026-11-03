@@ -1,0 +1,545 @@
+{
+  "corpora": [
+    {
+      "name": "fleurs-test",
+      "runs": 6,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ],
+  "date": "2026-11-02T12:00:00Z",
+  "engine": "fake",
+  "hardwareModel": "Fixture1,1",
+  "label": "fixture",
+  "mode": "clean",
+  "operatingSystem": "Fixture OS",
+  "peakMemoryIncreaseMB": 120.5,
+  "physicalMemoryGB": 16,
+  "runs": [
+    {
+      "baseID": "fleurs-hi_in-1",
+      "id": "fleurs-hi_in-1",
+      "result": {
+        "audioSeconds": 6.0,
+        "category": "read",
+        "id": "fleurs-hi_in-1",
+        "inferenceSeconds": 1.5,
+        "language": "hi",
+        "mode": "clean",
+        "outcome": "review.translation",
+        "producedText": true,
+        "score": {
+          "characters": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 40,
+            "substitutions": 2
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 1
+          },
+          "repetitionLoop": false,
+          "textWithoutSpeech": false,
+          "words": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 1
+          }
+        },
+        "stopToDeliverySeconds": 1.8,
+        "style": null,
+        "task": "translate-to-english",
+        "translation": {
+          "characterNGrams": {
+            "hypothesis": [
+              6,
+              5,
+              4,
+              3,
+              2,
+              1
+            ],
+            "matches": [
+              5,
+              3,
+              1,
+              0,
+              0,
+              0
+            ],
+            "reference": [
+              6,
+              5,
+              4,
+              3,
+              2,
+              1
+            ]
+          },
+          "violations": []
+        },
+        "writingMode": "clean"
+      },
+      "review": "dataset-human",
+      "source": "fleurs",
+      "tags": [],
+      "variantID": null
+    },
+    {
+      "baseID": "fleurs-hi_in-2",
+      "id": "fleurs-hi_in-2",
+      "result": {
+        "audioSeconds": 6.0,
+        "category": "read",
+        "id": "fleurs-hi_in-2",
+        "inferenceSeconds": 1.5,
+        "language": "hi",
+        "mode": "clean",
+        "outcome": "review.translation",
+        "producedText": true,
+        "score": {
+          "characters": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 40,
+            "substitutions": 2
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 1
+          },
+          "repetitionLoop": false,
+          "textWithoutSpeech": false,
+          "words": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 1
+          }
+        },
+        "stopToDeliverySeconds": 1.8,
+        "style": null,
+        "task": "translate-to-english",
+        "translation": {
+          "characterNGrams": {
+            "hypothesis": [
+              20,
+              19,
+              18,
+              17,
+              16,
+              15
+            ],
+            "matches": [
+              20,
+              19,
+              18,
+              17,
+              16,
+              15
+            ],
+            "reference": [
+              20,
+              19,
+              18,
+              17,
+              16,
+              15
+            ]
+          },
+          "violations": [
+            "negation-changed"
+          ]
+        },
+        "writingMode": "clean"
+      },
+      "review": "dataset-human",
+      "source": "fleurs",
+      "tags": [],
+      "variantID": null
+    },
+    {
+      "baseID": "fleurs-te_in-1",
+      "id": "fleurs-te_in-1",
+      "result": {
+        "audioSeconds": 6.0,
+        "category": "read",
+        "id": "fleurs-te_in-1",
+        "inferenceSeconds": 1.5,
+        "language": "te",
+        "mode": "clean",
+        "outcome": "review.translation",
+        "producedText": true,
+        "score": {
+          "characters": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 40,
+            "substitutions": 2
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 1
+          },
+          "repetitionLoop": false,
+          "textWithoutSpeech": false,
+          "words": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 1
+          }
+        },
+        "stopToDeliverySeconds": 1.8,
+        "style": null,
+        "task": "translate-to-english",
+        "translation": {
+          "characterNGrams": {
+            "hypothesis": [
+              20,
+              19,
+              18,
+              17,
+              16,
+              15
+            ],
+            "matches": [
+              20,
+              19,
+              18,
+              17,
+              16,
+              15
+            ],
+            "reference": [
+              20,
+              19,
+              18,
+              17,
+              16,
+              15
+            ]
+          },
+          "violations": [
+            "number-changed",
+            "name-changed"
+          ]
+        },
+        "writingMode": "clean"
+      },
+      "review": "dataset-human",
+      "source": "fleurs",
+      "tags": [],
+      "variantID": null
+    },
+    {
+      "baseID": "fleurs-te_in-2",
+      "id": "fleurs-te_in-2",
+      "result": {
+        "audioSeconds": 6.0,
+        "category": "read",
+        "id": "fleurs-te_in-2",
+        "inferenceSeconds": 1.5,
+        "language": "te",
+        "mode": "clean",
+        "outcome": "recognition.no-speech",
+        "producedText": false,
+        "score": {
+          "characters": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 40,
+            "substitutions": 2
+          },
+          "numberNormalizedWords": {
+            "deletions": 5,
+            "insertions": 0,
+            "referenceLength": 5,
+            "substitutions": 0
+          },
+          "repetitionLoop": false,
+          "textWithoutSpeech": false,
+          "words": {
+            "deletions": 5,
+            "insertions": 0,
+            "referenceLength": 5,
+            "substitutions": 0
+          }
+        },
+        "stopToDeliverySeconds": 1.8,
+        "style": null,
+        "task": "translate-to-english",
+        "translation": {
+          "characterNGrams": {
+            "hypothesis": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "matches": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "reference": [
+              10,
+              9,
+              8,
+              7,
+              6,
+              5
+            ]
+          },
+          "violations": []
+        },
+        "writingMode": "clean"
+      },
+      "review": "dataset-human",
+      "source": "fleurs",
+      "tags": [],
+      "variantID": null
+    },
+    {
+      "baseID": "fleurs-te_in-3",
+      "id": "fleurs-te_in-3",
+      "result": {
+        "audioSeconds": 6.0,
+        "category": "read",
+        "id": "fleurs-te_in-3",
+        "inferenceSeconds": 1.5,
+        "language": "te",
+        "mode": "clean",
+        "outcome": "review.translation",
+        "producedText": true,
+        "score": {
+          "characters": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 40,
+            "substitutions": 2
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 1
+          },
+          "repetitionLoop": false,
+          "textWithoutSpeech": false,
+          "words": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 1
+          }
+        },
+        "stopToDeliverySeconds": 1.8,
+        "style": null,
+        "task": "translate-to-english",
+        "translation": {
+          "characterNGrams": {
+            "hypothesis": [
+              20,
+              19,
+              18,
+              17,
+              16,
+              15
+            ],
+            "matches": [
+              20,
+              19,
+              18,
+              17,
+              16,
+              15
+            ],
+            "reference": [
+              20,
+              19,
+              18,
+              17,
+              16,
+              15
+            ]
+          },
+          "violations": [
+            "name-changed"
+          ]
+        },
+        "writingMode": "clean"
+      },
+      "review": "dataset-human",
+      "source": "fleurs",
+      "tags": [],
+      "variantID": null
+    },
+    {
+      "baseID": "fleurs-hi_in-1",
+      "id": "fleurs-hi_in-1~noise-snr10",
+      "result": {
+        "audioSeconds": 6.0,
+        "category": "read",
+        "id": "fleurs-hi_in-1~noise-snr10",
+        "inferenceSeconds": 1.5,
+        "language": "hi",
+        "mode": "clean",
+        "outcome": "review.translation",
+        "producedText": true,
+        "score": {
+          "characters": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 40,
+            "substitutions": 2
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 1
+          },
+          "repetitionLoop": false,
+          "textWithoutSpeech": false,
+          "words": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 8,
+            "substitutions": 1
+          }
+        },
+        "stopToDeliverySeconds": 1.8,
+        "style": null,
+        "task": "translate-to-english",
+        "translation": {
+          "characterNGrams": {
+            "hypothesis": [
+              20,
+              19,
+              18,
+              17,
+              16,
+              15
+            ],
+            "matches": [
+              20,
+              19,
+              18,
+              17,
+              16,
+              15
+            ],
+            "reference": [
+              20,
+              19,
+              18,
+              17,
+              16,
+              15
+            ]
+          },
+          "violations": []
+        },
+        "writingMode": "clean"
+      },
+      "review": "dataset-human",
+      "source": "fleurs",
+      "tags": [],
+      "variantID": "noise-snr10"
+    },
+    {
+      "baseID": "silence-2s",
+      "id": "silence-2s@hi",
+      "result": {
+        "audioSeconds": 6.0,
+        "category": "no-speech",
+        "id": "silence-2s@hi",
+        "inferenceSeconds": 1.5,
+        "language": "hi",
+        "mode": "clean",
+        "outcome": "recognition.silent-audio",
+        "producedText": false,
+        "score": {
+          "characters": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 0,
+            "substitutions": 0
+          },
+          "numberNormalizedWords": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 0,
+            "substitutions": 0
+          },
+          "repetitionLoop": false,
+          "textWithoutSpeech": false,
+          "words": {
+            "deletions": 0,
+            "insertions": 0,
+            "referenceLength": 0,
+            "substitutions": 0
+          }
+        },
+        "stopToDeliverySeconds": 1.8,
+        "style": null,
+        "task": "translate-to-english",
+        "translation": {
+          "characterNGrams": {
+            "hypothesis": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "matches": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "reference": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "violations": []
+        },
+        "writingMode": "clean"
+      },
+      "review": "by-construction",
+      "source": null,
+      "tags": [],
+      "variantID": null
+    }
+  ],
+  "schema": 2,
+  "skipped": {
+    "already-english": 0
+  },
+  "style": "none",
+  "task": "translate-to-english",
+  "warmUpSeconds": 0.75,
+  "writingMode": "clean"
+}

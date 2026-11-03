@@ -12,10 +12,6 @@ import SwiftUI
 import UI
 import os
 
-#if DEBUG
-    import TestSupport
-#endif
-
 /// The single composition root of the iPhone and iPad app. Every concrete
 /// operating-system service is constructed here; everything downstream receives
 /// protocols (ADR 0027).
@@ -62,11 +58,17 @@ struct IOSComposition {
         var diagnostics: DiagnosticsBuffer
         var hardware: HardwareProfile
         var copiedTextLifetime: @MainActor () -> CopiedTextLifetime
+        var limits: RecordingLimits = .handheld
     }
 
     static func make(arguments: [String]) -> IOSComposition {
         #if DEBUG
-            if arguments.contains(uiTestingArgument) { return assemble(mode: .uiTesting, uiTesting()) }
+            if arguments.contains(uiTestingArgument) {
+                let scenario = UITestScenario(arguments: arguments)
+                let composition = assemble(mode: .uiTesting, uiTesting(scenario))
+                if scenario.startsFromShortcut { composition.launchRequests.post() }
+                return composition
+            }
         #endif
         return assemble(mode: .live, live())
     }
@@ -93,7 +95,7 @@ struct IOSComposition {
                 AppleSpeechEngine(authorizer: authorizer, language: { preferences.dictationLanguage }),
                 WhisperEngine(
                     assets: modelAssets, hardware: hardware,
-                    availableMemory: { UInt64(max(0, os_proc_available_memory())) },
+                    availableMemory: availableMemory,
                     settings: { whisperSettings(preferences: preferences, conditions: conditions.current) }),
             ],
             modelAssets: modelAssets,
@@ -107,43 +109,6 @@ struct IOSComposition {
             hardware: hardware,
             copiedTextLifetime: { CopiedTextLifetime.stored(in: .standard) })
     }
-
-    #if DEBUG
-        /// Fakes: the microphone is granted, a tone is "recorded", and the "speech
-        /// engine" returns a fixed sentence. Nothing touches the pasteboard.
-        private static func uiTesting() -> Services {
-            let diagnostics = DiagnosticsBuffer()
-            let copier = FakeTextDelivery()
-            let permissions = FakePermissions(
-                statuses: [.microphone: .granted], microphoneAnswer: .granted, grantsAccessibilityOnRequest: false)
-            let preferences = FakePreferences(hasCompletedOnboarding: true)
-            return Services(
-                permissionChecker: permissions,
-                permissionRequester: permissions,
-                preferences: preferences,
-                audioCapture: AudioCaptureService(
-                    source: FakeAudioSource(liveTone: true),
-                    storage: AudioSessionStorage(
-                        directory: FileManager.default.temporaryDirectory
-                            .appendingPathComponent("LemmeTypeUITesting", isDirectory: true)),
-                    permissions: permissions, diagnostics: diagnostics),
-                speechAuthorizer: FakeSpeechAuthorizer(status: .granted),
-                engines: [
-                    FakeRecognitionEngine(id: .appleSpeech, script: .init(text: "hello from lemmetype")),
-                    FakeRecognitionEngine(
-                        id: .whisper, availability: .assetsMissing, assets: .downloadable(.whisperBaseEnglish)),
-                ],
-                modelAssets: FakeModelAssetManager(),
-                textCopier: copier,
-                rewriter: FakeTextRewriter(),
-                personalizationStore: FakePersonalizationStore(),
-                historyStore: FakeDictationHistoryStore(),
-                conditions: FakeSystemConditions(),
-                diagnostics: diagnostics,
-                hardware: HardwareProfile(isAppleSilicon: true, physicalMemoryBytes: 8 << 30, deviceClass: .iPhone),
-                copiedTextLifetime: { .default })
-        }
-    #endif
 
     // MARK: Assembly
 
@@ -167,7 +132,7 @@ struct IOSComposition {
             speechAuthorizer: services.speechAuthorizer, textCopier: services.textCopier,
             attentionDisplay: .seconds(600),
             personalization: { [weak personalization] in personalization?.library ?? .empty },
-            residency: residency, diagnostics: diagnostics, limits: .handheld)
+            residency: residency, diagnostics: diagnostics, limits: services.limits)
         let permissions = PermissionsModel(
             checker: services.permissionChecker, requester: services.permissionRequester, diagnostics: diagnostics)
         let dictation = DictationSettingsModel(
@@ -234,6 +199,17 @@ struct IOSComposition {
         }
     }
 
+    /// Memory this app may still use before iOS ends it, for the Whisper load check (E8-S5).
+    /// The Simulator has no such limit and reports 0, which would refuse every model, so
+    /// there it is unknown and the check is skipped.
+    nonisolated static func availableMemory() -> UInt64? {
+        #if targetEnvironment(simulator)
+            nil
+        #else
+            UInt64(max(0, os_proc_available_memory()))
+        #endif
+    }
+
     // MARK: Whisper settings
 
     /// The Whisper model choice and the performance plan, read for every session (E5-S1, E5-S5).
@@ -243,10 +219,20 @@ struct IOSComposition {
         let plan = performancePlan(preferences: preferences, conditions: conditions)
         return WhisperRunSettings(
             choice: preferences.whisperModel, order: plan.whisperModelOrder, threads: plan.inferenceThreads,
-            usesGPU: plan.usesGPU,
+            usesGPU: plan.usesGPU && gpuRunsWhisper,
             warmUpNeed: RecognitionNeed(
                 language: preferences.dictationLanguage,
                 task: .required(for: preferences.dictationLanguage, output: preferences.speechOutput)))
+    }
+
+    /// The Simulator's Metal driver cannot allocate the shared buffers whisper.cpp asks for
+    /// (the app traps in `newBufferWithLength`), so Whisper runs on the CPU there.
+    nonisolated static var gpuRunsWhisper: Bool {
+        #if targetEnvironment(simulator)
+            false
+        #else
+            true
+        #endif
     }
 
     nonisolated static func performancePlan(
