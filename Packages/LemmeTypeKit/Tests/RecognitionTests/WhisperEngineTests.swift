@@ -325,6 +325,18 @@ struct WhisperEngineTests {
         }
     }
 
+    @Test func aDecodingLoopAcrossSegmentsIsCutToOneCopy() async throws {
+        defer { fixtures.removeAll() }
+        let loop = (0..<6).map { TranscriptSegment(text: "Thank you.", start: Double($0), duration: 1) }
+        let engine = makeEngine(
+            runtime: FakeWhisperRuntime(
+                segments: [TranscriptSegment(text: "Send the draft.", start: 0, duration: 1)] + loop))
+
+        let transcript = try await engine.recognize(try fixtures.make(.tone(seconds: 1.5))) { _ in }
+
+        #expect(transcript.text == "Send the draft. Thank you.")
+    }
+
     @Test(arguments: [true, false])
     func satisfiesTheEngineContract(installed: Bool) async throws {
         defer { fixtures.removeAll() }

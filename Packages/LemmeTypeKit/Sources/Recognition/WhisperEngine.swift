@@ -208,11 +208,12 @@ public actor WhisperEngine: SpeechRecognitionEngine {
             language: language, task: request.task, prompt: Self.prompt(for: request.hints), threads: threads)
         let segments = try await Self.transcribe(samples, with: model, inference: inference, updates: updates)
         if Task.isCancelled { throw .cancelled }
-        let text = segments.map(\.text).joined(separator: " ")
-            .split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        // A decoding loop is cut back to one copy (#136).
+        let (text, loopCopies) = RepetitionLoop.collapse(
+            segments.map(\.text).joined(separator: " ").split(whereSeparator: \.isWhitespace).joined(separator: " "))
         guard !text.isEmpty else { throw .noSpeechDetected }
         Log.recognition.info(
-            "Whisper finished; segments=\(segments.count, privacy: .public) task=\(request.task.rawValue, privacy: .public)"
+            "Whisper finished; segments=\(segments.count, privacy: .public) task=\(request.task.rawValue, privacy: .public) loopCopiesCut=\(loopCopies, privacy: .public)"
         )
         return Transcript(
             text: text,
