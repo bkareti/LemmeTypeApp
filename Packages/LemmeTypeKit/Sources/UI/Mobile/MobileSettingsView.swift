@@ -39,6 +39,12 @@
                         }
                     }
                     .accessibilityIdentifier("settings.language")
+                    if let explanation = dictation.languageStatus?.explanation {
+                        Text(explanation)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .accessibilityIdentifier("settings.language.status")
+                    }
                     Picker(
                         String(localized: "Text you get", bundle: .module),
                         selection: Binding(get: { dictation.speechOutput }, set: { dictation.setSpeechOutput($0) })

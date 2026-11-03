@@ -12,16 +12,20 @@ struct LanguageSupportMatrixTests {
         }
     }
 
-    @Test func englishIsValidatedAndTheIndianLanguagesAreOnlyUnderEvaluation() {
+    @Test func englishIsValidatedHindiIsUnderEvaluationAndTeluguIsNotReliable() {
         #expect(LanguageSupportMatrix.status(of: "en-GB") == .validated)
         #expect(LanguageSupportMatrix.status(of: "hi") == .evaluation)
-        #expect(LanguageSupportMatrix.status(of: "te") == .evaluation)
+        // Measured on 2026-11-03: Whisper Small gets most Telugu wrong (#137).
+        #expect(LanguageSupportMatrix.status(of: "te") == .unreliable)
+        #expect(LanguageSupportMatrix.row(language: "te", task: .transcribe)?.status == .unreliable)
+        // Translation from Telugu has not been measured on its own.
+        #expect(LanguageSupportMatrix.row(language: "te", task: .translateToEnglish)?.status == .evaluation)
     }
 
     @Test func noRowIsValidatedWithoutAMeasurementRecord() {
         for row in LanguageSupportMatrix.rows {
             switch row.status {
-            case .validated: #expect(row.measurement?.isEmpty == false, "\(row.language) \(row.task)")
+            case .validated, .unreliable: #expect(row.measurement?.isEmpty == false, "\(row.language) \(row.task)")
             case .evaluation: #expect(row.measurement == nil, "\(row.language) is evaluation but has a record")
             }
         }

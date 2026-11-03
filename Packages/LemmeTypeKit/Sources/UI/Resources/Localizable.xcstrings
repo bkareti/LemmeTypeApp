@@ -59,9 +59,6 @@
         }
       }
     },
-    "%@: this language is being evaluated. It can be chosen, but its accuracy has not been measured yet." : {
-
-    },
     "%lld diagnostic events" : {
 
     },
@@ -657,6 +654,9 @@
     "Evaluation" : {
 
     },
+    "Evaluation: this language is being evaluated. It can be chosen, but its accuracy has not been measured yet." : {
+
+    },
     "Every engine runs on this Mac. Your recordings and text never leave it. Changes apply to your next dictation." : {
 
     },
@@ -1066,6 +1066,12 @@
 
     },
     "Not ready" : {
+
+    },
+    "Not reliable" : {
+
+    },
+    "Not reliable: even Whisper Small, the largest model available, gets most words in this language wrong. It can be chosen for testing only." : {
 
     },
     "Not requested" : {

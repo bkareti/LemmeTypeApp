@@ -16,6 +16,25 @@ extension LanguageSupportStatus {
         switch self {
         case .validated: nil
         case .evaluation: String(localized: "Evaluation", bundle: .module)
+        case .unreliable: String(localized: "Not reliable", bundle: .module)
+        }
+    }
+
+    /// One sentence under the language picker; `nil` for validated languages.
+    var explanation: String? {
+        switch self {
+        case .validated:
+            nil
+        case .evaluation:
+            String(
+                localized:
+                    "Evaluation: this language is being evaluated. It can be chosen, but its accuracy has not been measured yet.",
+                bundle: .module)
+        case .unreliable:
+            String(
+                localized:
+                    "Not reliable: even Whisper Small, the largest model available, gets most words in this language wrong. It can be chosen for testing only.",
+                bundle: .module)
         }
     }
 }
