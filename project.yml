@@ -113,6 +113,9 @@ schemes:
         - package: LemmeTypeKit/SupportTests
         - package: LemmeTypeKit/ModelAssetsTests
         - package: LemmeTypeKit/EditingTests
+        - package: LemmeTypeKit/AudioTests
+        - package: LemmeTypeKit/RecognitionTests
+        - package: LemmeTypeKit/EndToEndTests
     archive:
       config: Release
   LemmeType:

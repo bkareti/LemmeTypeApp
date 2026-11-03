@@ -24,9 +24,9 @@ audio, and runs on macOS and iOS.
 Its report format is unchanged.
 
 Tests: `TranscriptMetricsTests` (DomainTests), `FileAudioSourceTests` (AudioTests),
-`EvaluationRunnerTests` (EndToEndTests), `AudioFileReaderTests` (RecognitionTests). The
-harness compiles for iOS, but only DomainTests run on the iOS Simulator so far; the
-others run on macOS until Phase 5 adds them to the `LemmeTypeiOS` scheme.
+`EvaluationRunnerTests` (EndToEndTests), `AudioFileReaderTests` (RecognitionTests). All four
+suites also run on the iOS Simulator (`make test-ios`) since Phase 5; tests that need the Mac
+(the shortcut, insertion into other apps, the socket watch, `say`) are marked `#if os(macOS)`.
 
 ### Rules the harness keeps
 
@@ -120,11 +120,74 @@ Report schema 2 adds `mode` and `style` to the report and `numberNormalizedWords
 reports are keyed by label, task, and mode. The three fixtures in `scripts/tests/fixtures/`
 are made by `make-evaluation-fixtures.py` and are test data, not measurements.
 
+## iPhone and iPad (Phase 5)
+
+### UI tests on the Simulator
+
+`make test-ui-ios` runs `LemmeTypeiOSUITests` against fakes (`-LemmeTypeUITesting`). A test
+picks a scenario with launch arguments, read by `IOSComposition.UITestScenario` (Debug only):
+
+| Argument | Scenario |
+|---|---|
+| `-LemmeTypeMicrophone notRequested\|denied\|restricted` | The microphone permission at launch (default granted) |
+| `-LemmeTypeMicrophoneAnswer denied` | What the system prompt resolves to |
+| `-LemmeTypeInterruptAfter <seconds>` | The fake microphone reports an interruption (a call, Siri, an alarm) |
+| `-LemmeTypeRecordingLimit <seconds>` | A shorter recording limit than five minutes |
+| `-LemmeTypeRecognition no-speech` | The engine finds no speech |
+| `-LemmeTypeLaunchRequest` | A shortcut left a launch request, as the App Intent does |
+
+| Test | Checks |
+|---|---|
+| `QuickDictationUITests` | Record, review, copy; cancel; discard; Settings sections |
+| `RecordingEndingsUITests` | The microphone explanation, Not Now, a denial at the prompt and at launch (Open Settings), an interruption (Try Again, nothing to copy), the time limit (the text is still reviewed), leaving the app (the dictation is kept), no speech, Dictate Again, and a shortcut start |
+
+Writing these found a gap against E8-S4: after the explanation, denying the system prompt
+left the screen at Start Dictating with no message. `QuickDictationModel.continueAfterExplanation`
+now goes through the recorder either way, so a denial shows why and offers Open Settings
+(`denyingAtTheSystemPromptSaysWhyAndOffersSettings`).
+
+Not covered by the Simulator, and kept in the device checklist: real calls, Siri, alarms, and
+route changes (MA-69), a five-minute recording, the app-switcher snapshot (MA-71), VoiceOver,
+and Airplane Mode (MA-70).
+
+### On-device evaluation
+
+`scripts/run-ios-evaluation.sh` (or `make evaluation-ios MODEL=whisper-base`) runs the same
+corpus evaluation **inside the Debug iPhone and iPad app**, with the app's own model store,
+memory check, and performance plan, and with `reviewsEveryResult` as on the phone:
+
+1. It builds and installs the app on the Simulator (default `iPhone 17`) or on `--device`.
+2. It puts the manifests, and the corpus, in `Documents/LemmeTypeEvaluation/`. On the
+   Simulator the corpus is a link to this Mac's cache; on a device it is copied (only the
+   `--languages` folders when given).
+3. It launches the app with `-LemmeTypeEvaluation <model id>` (and `-LemmeTypeEvaluationTask`,
+   `Mode`, `Style`, `Languages`, `Label`). `IOSComposition+Evaluation.swift` runs
+   `CorpusEvaluation`, writes the report and `status.json`, deletes the copied manifests and
+   audio, and quits.
+4. It copies the report to `build/evaluation/ios/` and writes the summary, JUnit XML, and
+   dashboard to `build/evaluation/ios/report/`.
+
+The model must be installed in the app (Settings › Models), or copied from this Mac with
+`--copy-mac-model` (it is verified by SHA-256 when it loads). The report's `hardwareModel` names
+the device. There is no socket watch on iOS, so a device run is made in Airplane Mode. A full
+FLEURS run on a phone takes hours; start with `--languages te` or `--manifests edge-cases.json`.
+
+Running it on the Simulator found that the app refused every Whisper model there:
+`os_proc_available_memory()` has no limit to report on the Simulator and returns 0, so the load
+check (E8-S5) always said "not enough memory". `IOSComposition.availableMemory()` now treats it
+as unknown on the Simulator only; devices keep the check. With that fixed, loading a model on
+the Simulator then crashed in whisper.cpp's Metal code (the Simulator's GPU driver cannot
+allocate its shared buffers), so Whisper runs on the CPU there (`gpuRunsWhisper`). Both changes
+apply to the Simulator only, so Simulator timings are not device timings. Whisper Small is still refused on an
+iPhone by the catalog (it is offered on iPads with 8 GB or more), so use Tiny or Base there.
+
+The device path (`--device`) uses `xcrun devicectl` and the signing set up in Xcode. It has not
+been run yet; only the Simulator path has (see the PR).
+
 ## Next phases
 
 | Phase | Scope |
 |---|---|
-| 5. iOS | XCUITests for permission denial, interruptions, background, time limit, copy, and settings, and an on-device benchmark entry point. |
 | 6. CI and gates | A PR smoke job, a nightly full run, a release workflow, and `release-gates.json`. |
 | 7. TestFlight readiness | Export settings, encryption declaration, privacy label draft, tester guide. Nothing is uploaded without the maintainer's approval. |
 | 8. First real runs | The dashboard and a defect report from actual runs only. |

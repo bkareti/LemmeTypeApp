@@ -116,11 +116,12 @@ public final class QuickDictationModel {
         }
     }
 
+    /// Asks the system, then starts. A denial goes through the recorder too, so the
+    /// screen says why nothing records and offers Open Settings (E8-S4).
     public func continueAfterExplanation() async {
         isExplainingMicrophone = false
-        if await requestMicrophone().isGranted {
-            recorder.requestStart(target: nil)
-        }
+        _ = await requestMicrophone()
+        recorder.requestStart(target: nil)
     }
 
     public func cancelExplanation() {

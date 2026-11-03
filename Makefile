@@ -10,7 +10,7 @@ IOS_XCODEBUILD := xcodebuild -project $(PROJECT) -scheme LemmeTypeiOS -destinati
 XCODEBUILD  := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED)
 SWIFT_DIRS  := App Packages/LemmeTypeKit/Sources Packages/LemmeTypeKit/Tests Packages/LemmeTypeKit/Package.swift
 
-.PHONY: bootstrap generate build build-ios test-ios test test-unit test-app test-ui lint format app-icons privacy-check network-check security-check privacy-docs-check l10n-check l10n-update docs-check corpus-check evaluation-check evaluation quality-gate release-build release-verify release-notarize release-script-tests ci run clean benchmark release-check
+.PHONY: bootstrap generate build build-ios test-ios test-ui-ios evaluation-ios test test-unit test-app test-ui lint format app-icons privacy-check network-check security-check privacy-docs-check l10n-check l10n-update docs-check corpus-check evaluation-check evaluation quality-gate release-build release-verify release-notarize release-script-tests ci run clean benchmark release-check
 
 bootstrap: ## Verify required tools are installed
 	@command -v xcodegen >/dev/null || { echo "Missing xcodegen: brew install xcodegen"; exit 1; }
@@ -29,6 +29,9 @@ build-ios: generate ## Debug build of the iPhone and iPad app for the iOS Simula
 
 test-ios: generate ## iPhone and iPad app unit tests and the portable package tests on the iOS Simulator
 	$(IOS_XCODEBUILD) test -skip-testing:LemmeTypeiOSUITests
+
+test-ui-ios: generate ## iPhone and iPad UI tests on the iOS Simulator, against fakes (no microphone or engine)
+	$(IOS_XCODEBUILD) test -only-testing:LemmeTypeiOSUITests
 
 test: generate ## All tests: package, app unit, and UI tests
 	$(XCODEBUILD) test
@@ -81,6 +84,9 @@ evaluation-check: ## Evaluation report script tests (fixtures only; no engine or
 
 evaluation: ## Corpus evaluation with real Whisper models + reports (not CI; BASELINE=path compares)
 	scripts/run-evaluation.sh $(if $(BASELINE),--baseline $(BASELINE))
+
+evaluation-ios: ## Corpus evaluation inside the iPhone app: MODEL=whisper-base [DEVICE=name] [LANGUAGES=hi,te] (not CI)
+	scripts/run-ios-evaluation.sh --model $(MODEL) $(if $(DEVICE),--device "$(DEVICE)") $(if $(LANGUAGES),--languages $(LANGUAGES))
 
 quality-gate: ## Every automated check with one summary (UI=1 adds the UI tests)
 	scripts/tests/test-quality-gate.sh

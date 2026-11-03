@@ -53,6 +53,8 @@ make release-check APP=<app|zip>  # thresholds + release-artifact scan
 make app-icons   # re-render the Mac and iPhone/iPad app icons from the vector L (needs librsvg)
 make build-ios   # the iPhone and iPad app for the iOS Simulator
 make test-ios    # its unit tests + the portable package tests on the iOS Simulator
+make test-ui-ios # its UI tests on the iOS Simulator, against fakes and scenarios
+make evaluation-ios MODEL=whisper-base  # corpus evaluation inside the iPhone app (Simulator or DEVICE=…; not CI)
 make format      # apply swift-format
 make run         # build and launch
 ```
@@ -275,7 +277,10 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   fakes; `-LemmeTypeFreshInstall` (with it) starts with onboarding pending and
   nothing granted; `-LemmeTypeShowSettings` opens Settings at launch;
   `-LemmeTypeBenchmark <corpus> <dir>` runs the end-to-end benchmark in the
-  live app and quits (`App/LemmeType/AppComposition+Benchmark.swift`). XCUITest cannot
+  live app and quits (`App/LemmeType/AppComposition+Benchmark.swift`). On iOS, `-LemmeTypeUITesting` takes
+  scenario arguments (`IOSComposition.UITestScenario`: microphone, interruption, limit, no speech,
+  shortcut) and `-LemmeTypeEvaluation <model>` runs the corpus evaluation in the app
+  (`IOSComposition+Evaluation.swift`, `scripts/run-ios-evaluation.sh`). XCUITest cannot
   click status-menu items, so UI tests check menu contents only and use these.
 - `LemmeTypeTests` is hosted in the app and must not link package products
   (duplicate type copies break `is` checks); Debug disables dead-code stripping

@@ -12,7 +12,14 @@
         }
 
         /// `Mac15,6` on a Mac, `iPhone17,1` on an iPhone: the machine identifier, never a name.
+        /// The Simulator reports the device it imitates with a `simulator-` prefix, so its
+        /// timings are never read as a device's.
         static func hardwareModel() -> String {
+            #if targetEnvironment(simulator)
+                if let model = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] {
+                    return "simulator-\(model)"
+                }
+            #endif
             #if os(macOS)
                 let key = "hw.model"
             #else

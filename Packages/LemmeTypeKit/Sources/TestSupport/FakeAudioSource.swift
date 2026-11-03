@@ -16,14 +16,21 @@ public final class FakeAudioSource: AudioSource {
 
     private let state = Mutex(State())
     private let liveTone: Bool
+    private let interruptsAfter: Duration?
 
     /// - Parameters:
     ///   - startError: Error thrown by `start`, if any.
     ///   - fallsBack: Report that the system default was used instead of the chosen device.
     ///   - liveTone: Emit a quiet tone every 100 ms while running, for UI tests
     ///     that need a moving meter without a microphone.
-    public init(startError: AudioCaptureError? = nil, fallsBack: Bool = false, liveTone: Bool = false) {
+    ///   - interruptsAfter: With `liveTone`, report an interruption (a call, Siri, an alarm)
+    ///     once a recording has run this long, for UI tests.
+    public init(
+        startError: AudioCaptureError? = nil, fallsBack: Bool = false, liveTone: Bool = false,
+        interruptsAfter: Duration? = nil
+    ) {
         self.liveTone = liveTone
+        self.interruptsAfter = interruptsAfter
         state.withLock {
             $0.startError = startError
             $0.fallsBack = fallsBack
@@ -46,10 +53,17 @@ public final class FakeAudioSource: AudioSource {
         }
         let started = try result.get()
         if liveTone {
+            let interruptsAfter = interruptsAfter
             let task = Task.detached { [weak self] in
+                var elapsed = Duration.zero
                 while !Task.isCancelled, let self, self.isRunning {
+                    if let interruptsAfter, elapsed >= interruptsAfter {
+                        self.emit(.interrupted)
+                        return
+                    }
                     self.emitTone(seconds: 0.1, amplitude: 0.3)
                     try? await Task.sleep(for: .milliseconds(100))
+                    elapsed += .milliseconds(100)
                 }
             }
             state.withLock { $0.toneTask = task }

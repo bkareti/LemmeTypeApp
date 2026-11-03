@@ -121,6 +121,45 @@ struct QuickDictationModelTests {
         #expect(!source.isRunning)
     }
 
+    @Test func denyingAtTheSystemPromptSaysWhyAndOffersSettings() async {
+        let permissions = FakePermissions(statuses: [.microphone: .notRequested], microphoneAnswer: .denied)
+        let recorder = RecordingCoordinator(
+            capture: AudioCaptureService(source: source, storage: storage, permissions: permissions),
+            processor: processor, feedback: feedback, preferences: FakePreferences(), textCopier: copier,
+            finishedDisplay: .milliseconds(50), failureDisplay: .milliseconds(50))
+        let model = QuickDictationModel(
+            recorder: recorder, feedback: feedback, microphoneStatus: { permissions.status(for: .microphone) },
+            requestMicrophone: { await permissions.requestMicrophoneAccess() }, openSettings: {})
+
+        model.start()
+        #expect(model.isExplainingMicrophone)
+        await model.continueAfterExplanation()
+        await model.recorder.settle()
+
+        #expect(permissions.microphoneRequestCount == 1)
+        #expect(model.screen == .failed(.microphonePermissionMissing))
+        #expect(source.startCount == 0)
+    }
+
+    @Test func allowingAtTheSystemPromptStartsRecording() async {
+        let permissions = FakePermissions(statuses: [.microphone: .notRequested], microphoneAnswer: .granted)
+        let recorder = RecordingCoordinator(
+            capture: AudioCaptureService(source: source, storage: storage, permissions: permissions),
+            processor: processor, feedback: feedback, preferences: FakePreferences(), textCopier: copier,
+            finishedDisplay: .milliseconds(50), failureDisplay: .milliseconds(50))
+        let model = QuickDictationModel(
+            recorder: recorder, feedback: feedback, microphoneStatus: { permissions.status(for: .microphone) },
+            requestMicrophone: { await permissions.requestMicrophoneAccess() }, openSettings: {})
+
+        model.start()
+        await model.continueAfterExplanation()
+        await model.recorder.settle()
+
+        #expect(model.screen == .recording)
+        model.cancel()
+        await model.recorder.settle()
+    }
+
     @Test func aShortcutRequestStartsOnceAndAnExpiredOneStartsNothing() async {
         let now = TestNow()
         let inbox = LaunchRequestInbox(lifetime: 10, now: { now.date })
