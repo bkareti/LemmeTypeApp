@@ -68,7 +68,7 @@ extension point for future language packs.
 | Lint / format | `make lint` passed | `make ci` (lint, format-check) passed |
 | Package tests | `make test-unit` passed (all suites) | `make test` passed (module rules + ~1,170 tests) |
 | App build | Release archive built | Debug build passed in `make ci` |
-| Hosted app tests | **Not run**: the test host quit because a Debug LemmeType was already running on this Mac (single-instance rule) | n/a |
+| Hosted app tests | `make test-app` passed (27 tests), after quitting a Debug LemmeType that blocked the test host | n/a |
 | UI tests | **Not run**: UI Automation Mode needs interactive authentication here | **Not run** |
 | iOS | `make build-ios`, `make test-ios` passed (Simulator) | n/a |
 | Localization | `make l10n-check` passed | n/a |
@@ -130,8 +130,7 @@ Based on the run above; **Proposed until you approve them**.
 1. **Run the manual first-run and insertion checks** on a clean macOS user account with the
    release candidate (`docs/testing/manual-acceptance.md`, insertion matrix), and MeetQyl's
    test matrix with a real 5-minute call on macOS 27.
-2. **Quit your running Debug LemmeType** (or let me) and rerun `make test-app`; run
-   `make test-ui` from an interactive session.
+2. Run `make test-ui` (both apps' UI tests) from an interactive session.
 3. **Signing:** join the Apple Developer Program for a Developer ID (macOS notarization) and
    TestFlight (iPhone). Without it, friends use **Open Anyway** and must re-enable
    Accessibility after every LemmeType update.
