@@ -60,6 +60,8 @@
             /// Capture stop (processing start) to delivered text.
             public let stopToDeliverySeconds: Double
             public let wordErrorRate: Double
+            /// WER after `NumberNormalizer`, so "420" and "four hundred twenty" match.
+            public let numberNormalizedWordErrorRate: Double
             public let delivered: Bool
         }
 
@@ -92,6 +94,11 @@
             public let wordErrorRateByCategory: [String: Double]
             public let wordErrorRateByAccent: [String: Double]
             public let noisyWordErrorRate: Double
+            /// The same WERs with digits and English number words made equal (`NumberNormalizer`),
+            /// so writing "7:45" for "seven forty five" is not counted as a mistake.
+            public let numberNormalizedWordErrorRate: Double
+            public let noisyNumberNormalizedWordErrorRate: Double
+            public let numberNormalizedWordErrorRateByCategory: [String: Double]
             public let failedSessions: Int
             public let sessions: Int
         }
@@ -151,6 +158,8 @@
                                 audioSeconds: result.audioSeconds, inferenceSeconds: result.inferenceSeconds,
                                 stopToDeliverySeconds: result.stopToDeliverySeconds,
                                 wordErrorRate: result.producedText ? result.score.wordErrorRate : 1,
+                                numberNormalizedWordErrorRate: result.producedText
+                                    ? result.score.numberNormalizedWordErrorRate : 1,
                                 delivered: result.producedText))
                     }
                 }
@@ -167,10 +176,8 @@
             engine: String, corpus: BenchmarkCorpus, warmUp: Double, peakMemory: Int, measurements: [Measurement]
         ) -> Report {
             func mean(_ values: [Double]) -> Double { values.isEmpty ? 0 : values.reduce(0, +) / Double(values.count) }
-            func grouped(by key: (Measurement) -> String) -> [String: Double] {
-                Dictionary(grouping: measurements.filter { !$0.noisy }, by: key).mapValues {
-                    mean($0.map(\.wordErrorRate))
-                }
+            func grouped(by key: (Measurement) -> String, _ value: (Measurement) -> Double) -> [String: Double] {
+                Dictionary(grouping: measurements.filter { !$0.noisy }, by: key).mapValues { mean($0.map(value)) }
             }
             return Report(
                 engine: engine, corpusVersion: corpus.version, date: Date(),
@@ -182,9 +189,14 @@
                 stopToDeliverySeconds: Summary(measurements.map(\.stopToDeliverySeconds)),
                 realTimeFactor: Summary(measurements.map { $0.inferenceSeconds / max($0.audioSeconds, 0.01) }),
                 wordErrorRate: mean(measurements.filter { !$0.noisy }.map(\.wordErrorRate)),
-                wordErrorRateByCategory: grouped(by: \.category),
-                wordErrorRateByAccent: grouped(by: \.accent),
+                wordErrorRateByCategory: grouped(by: \.category, \.wordErrorRate),
+                wordErrorRateByAccent: grouped(by: \.accent, \.wordErrorRate),
                 noisyWordErrorRate: mean(measurements.filter(\.noisy).map(\.wordErrorRate)),
+                numberNormalizedWordErrorRate: mean(
+                    measurements.filter { !$0.noisy }.map(\.numberNormalizedWordErrorRate)),
+                noisyNumberNormalizedWordErrorRate: mean(
+                    measurements.filter(\.noisy).map(\.numberNormalizedWordErrorRate)),
+                numberNormalizedWordErrorRateByCategory: grouped(by: \.category, \.numberNormalizedWordErrorRate),
                 failedSessions: measurements.filter { !$0.delivered }.count,
                 sessions: measurements.count)
         }
@@ -223,15 +235,19 @@
                         format: "WER %.1f %% · noisy WER %.1f %% · %d of %d sessions failed",
                         report.wordErrorRate * 100, report.noisyWordErrorRate * 100, report.failedSessions,
                         report.sessions),
+                String(
+                    format: "Numbers normalized: WER %.1f %% · noisy WER %.1f %%",
+                    report.numberNormalizedWordErrorRate * 100, report.noisyNumberNormalizedWordErrorRate * 100),
                 "",
-                "| Group | WER |",
-                "|---|---|",
+                "| Group | WER | WER, numbers normalized |",
+                "|---|---|---|",
             ]
             for (name, value) in report.wordErrorRateByCategory.sorted(by: { $0.key < $1.key }) {
-                lines.append(String(format: "| %@ | %.1f %% |", name, value * 100))
+                let normalized = report.numberNormalizedWordErrorRateByCategory[name] ?? value
+                lines.append(String(format: "| %@ | %.1f %% | %.1f %% |", name, value * 100, normalized * 100))
             }
             for (name, value) in report.wordErrorRateByAccent.sorted(by: { $0.key < $1.key }) {
-                lines.append(String(format: "| accent %@ | %.1f %% |", name, value * 100))
+                lines.append(String(format: "| accent %@ | %.1f %% | |", name, value * 100))
             }
             return lines.joined(separator: "\n") + "\n"
         }

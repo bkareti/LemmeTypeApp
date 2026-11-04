@@ -44,6 +44,8 @@
             #expect(report.corpusVersion == 99)
             #expect(report.wordErrorRateByCategory["conversational"] == 0)
             #expect((report.wordErrorRateByCategory["numeric"] ?? 0) > 0)
+            #expect(report.numberNormalizedWordErrorRate <= report.wordErrorRate)
+            #expect(report.numberNormalizedWordErrorRateByCategory["conversational"] == 0)
             #expect(report.audioSeconds.mean > 0.5)
             #expect(report.stopToDeliverySeconds.mean >= report.inferenceSeconds.mean)
             #expect(!FileManager.default.fileExists(atPath: work.path))
