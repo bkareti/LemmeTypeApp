@@ -55,6 +55,8 @@ public final class DictationSettingsModel {
     private let speechAuthorizer: (any SpeechRecognitionAuthorizing)?
     private let diagnostics: any DiagnosticsRecording
     private let hardware: HardwareProfile
+    /// Which languages this build offers (ADR 0029).
+    public let languageScope: LanguageScope
     private var downloads: [ModelAssetID: Task<Void, Never>] = [:]
     private var refreshTask: Task<Void, Never>?
 
@@ -65,9 +67,11 @@ public final class DictationSettingsModel {
         preferences: any AppPreferences,
         speechAuthorizer: (any SpeechRecognitionAuthorizing)? = nil,
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics(),
-        hardware: HardwareProfile = .current
+        hardware: HardwareProfile = .current,
+        languageScope: LanguageScope = .allLanguages
     ) {
         self.hardware = hardware
+        self.languageScope = languageScope
         self.engines = engines
         self.modelAssets = modelAssets
         self.preferences = preferences
@@ -123,20 +127,26 @@ public final class DictationSettingsModel {
 
     /// The values the Language menu offers, in order: Automatic (when an
     /// engine can detect), English (with the regions Apple Speech offers), then
-    /// the other evaluation languages an engine supports.
+    /// the other evaluation languages an engine supports. An English-only
+    /// ``languageScope`` offers the English values alone.
     public var languageChoices: [String] {
         var choices: [String] = []
-        if rows.contains(where: { $0.capabilities.contains(.languageDetection) }) {
+        let englishOnly = languageScope == .englishOnly
+        if !englishOnly, rows.contains(where: { $0.capabilities.contains(.languageDetection) }) {
             choices.append(SpokenLanguages.automatic)
         }
         let regional = languages.filter { SpokenLanguages.isEnglish($0) && $0.contains("-") }
         choices += regional.isEmpty ? [SpokenLanguages.english.settingValue] : regional
-        for other in SpokenLanguages.all where !SpokenLanguages.isEnglish(other.code) {
+        for other in SpokenLanguages.all where !SpokenLanguages.isEnglish(other.code) && !englishOnly {
             if rows.contains(where: { supports($0, other.settingValue) }) { choices.append(other.settingValue) }
         }
         // A stored language that is no longer offered stays visible.
         return choices.contains(language) ? choices : choices + [language]
     }
+
+    /// The "Text you get" values this build offers. With a single value the
+    /// views hide the picker.
+    public var speechOutputChoices: [SpeechOutput] { languageScope.speechOutputs }
 
     /// The status of the chosen language in the support matrix, if it has one.
     public var languageStatus: LanguageSupportStatus? {

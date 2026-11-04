@@ -7,10 +7,22 @@ import UI
 /// per-app modes) or several services (models), and the performance plan
 /// that Whisper and model residency read for every session (E5-S5).
 extension AppComposition {
-    func makeModes(personalization: PersonalizationModel, languages: [String]) -> ModesSettingsModel {
+    /// Which languages this build offers (ADR 0029): English only in Release
+    /// (the friends beta), every language in Debug for evaluation work.
+    static var languageScope: LanguageScope {
+        #if ENGLISH_ONLY_RELEASE
+            .englishOnly
+        #else
+            .allLanguages
+        #endif
+    }
+
+    func makeModes(
+        personalization: PersonalizationModel, languages: [String], speechOutputs: [SpeechOutput]
+    ) -> ModesSettingsModel {
         ModesSettingsModel(
             personalization: personalization, preferences: preferences,
-            engines: recognitionEngines.map(\.descriptor.id), languages: languages,
+            engines: recognitionEngines.map(\.descriptor.id), languages: languages, speechOutputs: speechOutputs,
             runningApplications: Self.runningApplications, applicationName: Self.applicationName,
             diagnostics: diagnostics)
     }
@@ -18,6 +30,7 @@ extension AppComposition {
     func makeModels(dictation: DictationSettingsModel) -> ModelsSettingsModel {
         let models = ModelsSettingsModel(
             modelAssets: modelAssets, preferences: preferences, engines: recognitionEngines, hardware: hardware,
+            catalog: ModelCatalog.all.filter(Self.languageScope.lists),
             conditions: systemConditions.current, diagnostics: diagnostics)
         models.onModelsChanged = { [weak dictation] in dictation?.refreshInBackground() }
         return models

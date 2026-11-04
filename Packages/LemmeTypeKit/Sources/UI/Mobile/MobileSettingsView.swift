@@ -45,15 +45,17 @@
                             .foregroundStyle(.secondary)
                             .accessibilityIdentifier("settings.language.status")
                     }
-                    Picker(
-                        String(localized: "Text you get", bundle: .module),
-                        selection: Binding(get: { dictation.speechOutput }, set: { dictation.setSpeechOutput($0) })
-                    ) {
-                        ForEach(SpeechOutput.allCases, id: \.self) { output in
-                            Text(output.displayName).tag(output)
+                    if dictation.speechOutputChoices.count > 1 {
+                        Picker(
+                            String(localized: "Text you get", bundle: .module),
+                            selection: Binding(get: { dictation.speechOutput }, set: { dictation.setSpeechOutput($0) })
+                        ) {
+                            ForEach(dictation.speechOutputChoices, id: \.self) { output in
+                                Text(output.displayName).tag(output)
+                            }
                         }
+                        .accessibilityIdentifier("settings.output")
                     }
-                    .accessibilityIdentifier("settings.output")
                     Text(dictation.readiness.userMessage)
                         .font(.footnote)
                         .foregroundStyle(.secondary)

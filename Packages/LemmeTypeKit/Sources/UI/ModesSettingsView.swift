@@ -186,13 +186,16 @@ private struct ModeEditor: View {
                                 .tag(String?.some(language))
                         }
                     }
-                    Picker(String(localized: "Text you get", bundle: .module), selection: $mode.speechOutput) {
-                        Text(String(localized: "As in Dictation settings", bundle: .module)).tag(SpeechOutput?.none)
-                        ForEach(SpeechOutput.allCases, id: \.self) { output in
-                            Text(output.displayName).tag(SpeechOutput?.some(output))
+                    if model.speechOutputs.count > 1 {
+                        Picker(String(localized: "Text you get", bundle: .module), selection: $mode.speechOutput) {
+                            Text(String(localized: "As in Dictation settings", bundle: .module))
+                                .tag(SpeechOutput?.none)
+                            ForEach(model.speechOutputs, id: \.self) { output in
+                                Text(output.displayName).tag(SpeechOutput?.some(output))
+                            }
                         }
+                        .accessibilityIdentifier("modes.editor.output")
                     }
-                    .accessibilityIdentifier("modes.editor.output")
                 }
                 Section(
                     String(

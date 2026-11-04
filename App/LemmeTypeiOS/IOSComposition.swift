@@ -25,6 +25,16 @@ struct IOSComposition {
 
     static let uiTestingArgument = "-LemmeTypeUITesting"
 
+    /// Which languages this build offers (ADR 0029): English only in Release
+    /// (the friends beta), every language in Debug for evaluation work.
+    static var languageScope: LanguageScope {
+        #if ENGLISH_ONLY_RELEASE
+            .englishOnly
+        #else
+            .allLanguages
+        #endif
+    }
+
     let mode: Mode
     /// Shared with the App Intent, which leaves a request here (E8-S7).
     let launchRequests: LaunchRequestInbox
@@ -137,14 +147,17 @@ struct IOSComposition {
             checker: services.permissionChecker, requester: services.permissionRequester, diagnostics: diagnostics)
         let dictation = DictationSettingsModel(
             engines: services.engines, modelAssets: services.modelAssets, preferences: preferences,
-            speechAuthorizer: services.speechAuthorizer, diagnostics: diagnostics, hardware: services.hardware)
+            speechAuthorizer: services.speechAuthorizer, diagnostics: diagnostics, hardware: services.hardware,
+            languageScope: Self.languageScope)
         let modes = ModesSettingsModel(
             personalization: personalization, preferences: preferences,
             engines: services.engines.map(\.descriptor.id), languages: dictation.languageChoices,
+            speechOutputs: dictation.speechOutputChoices,
             runningApplications: { [] }, applicationName: { _ in nil }, diagnostics: diagnostics)
         let models = ModelsSettingsModel(
             modelAssets: services.modelAssets, preferences: preferences, engines: services.engines,
-            hardware: services.hardware, conditions: conditions.current, diagnostics: diagnostics)
+            hardware: services.hardware, catalog: ModelCatalog.all.filter(Self.languageScope.lists),
+            conditions: conditions.current, diagnostics: diagnostics)
         models.onModelsChanged = { [weak dictation] in dictation?.refreshInBackground() }
         let history = HistorySettingsModel(
             history: DictationHistoryService(

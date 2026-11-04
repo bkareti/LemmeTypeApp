@@ -17,10 +17,12 @@ struct DictationSettingsLanguageTests {
     /// Model fit is judged against a fixed Mac, not the machine running the tests.
     static let mac = HardwareProfile(isAppleSilicon: true, physicalMemoryBytes: 16 << 30)
 
-    func makeModel(engines: [FakeRecognitionEngine]? = nil) async -> DictationSettingsModel {
+    func makeModel(
+        engines: [FakeRecognitionEngine]? = nil, scope: LanguageScope = .allLanguages
+    ) async -> DictationSettingsModel {
         let model = DictationSettingsModel(
             engines: engines ?? [apple, whisper], modelAssets: FakeModelAssetManager(), preferences: preferences,
-            hardware: Self.mac)
+            hardware: Self.mac, languageScope: scope)
         await model.refresh()
         return model
     }
@@ -43,6 +45,29 @@ struct DictationSettingsLanguageTests {
         #expect(model.languageChoices == [SpokenLanguages.automatic, "en-US", "en-GB", "hi", "te"])
         #expect(DictationSettingsModel.settingLanguageName(SpokenLanguages.automatic) == "Automatic")
         #expect(DictationSettingsModel.settingLanguageName("hi") == "Hindi · हिन्दी")
+    }
+
+    // MARK: English-only scope (ADR 0029)
+
+    @Test func anEnglishOnlyBuildOffersEnglishRegionsWithoutAutomaticOrOtherLanguages() async {
+        let model = await makeModel(scope: .englishOnly)
+        #expect(model.languageChoices == ["en-US", "en-GB"])
+        #expect(model.speechOutputChoices == [.original], "nothing to translate, so the output picker is hidden")
+        #expect(model.readiness == .ready(engine: .appleSpeech))
+    }
+
+    @Test func anEnglishOnlyBuildKeepsAStoredOtherLanguageVisibleSoItCanBeChangedBack() async {
+        preferences.dictationLanguage = "hi"
+        let model = await makeModel(scope: .englishOnly)
+        #expect(model.languageChoices == ["en-US", "en-GB", "hi"])
+        model.setLanguage("en-US")
+        #expect(model.languageChoices == ["en-US", "en-GB"])
+    }
+
+    @Test func everyLanguageStaysOfferedWhenTheScopeIsAllLanguages() async {
+        let model = await makeModel(scope: .allLanguages)
+        #expect(model.languageChoices == [SpokenLanguages.automatic, "en-US", "en-GB", "hi", "te"])
+        #expect(model.speechOutputChoices == SpeechOutput.allCases)
     }
 
     @Test func automaticIsOfferedOnlyWhenAnEngineCanDetect() async {

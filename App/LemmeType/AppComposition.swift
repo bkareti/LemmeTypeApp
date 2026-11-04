@@ -232,8 +232,10 @@ struct AppComposition {
         let recorder = makeRecorder(personalization: personalization, residency: residency)
         let dictation = DictationSettingsModel(
             engines: recognitionEngines, modelAssets: modelAssets, preferences: preferences,
-            speechAuthorizer: speechAuthorizer, diagnostics: diagnostics)
-        let modes = makeModes(personalization: personalization, languages: dictation.languageChoices)
+            speechAuthorizer: speechAuthorizer, diagnostics: diagnostics, languageScope: Self.languageScope)
+        let modes = makeModes(
+            personalization: personalization, languages: dictation.languageChoices,
+            speechOutputs: dictation.speechOutputChoices)
         let models = makeModels(dictation: dictation)
         let updates = makeUpdates(recorder: recorder)
         let recovery = RecoveryNoticeModel()

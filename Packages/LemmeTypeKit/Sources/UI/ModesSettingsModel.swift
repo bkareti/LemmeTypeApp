@@ -34,12 +34,16 @@ public final class ModesSettingsModel {
     public let engines: [RecognitionEngineID]
     /// Languages a mode may pick.
     public let languages: [String]
+    /// "Text you get" values a mode may pick (ADR 0029). With one value the
+    /// editor hides the choice.
+    public let speechOutputs: [SpeechOutput]
 
     public init(
         personalization: PersonalizationModel,
         preferences: any AppPreferences,
         engines: [RecognitionEngineID] = [],
         languages: [String] = [],
+        speechOutputs: [SpeechOutput] = SpeechOutput.allCases,
         runningApplications: @escaping @MainActor () -> [ApplicationIdentity] = { [] },
         applicationName: @escaping @MainActor (String) -> String? = { _ in nil },
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
@@ -48,6 +52,7 @@ public final class ModesSettingsModel {
         self.preferences = preferences
         self.engines = engines
         self.languages = languages
+        self.speechOutputs = speechOutputs
         self.runningApplications = runningApplications
         self.applicationName = applicationName
         self.diagnostics = diagnostics

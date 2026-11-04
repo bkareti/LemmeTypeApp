@@ -4,3 +4,7 @@ SWIFT_OPTIMIZATION_LEVEL = -O
 SWIFT_COMPILATION_MODE = wholemodule
 ENABLE_HARDENED_RUNTIME = YES
 DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+
+// The friends beta offers English only (docs/decisions/0029-english-only-beta-scope.md).
+// Remove this condition to offer every language again; Debug keeps all of them.
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) ENGLISH_ONLY_RELEASE
