@@ -69,7 +69,7 @@ extension point for future language packs.
 | Package tests | `make test-unit` passed (all suites) | `make test` passed (module rules + ~1,170 tests) |
 | App build | Release archive built | Debug build passed in `make ci` |
 | Hosted app tests | `make test-app` passed (27 tests), after quitting a Debug LemmeType that blocked the test host | n/a |
-| UI tests | **Not run**: UI Automation Mode needs interactive authentication here | **Not run** |
+| UI tests | `make test-ui`: 33 of 35 pass with #143 (which fixes 5 tests that had failed on `main` since #119, including ⌃Tab pane switching and contrast). The 2 `PersonalizationUITests` failures happen only on this Mac (they pass on CI) | **Not run** |
 | iOS | `make build-ios`, `make test-ios` passed (Simulator) | n/a |
 | Localization | `make l10n-check` passed | n/a |
 | Release candidate | `make release-build REHEARSAL=1` + `release-verify` passed: signature valid (deep, strict), Hardened Runtime, entitlements = allowlist, no get-task-allow, no recordings or transcripts inside. Notarization skipped (ad hoc). `-DENGLISH_ONLY_RELEASE` confirmed in the archive log | `make test-dmg VERSION=0.2.0 EXPIRES=2026-12-04` (see MeetQyl report) |
@@ -130,7 +130,7 @@ Based on the run above; **Proposed until you approve them**.
 1. **Run the manual first-run and insertion checks** on a clean macOS user account with the
    release candidate (`docs/testing/manual-acceptance.md`, insertion matrix), and MeetQyl's
    test matrix with a real 5-minute call on macOS 27.
-2. Run `make test-ui` (both apps' UI tests) from an interactive session.
+2. Merge #143 (UI test fixes). Check with VoiceOver the two audit items it skips without proof (SwiftUI menu pickers, the Audio pane's level meter), and run MeetQyl's UI tests from an interactive session.
 3. **Signing:** join the Apple Developer Program for a Developer ID (macOS notarization) and
    TestFlight (iPhone). Without it, friends use **Open Anyway** and must re-enable
    Accessibility after every LemmeType update.
