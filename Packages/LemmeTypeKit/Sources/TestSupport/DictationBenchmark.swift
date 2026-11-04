@@ -63,6 +63,20 @@
             /// WER after `NumberNormalizer`, so "420" and "four hundred twenty" match.
             public let numberNormalizedWordErrorRate: Double
             public let delivered: Bool
+
+            /// A session that produced no text counts as every word wrong.
+            init(_ result: EvaluationResult, category: String, accent: String, noisy: Bool) {
+                id = result.id
+                self.category = category
+                self.accent = accent
+                self.noisy = noisy
+                audioSeconds = result.audioSeconds
+                inferenceSeconds = result.inferenceSeconds
+                stopToDeliverySeconds = result.stopToDeliverySeconds
+                wordErrorRate = result.producedText ? result.score.wordErrorRate : 1
+                numberNormalizedWordErrorRate = result.producedText ? result.score.numberNormalizedWordErrorRate : 1
+                delivered = result.producedText
+            }
         }
 
         public struct Summary: Codable, Sendable {
@@ -153,14 +167,7 @@
                             task: task)
                         try? FileManager.default.removeItem(at: url)
                         measurements.append(
-                            Measurement(
-                                id: utterance.id, category: utterance.category, accent: voice.accent, noisy: noisy,
-                                audioSeconds: result.audioSeconds, inferenceSeconds: result.inferenceSeconds,
-                                stopToDeliverySeconds: result.stopToDeliverySeconds,
-                                wordErrorRate: result.producedText ? result.score.wordErrorRate : 1,
-                                numberNormalizedWordErrorRate: result.producedText
-                                    ? result.score.numberNormalizedWordErrorRate : 1,
-                                delivered: result.producedText))
+                            Measurement(result, category: utterance.category, accent: voice.accent, noisy: noisy))
                     }
                 }
             }
