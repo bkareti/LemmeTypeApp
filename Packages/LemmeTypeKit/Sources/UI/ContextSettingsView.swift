@@ -43,12 +43,16 @@
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     if let availability = model.rewriterAvailability {
-                        Label(
-                            availability.userMessage,
-                            systemImage: availability.isReady
-                                ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
-                        )
-                        .foregroundStyle(availability.isReady ? .green : .orange)
+                        // Only the icon is coloured: green or orange text fails the contrast audit.
+                        Label {
+                            Text(availability.userMessage)
+                        } icon: {
+                            Image(
+                                systemName: availability.isReady
+                                    ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
+                            )
+                            .foregroundStyle(availability.isReady ? .green : .orange)
+                        }
                         .accessibilityIdentifier("context.modelStatus")
                     }
                 }
@@ -71,12 +75,11 @@
                         }
                     }
                     .accessibilityIdentifier("context.addApp")
+                    // Default colour: secondary text on a form row fails the contrast audit.
                     Text(sensitiveNote)
                         .font(.callout)
-                        .foregroundStyle(.secondary)
                     Text(String(localized: "Password fields are never read in any app.", bundle: .module))
                         .font(.callout)
-                        .foregroundStyle(.secondary)
                 }
             }
             .formStyle(.grouped)

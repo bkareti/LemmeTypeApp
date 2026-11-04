@@ -20,7 +20,8 @@ final class PseudoLocalizationUITests: XCTestCase {
         let window = app.windows["settings"]
         XCTAssertTrue(window.waitForExistence(timeout: 10))
         for name in tabs {
-            let tab = window.tabs[name]
+            // Doubled strings label the tab "General General"; match the start.
+            let tab = window.tabs.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
             XCTAssertTrue(tab.waitForExistence(timeout: 5), "\(name) tab exists")
             tab.click()
             let controls =
