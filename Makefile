@@ -10,7 +10,7 @@ IOS_XCODEBUILD := xcodebuild -project $(PROJECT) -scheme LemmeTypeiOS -destinati
 XCODEBUILD  := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED)
 SWIFT_DIRS  := App Packages/LemmeTypeKit/Sources Packages/LemmeTypeKit/Tests Packages/LemmeTypeKit/Package.swift
 
-.PHONY: bootstrap generate build build-ios test-ios test-ui-ios evaluation-ios test test-unit test-app test-ui lint format app-icons privacy-check network-check security-check privacy-docs-check l10n-check l10n-update docs-check corpus-check evaluation-check evaluation quality-gate release-build release-verify release-notarize release-script-tests ci run clean benchmark release-check
+.PHONY: bootstrap generate build build-ios test-ios test-ui-ios evaluation-ios test test-unit test-app test-ui lint format app-icons privacy-check network-check security-check privacy-docs-check l10n-check l10n-update docs-check corpus-check evaluation-check evaluation quality-gate ios-appstore-check ios-appstore release-build release-verify release-notarize release-script-tests ci run clean benchmark release-check
 
 bootstrap: ## Verify required tools are installed
 	@command -v xcodegen >/dev/null || { echo "Missing xcodegen: brew install xcodegen"; exit 1; }
@@ -94,6 +94,12 @@ quality-gate: ## Every automated check with one summary (UI=1 adds the UI tests)
 
 release-script-tests: ## Fixture tests for the release scripts
 	scripts/tests/test-verify-release.sh
+
+ios-appstore-check: ## Archive the iPhone and iPad app unsigned and run the App Store checks
+	scripts/build-ios-appstore.sh --check
+
+ios-appstore: ## Archive and export the iPhone and iPad app for App Store Connect (UPLOAD=1 uploads; needs TEAM_ID)
+	scripts/build-ios-appstore.sh $(if $(UPLOAD),--upload)
 
 release-build: ## Build build/release (Developer ID if available; REHEARSAL=1 forces an ad-hoc build)
 	scripts/build-release.sh $(if $(REHEARSAL),--rehearsal)

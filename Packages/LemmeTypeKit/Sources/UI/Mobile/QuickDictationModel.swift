@@ -34,6 +34,8 @@ public final class QuickDictationModel {
     private let requestMicrophone: @MainActor () async -> PermissionStatus
     private let openSettings: @MainActor () -> Void
     private let lifetime: @MainActor () -> CopiedTextLifetime
+    private let needsSpeechRecognition: @MainActor () -> Bool
+    private let requestSpeechRecognition: @MainActor () async -> Void
     private let launchRequests: LaunchRequestInbox?
     private let feedback: any RecordingFeedback
 
@@ -44,6 +46,8 @@ public final class QuickDictationModel {
         requestMicrophone: @escaping @MainActor () async -> PermissionStatus,
         openSettings: @escaping @MainActor () -> Void,
         lifetime: @escaping @MainActor () -> CopiedTextLifetime = { .default },
+        needsSpeechRecognition: @escaping @MainActor () -> Bool = { false },
+        requestSpeechRecognition: @escaping @MainActor () async -> Void = {},
         launchRequests: LaunchRequestInbox? = nil
     ) {
         self.recorder = recorder
@@ -52,6 +56,8 @@ public final class QuickDictationModel {
         self.requestMicrophone = requestMicrophone
         self.openSettings = openSettings
         self.lifetime = lifetime
+        self.needsSpeechRecognition = needsSpeechRecognition
+        self.requestSpeechRecognition = requestSpeechRecognition
         self.launchRequests = launchRequests
     }
 
@@ -104,12 +110,13 @@ public final class QuickDictationModel {
 
     // MARK: Recording
 
-    /// Starts a dictation. The first time, the user reads why the microphone is
-    /// needed before the system asks.
+    /// Starts a dictation. The first time, the user reads why the microphone (and,
+    /// when no engine is ready without it, Speech Recognition) is needed before the
+    /// system asks, so the first dictation works without a detour to Settings.
     public func start() {
         guard screen == .ready else { return }
         copiedFor = nil
-        if microphoneStatus() == .notRequested {
+        if microphoneStatus() == .notRequested || needsSpeechRecognition() {
             isExplainingMicrophone = true
         } else {
             recorder.requestStart(target: nil)
@@ -120,7 +127,8 @@ public final class QuickDictationModel {
     /// screen says why nothing records and offers Open Settings (E8-S4).
     public func continueAfterExplanation() async {
         isExplainingMicrophone = false
-        _ = await requestMicrophone()
+        if microphoneStatus() == .notRequested { _ = await requestMicrophone() }
+        if needsSpeechRecognition() { await requestSpeechRecognition() }
         recorder.requestStart(target: nil)
     }
 

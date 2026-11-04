@@ -113,3 +113,14 @@ Domain protocol only.
    Settings › General › Updates.
 3. Should the app show release notes? The release page does; the app shows the
    version and a link only, so no remote text is rendered inside the app.
+
+## Addendum 2026-11-04: channels for 1.0.0
+
+- **iPhone and iPad: the App Store.** The iOS app is sandboxed by nature, needs no
+  Accessibility, and has no update mechanism of its own, so it fits App Review as is.
+  The submission, metadata, and review-risk checklist are in `docs/release/app-store.md`;
+  `make ios-appstore-check` / `make ios-appstore` build and check the archive.
+- **Mac: Developer ID download, as decided above.** The Mac App Store stays out of 1.0.0:
+  it needs the App Sandbox (Guideline 2.4.5(i)), whose effect on cross-app insertion is
+  untested (MA-61), and forbids the update check (2.4.5(vii)). Revisit only after MA-61.
+

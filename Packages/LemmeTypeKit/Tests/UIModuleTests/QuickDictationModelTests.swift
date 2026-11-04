@@ -20,7 +20,8 @@ struct QuickDictationModelTests {
     private func makeModel(
         microphone: PermissionStatus = .granted,
         inbox: LaunchRequestInbox? = nil,
-        lifetime: CopiedTextLifetime = .twoMinutes
+        lifetime: CopiedTextLifetime = .twoMinutes,
+        speech: FakeSpeechAuthorizer? = nil
     ) -> QuickDictationModel {
         let recorder = RecordingCoordinator(
             capture: AudioCaptureService(
@@ -29,7 +30,10 @@ struct QuickDictationModelTests {
             textCopier: copier, finishedDisplay: .milliseconds(50), failureDisplay: .milliseconds(50))
         return QuickDictationModel(
             recorder: recorder, feedback: feedback, microphoneStatus: { microphone },
-            requestMicrophone: { .granted }, openSettings: {}, lifetime: { lifetime }, launchRequests: inbox)
+            requestMicrophone: { .granted }, openSettings: {}, lifetime: { lifetime },
+            needsSpeechRecognition: { speech?.status() == .notRequested },
+            requestSpeechRecognition: { _ = await speech?.requestAuthorization() },
+            launchRequests: inbox)
     }
 
     private func review(_ text: String) -> DictationOutcome {
@@ -109,6 +113,38 @@ struct QuickDictationModelTests {
         model.cancelExplanation()
         #expect(!model.isExplainingMicrophone)
         #expect(model.screen == .ready)
+    }
+
+    /// App Review: the first dictation must work without a detour to Settings, so Speech
+    /// Recognition is asked for right after the microphone when nothing else is ready.
+    @Test func theFirstStartAsksForSpeechRecognitionAfterTheExplanationWhenNeeded() async {
+        let speech = FakeSpeechAuthorizer(status: .notRequested, answer: .granted)
+        let model = makeModel(microphone: .granted, speech: speech)
+
+        model.start()
+        await model.recorder.settle()
+        #expect(model.isExplainingMicrophone, "explained first, even with the microphone already allowed")
+        #expect(speech.requestCount == 0)
+
+        await model.continueAfterExplanation()
+        await model.recorder.settle()
+        #expect(speech.requestCount == 1)
+        #expect(model.screen == .recording)
+        model.cancel()
+        await model.recorder.settle()
+    }
+
+    @Test func aDecidedSpeechPermissionIsNotAskedAgain() async {
+        let speech = FakeSpeechAuthorizer(status: .denied)
+        let model = makeModel(microphone: .granted, speech: speech)
+
+        model.start()
+        await model.recorder.settle()
+
+        #expect(!model.isExplainingMicrophone)
+        #expect(speech.requestCount == 0)
+        model.cancel()
+        await model.recorder.settle()
     }
 
     @Test func deniedMicrophoneNeverRecordsAndOffersSettings() async {

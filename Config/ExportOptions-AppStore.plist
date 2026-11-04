@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- App Store Connect export of the iPhone and iPad app (docs/release/app-store.md).
+     scripts/build-ios-appstore.sh replaces __TEAM_ID__ and __DESTINATION__ (export or
+     upload) in a temporary copy; the team id comes from the environment or
+     Config/Signing.local.xcconfig, which is not committed. -->
+<plist version="1.0">
+<dict>
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>signingStyle</key>
+	<string>automatic</string>
+	<key>teamID</key>
+	<string>__TEAM_ID__</string>
+	<key>destination</key>
+	<string>__DESTINATION__</string>
+	<key>uploadSymbols</key>
+	<true/>
+	<key>manageAppVersionAndBuildNumber</key>
+	<false/>
+</dict>
+</plist>

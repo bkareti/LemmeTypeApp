@@ -139,7 +139,7 @@ picks a scenario with launch arguments, read by `IOSComposition.UITestScenario` 
 | Test | Checks |
 |---|---|
 | `QuickDictationUITests` | Record, review, copy; cancel; discard; Settings sections |
-| `RecordingEndingsUITests` | The microphone explanation, Not Now, a denial at the prompt and at launch (Open Settings), an interruption (Try Again, nothing to copy), the time limit (the text is still reviewed), leaving the app (the dictation is kept), no speech, Dictate Again, and a shortcut start |
+| `RecordingEndingsUITests` | The microphone explanation (Continue only, Guideline 5.1.1), a denial at the prompt and at launch (Open Settings), an interruption (Try Again, nothing to copy), the time limit (the text is still reviewed), leaving the app (the dictation is kept), no speech, Dictate Again, and a shortcut start |
 
 Writing these found a gap against E8-S4: after the explanation, denying the system prompt
 left the screen at Start Dictating with no message. `QuickDictationModel.continueAfterExplanation`

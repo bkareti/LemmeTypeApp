@@ -139,6 +139,9 @@
     "A short list of recent events, such as “recording stopped”. It has no words or audio." : {
 
     },
+    "About" : {
+      "comment" : "Settings section: version and legal"
+    },
     "About and support" : {
 
     },
@@ -150,6 +153,9 @@
     },
     "Accessibility access is needed to insert text. Copy it for now." : {
 
+    },
+    "Acknowledgements" : {
+      "comment" : "Opens the open-source licences"
     },
     "Action Button" : {
 
@@ -204,9 +210,6 @@
 
     },
     "Allow Speech Recognition" : {
-
-    },
-    "Allow the microphone?" : {
 
     },
     "Allowed" : {
@@ -292,6 +295,9 @@
     },
     "Balanced, or Low Power while %@ is in Low Power Mode." : {
 
+    },
+    "Before You Dictate" : {
+      "comment" : "Title shown before iOS asks for microphone and speech recognition permission"
     },
     "Best Accuracy" : {
 
@@ -705,6 +711,9 @@
     "Granted" : {
 
     },
+    "Help and Support" : {
+      "comment" : "Link to the help page"
+    },
     "History" : {
       "comment" : "Noun: the list of dictations the user chose to keep"
     },
@@ -841,8 +850,8 @@
     "LemmeType History" : {
 
     },
-    "LemmeType listens only while you are on this screen and the recording is showing. Your voice is turned into text on this device and never leaves it." : {
-
+    "LemmeType listens only while you are on this screen and the recording is showing. Your voice is turned into text on this device and never leaves it. Next, iOS asks for your permission." : {
+      "comment" : "Shown before iOS asks for microphone and speech recognition permission"
     },
     "LemmeType needs Accessibility to type your dictated text into the app you were using." : {
 
@@ -1233,6 +1242,9 @@
     },
     "Privacy and Data" : {
 
+    },
+    "Privacy Policy" : {
+      "comment" : "Link to the privacy policy"
     },
     "Processing…" : {
 
@@ -1892,7 +1904,7 @@
 
     },
     "Version" : {
-
+      "comment" : "Label: the app's version number"
     },
     "Vocabulary" : {
 
