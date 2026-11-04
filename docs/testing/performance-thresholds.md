@@ -104,7 +104,9 @@ model is loaded at launch.
 
 | Date | Mac (model, memory) | macOS | Engine | Report summary | Within thresholds |
 |---|---|---|---|---|---|
-| — | — | — | — | Not yet run on minimum or recommended hardware | — |
+| 2026-11-04 | Mac16,1, 16 GB (recommended tier) | 27.0 (26A428) | Whisper Small English | 0/80 failed; stop → text 0.50 s mean, 0.84 s p95; RTF 0.11; load 0.20 s; +686 MB; WER 15.1 % raw, 10.3 % numbers normalized; noisy 17.7 % / 12.9 % (`scripts/run-recognition-benchmark.sh`, corpus v2) | All but raw `wordErrorRate` (number formatting; see `docs/release/friends-beta-readiness.md`) |
+| 2026-11-04 | Mac16,1, 16 GB | 27.0 (26A428) | Whisper Small (multilingual) | 0/80 failed; 0.45 s / 0.71 s; WER 16.3 % raw, 11.5 % normalized; noisy 20.9 % / 16.1 % | All but raw `wordErrorRate` |
+| — | 8 GB M1 (minimum) | — | Base | Not yet run | — |
 
 ## Approval
 
