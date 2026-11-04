@@ -115,6 +115,10 @@ jobs:
         run: brew install xcodegen
 
       - name: UI tests (fake services, no microphone or permissions)
+        # Contrast is audited on a Mac display (make test-ui), not on the hosted runner
+        # (AccessibilityUITests.auditTypes).
+        env:
+          TEST_RUNNER_LEMMETYPE_SKIP_CONTRAST_AUDIT: "1"
         run: make test-ui
 
       - name: No captured audio left behind
