@@ -78,19 +78,21 @@ struct DictationSettingsView: View {
                     .accessibilityIdentifier("dictation.language.status")
             }
 
-            Picker(
-                String(localized: "Text you get", bundle: .module),
-                selection: Binding(get: { model.speechOutput }, set: { model.setSpeechOutput($0) })
-            ) {
-                ForEach(SpeechOutput.allCases, id: \.self) { output in
-                    Text(output.displayName).tag(output)
+            if model.speechOutputChoices.count > 1 {
+                Picker(
+                    String(localized: "Text you get", bundle: .module),
+                    selection: Binding(get: { model.speechOutput }, set: { model.setSpeechOutput($0) })
+                ) {
+                    ForEach(model.speechOutputChoices, id: \.self) { output in
+                        Text(output.displayName).tag(output)
+                    }
                 }
+                .accessibilityIdentifier("dictation.output")
+                Text(model.speechOutput.summary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("dictation.output.summary")
             }
-            .accessibilityIdentifier("dictation.output")
-            Text(model.speechOutput.summary)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .accessibilityIdentifier("dictation.output.summary")
 
             HStack {
                 Image(systemName: model.readiness.isReady ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")

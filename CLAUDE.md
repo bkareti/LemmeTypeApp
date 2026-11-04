@@ -203,6 +203,13 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   `ModesSettingsModel` backs Settings › Dictation › Modes and the menu picker.
   Export/Import/Delete All (`PersonalizationDataControls`) use the archive;
   `PersonalizationEndToEndTests` covers Epic 4 end to end with canaries.
+- English-only beta (ADR 0029): `LanguageScope` (Domain) decides what a build
+  offers. `Config/Release.xcconfig` adds `ENGLISH_ONLY_RELEASE`, so
+  `AppComposition.languageScope` / `IOSComposition.languageScope` pass
+  `.englishOnly` to `DictationSettingsModel(languageScope:)` (no Automatic, no
+  Hindi/Telugu, `speechOutputChoices == [.original]`, so the "Text you get"
+  pickers hide), `ModesSettingsModel(speechOutputs:)`, and `ModelsSettingsModel`
+  (catalog filtered by `LanguageScope.lists`). Debug keeps every language.
 - Multilingual dictation (ADR 0023): `SpokenLanguages` (Domain; evaluation
   languages en/hi/te plus the stored value `auto`) and `LanguageSupportMatrix`
   (the one source for "validated" vs "evaluation"). Engines declare `tasks`
@@ -295,7 +302,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management; 0023 multilingual dictation; 0024 tone and style; 0025 privacy data and history; 0026 distribution and updates; 0027 iPhone and iPad companion; 0028 Whisper decoding safeguards).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management; 0023 multilingual dictation; 0024 tone and style; 0025 privacy data and history; 0026 distribution and updates; 0027 iPhone and iPad companion; 0028 Whisper decoding safeguards; 0029 English-only beta scope; 0030 shared local transcription foundation, Proposed).
 
 ## Planning documents
 
