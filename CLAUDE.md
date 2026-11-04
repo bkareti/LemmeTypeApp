@@ -55,6 +55,9 @@ make build-ios   # the iPhone and iPad app for the iOS Simulator
 make test-ios    # its unit tests + the portable package tests on the iOS Simulator
 make test-ui-ios # its UI tests on the iOS Simulator, against fakes and scenarios
 make evaluation-ios MODEL=whisper-base  # corpus evaluation inside the iPhone app (Simulator or DEVICE=…; not CI)
+make ios-appstore-check   # unsigned Release iPhone/iPad archive + App Store checks (docs/release/app-store.md)
+make ios-appstore UPLOAD=1  # signed archive, checks, upload to App Store Connect (needs TEAM_ID)
+scripts/make-app-store-screenshots.sh  # 6.9-inch iPhone and 13-inch iPad App Store screenshots
 make format      # apply swift-format
 make run         # build and launch
 ```
@@ -277,6 +280,15 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   on phones; `WhisperEngine(availableMemory:)` refuses a load that does not fit. An App Intent
   leaves a one-time `LaunchRequestInbox` request. `DeviceWords` keeps shared text from saying
   "this Mac" on a phone. `HandheldEndToEndTests` covers the path; device steps are MA-66…MA-72.
+- App Store (iPhone and iPad, ADR 0026 addendum): `docs/release/app-store.md` holds the
+  metadata, privacy answers, review notes, and the review-risk checklist.
+  `scripts/verify-ios-appstore.sh` checks an archive. Guideline 5.1.1: the first-dictation
+  explanation (`QuickDictationView`, "Before You Dictate") has only Continue, then
+  `QuickDictationModel` asks for the microphone and, when no engine is ready, Speech
+  Recognition. Settings › About (`MobileAboutSection`) links `PublicLinks.privacyPolicy` /
+  `support` and shows `Acknowledgements` (bundled `Acknowledgements.txt`, kept equal to
+  `THIRD_PARTY_NOTICES.md` by `AcknowledgementsTests`). The Mac app is not on the Mac App
+  Store (sandbox vs Accessibility insertion, MA-61).
 - App icons: `scripts/make-app-icons.py` draws the "L." mark (geometry measured from
   `Logos/`, jade `#03A58D`) once and renders `Design/AppIcon/*.svg` plus both
   `Assets.xcassets/AppIcon.appiconset` catalogs (Mac 16–512 pt at 1x/2x; iPhone/iPad
