@@ -21,7 +21,7 @@ final class RecordingEndingsUITests: XCTestCase {
     private var record: XCUIElement { app.buttons["quick.record"] }
     private var stop: XCUIElement { app.buttons["quick.stop"] }
     private var result: XCUIElement { app.staticTexts["quick.result"] }
-    private var microphoneAlert: XCUIElement { app.alerts["Allow the microphone?"] }
+    private var microphoneAlert: XCUIElement { app.alerts["Before You Dictate"] }
 
     private func element(_ identifier: String) -> XCUIElement {
         app.descendants(matching: .any)[identifier].firstMatch
@@ -43,16 +43,17 @@ final class RecordingEndingsUITests: XCTestCase {
         XCTAssertTrue(record.waitForExistence(timeout: 5))
     }
 
-    func testNotNowRecordsNothing() {
+    /// App Review Guideline 5.1.1(iv): the explanation offers no way out before the system
+    /// prompt; declining happens in the system prompt (next test).
+    func testTheExplanationOnlyContinuesToTheSystemPrompt() {
         launch(["-LemmeTypeMicrophone", "notRequested"])
         XCTAssertTrue(record.waitForExistence(timeout: 10))
         record.tap()
         XCTAssertTrue(microphoneAlert.waitForExistence(timeout: 5))
 
-        microphoneAlert.buttons["Not Now"].tap()
-
-        XCTAssertTrue(record.waitForExistence(timeout: 5))
-        XCTAssertFalse(stop.exists)
+        XCTAssertEqual(microphoneAlert.buttons.count, 1)
+        XCTAssertTrue(microphoneAlert.buttons["Continue"].exists)
+        XCTAssertFalse(stop.exists, "nothing records before the system prompt is answered")
     }
 
     func testDenyingAtTheSystemPromptSaysWhyAndOffersSettings() {

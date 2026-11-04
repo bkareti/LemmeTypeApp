@@ -174,7 +174,17 @@ struct IOSComposition {
             microphoneStatus: { checker.status(for: .microphone) },
             requestMicrophone: { await requester.requestMicrophoneAccess() },
             openSettings: { requester.openSystemSettings(for: .microphone) },
-            lifetime: services.copiedTextLifetime, launchRequests: launchRequests)
+            lifetime: services.copiedTextLifetime,
+            // Apple Speech, the engine that works without a download, needs Speech Recognition:
+            // ask with the microphone on the first dictation when nothing else is ready.
+            needsSpeechRecognition: { [weak dictation] in
+                services.speechAuthorizer.status() == .notRequested && dictation?.hasReadyEngine != true
+            },
+            requestSpeechRecognition: { [weak dictation] in
+                _ = await services.speechAuthorizer.requestAuthorization()
+                await dictation?.refresh()
+            },
+            launchRequests: launchRequests)
         return IOSComposition(
             mode: mode, launchRequests: launchRequests, recorder: recorder, quick: quick, dictation: dictation,
             models: models, personalization: personalization, modes: modes, privacy: privacy,

@@ -36,21 +36,24 @@
                 .frame(maxWidth: .infinity)
             }
             .navigationTitle(String(localized: "Dictate", bundle: .module, comment: "Title of the main screen"))
+            // App Review Guideline 5.1.1(iv): an explanation before the system prompt may only
+            // continue to it. The user declines (or allows) in the system prompt itself.
             .alert(
-                String(localized: "Allow the microphone?", bundle: .module),
-                isPresented: Binding(
-                    get: { model.isExplainingMicrophone }, set: { if !$0 { model.cancelExplanation() } })
+                String(
+                    localized: "Before You Dictate", bundle: .module,
+                    comment: "Title shown before iOS asks for microphone and speech recognition permission"),
+                isPresented: Binding(get: { model.isExplainingMicrophone }, set: { _ in })
             ) {
                 Button(String(localized: "Continue", bundle: .module)) {
                     Task { await model.continueAfterExplanation() }
                 }
-                Button(String(localized: "Not Now", bundle: .module), role: .cancel) { model.cancelExplanation() }
             } message: {
                 Text(
                     String(
                         localized:
-                            "LemmeType listens only while you are on this screen and the recording is showing. Your voice is turned into text on this device and never leaves it.",
-                        bundle: .module))
+                            "LemmeType listens only while you are on this screen and the recording is showing. Your voice is turned into text on this device and never leaves it. Next, iOS asks for your permission.",
+                        bundle: .module,
+                        comment: "Shown before iOS asks for microphone and speech recognition permission"))
             }
         }
 
@@ -58,9 +61,16 @@
 
         private var summary: some View {
             VStack(spacing: 4) {
-                Text(
-                    "\(DictationSettingsModel.settingLanguageName(dictation.language)) · \(dictation.speechOutput.displayName)"
-                )
+                // An English-only build (ADR 0029) has one output, so naming it says nothing.
+                Group {
+                    if dictation.speechOutputChoices.count > 1 {
+                        Text(
+                            "\(DictationSettingsModel.settingLanguageName(dictation.language)) · \(dictation.speechOutput.displayName)"
+                        )
+                    } else {
+                        Text(verbatim: DictationSettingsModel.settingLanguageName(dictation.language))
+                    }
+                }
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("quick.summary")

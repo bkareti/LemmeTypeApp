@@ -109,6 +109,7 @@
                     }
                     .accessibilityIdentifier("settings.privacy")
                 }
+                MobileAboutSection()
             }
             .navigationTitle(String(localized: "Settings", bundle: .module))
             .task { await dictation.refresh() }
