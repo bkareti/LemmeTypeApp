@@ -76,6 +76,16 @@ struct DictationSettingsLanguageTests {
         #expect(model.readiness == .ready(engine: .whisper))
     }
 
+    @Test func teluguSaysItIsNotReliableButCanStillBeChosen() async {
+        let model = await makeModel()
+        model.setLanguage("te")
+        await model.refresh()
+        #expect(model.languageStatus == .unreliable)
+        #expect(model.languageStatus?.badge == "Not reliable")
+        #expect(model.languageStatus?.explanation?.contains("Whisper Small") == true)
+        #expect(model.readiness == .ready(engine: .whisper))
+    }
+
     @Test func aMissingModelIsExplainedWithTheModelAndItsSize() async {
         whisper.setAvailability(.assetsMissing, for: RecognitionNeed(language: "hi"))
         let model = await makeModel()

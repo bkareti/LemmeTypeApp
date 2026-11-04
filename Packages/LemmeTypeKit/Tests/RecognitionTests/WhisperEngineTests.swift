@@ -10,21 +10,25 @@ import Testing
 /// inference until aborted.
 final class FakeWhisperRuntime: WhisperRuntime {
     private let state = Mutex((loads: 0, live: 0))
-    let segments: [TranscriptSegment]
+    let segments: [WhisperSegment]
     let loadDelay: Duration
     let inferenceBlocksUntilAborted: Bool
     /// What detection reports (E9-S2).
     let probabilities: [LanguageProbability]
+    /// What the no-speech check reports per window.
+    let noSpeech: [Float]
 
     init(
-        segments: [TranscriptSegment] = [
-            TranscriptSegment(text: "Ship it", start: 0, duration: 0.6),
-            TranscriptSegment(text: " on Wednesday.", start: 0.6, duration: 0.8),
+        segments: [WhisperSegment] = [
+            WhisperSegment(text: "Ship it", start: 0, duration: 0.6),
+            WhisperSegment(text: " on Wednesday.", start: 0.6, duration: 0.8),
         ],
         loadDelay: Duration = .zero,
         inferenceBlocksUntilAborted: Bool = false,
-        probabilities: [LanguageProbability] = []
+        probabilities: [LanguageProbability] = [],
+        noSpeech: [Float] = [0.01]
     ) {
+        self.noSpeech = noSpeech
         self.segments = segments
         self.loadDelay = loadDelay
         self.inferenceBlocksUntilAborted = inferenceBlocksUntilAborted
@@ -88,12 +92,16 @@ final class FakeWhisperRuntime: WhisperRuntime {
             return runtime.probabilities
         }
 
+        func noSpeechProbabilities(_ samples: [Float], threads: Int) throws(RecognitionError) -> [Float] {
+            runtime.noSpeech
+        }
+
         func transcribe(
             _ samples: [Float],
             _ inference: WhisperInference,
             shouldAbort: @escaping @Sendable () -> Bool,
             progress: @escaping @Sendable (Double) -> Void
-        ) throws(RecognitionError) -> [TranscriptSegment] {
+        ) throws(RecognitionError) -> [WhisperSegment] {
             runtime.inferences.withLock { $0.append(inference) }
             runtime.recordPrompt(inference.prompt)
             runtime.threads.withLock { $0.append(inference.threads) }
@@ -323,6 +331,18 @@ struct WhisperEngineTests {
         await #expect(throws: RecognitionError.noSpeechDetected) {
             try await engine.recognize(try fixtures.make(.tone(seconds: 1))) { _ in }
         }
+    }
+
+    @Test func aDecodingLoopAcrossSegmentsIsCutToOneCopy() async throws {
+        defer { fixtures.removeAll() }
+        let loop = (0..<6).map { WhisperSegment(text: "Thank you.", start: Double($0), duration: 1) }
+        let engine = makeEngine(
+            runtime: FakeWhisperRuntime(
+                segments: [WhisperSegment(text: "Send the draft.", start: 0, duration: 1)] + loop))
+
+        let transcript = try await engine.recognize(try fixtures.make(.tone(seconds: 1.5))) { _ in }
+
+        #expect(transcript.text == "Send the draft. Thank you.")
     }
 
     @Test(arguments: [true, false])

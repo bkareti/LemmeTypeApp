@@ -71,16 +71,11 @@ struct DictationSettingsView: View {
             }
             .accessibilityIdentifier("dictation.language")
 
-            if let badge = model.languageStatus?.badge {
-                Text(
-                    String(
-                        localized:
-                            "\(badge): this language is being evaluated. It can be chosen, but its accuracy has not been measured yet.",
-                        bundle: .module)
-                )
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .accessibilityIdentifier("dictation.language.status")
+            if let explanation = model.languageStatus?.explanation {
+                Text(explanation)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("dictation.language.status")
             }
 
             Picker(

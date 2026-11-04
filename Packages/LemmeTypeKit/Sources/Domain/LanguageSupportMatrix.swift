@@ -7,6 +7,9 @@ public enum LanguageSupportStatus: String, Codable, Sendable {
     case evaluation
     /// Measured against the review rubric and approved (see ``LanguageSupportRow/measurement``).
     case validated
+    /// Measured, and the largest available model gets most of it wrong (see
+    /// ``LanguageSupportRow/measurement``). Still selectable, for testing; the UI says so.
+    case unreliable
 }
 
 /// One tested combination of language, engine, and task.
@@ -27,6 +30,7 @@ public struct LanguageSupportRow: Equatable, Sendable {
 /// `validated` only with a recorded measurement.
 public enum LanguageSupportMatrix {
     private static let englishMeasurement = "docs/testing/performance-thresholds.md (E2-S10, E5-S7)"
+    private static let teluguMeasurement = "docs/testing/language-support-matrix.md (2026-11-03 evaluation, #137)"
 
     public static let rows: [LanguageSupportRow] = [
         // English dictation was measured and accepted in Epics 2 and 5.
@@ -35,7 +39,8 @@ public enum LanguageSupportMatrix {
         // Indian languages: expected to need Small; nothing is measured yet.
         row("hi", .whisper, .transcribe, .mostAccurate, .evaluation),
         row("hi", .whisper, .translateToEnglish, .mostAccurate, .evaluation),
-        row("te", .whisper, .transcribe, .mostAccurate, .evaluation),
+        // Whisper Small, the largest model offered, gets most Telugu wrong (#137).
+        row("te", .whisper, .transcribe, .mostAccurate, .unreliable, teluguMeasurement),
         row("te", .whisper, .translateToEnglish, .mostAccurate, .evaluation),
     ]
 
@@ -56,12 +61,13 @@ public enum LanguageSupportMatrix {
         return rows.first { $0.language == code && $0.task == task && $0.engine == engine }
     }
 
-    /// The least-validated status across every row for `language`, or `nil`
-    /// when the language is not in the matrix.
+    /// The least-validated status across every row for `language` (unreliable,
+    /// then evaluation, then validated), or `nil` when the language is not in the matrix.
     public static func status(of language: String) -> LanguageSupportStatus? {
         let code = SpokenLanguages.code(of: language)
         let statuses = rows.filter { $0.language == code }.map(\.status)
         guard !statuses.isEmpty else { return nil }
+        if statuses.contains(.unreliable) { return .unreliable }
         return statuses.contains(.evaluation) ? .evaluation : .validated
     }
 }
