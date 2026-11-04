@@ -96,11 +96,30 @@
                 }
             }
             .frame(width: 560, height: 460)
+            .background { PaneKeyboardShortcuts(navigation: navigation) }
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
                 general.refresh()
                 permissions.refresh()
                 dictation.refreshInBackground()
             }
+        }
+    }
+
+    /// ⌃Tab and ⌃⇧Tab switch panes from anywhere in the window (E7-S6). macOS 27's
+    /// SwiftUI tab bar does not handle them once a pane's scroll view has focus.
+    private struct PaneKeyboardShortcuts: View {
+        let navigation: SettingsNavigation
+
+        var body: some View {
+            ZStack {
+                Button(action: navigation.selectNext) { EmptyView() }
+                    .keyboardShortcut(.tab, modifiers: .control)
+                Button(action: navigation.selectPrevious) { EmptyView() }
+                    .keyboardShortcut(.tab, modifiers: [.control, .shift])
+            }
+            .opacity(0)
+            .frame(width: 0, height: 0)
+            .accessibilityHidden(true)
         }
     }
 #endif

@@ -12,7 +12,8 @@ struct PermissionRow: View {
         VStack(alignment: .leading, spacing: 6) {
             LabeledContent(permission.displayName) {
                 Text(status.displayName)
-                    .foregroundStyle(status.isGranted ? .green : .secondary)
+                    // Primary, not green: green text fails the contrast audit (E7-S6).
+                    .foregroundStyle(status.isGranted ? Color.primary : Color.secondary)
                     .accessibilityIdentifier("permission.\(permission.rawValue).status")
             }
             if showsExplanation {

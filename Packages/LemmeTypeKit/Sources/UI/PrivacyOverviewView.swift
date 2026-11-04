@@ -52,12 +52,10 @@ struct PrivacyOverviewView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(item.name).font(.headline)
                                 Text(item.what)
-                                Group {
-                                    Text(item.location)
-                                    Text(item.duration)
-                                    Text(item.removal)
-                                }
-                                .foregroundStyle(.secondary)
+                                // Default colour: secondary text inside a group box fails the contrast audit.
+                                Text(item.location)
+                                Text(item.duration)
+                                Text(item.removal)
                             }
                             .font(.callout)
                             .fixedSize(horizontal: false, vertical: true)
