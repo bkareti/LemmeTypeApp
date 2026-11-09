@@ -98,7 +98,12 @@ public enum RecognitionEngineContract {
         request: RecognitionRequest
     ) async -> [String] {
         let start = ContinuousClock.now
-        let task = Task { try await engine.recognize(request) { _ in } }
+        // The task cancels itself before it calls the engine: with only `task.cancel()` from
+        // outside, a fast engine could finish first and the check would race (seen on CI).
+        let task = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            return try await engine.recognize(request) { _ in }
+        }
         task.cancel()
         let result = await task.result
         var issues: [String] = []

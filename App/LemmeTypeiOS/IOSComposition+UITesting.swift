@@ -18,6 +18,9 @@
             static let interruptAfterArgument = "-LemmeTypeInterruptAfter"
             static let recognitionArgument = "-LemmeTypeRecognition"
             static let launchRequestArgument = "-LemmeTypeLaunchRequest"
+            /// The words the fake engine "hears" (App Store screenshots), from the environment so
+            /// punctuation survives; otherwise a fixed phrase.
+            static let recognizedTextVariable = "LEMMETYPE_RECOGNIZED_TEXT"
 
             /// The microphone permission at launch: `granted`, `notRequested`, `denied`, or `restricted`.
             var microphone: PermissionStatus = .granted
@@ -31,6 +34,7 @@
             var recognitionError: RecognitionError?
             /// A shortcut left a launch request, as the App Intent does (E8-S7).
             var startsFromShortcut = false
+            var recognizedText = "hello from lemmetype"
 
             init() {}
 
@@ -54,6 +58,7 @@
                 interruptsAfter = seconds(after: Self.interruptAfterArgument)
                 if value(after: Self.recognitionArgument) == "no-speech" { recognitionError = .noSpeechDetected }
                 startsFromShortcut = arguments.contains(Self.launchRequestArgument)
+                if let text = ProcessInfo.processInfo.environment[Self.recognizedTextVariable] { recognizedText = text }
             }
         }
 
@@ -78,7 +83,7 @@
                 engines: [
                     FakeRecognitionEngine(
                         id: .appleSpeech,
-                        script: .init(text: "hello from lemmetype", error: scenario.recognitionError)),
+                        script: .init(text: scenario.recognizedText, error: scenario.recognitionError)),
                     FakeRecognitionEngine(
                         id: .whisper, availability: .assetsMissing, assets: .downloadable(.whisperBaseEnglish)),
                 ],

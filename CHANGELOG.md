@@ -8,7 +8,20 @@ completed epic or user-visible feature set, a patch version for fixes). Story id
 
 ## [Unreleased]
 
+## [1.0.0] - not released yet
+
+The first public release: LemmeType for iPhone and iPad on the App Store, and for Mac
+by Developer ID download. English only (ADR 0029).
+
 ### Added
+
+- LemmeType for iPhone and iPad: Quick Dictation with review and an expiring,
+  device-only Copy; the Start Dictating shortcut for the Action Button and Back Tap
+  (Epic 8, ADR 0027).
+- iPhone and iPad Settings › About: version, Privacy Policy, Help and Support, and the
+  open-source licences (Acknowledgements).
+- A privacy policy (`docs/privacy-policy.md`) and a help page (`docs/support.md`).
+- ⌃Tab and ⌃⇧Tab switch Mac Settings panes.
 
 - Opt-in dictation history with a retention period, export, and deletion (E6-S3, E6-S4).
 - Settings › Privacy: a plain-language overview of permissions and stored data, and
@@ -22,6 +35,11 @@ completed epic or user-visible feature set, a patch version for fixes). Story id
 
 ### Changed
 
+- Release builds offer English only; other languages, translation, and multilingual
+  models stay in development builds (ADR 0029).
+- On iPhone and iPad the first dictation explains the microphone with a single Continue,
+  then asks for the microphone and, when no engine is ready, Speech Recognition.
+- Status and note text uses higher-contrast colours in Settings.
 - The Permissions pane and onboarding use the shared plain-language permission text (E6-S5).
 - Diagnostics reports have schema version 2 (E7-S5).
 
@@ -34,6 +52,8 @@ completed epic or user-visible feature set, a patch version for fixes). Story id
 
 ### Fixed
 
+- Whisper no longer writes words from silence, noise, or tones, and repeated phrases
+  are cut back to one copy (ADR 0028, #135, #136).
 - Speech recognition now hears the whole recording. The last 8–64 ms of every dictation
   was dropped before it reached Whisper or Apple Speech.
 
