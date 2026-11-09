@@ -15,12 +15,19 @@ public struct RecognitionEngineID: RawRepresentable, Hashable, Codable, Sendable
     public static let appleSpeech = RecognitionEngineID(rawValue: "apple-speech")
     /// The optional downloadable Whisper model (E2-S3).
     public static let whisper = RecognitionEngineID(rawValue: "whisper")
+    /// The opt-in cloud engine (ADR 0031). Vendor-neutral on purpose: saved
+    /// preferences and modes keep working when the provider changes.
+    public static let cloud = RecognitionEngineID(rawValue: "cloud")
+
+    /// Whether audio leaves the device. Such an engine runs only when the user chose it.
+    public var isCloud: Bool { self == .cloud }
 }
 
-/// Where recognition runs. Only on-device engines exist in the MVP; the type
-/// makes any future cloud engine impossible to add without a visible change.
+/// Where recognition runs. A cloud engine is always a visible, opt-in choice
+/// (docs/decisions/0031-cloud-speech-provider.md).
 public enum ProcessingLocation: String, Codable, Sendable {
     case onDevice
+    case cloud
 }
 
 /// What an engine needs installed before it can run.

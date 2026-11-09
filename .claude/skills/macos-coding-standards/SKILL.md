@@ -34,7 +34,7 @@ Code lives in the local package `Packages/LemmeTypeKit` plus a thin app target:
 | `Permissions` | TCC/AX permission implementations | Domain, Support |
 | `Shortcuts` | Global shortcut registration and target capture | Domain, Support |
 | `Lifecycle` | Login item, single instance, app-lifecycle OS integration | Domain, Support |
-| `Recognition` | Speech-recognition engines (Speech framework, local models) | Domain, Support |
+| `Recognition` | Speech-recognition engines (Speech framework, local models, the opt-in cloud engine, ADR 0031) | Domain, Support |
 | `ModelAssets` | Model download, verification, removal — the only network code (ADR 0011) | Domain, Support |
 | `Delivery` | Accessibility insertion and clipboard fallback (ADR 0015) | Domain, Support |
 | `Editing` | On-device text rewriting with Apple Foundation Models (ADR 0018) | Domain, Support |

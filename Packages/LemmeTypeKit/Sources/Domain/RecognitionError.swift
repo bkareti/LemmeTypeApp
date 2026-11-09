@@ -21,6 +21,16 @@ public enum RecognitionError: LemmeTypeError, Equatable {
     case languageUncertain
     /// The framework reported an error; `code` is its numeric code only.
     case engineFailure(code: Int)
+    /// The cloud engine could not reach its provider (ADR 0031).
+    case cloudOffline
+    /// The provider refused the API key.
+    case cloudKeyRejected
+    /// The provider asked to slow down, and retrying did not help.
+    case cloudRateLimited
+    /// The account has no credit left.
+    case cloudQuotaExhausted
+    /// The provider failed, timed out, or answered with something unusable.
+    case cloudServiceFailed
 
     public var identifier: String {
         switch self {
@@ -34,6 +44,11 @@ public enum RecognitionError: LemmeTypeError, Equatable {
         case .modelLoadFailed: "recognition.model-load-failed"
         case .languageUncertain: "recognition.language-uncertain"
         case .engineFailure: "recognition.engine-failure"
+        case .cloudOffline: "recognition.cloud-offline"
+        case .cloudKeyRejected: "recognition.cloud-key-rejected"
+        case .cloudRateLimited: "recognition.cloud-rate-limited"
+        case .cloudQuotaExhausted: "recognition.cloud-quota-exhausted"
+        case .cloudServiceFailed: "recognition.cloud-service-failed"
         }
     }
 
@@ -41,9 +56,10 @@ public enum RecognitionError: LemmeTypeError, Equatable {
     /// changing anything else.
     public var isRetryable: Bool {
         switch self {
-        case .engineFailure, .modelLoadFailed, .audioUnreadable: true
+        case .engineFailure, .modelLoadFailed, .audioUnreadable, .cloudOffline, .cloudRateLimited, .cloudServiceFailed:
+            true
         case .cancelled, .assetsMissing, .unsupported, .permissionDenied, .noSpeechDetected, .silentAudio,
-            .languageUncertain:
+            .languageUncertain, .cloudKeyRejected, .cloudQuotaExhausted:
             false
         }
     }

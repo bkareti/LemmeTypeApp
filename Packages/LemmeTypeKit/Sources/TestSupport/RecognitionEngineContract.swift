@@ -10,9 +10,12 @@ public enum RecognitionEngineContract {
     public static let cancellationDeadline: Duration = .seconds(2)
 
     /// Runs every check. `request` should point at a real recording the
-    /// engine can read; it is never deleted.
-    public static func verify(_ engine: any SpeechRecognitionEngine, request: RecognitionRequest) async -> [String] {
-        var issues = checkDescriptor(engine.descriptor)
+    /// engine can read; it is never deleted. Only the cloud engine (ADR 0031)
+    /// passes a location other than on-device.
+    public static func verify(
+        _ engine: any SpeechRecognitionEngine, request: RecognitionRequest, location: ProcessingLocation = .onDevice
+    ) async -> [String] {
+        var issues = checkDescriptor(engine.descriptor, location: location)
         let availability = await engine.availability()
         if availability.isReady {
             issues += await checkRecognition(engine, request: request)
@@ -27,13 +30,15 @@ public enum RecognitionEngineContract {
         return issues
     }
 
-    public static func checkDescriptor(_ descriptor: EngineDescriptor) -> [String] {
+    public static func checkDescriptor(
+        _ descriptor: EngineDescriptor, location: ProcessingLocation = .onDevice
+    ) -> [String] {
         var issues: [String] = []
         if !DiagnosticValue.isSafeIdentifier(descriptor.id.rawValue) {
             issues.append("engine id \(descriptor.id) is not a stable lowercase identifier")
         }
-        if descriptor.location != .onDevice {
-            issues.append("engine does not run on device")
+        if descriptor.location != location {
+            issues.append("engine does not run \(location == .onDevice ? "on device" : "in the cloud")")
         }
         if descriptor.supportedLanguages.isEmpty {
             issues.append("engine lists no supported language")
