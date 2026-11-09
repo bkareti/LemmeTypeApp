@@ -31,7 +31,7 @@ without changing the promise for anyone who leaves it off.
 - Streaming or partial results.
 - A relay server and shared API keys (needed for a public release; a separate decision).
 - A provider picker for users, or changing the provider without an app update.
-- iPhone and iPad (Epic 8).
+- iPhone and iPad (Epic 12 connects this engine to the iPhone app).
 
 ### Epic acceptance criteria
 
@@ -143,6 +143,7 @@ Telugu–English text and always know when my voice leaves my Mac.
 - `AppComposition` registers the engine, behind one Release off-switch that stays off until E11-S4.
   `ENGLISH_ONLY_RELEASE` (ADR 0029) also hides Telugu in Release, so `LanguageScope` must offer Telugu for the Cloud mode when that switch is on.
 - `LanguageSupportMatrix` rows for Telugu on `.cloud`, status `evaluation`.
+- Reuses the consent store, Keychain store, and settings model from E12-S1 if that story is built first.
 - The overlay and menu show a cloud indicator whenever the active engine's `location` is `.cloud`.
 - Before recording with the cloud engine, the app refuses in excluded or built-in sensitive
   apps, password fields, and secure input, using a new `ContextPurpose` and a `DictationIssue`.

@@ -52,6 +52,12 @@ extension StyleOptions {
         if tone != .neutral { parts.append(tone.displayName) }
         if format != .plainText { parts.append(format.displayName) }
         if length != .original { parts.append(length.displayName) }
+        if correctsGrammar {
+            parts.append(
+                String(
+                    localized: "Correct grammar", bundle: .module,
+                    comment: "A mode option: fix grammar, spelling, and punctuation"))
+        }
         return parts.joined(separator: " · ")
     }
 }
@@ -91,7 +97,8 @@ extension RewriterAvailability {
         switch self {
         case .ready: String(localized: "it is ready.", bundle: .module)
         case .notEnabled: String(localized: "Apple Intelligence is turned off.", bundle: .module)
-        case .deviceNotEligible: String(localized: "this Mac can’t run Apple’s on-device model.", bundle: .module)
+        case .deviceNotEligible:
+            String(localized: "\(DeviceWords.thisDevice) can’t run Apple’s on-device model.", bundle: .module)
         case .modelNotReady: String(localized: "Apple’s on-device model is still getting ready.", bundle: .module)
         case .unsupportedLanguage:
             String(localized: "the on-device model doesn’t support this language.", bundle: .module)

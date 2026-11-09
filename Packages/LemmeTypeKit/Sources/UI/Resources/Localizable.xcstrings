@@ -43,6 +43,9 @@
     "%@ can’t be empty." : {
 
     },
+    "%@ can’t run Apple’s on-device model." : {
+
+    },
     "%@ Copy" : {
 
     },
@@ -415,6 +418,9 @@
     },
     "Copy Text" : {
 
+    },
+    "Correct grammar" : {
+      "comment" : "A mode option: fix grammar, spelling, and punctuation"
     },
     "Couldn’t reach GitHub. Check your connection and try again." : {
 
@@ -1198,7 +1204,7 @@
     "Open System Settings…" : {
 
     },
-    "Optional. LemmeType rewrites on this Mac and shows you the result before anything is inserted. Neutral, Plain text, and Original change nothing." : {
+    "Optional. LemmeType rewrites on %@ and shows you the result before anything is used. Neutral, Plain text, and Original change nothing." : {
 
     },
     "Original" : {
@@ -1300,6 +1306,9 @@
     },
     "Profile" : {
       "comment" : "Noun: a performance profile such as Balanced"
+    },
+    "Proper English" : {
+      "comment" : "A built-in mode name: English dictation with its grammar corrected"
     },
     "Push to Talk — hold to dictate" : {
 
@@ -1801,9 +1810,6 @@
       "comment" : "The computer, after a preposition"
     },
     "This Mac can’t run Apple’s on-device model, so voice editing isn’t available." : {
-
-    },
-    "this Mac can’t run Apple’s on-device model." : {
 
     },
     "This Mac doesn’t have enough memory for the model this needs." : {

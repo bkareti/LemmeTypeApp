@@ -2,7 +2,7 @@
 
 - Status: Accepted (provider choice, 2026-11-09). Not implemented; launch gates below are open.
 - Date: 2026-11-09
-- Stories: [Epic 11](../backlog/epic-11-cloud-speech.md), E11-S1 … E11-S4 (no GitHub issues yet)
+- Stories: [Epic 11](../backlog/epic-11-cloud-speech.md), E11-S1 … E11-S4, and [Epic 12](../backlog/epic-12-iphone-cloud-english.md) for iPhone (no GitHub issues yet)
 - Updates: [ADR 0023](0023-multilingual-dictation.md), which rejected cloud speech outright
 
 ## Context

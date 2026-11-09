@@ -13,6 +13,7 @@ public struct DictationModeID: RawRepresentable, Hashable, Codable, Sendable, Cu
     public static let exact = DictationModeID(rawValue: "exact")
     public static let clean = DictationModeID(rawValue: "clean")
     public static let message = DictationModeID(rawValue: "message")
+    public static let properEnglish = DictationModeID(rawValue: "proper-english")
 
     public static func newCustom() -> DictationModeID {
         DictationModeID(rawValue: "custom-\(UUID().uuidString.lowercased())")
@@ -151,7 +152,13 @@ public struct DictationMode: Identifiable, Equatable, Codable, Sendable {
     public static let message = DictationMode(
         id: .message, name: "Message", writingMode: .clean, finalPunctuation: .omit)
 
-    public static let builtIns: [DictationMode] = [exact, clean, message]
+    /// English with its grammar corrected on the device (E12-S3). The language is
+    /// fixed, so it stays English when Settings is on another language.
+    public static let properEnglish = DictationMode(
+        id: .properEnglish, name: "Proper English", language: SpokenLanguages.english.settingValue,
+        speechOutput: .original, writingMode: .clean, style: StyleOptions(correctsGrammar: true))
+
+    public static let builtIns: [DictationMode] = [exact, clean, message, properEnglish]
 
     /// The built-in mode matching an Epic 2 writing-mode preference.
     public static func builtIn(for writingMode: WritingMode) -> DictationMode {
