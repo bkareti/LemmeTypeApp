@@ -109,7 +109,7 @@ No user audio goes to Sarvam until these are closed.
 |---|---|---|
 | Written confirmation or a DPA on training and retention for API accounts | Sarvam's documents disagree (below) | Open |
 | Training opt-out and retention set on the account | Belt and braces while the terms disagree | Open |
-| How keys reach the app | A shared key cannot ship inside the app (below) | Open |
+| How keys reach the app | A shared key cannot ship inside the app (below) | Decided for the friends beta: each user's own key. Open for a public release |
 | Run the 34-sentence Telugu–English test | The accepted risk above; it costs about ₹2 | Recommended before any beta |
 | Network allowlist, threat model, privacy checklist, App Store labels, product brief wording | They say nothing leaves the device | Open |
 
@@ -126,9 +126,12 @@ would cross a border to reach India; the consent screen must say so.
 
 ### Keys
 
+No API key is ever built into the app, encrypted or not: the app would have to decrypt it to use
+it, so anyone with a copy could extract it.
+
 | Stage | Approach | Trade-off |
 |---|---|---|
-| Friends beta (proposed) | Each user pastes their own key; stored in the Keychain | No server, no shared cost; too technical for a public release |
+| Friends beta (decided 2026-11-09) | Each user pastes their own key; stored in the Keychain | No server, no shared cost; too technical for a public release |
 | Public release (proposed) | A small relay we run, which holds the key | Ongoing cost and a new party that sees audio. It would be a `CloudSpeechProvider` like any other |
 
 Sarvam's pay-as-you-go limit is 60 requests a minute per account, enough for one person but

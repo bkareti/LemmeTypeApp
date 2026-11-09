@@ -137,7 +137,7 @@ Telugu–English text and always know when my voice leaves my Mac.
 - Turning it on shows a consent sheet naming the provider, the host, that audio is sent to
   India, and what is never sent. Consent is stored per provider id.
 - The user pastes their own API key. `KeychainCloudCredentialStore` (Support) stores it in
-  the login Keychain; it is never shown again, logged, or exported.
+  the login Keychain; it is never shown again, logged, or exported. No key is ever built into the app.
 - After consent and a key, the app offers to create a custom **Telugu (Cloud)** dictation
   mode: language Telugu, engine Cloud, writing mode Exact. Other modes do not change.
 - `AppComposition` registers the engine, behind one Release off-switch that stays off until E11-S4.
