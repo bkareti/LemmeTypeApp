@@ -15,6 +15,10 @@ extension DictationMode {
         switch id {
         case .exact: WritingMode.exact.displayName
         case .clean: WritingMode.clean.displayName
+        case .properEnglish:
+            String(
+                localized: "Proper English", bundle: .module,
+                comment: "A built-in mode name: English dictation with its grammar corrected")
         case .message:
             String(
                 localized: "Message", bundle: .module,

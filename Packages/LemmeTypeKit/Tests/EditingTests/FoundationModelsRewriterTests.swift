@@ -69,6 +69,33 @@ struct FoundationModelsStyleTests {
     /// Proposed: seconds for the slowest short rewrite.
     static let proposedLatencyLimit = 15.0
 
+    /// Fixed grammar errors for Proper English (E12-S3). Every fact has to survive.
+    static let grammarSamples: [(text: String, corrected: [String])] = [
+        ("He go to the office on Friday and he have 3 meetings.", ["goes"]),
+        ("She don't know that Priya are coming tomorrow.", ["doesn't", "doesn’t", "does not"]),
+        ("Me and Ravi was waiting at the station since 2 hours.", ["were"]),
+        ("I has not send the report to the client yet.", ["have not", "haven't", "haven’t"]),
+        ("The children is playing in the park with their friends.", ["children are"]),
+    ]
+
+    @Test(.enabled(if: Environment.realRewrite))
+    func grammarCorrectionKeepsTheFacts() async throws {
+        let rewriter = FoundationModelsRewriter()
+        try #require(await rewriter.availability(language: "en-US") == .ready)
+        let instruction = try #require(StyleInstruction.make(StyleOptions(correctsGrammar: true)))
+        var changedFacts: [String] = []
+        var missed: [String] = []
+        for sample in Self.grammarSamples {
+            let result = try await TextRewritingRunner().run(
+                rewriter, RewriteRequest(instruction: instruction, text: sample.text, language: "en-US"))
+            changedFacts += PreservationChecker.violations(original: sample.text, rewritten: result).map(\.rawValue)
+            // The samples are made up, so the model's text can be shown.
+            if !sample.corrected.contains(where: result.contains) { missed.append(result) }
+        }
+        #expect(changedFacts.isEmpty, "\(changedFacts)")
+        #expect(missed.isEmpty, "not corrected: \(missed)")
+    }
+
     @Test(.enabled(if: Environment.realRewrite))
     func stylesKeepWhatWasSaid() async throws {
         let rewriter = FoundationModelsRewriter()
