@@ -36,6 +36,8 @@ struct IOSComposition {
     }
 
     let mode: Mode
+    /// Turning cloud speech on and off; `nil` when this build doesn't offer it.
+    let cloudSpeech: CloudSpeechSettingsModel?
     /// Shared with the App Intent, which leaves a request here (E8-S7).
     let launchRequests: LaunchRequestInbox
     let recorder: RecordingCoordinator
@@ -69,6 +71,7 @@ struct IOSComposition {
         var hardware: HardwareProfile
         var copiedTextLifetime: @MainActor () -> CopiedTextLifetime
         var limits: RecordingLimits = .handheld
+        var cloudSpeech: CloudSpeechServices?
     }
 
     static func make(arguments: [String]) -> IOSComposition {
@@ -93,6 +96,7 @@ struct IOSComposition {
         let conditions = SystemConditionsMonitor()
         let modelAssets = ModelAssetStore.makeDefault(diagnostics: diagnostics)
         let hardware = HardwareProfile.current
+        let cloudSpeech = liveCloudSpeech()
         return Services(
             permissionChecker: checker,
             permissionRequester: SystemPermissionRequester(),
@@ -107,7 +111,7 @@ struct IOSComposition {
                     assets: modelAssets, hardware: hardware,
                     availableMemory: availableMemory,
                     settings: { whisperSettings(preferences: preferences, conditions: conditions.current) }),
-            ],
+            ] + cloudEngines(cloudSpeech, diagnostics: diagnostics),
             modelAssets: modelAssets,
             textCopier: ExpiringTextCopier(
                 writer: UIPasteboardWriter(), lifetime: { CopiedTextLifetime.stored(in: .standard) }),
@@ -117,7 +121,8 @@ struct IOSComposition {
             conditions: conditions,
             diagnostics: diagnostics,
             hardware: hardware,
-            copiedTextLifetime: { CopiedTextLifetime.stored(in: .standard) })
+            copiedTextLifetime: { CopiedTextLifetime.stored(in: .standard) },
+            cloudSpeech: cloudSpeech)
     }
 
     // MARK: Assembly
@@ -151,7 +156,7 @@ struct IOSComposition {
             languageScope: Self.languageScope)
         let modes = ModesSettingsModel(
             personalization: personalization, preferences: preferences,
-            engines: services.engines.map(\.descriptor.id), languages: dictation.languageChoices,
+            engines: services.engines.map(\.descriptor.id).filter { !$0.isCloud }, languages: dictation.languageChoices,
             speechOutputs: dictation.speechOutputChoices,
             runningApplications: { [] }, applicationName: { _ in nil }, diagnostics: diagnostics)
         let models = ModelsSettingsModel(
@@ -163,9 +168,17 @@ struct IOSComposition {
             history: DictationHistoryService(
                 store: services.historyStore, preferences: preferences, diagnostics: diagnostics),
             copier: services.textCopier)
+        let cloudSpeech = services.cloudSpeech.map {
+            CloudSpeechSettingsModel(provider: $0.provider, store: $0.store, consent: $0.consent)
+        }
+        cloudSpeech?.onChange = { [weak modes, weak dictation] offered in
+            modes?.setOffersCloudEngine(offered)
+            dictation?.refreshInBackground()
+        }
         let privacy = PrivacyOverviewModel(
             history: history, personalization: personalization, modes: modes, capture: services.audioCapture,
-            modelAssets: services.modelAssets, clearDiagnostics: { diagnostics.removeAll() })
+            modelAssets: services.modelAssets, clearDiagnostics: { diagnostics.removeAll() },
+            eraseCloudSpeech: { await cloudSpeech?.eraseAll() ?? false })
         let launchRequests = LaunchRequestInbox()
         let checker = services.permissionChecker
         let requester = services.permissionRequester
@@ -184,9 +197,11 @@ struct IOSComposition {
                 _ = await services.speechAuthorizer.requestAuthorization()
                 await dictation?.refresh()
             },
-            launchRequests: launchRequests)
+            launchRequests: launchRequests,
+            isCloudSpeechOn: { cloudSpeech?.status == .turnedOn })
         return IOSComposition(
-            mode: mode, launchRequests: launchRequests, recorder: recorder, quick: quick, dictation: dictation,
+            mode: mode, cloudSpeech: cloudSpeech, launchRequests: launchRequests, recorder: recorder, quick: quick,
+            dictation: dictation,
             models: models, personalization: personalization, modes: modes, privacy: privacy,
             permissions: permissions, residency: residency, conditions: conditions,
             audioCapture: services.audioCapture)
@@ -199,7 +214,7 @@ struct IOSComposition {
             quick: quick, dictation: dictation,
             settings: MobileSettingsView(
                 dictation: dictation, models: models, personalization: personalization, modes: modes,
-                privacy: privacy, permissions: permissions))
+                privacy: privacy, permissions: permissions, cloudSpeech: cloudSpeech))
     }
 
     /// Cleans up after a crash, loads saved data, and follows the system's memory
@@ -207,6 +222,7 @@ struct IOSComposition {
     func start() async {
         await audioCapture.purgeLeftovers()
         await personalization.load()
+        await cloudSpeech?.refresh()
         await dictation.refresh()
         await models.refresh()
         quick.startIfRequestedByShortcut()

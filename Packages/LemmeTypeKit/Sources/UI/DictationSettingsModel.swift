@@ -107,7 +107,7 @@ public final class DictationSettingsModel {
         return nil
     }
 
-    public var hasReadyEngine: Bool { rows.contains(where: \.isReady) }
+    public var hasReadyEngine: Bool { rows.contains { $0.isReady && !$0.id.isCloud } }
 
     /// Languages every listed engine can be asked for, in a stable order.
     public var languages: [String] {

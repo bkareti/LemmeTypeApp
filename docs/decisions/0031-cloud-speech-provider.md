@@ -153,3 +153,9 @@ not for a shared key at release ([pricing](https://docs.sarvam.ai/api-reference-
   you turn on Cloud". Local mode stays network-silent, and `NetworkSilenceTests` must still pass.
 - Each user who turns it on sends audio to a third party, at about ₹29 per hour of audio.
 - `RecognitionEngineID` gains a stable `cloud` value that never names a vendor.
+
+## Addition: iPhone (E12-S1)
+
+`Support` now imports Security for `KeychainCloudCredentialStore`: a new edge in the module table. Keys stay
+on this device (`kSecAttrAccessibleWhenUnlockedThisDeviceOnly`, no iCloud sync). The iPhone app offers cloud
+speech only in Debug builds until the launch gates above close (`IOSComposition.offersCloudSpeech`).

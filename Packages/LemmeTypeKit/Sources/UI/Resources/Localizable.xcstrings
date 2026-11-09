@@ -27,6 +27,9 @@
     "%@ → English" : {
 
     },
+    "%@ API key" : {
+
+    },
     "%@ can be at most %lld characters." : {
       "localizations" : {
         "en" : {
@@ -197,6 +200,9 @@
     "Adds capitals and end punctuation, turns spoken “comma” or “new line” into punctuation, and drops “um”, repeated words, and clear self-corrections like “Tuesday—sorry—Wednesday”. Numbers, links, email addresses, code, and quotes are never changed." : {
 
     },
+    "Agree" : {
+
+    },
     "All saved dictations were deleted." : {
 
     },
@@ -352,6 +358,12 @@
     },
     "Clipboard only" : {
 
+    },
+    "Cloud" : {
+      "comment" : "The name of the speech engine that sends audio online"
+    },
+    "Cloud speech" : {
+      "comment" : "A settings section title"
     },
     "Cloud speech needs an API key. Your recording is kept." : {
       "comment" : "Shown when the cloud speech engine has no API key stored"
@@ -735,6 +747,16 @@
     "If my engine isn’t ready, use another on-device engine without asking" : {
 
     },
+    "If you turn this on, recordings made with the Cloud engine are sent to %@ (%@) to be turned into text. They are processed in India." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "If you turn this on, recordings made with the Cloud engine are sent to %1$@ (%2$@) to be turned into text. They are processed in India."
+          }
+        }
+      }
+    },
     "Import personalization?" : {
 
     },
@@ -855,6 +877,9 @@
     },
     "LemmeType History" : {
 
+    },
+    "LemmeType listens only while you are on this screen and the recording is showing. Modes that use Cloud speech send your voice online; others keep it on this device. Next, iOS asks for your permission." : {
+      "comment" : "Shown before iOS asks for microphone permission, when cloud speech is on"
     },
     "LemmeType listens only while you are on this screen and the recording is showing. Your voice is turned into text on this device and never leaves it. Next, iOS asks for your permission." : {
       "comment" : "Shown before iOS asks for microphone and speech recognition permission"
@@ -1125,6 +1150,9 @@
     "Off" : {
       "comment" : "State of a switch: turned off"
     },
+    "Off by default. When on, a mode can use the Cloud engine for more accurate Telugu. Modes that don’t choose it stay on this device." : {
+
+    },
     "Off. LemmeType keeps no record of what you dictate. If you turn this on, only the text you insert or copy is saved, on this Mac." : {
 
     },
@@ -1138,6 +1166,15 @@
 
     },
     "On-device recognition isn’t installed for this language. Add it in System Settings › Keyboard › Dictation." : {
+
+    },
+    "On. Your key is saved on this device." : {
+
+    },
+    "Only modes that use Cloud speech go online, and only during their dictation. The only download is a speech model, and only after you confirm it." : {
+
+    },
+    "Only the audio of those recordings is sent. Your vocabulary, your other modes, and anything else on this device are not." : {
 
     },
     "Open Context Settings" : {
@@ -1183,6 +1220,9 @@
 
     },
     "password managers and Keychain Access" : {
+
+    },
+    "Paste your API key first." : {
 
     },
     "Paste, then restore my clipboard" : {
@@ -1307,6 +1347,9 @@
     "Recommended for %@" : {
 
     },
+    "Recorded only while the recording is showing, and deleted when the text is ready or you cancel. Modes that use Cloud speech send it online to be turned into text; others keep it on this device." : {
+
+    },
     "Recorded only while the recording is showing, turned into text on this device, and deleted when the text is ready or you cancel." : {
 
     },
@@ -1415,6 +1458,9 @@
     "Save Audio…" : {
 
     },
+    "Save Key" : {
+
+    },
     "Save…" : {
 
     },
@@ -1434,6 +1480,9 @@
 
     },
     "Self-corrections (“Tuesday—sorry—Wednesday”)" : {
+
+    },
+    "Send Audio to the Cloud?" : {
 
     },
     "Send text to" : {
@@ -1631,6 +1680,9 @@
     "The internet and tracking" : {
 
     },
+    "The key couldn’t be saved. Try again." : {
+
+    },
     "The microphone couldn’t be started. Try again or choose another input." : {
 
     },
@@ -1817,7 +1869,16 @@
     "Turn it on in System Settings › Privacy & Security." : {
 
     },
+    "Turn Off and Remove Key" : {
+
+    },
+    "Turn off cloud speech?" : {
+
+    },
     "Turn off history?" : {
+
+    },
+    "Turn On Cloud Speech…" : {
 
     },
     "Turns speech in another language into English on %@. You read the translation before anything is inserted." : {
@@ -1908,6 +1969,9 @@
     },
     "Uses macOS dictation languages" : {
 
+    },
+    "Using Cloud speech: your voice is sent online" : {
+      "comment" : "Shown while a recording uses the cloud speech engine"
     },
     "Using Low Power because Low Power Mode is on." : {
 
@@ -2021,11 +2085,24 @@
     "You turned off context for this app in Settings › Context." : {
 
     },
+    "You use your own %@ API key and pay %@ directly. Its terms decide how long your audio is kept." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You use your own %1$@ API key and pay %2$@ directly. Its terms decide how long your audio is kept."
+          }
+        }
+      }
+    },
     "Your clipboard holds something LemmeType can’t put back, so it wasn’t used. Copying the text will replace it." : {
 
     },
     "Your cloud speech account has no credit left. Your recording is kept." : {
       "comment" : "Shown when the cloud speech account balance is used up"
+    },
+    "your cloud speech key and consent" : {
+
     },
     "your iPad" : {
       "comment" : "The user's tablet"

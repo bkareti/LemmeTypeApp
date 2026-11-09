@@ -22,6 +22,8 @@ INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES
 INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
 INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
 INFOPLIST_KEY_NSMicrophoneUsageDescription = LemmeType records your voice only while the recording is showing on screen, and turns it into text on this device.
+// Cloud speech exists only in Debug until E12-S4 closes the gates in ADR 0031.
+INFOPLIST_KEY_NSMicrophoneUsageDescription[config=Debug] = LemmeType records your voice only while the recording is showing. It turns it into text on this device, unless you turn on Cloud speech for a mode.
 INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = If you choose Apple Speech, LemmeType uses on-device speech recognition to turn your dictation into text. Audio never leaves this device.
 // Only standard, exempt encryption (HTTPS for the model download, SHA-256 checks).
 INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO

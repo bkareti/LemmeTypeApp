@@ -8,11 +8,13 @@ public struct LocalDataErasure: Equatable, Sendable {
     public var personalizationItems = 0
     public var diagnosticsEvents = 0
     public var modelsRemoved = 0
+    public var cloudSpeechRemoved = false
 
     public init() {}
 
     public var isEmpty: Bool {
         historyEntries == 0 && personalizationItems == 0 && diagnosticsEvents == 0 && modelsRemoved == 0
+            && !cloudSpeechRemoved
     }
 }
 
@@ -36,6 +38,7 @@ public final class PrivacyOverviewModel {
     private let capture: any AudioCapturing
     private let modelAssets: any ModelAssetManaging
     private let clearDiagnostics: @MainActor () -> Int
+    private let eraseCloudSpeech: (@MainActor () async -> Bool)?
 
     public init(
         history: HistorySettingsModel,
@@ -43,7 +46,8 @@ public final class PrivacyOverviewModel {
         modes: ModesSettingsModel,
         capture: any AudioCapturing,
         modelAssets: any ModelAssetManaging,
-        clearDiagnostics: @escaping @MainActor () -> Int
+        clearDiagnostics: @escaping @MainActor () -> Int,
+        eraseCloudSpeech: (@MainActor () async -> Bool)? = nil
     ) {
         self.history = history
         self.personalization = personalization
@@ -51,6 +55,7 @@ public final class PrivacyOverviewModel {
         self.capture = capture
         self.modelAssets = modelAssets
         self.clearDiagnostics = clearDiagnostics
+        self.eraseCloudSpeech = eraseCloudSpeech
     }
 
     /// A sentence the pane shows and announces after an erase.
@@ -74,6 +79,9 @@ public final class PrivacyOverviewModel {
         if result.modelsRemoved > 0 {
             parts.append(String(localized: "\(result.modelsRemoved) downloaded models", bundle: .module))
         }
+        if result.cloudSpeechRemoved {
+            parts.append(String(localized: "your cloud speech key and consent", bundle: .module))
+        }
         return String(
             localized: "Deleted: \(parts.formatted(.list(type: .and))).", bundle: .module,
             comment: "Lists what Delete All Local Data removed")
@@ -96,6 +104,7 @@ public final class PrivacyOverviewModel {
 
         await capture.purgeLeftovers()
         result.diagnosticsEvents = clearDiagnostics()
+        if let eraseCloudSpeech { result.cloudSpeechRemoved = await eraseCloudSpeech() }
 
         if removesModels {
             for asset in ModelCatalog.all where await modelAssets.state(of: asset.id) != .notInstalled {

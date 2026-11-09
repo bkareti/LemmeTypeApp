@@ -48,12 +48,7 @@
                     Task { await model.continueAfterExplanation() }
                 }
             } message: {
-                Text(
-                    String(
-                        localized:
-                            "LemmeType listens only while you are on this screen and the recording is showing. Your voice is turned into text on this device and never leaves it. Next, iOS asks for your permission.",
-                        bundle: .module,
-                        comment: "Shown before iOS asks for microphone and speech recognition permission"))
+                Text(CloudSpeechNotice.microphoneExplanation(cloudSpeechOn: model.isCloudSpeechOn()))
             }
         }
 
@@ -124,6 +119,7 @@
 
         private var recording: some View {
             VStack(spacing: 20) {
+                CloudSpeechNotice(isVisible: model.recorder.isUsingCloudSpeech)
                 HStack(spacing: 8) {
                     Image(systemName: "record.circle.fill").foregroundStyle(.red).accessibilityHidden(true)
                     Text(String(localized: "Recording", bundle: .module)).font(.title2.weight(.semibold))
@@ -150,6 +146,7 @@
 
         private var processing: some View {
             VStack(spacing: 12) {
+                CloudSpeechNotice(isVisible: model.recorder.isUsingCloudSpeech)
                 ProgressView()
                 Text(model.recorder.processingPhase?.title ?? String(localized: "Working…", bundle: .module))
                     .accessibilityIdentifier("quick.processing")

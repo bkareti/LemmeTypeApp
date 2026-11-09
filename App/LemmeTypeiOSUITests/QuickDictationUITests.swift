@@ -56,6 +56,37 @@ final class QuickDictationUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["quick.result"].exists)
     }
 
+    func testCloudSpeechAsksFirstThenTakesAKeyAndTurnsOff() {
+        app.tabBars.buttons.element(boundBy: 1).tap()
+        func element(_ identifier: String) -> XCUIElement { app.descendants(matching: .any)[identifier] }
+
+        // The list creates rows lazily; Cloud speech is near the end.
+        XCTAssertTrue(element("settings.language").waitForExistence(timeout: 10))
+        for _ in 0..<5 where !element("settings.cloud.turnOn").isHittable { app.swipeUp() }
+        XCTAssertTrue(element("settings.cloud.turnOn").waitForExistence(timeout: 5))
+        element("settings.cloud.turnOn").tap()
+        XCTAssertTrue(element("settings.cloud.consent").waitForExistence(timeout: 5))
+        element("settings.cloud.decline").tap()
+        XCTAssertTrue(element("settings.cloud.turnOn").waitForExistence(timeout: 5), "cancelling changes nothing")
+
+        element("settings.cloud.turnOn").tap()
+        XCTAssertTrue(element("settings.cloud.agree").waitForExistence(timeout: 5))
+        element("settings.cloud.agree").tap()
+        let key = app.secureTextFields["settings.cloud.key"]
+        XCTAssertTrue(key.waitForExistence(timeout: 5))
+        key.tap()
+        key.typeText("test-key")
+        element("settings.cloud.saveKey").tap()
+        XCTAssertTrue(element("settings.cloud.status").waitForExistence(timeout: 5))
+
+        element("settings.cloud.turnOff").tap()
+        // iOS exposes a dialog's button more than once, so take the first.
+        let confirm = app.buttons.matching(identifier: "settings.cloud.confirmTurnOff").firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+        XCTAssertTrue(element("settings.cloud.turnOn").waitForExistence(timeout: 5))
+    }
+
     func testSettingsShowLanguageModelsPrivacyAndTheShortcutGuide() {
         app.tabBars.buttons.element(boundBy: 1).tap()
 
