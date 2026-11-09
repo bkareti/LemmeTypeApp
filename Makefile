@@ -81,6 +81,8 @@ corpus-check: ## Corpus script tests and the committed corpus manifests (no audi
 
 evaluation-check: ## Evaluation report script tests (fixtures only; no engine or audio needed)
 	python3 -I scripts/tests/test-evaluation-report.py
+	python3 -I scripts/tests/test-cloud-speech-eval.py
+	python3 -I scripts/tests/test-record-corpus.py
 
 evaluation: ## Corpus evaluation with real Whisper models + reports (not CI; BASELINE=path compares)
 	scripts/run-evaluation.sh $(if $(BASELINE),--baseline $(BASELINE))

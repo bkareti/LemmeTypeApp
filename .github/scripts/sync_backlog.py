@@ -29,6 +29,7 @@ EPIC_7_PATH = ROOT / "docs" / "backlog" / "epic-07-quality-release.md"
 EPIC_8_PATH = ROOT / "docs" / "backlog" / "epic-08-ios-companion.md"
 EPIC_9_PATH = ROOT / "docs" / "backlog" / "epic-09-multilingual-dictation.md"
 EPIC_10_PATH = ROOT / "docs" / "backlog" / "epic-10-tone-and-style.md"
+EPIC_11_PATH = ROOT / "docs" / "backlog" / "epic-11-cloud-speech.md"
 # Refined epics: number -> (backlog file, story phase label, expected story count).
 REFINED_EPICS = {
     1: (EPIC_1_PATH, "phase:mvp", 8),
@@ -41,9 +42,10 @@ REFINED_EPICS = {
     8: (EPIC_8_PATH, "phase:post-mvp", 9),
     9: (EPIC_9_PATH, "phase:post-mvp", 6),
     10: (EPIC_10_PATH, "phase:post-mvp", 5),
+    11: (EPIC_11_PATH, "phase:post-mvp", 4),
 }
-# Epics 9 and 10 are not in roadmap.md; their title comes from the backlog file heading.
-BACKLOG_ONLY_EPICS = (9, 10)
+# Epics 9, 10, and 11 are not in roadmap.md; their title comes from the backlog file heading.
+BACKLOG_ONLY_EPICS = (9, 10, 11)
 EPIC_COUNT = 8 + len(BACKLOG_ONLY_EPICS)
 
 LABELS = {
@@ -85,6 +87,7 @@ EPIC_LABELS = {
     8: ["epic", "platform:iOS", "phase:post-mvp", "area:mobile"],
     9: ["epic", "platform:macOS", "phase:post-mvp", "area:transcription"],
     10: ["epic", "platform:macOS", "phase:post-mvp", "area:voice-editing", "area:modes"],
+    11: ["epic", "platform:macOS", "phase:post-mvp", "area:transcription", "area:privacy", "area:security"],
 }
 
 # Stories carry the macOS label unless their epic is listed here.
@@ -169,6 +172,10 @@ STORY_AREA_LABELS = {
     "E10-S3": ["area:voice-editing", "area:modes"],
     "E10-S4": ["area:voice-editing", "area:modes"],
     "E10-S5": ["area:voice-editing", "area:modes"],
+    "E11-S1": ["area:transcription", "area:security"],
+    "E11-S2": ["area:transcription"],
+    "E11-S3": ["area:transcription", "area:privacy"],
+    "E11-S4": ["area:privacy", "area:security", "area:quality"],
 }
 
 
