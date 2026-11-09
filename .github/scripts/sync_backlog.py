@@ -30,6 +30,7 @@ EPIC_8_PATH = ROOT / "docs" / "backlog" / "epic-08-ios-companion.md"
 EPIC_9_PATH = ROOT / "docs" / "backlog" / "epic-09-multilingual-dictation.md"
 EPIC_10_PATH = ROOT / "docs" / "backlog" / "epic-10-tone-and-style.md"
 EPIC_11_PATH = ROOT / "docs" / "backlog" / "epic-11-cloud-speech.md"
+EPIC_12_PATH = ROOT / "docs" / "backlog" / "epic-12-iphone-cloud-english.md"
 # Refined epics: number -> (backlog file, story phase label, expected story count).
 REFINED_EPICS = {
     1: (EPIC_1_PATH, "phase:mvp", 8),
@@ -43,9 +44,10 @@ REFINED_EPICS = {
     9: (EPIC_9_PATH, "phase:post-mvp", 6),
     10: (EPIC_10_PATH, "phase:post-mvp", 5),
     11: (EPIC_11_PATH, "phase:post-mvp", 4),
+    12: (EPIC_12_PATH, "phase:post-mvp", 4),
 }
-# Epics 9, 10, and 11 are not in roadmap.md; their title comes from the backlog file heading.
-BACKLOG_ONLY_EPICS = (9, 10, 11)
+# Epics 9 through 12 are not in roadmap.md; their title comes from the backlog file heading.
+BACKLOG_ONLY_EPICS = (9, 10, 11, 12)
 EPIC_COUNT = 8 + len(BACKLOG_ONLY_EPICS)
 
 LABELS = {
@@ -88,10 +90,11 @@ EPIC_LABELS = {
     9: ["epic", "platform:macOS", "phase:post-mvp", "area:transcription"],
     10: ["epic", "platform:macOS", "phase:post-mvp", "area:voice-editing", "area:modes"],
     11: ["epic", "platform:macOS", "phase:post-mvp", "area:transcription", "area:privacy", "area:security"],
+    12: ["epic", "platform:iOS", "phase:post-mvp", "area:mobile", "area:transcription", "area:privacy"],
 }
 
 # Stories carry the macOS label unless their epic is listed here.
-EPIC_PLATFORM_LABELS = {8: "platform:iOS"}
+EPIC_PLATFORM_LABELS = {8: "platform:iOS", 12: "platform:iOS"}
 
 STORY_AREA_LABELS = {
     "E1-S1": ["area:foundation"],
@@ -176,6 +179,10 @@ STORY_AREA_LABELS = {
     "E11-S2": ["area:transcription"],
     "E11-S3": ["area:transcription", "area:privacy"],
     "E11-S4": ["area:privacy", "area:security", "area:quality"],
+    "E12-S1": ["area:mobile", "area:transcription", "area:privacy"],
+    "E12-S2": ["area:mobile", "area:transcription"],
+    "E12-S3": ["area:mobile", "area:modes"],
+    "E12-S4": ["area:mobile", "area:privacy", "area:quality"],
 }
 
 

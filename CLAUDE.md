@@ -313,7 +313,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
 ## Planning documents
 
 - `docs/product-brief.md`, `docs/roadmap.md` — scope, non-goals, epic exit criteria.
-- `docs/backlog/epic-{01,02,03,04,05,06,07,08,09,10,11}-*.md` — development-ready stories (source of truth
+- `docs/backlog/epic-{01,02,03,04,05,06,07,08,09,10,11,12}-*.md` — development-ready stories (source of truth
   for acceptance criteria). Readiness reviews go in `docs/backlog/reviews/`.
 - `docs/testing/manual-acceptance.md` — checks that cannot run on CI.
 - `docs/testing/insertion-matrix.md` — per-app insertion results and failure evidence.
@@ -347,12 +347,12 @@ sub-issues on `bkareti/LemmeTypeApp` (needs authenticated `gh`).
   8) then `## Dependency order` in `roadmap.md`; backlog files need
   `## Epic issue body`, `## EN-SM — Title` stories separated by `---`, and a
   final `## Epic N story order` section.
-- Epics 9, 10, and 11 are not in `roadmap.md`; they are listed in
+- Epics 9 through 12 are not in `roadmap.md`; they are listed in
   `BACKLOG_ONLY_EPICS` and take their title from the backlog file's
-  `# Epic N — Title` heading (first letter capitalised), so 11 epics in total.
+  `# Epic N — Title` heading (first letter capitalised), so 12 epics in total.
 - Refined epics are listed in `REFINED_EPICS` (backlog file, story phase
   label, story count: 8 for Epic 1, 10 for Epic 2, 7 for Epic 3, 9 for Epic 4,
-  7 for Epic 5, 8 for Epic 6, 9 for Epic 7, 9 for Epic 8, 6 for Epic 9, 5 for Epic 10, 4 for Epic 11).
+  7 for Epic 5, 8 for Epic 6, 9 for Epic 7, 9 for Epic 8, 6 for Epic 9, 5 for Epic 10, 4 for Epic 11, 4 for Epic 12).
   Epic 8's two original issues are E8-S1 and E8-S2; E8-S2 is the last story in the file.
   Stories carry `platform:macOS` unless the epic is in `EPIC_PLATFORM_LABELS`.
   Adding or removing a story requires updating `STORY_AREA_LABELS` and that count.
