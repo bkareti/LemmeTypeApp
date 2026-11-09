@@ -236,7 +236,8 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   rewrite, original, notice). The recorder holds it in memory only
   (`reviewText/reviewOriginal`) with Insert, Use Original, Regenerate (no new
   recognition), Copy, Discard.
-- Cloud speech (ADR 0031, Epic 11, in progress): `CloudSpeechEngine` (Recognition/Cloud) is the one
+- Cloud speech (ADR 0031, Epic 11, in progress): `SpeechSplitter` cuts long recordings at pauses into
+  provider-sized parts, sent one at a time (E11-S2). `CloudSpeechEngine` (Recognition/Cloud) is the one
   vendor-neutral engine, `RecognitionEngineID.cloud`, `ProcessingLocation.cloud`. Everything specific to a
   vendor is one pure `CloudSpeechProvider` (`SarvamProvider`); `CloudSpeechProviderContract` (TestSupport)
   is what a replacement must pass. `URLSessionCloudSpeechTransport` is the third allowlisted network file.

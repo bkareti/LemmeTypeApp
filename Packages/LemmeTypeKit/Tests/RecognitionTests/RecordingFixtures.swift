@@ -14,6 +14,7 @@ struct RecordingFixtures {
         case silence(seconds: Double)
         /// A 220 Hz tone standing in for speech energy (fake backends do the "recognition").
         case tone(seconds: Double)
+        case samples([Float])
     }
 
     func make(_ content: Content, language: String = "en-US") throws -> RecognitionRequest {
@@ -28,6 +29,8 @@ struct RecordingFixtures {
             samples = [Float](repeating: 0, count: Int(seconds * rate))
         case .tone(let seconds):
             samples = (0..<Int(seconds * rate)).map { Float(sin(2 * Double.pi * 220 * Double($0) / rate)) * 0.3 }
+        case .samples(let given):
+            samples = given
         }
         let format = try #require(
             AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: rate, channels: 1, interleaved: false))

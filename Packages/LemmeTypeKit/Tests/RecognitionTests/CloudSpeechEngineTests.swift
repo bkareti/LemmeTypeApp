@@ -44,7 +44,7 @@ struct CloudSpeechEngineTests {
 
     let fixtures = RecordingFixtures()
 
-    private func engine(
+    func engine(
         _ transport: FakeCloudSpeechTransport, secret: String? = "test-key",
         clock: any Clock<Duration> = ContinuousClock(),
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics()
@@ -54,11 +54,11 @@ struct CloudSpeechEngineTests {
             clock: clock, diagnostics: diagnostics)
     }
 
-    private func tone(seconds: Double = 1, language: String = "te") throws -> RecognitionRequest {
+    func tone(seconds: Double = 1, language: String = "te") throws -> RecognitionRequest {
         try fixtures.make(.tone(seconds: seconds), language: language)
     }
 
-    private static func outcome(
+    static func outcome(
         _ engine: CloudSpeechEngine, _ request: RecognitionRequest
     ) async -> Result<Transcript, RecognitionError> {
         do throws(RecognitionError) {
@@ -69,7 +69,7 @@ struct CloudSpeechEngineTests {
     }
 
     /// Runs `engine`, letting every backoff on `clock` finish.
-    private func runAdvancing(
+    func runAdvancing(
         _ engine: CloudSpeechEngine, _ request: RecognitionRequest, clock: ManualClock
     ) async -> Result<Transcript, RecognitionError> {
         let task = Task { await Self.outcome(engine, request) }
@@ -84,7 +84,7 @@ struct CloudSpeechEngineTests {
         return result
     }
 
-    private func failure(_ result: Result<Transcript, RecognitionError>) -> RecognitionError? {
+    func failure(_ result: Result<Transcript, RecognitionError>) -> RecognitionError? {
         if case .failure(let error) = result { return error }
         return nil
     }
@@ -182,16 +182,6 @@ struct CloudSpeechEngineTests {
         let transport = FakeCloudSpeechTransport([Self.answered])
         let request = try tone(language: "en-US")
         await #expect(throws: RecognitionError.unsupported(.language)) {
-            try await engine(transport).recognize(request) { _ in }
-        }
-        #expect(transport.requests.isEmpty)
-    }
-
-    @Test func aRecordingLongerThanOneRequestSendsNothing() async throws {
-        defer { fixtures.removeAll() }
-        let transport = FakeCloudSpeechTransport([Self.answered])
-        let request = try tone(seconds: 31)
-        await #expect(throws: RecognitionError.cloudServiceFailed) {
             try await engine(transport).recognize(request) { _ in }
         }
         #expect(transport.requests.isEmpty)
