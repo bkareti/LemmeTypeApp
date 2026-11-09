@@ -264,7 +264,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   `verify-release.sh` → `notarize-release.sh` (needs the maintainer's Developer ID and
   `NOTARY_PROFILE`; a `--rehearsal` build is ad hoc and never shipped);
   `docs/release/{runbook,beta-program,rollback}.md`. The `Updates` module is the only
-  other network code: `GitHubReleaseFeed` makes one anonymous GET for release metadata
+  other network code besides opt-in cloud speech (ADR 0031): `GitHubReleaseFeed` makes one anonymous GET for release metadata
   (user-started or opt-in weekly, never during a session); `UpdateChecker` decides what
   it means; the app never downloads or runs a release. `LaunchSentinel` (Lifecycle)
   leaves a marker that a normal quit removes, so `AppController.beginRun/endRun` can show

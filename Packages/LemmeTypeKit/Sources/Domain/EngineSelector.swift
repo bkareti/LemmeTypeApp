@@ -30,7 +30,8 @@ public enum EngineSelector {
             return choose(preferred: nil, candidates: candidates)
         }
         if chosen.availability.isReady { return .engine(preferred) }
-        if fallsBackAutomatically, let alternative = ready.first { return .engine(alternative) }
+        // A cloud choice never moves to a local engine silently, or the other way round (ADR 0031).
+        if fallsBackAutomatically, !preferred.isCloud, let alternative = ready.first { return .engine(alternative) }
         return .unavailable(preferred, chosen.availability, alternatives: ready)
     }
 }

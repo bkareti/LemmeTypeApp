@@ -36,9 +36,10 @@ struct CloudEngineSelectionTests {
         #expect(choice == .unavailable(.appleSpeech, .assetsMissing, alternatives: [.whisper]))
     }
 
-    @Test func aCloudChoiceThatCannotRunStaysThatChoice() {
+    @Test(arguments: [false, true])
+    func aCloudChoiceThatCannotRunStaysThatChoice(fallsBackAutomatically: Bool) {
         let choice = EngineSelector.choose(
-            preferred: .cloud, fallsBackAutomatically: false,
+            preferred: .cloud, fallsBackAutomatically: fallsBackAutomatically,
             candidates: [(.cloud, .permissionUnavailable), (.whisper, .ready)])
         #expect(choice == .unavailable(.cloud, .permissionUnavailable, alternatives: [.whisper]))
     }
