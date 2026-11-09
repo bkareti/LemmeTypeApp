@@ -214,7 +214,7 @@ extension DictationIssue {
         let switchEngine = alternatives.map(DictationAction.useEngine)
         switch self {
         case .recognitionFailed(.permissionDenied), .engineUnavailable(_, .permissionUnavailable):
-            return [.allowSpeechRecognition, .retry] + switchEngine + [.saveAudio, .discard]
+            return permissionActions(switchEngine)
         case .recognitionFailed(.noSpeechDetected), .recognitionFailed(.silentAudio):
             return [.discard]
         case .recognitionFailed(.languageUncertain), .languageUnavailable, .reviewTranslation:
@@ -234,6 +234,12 @@ extension DictationIssue {
         case .editingUnavailable, .rewriterUnavailable, .rewriteFailed:
             return editingActions
         }
+    }
+
+    /// A missing API key for the cloud engine is not solved by Speech Recognition access.
+    private func permissionActions(_ switchEngine: [DictationAction]) -> [DictationAction] {
+        if case .engineUnavailable(.cloud, _) = self { return switchEngine + [.chooseEngine, .saveAudio, .discard] }
+        return [.allowSpeechRecognition, .retry] + switchEngine + [.saveAudio, .discard]
     }
 
     /// Choices for a review of rewritten (E10-S4) or plain (E8-S6) text.

@@ -55,6 +55,30 @@ extension DictationIssue {
                 ?? String(
                     localized: "Read the rewrite. Nothing is inserted until you choose Insert or Copy.",
                     bundle: .module)
+        case .engineUnavailable(.cloud, .permissionUnavailable):
+            String(
+                localized: "Cloud speech needs an API key. Your recording is kept.", bundle: .module,
+                comment: "Shown when the cloud speech engine has no API key stored")
+        case .recognitionFailed(.cloudOffline):
+            String(
+                localized: "Couldn’t reach the cloud speech service. Check your connection. Your recording is kept.",
+                bundle: .module, comment: "Shown when the cloud speech service cannot be reached")
+        case .recognitionFailed(.cloudKeyRejected):
+            String(
+                localized: "The cloud speech service refused your API key. Your recording is kept.", bundle: .module,
+                comment: "Shown when the cloud speech provider rejects the API key")
+        case .recognitionFailed(.cloudRateLimited):
+            String(
+                localized: "The cloud speech service is busy. Try again in a moment. Your recording is kept.",
+                bundle: .module, comment: "Shown when the cloud speech provider rate limits requests")
+        case .recognitionFailed(.cloudQuotaExhausted):
+            String(
+                localized: "Your cloud speech account has no credit left. Your recording is kept.", bundle: .module,
+                comment: "Shown when the cloud speech account balance is used up")
+        case .recognitionFailed(.cloudServiceFailed):
+            String(
+                localized: "The cloud speech service couldn’t process this recording. Your recording is kept.",
+                bundle: .module, comment: "Shown when the cloud speech provider fails")
         case .recognitionFailed(.permissionDenied), .engineUnavailable(_, .permissionUnavailable):
             String(
                 localized: "Apple Speech needs Speech Recognition access. Your recording is kept until you decide.",

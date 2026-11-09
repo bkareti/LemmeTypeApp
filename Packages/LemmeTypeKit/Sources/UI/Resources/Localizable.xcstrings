@@ -353,6 +353,9 @@
     "Clipboard only" : {
 
     },
+    "Cloud speech needs an API key. Your recording is kept." : {
+      "comment" : "Shown when the cloud speech engine has no API key stored"
+    },
     "Concise" : {
       "comment" : "Adjective: shorter rewritten text"
     },
@@ -403,6 +406,9 @@
     },
     "Couldn’t reach GitHub. Check your connection and try again." : {
 
+    },
+    "Couldn’t reach the cloud speech service. Check your connection. Your recording is kept." : {
+      "comment" : "Shown when the cloud speech service cannot be reached"
     },
     "Couldn’t record" : {
 
@@ -1598,6 +1604,15 @@
     "The clipboard" : {
 
     },
+    "The cloud speech service couldn’t process this recording. Your recording is kept." : {
+      "comment" : "Shown when the cloud speech provider fails"
+    },
+    "The cloud speech service is busy. Try again in a moment. Your recording is kept." : {
+      "comment" : "Shown when the cloud speech provider rate limits requests"
+    },
+    "The cloud speech service refused your API key. Your recording is kept." : {
+      "comment" : "Shown when the cloud speech provider rejects the API key"
+    },
     "The download failed. Check your connection and try again." : {
 
     },
@@ -2008,6 +2023,9 @@
     },
     "Your clipboard holds something LemmeType can’t put back, so it wasn’t used. Copying the text will replace it." : {
 
+    },
+    "Your cloud speech account has no credit left. Your recording is kept." : {
+      "comment" : "Shown when the cloud speech account balance is used up"
     },
     "your iPad" : {
       "comment" : "The user's tablet"

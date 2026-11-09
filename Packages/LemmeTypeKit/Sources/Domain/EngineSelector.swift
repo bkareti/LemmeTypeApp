@@ -1,5 +1,6 @@
-/// Chooses the engine for a new session. Only local engines exist, and the
-/// choice never falls back silently to a different engine than the user picked.
+/// Chooses the engine for a new session. The choice never falls back silently
+/// to a different engine than the user picked, and a cloud engine runs only
+/// when it is the one the user picked (ADR 0031).
 public enum EngineSelector {
     public enum Choice: Equatable, Sendable {
         case engine(RecognitionEngineID)
@@ -19,7 +20,7 @@ public enum EngineSelector {
         fallsBackAutomatically: Bool = false,
         candidates: [(id: RecognitionEngineID, availability: EngineAvailability)]
     ) -> Choice {
-        let ready = candidates.filter { $0.availability.isReady }.map(\.id)
+        let ready = candidates.filter { $0.availability.isReady && !$0.id.isCloud }.map(\.id)
         guard let preferred else {
             return ready.first.map(Choice.engine) ?? .noneAvailable
         }
@@ -29,7 +30,8 @@ public enum EngineSelector {
             return choose(preferred: nil, candidates: candidates)
         }
         if chosen.availability.isReady { return .engine(preferred) }
-        if fallsBackAutomatically, let alternative = ready.first { return .engine(alternative) }
+        // A cloud choice never moves to a local engine silently, or the other way round (ADR 0031).
+        if fallsBackAutomatically, !preferred.isCloud, let alternative = ready.first { return .engine(alternative) }
         return .unavailable(preferred, chosen.availability, alternatives: ready)
     }
 }

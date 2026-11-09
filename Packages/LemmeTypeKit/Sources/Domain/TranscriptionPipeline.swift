@@ -283,12 +283,16 @@ public actor TranscriptionPipeline: DictationProcessing {
 
     private static let noEngine = DictationOutcome.needsAttention(
         .noEngineAvailable, engine: nil, alternatives: [], transcript: nil)
+}
 
+extension TranscriptionPipeline {
     private func readyEngines(excluding id: RecognitionEngineID, for need: RecognitionNeed) async
         -> [RecognitionEngineID]
     {
         var ready: [RecognitionEngineID] = []
-        for engine in engines where engine.descriptor.id != id && engine.descriptor.supports(need) {
+        // Never offers the cloud engine as the way out of a failure (ADR 0031).
+        for engine in engines
+        where engine.descriptor.id != id && !engine.descriptor.id.isCloud && engine.descriptor.supports(need) {
             if await engine.availability(for: need).isReady {
                 ready.append(engine.descriptor.id)
             }

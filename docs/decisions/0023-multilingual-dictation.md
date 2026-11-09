@@ -56,7 +56,7 @@ removes (ADR 0011, 0022).
 
 | Option | Why not |
 |---|---|
-| Cloud speech or translation | Breaks the local-only promise. |
+| Cloud speech or translation | Breaks the local-only promise. Reconsidered as an opt-in engine, off by default, in [ADR 0031](0031-cloud-speech-provider.md). |
 | A separate translation model after transcription | Another download, runtime, and error path; Whisper already translates to English. |
 | Apple's Translation framework | Text to text, needs system language packs and a SwiftUI-owned session; does not fit the headless pipeline. A later candidate for non-English output. |
 | Apple Speech for Hindi | Not evaluated; on-device availability varies by Mac and OS. |
