@@ -1,5 +1,6 @@
 import Domain
 import Foundation
+import Support
 import Testing
 import UI
 
@@ -18,6 +19,26 @@ struct IOSCompositionTests {
         #expect(composition.mode == .uiTesting)
         #expect(composition.quick.screen == .ready)
         #expect(composition.recorder.state == .idle)
+    }
+
+    @Test func aDebugBuildOffersCloudSpeechButItStartsOff() async {
+        let composition = makeComposition()
+        #expect(IOSComposition.offersCloudSpeech)
+        let cloudSpeech = composition.cloudSpeech
+        await cloudSpeech?.refresh()
+        #expect(cloudSpeech?.status == .off)
+        #expect(!composition.modes.engines.contains(.cloud))
+    }
+
+    @Test func theKeychainKeepsAndRemovesAKey() async throws {
+        let store = KeychainCloudCredentialStore(service: "com.lemmetype.tests.\(UUID().uuidString)")
+        let provider = CloudSpeechProviderID(rawValue: "sarvam")
+        #expect(await store.credential(for: provider) == nil)
+        try store.save(CloudCredential(secret: "first"), for: provider)
+        try store.save(CloudCredential(secret: "second"), for: provider)
+        #expect(await store.credential(for: provider) == CloudCredential(secret: "second"))
+        store.remove(for: provider)
+        #expect(await store.credential(for: provider) == nil)
     }
 
     @Test func aRecordingHasATimeLimit() {

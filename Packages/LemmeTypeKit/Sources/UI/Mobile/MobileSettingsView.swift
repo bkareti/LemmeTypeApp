@@ -12,13 +12,17 @@
         let modes: ModesSettingsModel
         let privacy: PrivacyOverviewModel
         let permissions: PermissionsModel
+        /// `nil` when this build does not offer cloud speech.
+        let cloudSpeech: CloudSpeechSettingsModel?
         @AppStorage(CopiedTextLifetime.storageKey) private var lifetimeRaw = CopiedTextLifetime.default.rawValue
         @State private var kind: PersonalizationDraft.Kind = .vocabulary
 
         public init(
             dictation: DictationSettingsModel, models: ModelsSettingsModel, personalization: PersonalizationModel,
-            modes: ModesSettingsModel, privacy: PrivacyOverviewModel, permissions: PermissionsModel
+            modes: ModesSettingsModel, privacy: PrivacyOverviewModel, permissions: PermissionsModel,
+            cloudSpeech: CloudSpeechSettingsModel? = nil
         ) {
+            self.cloudSpeech = cloudSpeech
             self.dictation = dictation
             self.models = models
             self.personalization = personalization
@@ -105,10 +109,12 @@
                 }
                 Section(String(localized: "Privacy", bundle: .module)) {
                     NavigationLink(String(localized: "Privacy and Data", bundle: .module)) {
-                        MobilePrivacyView(model: privacy, permissions: permissions)
+                        MobilePrivacyView(
+                            model: privacy, permissions: permissions, usesCloudSpeech: cloudSpeech?.status == .turnedOn)
                     }
                     .accessibilityIdentifier("settings.privacy")
                 }
+                if let cloudSpeech { MobileCloudSpeechSection(model: cloudSpeech) }
                 MobileAboutSection()
             }
             .navigationTitle(String(localized: "Settings", bundle: .module))
@@ -157,6 +163,7 @@
     struct MobilePrivacyView: View {
         let model: PrivacyOverviewModel
         let permissions: PermissionsModel
+        var usesCloudSpeech = false
         @State private var isConfirming = false
 
         var body: some View {
@@ -164,10 +171,15 @@
                 Section {
                     row(
                         "mic", String(localized: "Your voice", bundle: .module),
-                        String(
-                            localized:
-                                "Recorded only while the recording is showing, turned into text on this device, and deleted when the text is ready or you cancel.",
-                            bundle: .module))
+                        usesCloudSpeech
+                            ? String(
+                                localized:
+                                    "Recorded only while the recording is showing, and deleted when the text is ready or you cancel. Modes that use Cloud speech send it online to be turned into text; others keep it on this device.",
+                                bundle: .module)
+                            : String(
+                                localized:
+                                    "Recorded only while the recording is showing, turned into text on this device, and deleted when the text is ready or you cancel.",
+                                bundle: .module))
                     row(
                         "text.alignleft", String(localized: "Your words", bundle: .module),
                         String(
@@ -176,10 +188,15 @@
                             bundle: .module))
                     row(
                         "wifi.slash", String(localized: "The network", bundle: .module),
-                        String(
-                            localized:
-                                "Dictation never uses the network. The only download is a speech model, and only after you confirm it.",
-                            bundle: .module))
+                        usesCloudSpeech
+                            ? String(
+                                localized:
+                                    "Only modes that use Cloud speech go online, and only during their dictation. The only download is a speech model, and only after you confirm it.",
+                                bundle: .module)
+                            : String(
+                                localized:
+                                    "Dictation never uses the network. The only download is a speech model, and only after you confirm it.",
+                                bundle: .module))
                     row(
                         "doc.on.clipboard", String(localized: "The clipboard", bundle: .module),
                         String(

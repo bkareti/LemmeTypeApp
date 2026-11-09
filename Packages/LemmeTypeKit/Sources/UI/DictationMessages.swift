@@ -268,6 +268,9 @@ extension RecognitionEngineID {
         switch self {
         case .appleSpeech: String(localized: "Apple Speech", bundle: .module)
         case .whisper: String(localized: "Whisper", bundle: .module)
+        case .cloud:
+            String(
+                localized: "Cloud", bundle: .module, comment: "The name of the speech engine that sends audio online")
         default: rawValue
         }
     }

@@ -37,6 +37,8 @@ public final class QuickDictationModel {
     private let needsSpeechRecognition: @MainActor () -> Bool
     private let requestSpeechRecognition: @MainActor () async -> Void
     private let launchRequests: LaunchRequestInbox?
+    /// Whether the user has turned cloud speech on, so explanations stay true (ADR 0031).
+    public let isCloudSpeechOn: @MainActor () -> Bool
     private let feedback: any RecordingFeedback
 
     public init(
@@ -48,8 +50,10 @@ public final class QuickDictationModel {
         lifetime: @escaping @MainActor () -> CopiedTextLifetime = { .default },
         needsSpeechRecognition: @escaping @MainActor () -> Bool = { false },
         requestSpeechRecognition: @escaping @MainActor () async -> Void = {},
-        launchRequests: LaunchRequestInbox? = nil
+        launchRequests: LaunchRequestInbox? = nil,
+        isCloudSpeechOn: @escaping @MainActor () -> Bool = { false }
     ) {
+        self.isCloudSpeechOn = isCloudSpeechOn
         self.recorder = recorder
         self.feedback = feedback
         self.microphoneStatus = microphoneStatus

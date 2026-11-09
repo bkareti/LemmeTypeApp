@@ -42,6 +42,9 @@ public enum LanguageSupportMatrix {
         // Whisper Small, the largest model offered, gets most Telugu wrong (#137).
         row("te", .whisper, .transcribe, .mostAccurate, .unreliable, teluguMeasurement),
         row("te", .whisper, .translateToEnglish, .mostAccurate, .evaluation),
+        // Opt-in cloud speech (ADR 0031): no local model is involved, so the tier means nothing.
+        row("te", .cloud, .transcribe, .balanced, .evaluation),
+        row("te", .cloud, .translateToEnglish, .balanced, .evaluation),
     ]
 
     private static func row(

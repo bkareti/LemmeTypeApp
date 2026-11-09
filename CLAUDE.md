@@ -240,8 +240,9 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   vendor-neutral engine, `RecognitionEngineID.cloud`, `ProcessingLocation.cloud`. Everything specific to a
   vendor is one pure `CloudSpeechProvider` (`SarvamProvider`); `CloudSpeechProviderContract` (TestSupport)
   is what a replacement must pass. `URLSessionCloudSpeechTransport` is the third allowlisted network file.
-  `EngineSelector` and the pipeline's alternatives never pick it unless it is the preferred engine. It is
-  not registered in `AppComposition` yet (E11-S3). The real-service test needs `LEMMETYPE_REAL_CLOUD=1`.
+  `EngineSelector` and the pipeline's alternatives never pick it unless it is the preferred engine. The iPhone app registers it in Debug only (`IOSComposition.offersCloudSpeech`, E12-S1); the Mac app does
+  not yet (E11-S3). `CloudSpeechSettingsModel` (UI) owns consent and the key: `ConsentedCloudCredentials` hands the
+  engine a key only for the provider the user agreed to, and `KeychainCloudCredentialStore` (Support) keeps it for this device. The real-service test needs `LEMMETYPE_REAL_CLOUD=1`.
 - Engine/mode selection (ADR 0016): `DictationSettingsModel` (UI) backs
   Settings › Dictation and the status menu. Mode, language, and
   `EnginePreference` are captured when recording starts and stored in the

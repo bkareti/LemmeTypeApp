@@ -31,6 +31,9 @@ struct SessionSettings: Sendable {
 }
 
 extension RecordingCoordinator {
+    /// The current session's audio goes to the cloud (ADR 0031), so the screen says so.
+    public var isUsingCloudSpeech: Bool { activeSettings?.enginePreference.selected?.isCloud == true }
+
     /// The writing mode captured when the current recording started; shown
     /// in the overlay and stored with the session.
     public var activeMode: WritingMode? { activeSettings?.resolved.mode.writingMode }

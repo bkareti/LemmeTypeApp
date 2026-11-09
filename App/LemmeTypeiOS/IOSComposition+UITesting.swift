@@ -2,6 +2,7 @@
     import Audio
     import Domain
     import Foundation
+    import Recognition
     import Support
     import TestSupport
 
@@ -96,7 +97,9 @@
                 diagnostics: diagnostics,
                 hardware: HardwareProfile(isAppleSilicon: true, physicalMemoryBytes: 8 << 30, deviceClass: .iPhone),
                 copiedTextLifetime: { .default },
-                limits: scenario.recordingLimit)
+                limits: scenario.recordingLimit,
+                cloudSpeech: CloudSpeechServices(
+                    provider: SarvamProvider(), store: FakeCloudCredentialStore(), consent: FakeCloudSpeechConsent()))
         }
     }
 #endif

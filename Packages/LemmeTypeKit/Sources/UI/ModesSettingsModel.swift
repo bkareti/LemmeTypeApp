@@ -31,7 +31,7 @@ public final class ModesSettingsModel {
     private let diagnostics: any DiagnosticsRecording
 
     /// Engines a mode may pick, in recommendation order.
-    public let engines: [RecognitionEngineID]
+    public private(set) var engines: [RecognitionEngineID]
     /// Languages a mode may pick.
     public let languages: [String]
     /// "Text you get" values a mode may pick (ADR 0029). With one value the
@@ -57,6 +57,12 @@ public final class ModesSettingsModel {
         self.applicationName = applicationName
         self.diagnostics = diagnostics
         defaultMode = preferences.dictationMode
+    }
+
+    /// The cloud engine appears only while cloud speech is turned on (ADR 0031).
+    public func setOffersCloudEngine(_ offered: Bool) {
+        engines.removeAll(where: \.isCloud)
+        if offered { engines.append(.cloud) }
     }
 
     // MARK: Modes
