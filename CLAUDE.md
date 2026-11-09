@@ -196,7 +196,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
 - Dictation modes (ADR 0021): `DictationMode` (Domain) bundles engine,
   language, writing mode + Clean rules, style (personalization, snippets,
   final period), and output (insert / copy only, trailing space). Built-ins
-  `exact`/`clean`/`message`; custom modes and `AppModeRule`s live in the
+  `exact`/`clean`/`message`/`proper-english`; custom modes and `AppModeRule`s live in the
   personalization library. `AppPreferences.dictationMode` is the default
   (migrates from `writingMode`). `ModeResolver` picks app rule → default at
   activation; `SessionSettings` (UI) captures it into the session.
@@ -224,7 +224,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   (`DictationProcessing.languageIssue`). Non-English text is written Exact; a
   translation ends in `DictationIssue.reviewTranslation` (Insert, Copy,
   Translate Again, Discard) and is never delivered automatically.
-- Tone and style (ADR 0024): `StyleOptions` (tone, format, length; Neutral +
+- Tone and style (ADR 0024): `StyleOptions` (tone, format, length, and `correctsGrammar` for E12-S3; Neutral +
   Plain text + Original = no rewrite) on `DictationMode`; `effectiveStyle` is
   none for Exact. `TranscriptionPipeline+Style` runs the fixed
   `StyleInstruction` through `TextRewriting` after personalization and before

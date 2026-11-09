@@ -76,7 +76,8 @@ struct StyleOptionsTests {
     }
 
     @Test func builtInModesHaveNoStyle() {
-        for mode in DictationMode.builtIns {
+        // Proper English (E12-S3) corrects grammar on purpose.
+        for mode in DictationMode.builtIns where mode.id != .properEnglish {
             #expect(mode.style == .none)
             #expect(mode.effectiveStyle == .none)
         }

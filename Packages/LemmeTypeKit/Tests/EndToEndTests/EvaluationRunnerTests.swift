@@ -66,7 +66,7 @@ struct EvaluationRunnerTests {
 
         #expect(result.mode == mode.id.rawValue)
         #expect(result.writingMode == mode.writingMode.rawValue)
-        #expect(result.style == nil)
+        #expect((result.style != nil) == !mode.effectiveStyle.isNone)
         #expect(result.translation == nil)
         // Clean Writing and Message remove the filler; Exact never changes words.
         #expect(result.score.words.insertions == (mode.writingMode == .exact ? 1 : 0))

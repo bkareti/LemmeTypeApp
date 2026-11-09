@@ -82,3 +82,11 @@ works, not a quality approval.
   `regenerate`.
 - A rewrite adds roughly the model's latency (≈ 0.6 s measured) before the text
   appears, always followed by a click.
+
+## Addition: grammar correction (E12-S3, 2026-11-09)
+
+`StyleOptions.correctsGrammar` (off by default, so saved modes are unchanged) asks the same
+on-device model to fix grammar, spelling, and punctuation and keep the speaker's words. It uses this
+ADR's whole path: a fixed instruction, `PreservationChecker`, and a review with the original one tap
+away. The built-in **Proper English** mode turns it on and fixes the language to English, so it needs
+no network and works under the English-only scope (ADR 0029).

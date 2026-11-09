@@ -58,7 +58,7 @@ private struct PreservationFacts {
         for token in tokens {
             let lower = token.word.lowercased()
             words.insert(lower)
-            if Self.relativeDates.contains(lower) || (token.isCapitalized && Self.calendarNames.contains(lower)) {
+            if Self.relativeDates.contains(lower) || Self.calendarNames.contains(lower) {
                 dates.insert(lower)
             }
             if Self.numberWords.contains(lower) { numbers.insert(lower) }
@@ -152,7 +152,8 @@ private struct PreservationFacts {
     // MARK: Vocabulary
 
     static let relativeDates: Set<String> = ["today", "tomorrow", "yesterday", "tonight"]
-    /// Capitalised only; "may" and "march" are ordinary words.
+    /// Matched in any case, so correcting "friday" to "Friday" is not a changed date (E12-S3).
+    /// "May" and "March" stay out because "may" and "march" are ordinary words.
     static let calendarNames: Set<String> = [
         "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "january", "february",
         "april", "june", "july", "august", "september", "october", "november", "december",

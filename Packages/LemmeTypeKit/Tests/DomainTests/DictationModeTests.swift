@@ -6,7 +6,7 @@ import Testing
 /// E4-S5 and E4-S7: modes, app rules, and how a session's mode is chosen.
 struct DictationModeTests {
     @Test func builtInsHaveStableIdentifiersAndMatchEpicTwoModes() {
-        #expect(DictationMode.builtIns.map(\.id.rawValue) == ["exact", "clean", "message"])
+        #expect(DictationMode.builtIns.map(\.id.rawValue) == ["exact", "clean", "message", "proper-english"])
         #expect(DictationMode.builtIn(for: .exact) == .exact)
         #expect(DictationMode.builtIn(for: .clean) == .clean)
         #expect(DictationMode.message.finalPunctuation == .omit)
@@ -229,7 +229,8 @@ struct ModePipelineTests {
     }
 
     @Test func builtInModesKeepTheirBehaviour() {
-        for mode in DictationMode.builtIns {
+        // Proper English (E12-S3) fixes its language on purpose.
+        for mode in DictationMode.builtIns where mode.id != .properEnglish {
             #expect(mode.speechOutput == nil)
             #expect(mode.language == nil)
         }

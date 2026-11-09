@@ -298,6 +298,13 @@ private struct ModeEditor: View {
                 ForEach(LengthPreference.allCases, id: \.self) { Text($0.displayName).tag($0) }
             }
             .accessibilityIdentifier("modes.editor.length")
+            Toggle(
+                String(
+                    localized: "Correct grammar", bundle: .module,
+                    comment: "A mode option: fix grammar, spelling, and punctuation"),
+                isOn: $mode.style.correctsGrammar
+            )
+            .accessibilityIdentifier("modes.editor.grammar")
         } header: {
             Text(String(localized: "Tone and format", bundle: .module))
         } footer: {
@@ -308,7 +315,7 @@ private struct ModeEditor: View {
                         bundle: .module)
                     : String(
                         localized:
-                            "Optional. LemmeType rewrites on this Mac and shows you the result before anything is inserted. Neutral, Plain text, and Original change nothing.",
+                            "Optional. LemmeType rewrites on \(DeviceWords.thisDevice) and shows you the result before anything is used. Neutral, Plain text, and Original change nothing.",
                         bundle: .module)
             )
             .font(.caption)
