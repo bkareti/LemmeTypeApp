@@ -36,7 +36,7 @@ public struct CloudSpeechEngine: SpeechRecognitionEngine {
     public var descriptor: EngineDescriptor {
         EngineDescriptor(
             id: .cloud, location: .cloud, supportedLanguages: provider.supportedLanguages, assets: .none,
-            capabilities: [], tasks: provider.tasks)
+            capabilities: [.progress], tasks: provider.tasks)
     }
 
     public func availability() async -> EngineAvailability {
@@ -63,16 +63,12 @@ public struct CloudSpeechEngine: SpeechRecognitionEngine {
         guard !SpeechActivity.isSilent(samples) else { throw .silentAudio }
         guard let credential = await credentials.credential(for: provider.id) else { throw .permissionDenied }
 
-        let seconds = Double(samples.count) / AudioCaptureFormat.speech.sampleRate
-        // Until long recordings are sent in parts (E11-S2).
-        guard seconds <= provider.maximumClipSeconds else { throw .cloudServiceFailed }
-
-        let clip = CloudAudioClip(wav: WAVEncoder.encode(samples), seconds: seconds)
-        let outgoing = try provider.request(for: clip, need: need, credential: credential)
-        let answer = try await send(outgoing)
+        let rate = AudioCaptureFormat.speech.sampleRate
+        let seconds = Double(samples.count) / rate
+        let answers = try await transcribeParts(of: samples, need: need, credential: credential, updates: updates)
         if Task.isCancelled { throw .cancelled }
 
-        let text = answer.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        let text = answers.joined(separator: " ").split(whereSeparator: \.isWhitespace).joined(separator: " ")
         guard !text.isEmpty else { throw .noSpeechDetected }
         let elapsed = start.duration(to: .now).components
         diagnostics.record(
@@ -84,6 +80,28 @@ public struct CloudSpeechEngine: SpeechRecognitionEngine {
             spokenLanguage: request.language,
             audioDuration: request.audio.duration,
             processingDuration: Double(elapsed.seconds) + Double(elapsed.attoseconds) / 1e18)
+    }
+
+    /// Sends each part in order, one at a time. Any failure ends the whole
+    /// recognition, so partial text is never delivered as if it were complete.
+    private func transcribeParts(
+        of samples: [Float], need: RecognitionNeed, credential: CloudCredential,
+        updates: @Sendable (RecognitionUpdate) -> Void
+    ) async throws(RecognitionError) -> [String] {
+        let rate = AudioCaptureFormat.speech.sampleRate
+        let parts = SpeechSplitter.ranges(of: samples, sampleRate: rate, maximumSeconds: provider.maximumClipSeconds)
+        var answers: [String] = []
+        for (index, range) in parts.enumerated() {
+            if Task.isCancelled { throw .cancelled }
+            let part = Array(samples[range])
+            // A silent stretch costs money and can only come back empty.
+            if !SpeechActivity.isSilent(part) {
+                let clip = CloudAudioClip(wav: WAVEncoder.encode(part), seconds: Double(part.count) / rate)
+                answers.append(try await send(try provider.request(for: clip, need: need, credential: credential)))
+            }
+            if parts.count > 1 { updates(.progress(Double(index + 1) / Double(parts.count))) }
+        }
+        return answers
     }
 
     private func send(_ request: CloudHTTPRequest) async throws(RecognitionError) -> String {

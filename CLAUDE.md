@@ -240,7 +240,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   vendor-neutral engine, `RecognitionEngineID.cloud`, `ProcessingLocation.cloud`. Everything specific to a
   vendor is one pure `CloudSpeechProvider` (`SarvamProvider`); `CloudSpeechProviderContract` (TestSupport)
   is what a replacement must pass. `URLSessionCloudSpeechTransport` is the third allowlisted network file.
-  `EngineSelector` and the pipeline's alternatives never pick it unless it is the preferred engine. It is
+  `SpeechSplitter` cuts long recordings at pauses into provider-sized parts, sent one at a time (E11-S2). `EngineSelector` and the pipeline's alternatives never pick it unless it is the preferred engine. It is
   not registered in `AppComposition` yet (E11-S3). The real-service test needs `LEMMETYPE_REAL_CLOUD=1`.
 - Engine/mode selection (ADR 0016): `DictationSettingsModel` (UI) backs
   Settings › Dictation and the status menu. Mode, language, and
