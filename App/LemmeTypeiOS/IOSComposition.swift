@@ -225,8 +225,11 @@ struct IOSComposition {
         // screen or the Action Button launched the app.
         let startup = StartupOnce()
         let audioCapture = services.audioCapture
+        let handoff = services.actionDictation.handoff
         let prepare: @MainActor () async -> Void = {
             await startup.run {
+                // A result left by a crash or force-quit must not outlive that run.
+                handoff.clear()
                 await audioCapture.purgeLeftovers()
                 await personalization.load()
                 await cloudSpeech?.refresh()

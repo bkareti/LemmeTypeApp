@@ -25,6 +25,8 @@ public final class ActionDictationController {
 
     private var followTask: Task<Void, Never>?
     private var retentionTask: Task<Void, Never>?
+    /// iOS may suspend the app at any moment after this, so no text may be published.
+    private var backgroundTimeExpired = false
 
     public init(
         recorder: RecordingCoordinator,
@@ -68,6 +70,7 @@ public final class ActionDictationController {
 
     private func start() async {
         await clearPreviousResult()
+        backgroundTimeExpired = false
         do {
             // iOS ends the app if a recording intent has audio but no Live Activity.
             try presenter.begin()
@@ -117,7 +120,11 @@ public final class ActionDictationController {
         case .needsAttention(let issue) where issue.isTextForReview:
             if let text = recorder.reviewText {
                 recorder.discardRecordingKeepingText()
-                await finish(with: .ready(text: text), hold: resultRetention)
+                if backgroundTimeExpired {
+                    await fail(Self.textWaitingMessage)
+                } else {
+                    await finish(with: .ready(text: text), hold: resultRetention)
+                }
             } else {
                 await fail(issue.userMessage)
             }
@@ -166,7 +173,17 @@ public final class ActionDictationController {
 
     private func beginBackgroundTime() {
         // If iOS runs out of time first, the text is erased rather than left behind.
-        backgroundTime.begin { [weak self] in self?.handoff.clear() }
+        backgroundTime.begin { [weak self] in
+            self?.backgroundTimeExpired = true
+            self?.handoff.clear()
+        }
+    }
+
+    private static var textWaitingMessage: String {
+        String(
+            localized: "Your text is ready in LemmeType. Open the app to copy it.",
+            bundle: .module,
+            comment: "Shown on the keyboard when iOS ended background time before the text could be handed over")
     }
 
     private static var liveActivityMessage: String {

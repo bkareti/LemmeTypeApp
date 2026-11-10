@@ -13,6 +13,7 @@ final class KeyboardViewController: UIInputViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         model.insertText = { [weak self] in self?.textDocumentProxy.insertText($0) }
+        model.currentField = { [weak self] in self?.textDocumentProxy.documentIdentifier }
         model.onOverlayChange = { [weak self] in self?.updateOverlay() }
 
         keys.translatesAutoresizingMaskIntoConstraints = false
@@ -145,13 +146,20 @@ struct VoiceStatusView: View {
             } else if model.isWriting {
                 Image(systemName: "text.cursor").font(.largeTitle).symbolEffect(.pulse)
                 Text("Writing your text…").font(.headline)
+            } else if let offered = model.offered {
+                Text("Your text is ready").font(.headline)
+                Text(offered.text).font(.subheadline).lineLimit(2).padding(.horizontal)
+                HStack {
+                    Button("Not Here", action: model.dismissOffered).buttonStyle(.bordered)
+                    Button("Insert", action: model.insertOffered).buttonStyle(.borderedProminent)
+                }
             } else if let message = model.failureMessage {
                 Image(systemName: "exclamationmark.triangle").font(.title)
                 Text(message).font(.subheadline).multilineTextAlignment(.center).padding(.horizontal)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: model.offered == nil ? .combine : .contain)
     }
 }
 

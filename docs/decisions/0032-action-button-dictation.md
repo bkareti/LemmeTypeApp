@@ -30,9 +30,10 @@ Pro Max (iOS 27.0.1, 2026-11-10, `spike/keyboard-mic-session`) found:
 ## Security and privacy
 
 - New capabilities: one App Group, the `audio` background mode, and Live Activities.
-- The microphone is on only between the two presses.
-- The shared file holds one result, is excluded from backups, is erased after 25 seconds or when background time
-  ends, and is ignored by the keyboard once stale. Text also stays in memory in the Quick Dictation review.
+- The microphone is on only between the two presses, and starting needs an unlocked iPhone.
+- A result goes in by itself only into the field open when recording started. Elsewhere it waits for Insert.
+- The shared file holds one result, is excluded from backups, is erased after 25 seconds, when background time
+  ends, or at the next launch after a crash or force-quit, and is ignored by the keyboard once stale. Text also stays in memory in the Quick Dictation review.
 
 ## Consequences
 

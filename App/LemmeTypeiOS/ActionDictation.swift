@@ -23,6 +23,8 @@ struct DictateAnywhereIntent: AudioRecordingIntent, LiveActivityIntent {
         "Starts or stops a dictation without leaving the current app. The text appears where you are typing when the LemmeType keyboard is open."
     )
     static var supportedModes: IntentModes { .background }
+    // A press in a pocket must not turn on the microphone.
+    static let authenticationPolicy: IntentAuthenticationPolicy = .requiresLocalDeviceAuthentication
 
     @MainActor
     func perform() async throws -> some IntentResult {

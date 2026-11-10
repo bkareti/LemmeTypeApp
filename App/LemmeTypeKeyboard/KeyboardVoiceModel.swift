@@ -10,13 +10,19 @@ import Support
 @Observable
 final class KeyboardVoiceModel {
     private(set) var handoff = KeyboardHandoff.idle
+    /// A result that may belong to another field, waiting for a tap.
+    private(set) var offered: KeyboardHandoff.Insertion?
 
     @ObservationIgnored var insertText: (String) -> Void = { _ in }
+    @ObservationIgnored var currentField: () -> UUID? = { nil }
     @ObservationIgnored var onOverlayChange: () -> Void = {}
 
     @ObservationIgnored private let store = AppGroupKeyboardHandoffStore.makeDefault()
     @ObservationIgnored private var pollTask: Task<Void, Never>?
     @ObservationIgnored private var lastOverlay = false
+    @ObservationIgnored private var hasRefreshed = false
+    /// The field open when this keyboard saw the recording start.
+    @ObservationIgnored private var recordingField: UUID?
 
     /// Stored in this keyboard's own container, so a result is inserted only once
     /// even if iOS replaces the keyboard while the result is still fresh.
@@ -25,7 +31,7 @@ final class KeyboardVoiceModel {
     var isListening: Bool { handoff.phase == .listening }
     var isWriting: Bool { handoff.phase == .writing }
     var failureMessage: String? { handoff.phase == .failed ? handoff.failureMessage : nil }
-    var showsOverlay: Bool { isListening || isWriting || failureMessage != nil }
+    var showsOverlay: Bool { isListening || isWriting || failureMessage != nil || offered != nil }
 
     func start() {
         refresh()
@@ -43,17 +49,57 @@ final class KeyboardVoiceModel {
         pollTask = nil
     }
 
+    func insertOffered() {
+        guard let offered else { return }
+        markUsed(offered.id)
+        insertText(offered.text)
+        self.offered = nil
+        updateOverlay()
+    }
+
+    func dismissOffered() {
+        guard let offered else { return }
+        markUsed(offered.id)
+        self.offered = nil
+        updateOverlay()
+    }
+
     private func refresh() {
         let current = store.read()
-        if current != handoff { handoff = current }
-        if showsOverlay != lastOverlay {
-            lastOverlay = showsOverlay
-            onOverlayChange()
+        // Seeing the start matters: a keyboard opened mid-recording may be in another field.
+        if current.phase == .listening, handoff.phase != .listening, hasRefreshed {
+            recordingField = currentField()
         }
-        let defaults = UserDefaults.standard
-        let inserted = defaults.string(forKey: Self.insertedKey).flatMap(UUID.init(uuidString:))
-        guard let insertion = current.insertion(now: .now, alreadyInserted: inserted) else { return }
-        defaults.set(insertion.id.uuidString, forKey: Self.insertedKey)
-        insertText(insertion.text)
+        hasRefreshed = true
+        if current != handoff { handoff = current }
+        deliver(current)
+        updateOverlay()
+    }
+
+    private func deliver(_ current: KeyboardHandoff) {
+        let inserted = UserDefaults.standard.string(forKey: Self.insertedKey).flatMap(UUID.init(uuidString:))
+        switch current.delivery(
+            now: .now, alreadyInserted: inserted, recordingField: recordingField, currentField: currentField())
+        {
+        case .none:
+            offered = nil
+        case .offer(let insertion):
+            if offered != insertion { offered = insertion }
+        case .insert(let insertion):
+            markUsed(insertion.id)
+            recordingField = nil
+            offered = nil
+            insertText(insertion.text)
+        }
+    }
+
+    private func markUsed(_ id: UUID) {
+        UserDefaults.standard.set(id.uuidString, forKey: Self.insertedKey)
+    }
+
+    private func updateOverlay() {
+        guard showsOverlay != lastOverlay else { return }
+        lastOverlay = showsOverlay
+        onOverlayChange()
     }
 }

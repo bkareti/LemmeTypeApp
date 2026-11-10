@@ -2131,6 +2131,9 @@
     "Your saved personalization was made by a newer LemmeType. It was kept, and LemmeType started fresh." : {
 
     },
+    "Your text is ready in LemmeType. Open the app to copy it." : {
+      "comment" : "Shown on the keyboard when iOS ended background time before the text could be handed over"
+    },
     "Your voice" : {
 
     },

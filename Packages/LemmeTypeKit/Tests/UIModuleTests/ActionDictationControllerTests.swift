@@ -184,6 +184,26 @@ final class ActionDictationControllerTests {
         #expect(handoff.cleared == clearedBefore + 1)
     }
 
+    @Test func textFinishedAfterBackgroundTimeEndsIsNotShared() async {
+        let canary = "CANARY-private-words"
+        processor.script(
+            [.needsAttention(.reviewTranslation, engine: nil, alternatives: [], transcript: canary)],
+            delay: .milliseconds(100))
+        let recorder = makeRecorder()
+        let controller = makeController(recorder)
+        await controller.toggle()
+        source.emitTone(seconds: 0.2)
+        await controller.toggle()
+        await waitUntil { recorder.state == .processing }
+
+        backgroundTime.expire?()
+        await waitUntil { handoff.published.last?.phase == .failed }
+
+        #expect(!handoff.published.contains { $0.text == canary })
+        #expect(handoff.published.last?.phase == .failed)
+        #expect(recorder.reviewText == canary)
+    }
+
     @Test func aPressWhileWritingIsIgnored() async {
         processor.script([Self.review], delay: .milliseconds(100))
         let recorder = makeRecorder()

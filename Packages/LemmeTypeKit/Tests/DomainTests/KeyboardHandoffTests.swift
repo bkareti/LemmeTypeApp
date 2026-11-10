@@ -35,6 +35,45 @@ struct KeyboardHandoffTests {
         #expect(handoff.insertion(now: now, alreadyInserted: nil) == nil)
     }
 
+    @Test func theSameFieldGetsTheTextByItself() {
+        let field = UUID()
+        let handoff = KeyboardHandoff.ready(text: "Hello", at: now)
+        guard
+            case .insert(let insertion) = handoff.delivery(
+                now: now, alreadyInserted: nil, recordingField: field, currentField: field)
+        else {
+            Issue.record("Expected automatic insertion")
+            return
+        }
+        #expect(insertion.text == "Hello")
+    }
+
+    @Test func anotherFieldMustChoose() {
+        let handoff = KeyboardHandoff.ready(text: "Hello", at: now)
+        let delivery = handoff.delivery(now: now, alreadyInserted: nil, recordingField: UUID(), currentField: UUID())
+        guard case .offer = delivery else {
+            Issue.record("Expected an offer, got \(delivery)")
+            return
+        }
+    }
+
+    @Test func aKeyboardThatDidNotSeeTheStartMustChoose() {
+        let handoff = KeyboardHandoff.ready(text: "Hello", at: now)
+        let delivery = handoff.delivery(now: now, alreadyInserted: nil, recordingField: nil, currentField: UUID())
+        guard case .offer = delivery else {
+            Issue.record("Expected an offer, got \(delivery)")
+            return
+        }
+    }
+
+    @Test func nothingIsOfferedOnceInsertedOrStale() {
+        let id = UUID()
+        let handoff = KeyboardHandoff.ready(text: "Hello", id: id, at: now)
+        #expect(handoff.delivery(now: now, alreadyInserted: id, recordingField: nil, currentField: nil) == .none)
+        let late = now.addingTimeInterval(KeyboardHandoff.lifetime)
+        #expect(handoff.delivery(now: late, alreadyInserted: nil, recordingField: nil, currentField: nil) == .none)
+    }
+
     @Test func theDescriptionNeverContainsTheText() {
         let canary = "CANARY-private-words"
         #expect(!KeyboardHandoff.ready(text: canary).description.contains(canary))

@@ -60,6 +60,22 @@ public struct KeyboardHandoff: Codable, Equatable, Sendable, CustomStringConvert
         return Insertion(id: resultID, text: text)
     }
 
+    /// What the keyboard should do with a result.
+    public enum Delivery: Equatable, Sendable {
+        case none
+        case insert(Insertion)
+        /// The text may belong to another field, so it waits for an explicit tap.
+        case offer(Insertion)
+    }
+
+    /// A result goes in by itself only into the field that was open when the
+    /// recording started. Anywhere else, the person chooses.
+    public func delivery(now: Date, alreadyInserted: UUID?, recordingField: UUID?, currentField: UUID?) -> Delivery {
+        guard let insertion = insertion(now: now, alreadyInserted: alreadyInserted) else { return .none }
+        guard let recordingField, recordingField == currentField else { return .offer(insertion) }
+        return .insert(insertion)
+    }
+
     /// Never includes the text, so this value is safe in a log or a test failure.
     public var description: String {
         "KeyboardHandoff(phase: \(phase.rawValue), hasText: \(text != nil))"
