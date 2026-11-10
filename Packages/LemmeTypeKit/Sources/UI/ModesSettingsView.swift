@@ -116,6 +116,9 @@ struct ModesSettingsView: View {
                 .accessibilityLabel(Text(String(localized: "Delete \(mode.displayName)", bundle: .module)))
             }
         }
+        // In a list row, buttons with the default style all fire on one tap, so tapping
+        // anywhere on the row duplicated the mode. Borderless buttons fire on their own.
+        .buttonStyle(.borderless)
     }
 
     private func requestDelete(_ mode: DictationMode) {

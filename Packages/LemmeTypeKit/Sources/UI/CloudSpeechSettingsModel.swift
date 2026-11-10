@@ -22,6 +22,10 @@ public final class CloudSpeechSettingsModel {
     public let host: String
     /// Told whether the cloud engine can be offered, whenever that may have changed.
     public var onChange: @MainActor (Bool) -> Void = { _ in }
+    /// A key was just saved, so cloud speech is ready: the place to set up a mode that uses it.
+    public var onReady: @MainActor () -> Void = {}
+    /// Cloud speech was turned off and its key removed.
+    public var onTurnedOff: @MainActor () -> Void = {}
 
     public enum KeyProblem: Equatable, Sendable {
         case empty
@@ -78,6 +82,7 @@ public final class CloudSpeechSettingsModel {
             keyProblem = .notSaved
         }
         await refresh()
+        if status == .turnedOn { onReady() }
     }
 
     public func turnOff() async {
@@ -92,6 +97,7 @@ public final class CloudSpeechSettingsModel {
         consent.consentedProvider = nil
         keyProblem = nil
         await refresh()
+        if hadKey || hadConsent { onTurnedOff() }
         return hadKey || hadConsent
     }
 

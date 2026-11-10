@@ -30,5 +30,10 @@ struct LemmeTypeShortcuts: AppShortcutsProvider {
             ],
             shortTitle: "Start Dictating",
             systemImageName: "mic.fill")
+        AppShortcut(
+            intent: DictateAnywhereIntent(),
+            phrases: ["Dictate anywhere with \(.applicationName)"],
+            shortTitle: "Dictate Anywhere",
+            systemImageName: "waveform")
     }
 }

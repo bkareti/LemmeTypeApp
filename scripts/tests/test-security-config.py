@@ -8,6 +8,7 @@ violation, and expects the check to fail with a message about it.
 import importlib.util
 import shutil
 import sys
+import plistlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -135,16 +136,42 @@ class SecurityConfigTests(unittest.TestCase):
 
     def test_the_iphone_app_may_not_declare_background_modes(self) -> None:
         self.append("Config/LemmeTypeiOS.xcconfig", "INFOPLIST_KEY_UIBackgroundModes = audio\n")
-        self.assertIn("background modes", self.errors())
+        self.assertIn("only audio is allowed", self.errors())
 
-    def test_the_iphone_app_may_not_gain_an_entitlement(self) -> None:
+    def test_the_iphone_app_may_only_use_its_approved_entitlements_file(self) -> None:
         self.edit(
-            "Config/LemmeTypeiOS.xcconfig", "CODE_SIGN_ENTITLEMENTS =\n",
-            "CODE_SIGN_ENTITLEMENTS = App/LemmeTypeiOS/LemmeTypeiOS.entitlements\n",
+            "Config/LemmeTypeiOS.xcconfig", "App/LemmeTypeiOS/LemmeTypeiOS.entitlements",
+            "App/LemmeTypeiOS/Other.entitlements",
         )  # fmt: skip
-        self.assertIn("no entitlements", self.errors())
-        (self.root / "App/LemmeTypeiOS/LemmeTypeiOS.entitlements").write_text("<plist/>", encoding="utf-8")
-        self.assertIn("LemmeTypeiOS.entitlements", self.errors())
+        self.assertIn("may only use", self.errors())
+        (self.root / "App/LemmeTypeiOS/Other.entitlements").write_text(self.plist({}), encoding="utf-8")
+        self.assertIn("Other.entitlements: not an approved", self.errors())
+
+    def test_the_iphone_app_may_share_only_its_app_group(self) -> None:
+        path = self.root / "App/LemmeTypeiOS/LemmeTypeiOS.entitlements"
+        path.write_text(self.plist({"com.apple.security.application-groups": ["group.other"]}), encoding="utf-8")
+        self.assertIn("only the App Group", self.errors())
+        allowed = {"com.apple.security.application-groups": [check.IOS_APP_GROUP]}
+        path.write_text(self.plist(allowed), encoding="utf-8")
+        self.assertNotIn("only the App Group", self.errors())
+
+    def test_the_iphone_app_may_only_use_the_audio_background_mode(self) -> None:
+        path = self.root / "App/LemmeTypeiOS/Info.plist"
+        path.write_text(self.plist({"UIBackgroundModes": ["audio", "location"]}), encoding="utf-8")
+        self.assertIn("only the audio background mode", self.errors())
+        path.write_text(self.plist({"UIBackgroundModes": ["audio"]}), encoding="utf-8")
+        self.assertNotIn("only the audio background mode", self.errors())
+
+    def test_the_keyboard_may_not_request_full_access(self) -> None:
+        folder = self.root / "App/LemmeTypeKeyboard"
+        folder.mkdir(parents=True)
+        attributes = {"NSExtensionAttributes": {"RequestsOpenAccess": True}}
+        (folder / "Info.plist").write_text(self.plist({"NSExtension": attributes}), encoding="utf-8")
+        self.assertIn("must not request Full Access", self.errors())
+
+    @staticmethod
+    def plist(value: dict) -> str:
+        return plistlib.dumps(value).decode("utf-8")
 
     def test_the_iphone_app_may_not_relax_app_transport_security(self) -> None:
         self.append("Config/LemmeTypeiOS.xcconfig", "INFOPLIST_KEY_NSAppTransportSecurity = NSAllowsArbitraryLoads\n")

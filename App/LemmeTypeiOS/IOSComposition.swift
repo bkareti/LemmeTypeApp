@@ -16,6 +16,7 @@ import os
 /// operating-system service is constructed here; everything downstream receives
 /// protocols (ADR 0027).
 @MainActor
+// swiftlint:disable:next type_body_length
 struct IOSComposition {
     enum Mode: String {
         case live
@@ -51,6 +52,8 @@ struct IOSComposition {
     let residency: ModelResidencyController
     let conditions: any SystemConditionsMonitoring
     let audioCapture: any AudioCapturing
+    let actionDictation: ActionDictationController
+    private let prepare: @MainActor () async -> Void
 
     /// The services that differ between the real app and UI tests.
     struct Services {
@@ -72,6 +75,7 @@ struct IOSComposition {
         var copiedTextLifetime: @MainActor () -> CopiedTextLifetime
         var limits: RecordingLimits = .handheld
         var cloudSpeech: CloudSpeechServices?
+        var actionDictation = ActionDictationServices()
     }
 
     static func make(arguments: [String]) -> IOSComposition {
@@ -97,12 +101,13 @@ struct IOSComposition {
         let modelAssets = ModelAssetStore.makeDefault(diagnostics: diagnostics)
         let hardware = HardwareProfile.current
         let cloudSpeech = liveCloudSpeech()
+        let gate = BackgroundDictationGate()
         return Services(
             permissionChecker: checker,
             permissionRequester: SystemPermissionRequester(),
             preferences: preferences,
             audioCapture: AudioCaptureService(
-                source: AVAudioSessionSource(), storage: .makeDefault(), permissions: checker,
+                source: AVAudioSessionSource(backgroundDictation: gate), storage: .makeDefault(), permissions: checker,
                 diagnostics: diagnostics),
             speechAuthorizer: authorizer,
             engines: [
@@ -110,7 +115,12 @@ struct IOSComposition {
                 WhisperEngine(
                     assets: modelAssets, hardware: hardware,
                     availableMemory: availableMemory,
-                    settings: { whisperSettings(preferences: preferences, conditions: conditions.current) }),
+                    settings: {
+                        var settings = whisperSettings(preferences: preferences, conditions: conditions.current)
+                        // iOS refuses GPU work from the background.
+                        if gate.isActive { settings.usesGPU = false }
+                        return settings
+                    }),
             ] + cloudEngines(cloudSpeech, diagnostics: diagnostics),
             modelAssets: modelAssets,
             textCopier: ExpiringTextCopier(
@@ -122,7 +132,10 @@ struct IOSComposition {
             diagnostics: diagnostics,
             hardware: hardware,
             copiedTextLifetime: { CopiedTextLifetime.stored(in: .standard) },
-            cloudSpeech: cloudSpeech)
+            cloudSpeech: cloudSpeech,
+            actionDictation: ActionDictationServices(
+                handoff: AppGroupKeyboardHandoffStore.makeDefault(), presenter: IOSActionDictationPresenter(),
+                backgroundTime: IOSBackgroundTime(), gate: gate))
     }
 
     // MARK: Assembly
@@ -175,6 +188,15 @@ struct IOSComposition {
             modes?.setOffersCloudEngine(offered)
             dictation?.refreshInBackground()
         }
+        // Saving a key is the only step: the Cloud mode is added and becomes the default.
+        cloudSpeech?.onReady = { [weak modes, weak dictation] in
+            modes?.useCloudAnyLanguageMode()
+            dictation?.refreshInBackground()
+        }
+        cloudSpeech?.onTurnedOff = { [weak modes, weak dictation] in
+            modes?.removeCloudAnyLanguageMode()
+            dictation?.refreshInBackground()
+        }
         let privacy = PrivacyOverviewModel(
             history: history, personalization: personalization, modes: modes, capture: services.audioCapture,
             modelAssets: services.modelAssets, clearDiagnostics: { diagnostics.removeAll() },
@@ -199,12 +221,32 @@ struct IOSComposition {
             },
             launchRequests: launchRequests,
             isCloudSpeechOn: { cloudSpeech?.status == .turnedOn })
+        // Purges old audio and loads settings once, before any recording, whether the
+        // screen or the Action Button launched the app.
+        let startup = StartupOnce()
+        let audioCapture = services.audioCapture
+        let handoff = services.actionDictation.handoff
+        let prepare: @MainActor () async -> Void = {
+            await startup.run {
+                // A result left by a crash or force-quit must not outlive that run.
+                handoff.clear()
+                await audioCapture.purgeLeftovers()
+                await personalization.load()
+                await cloudSpeech?.refresh()
+                await dictation.refresh()
+                await models.refresh()
+            }
+        }
+        let actionDictation = ActionDictationController(
+            recorder: recorder, handoff: services.actionDictation.handoff,
+            presenter: services.actionDictation.presenter, backgroundTime: services.actionDictation.backgroundTime,
+            gate: services.actionDictation.gate, prepare: prepare)
         return IOSComposition(
             mode: mode, cloudSpeech: cloudSpeech, launchRequests: launchRequests, recorder: recorder, quick: quick,
             dictation: dictation,
             models: models, personalization: personalization, modes: modes, privacy: privacy,
             permissions: permissions, residency: residency, conditions: conditions,
-            audioCapture: services.audioCapture)
+            audioCapture: services.audioCapture, actionDictation: actionDictation, prepare: prepare)
     }
 
     // MARK: Running
@@ -214,17 +256,14 @@ struct IOSComposition {
             quick: quick, dictation: dictation,
             settings: MobileSettingsView(
                 dictation: dictation, models: models, personalization: personalization, modes: modes,
-                privacy: privacy, permissions: permissions, cloudSpeech: cloudSpeech))
+                privacy: privacy, permissions: permissions, cloudSpeech: cloudSpeech),
+            actionDictation: actionDictation)
     }
 
     /// Cleans up after a crash, loads saved data, and follows the system's memory
     /// and heat for as long as the app runs.
     func start() async {
-        await audioCapture.purgeLeftovers()
-        await personalization.load()
-        await cloudSpeech?.refresh()
-        await dictation.refresh()
-        await models.refresh()
+        await prepare()
         quick.startIfRequestedByShortcut()
         var previous = conditions.current
         for await current in conditions.changes() {

@@ -1887,6 +1887,9 @@
     "Turn On Cloud Speech…" : {
 
     },
+    "Turn on Live Activities for LemmeType in Settings to dictate from other apps." : {
+      "comment" : "Shown on the keyboard when iOS refuses the Live Activity that a background recording needs"
+    },
     "Turns speech in another language into English on %@. You read the translation before anything is inserted." : {
 
     },
@@ -2127,6 +2130,9 @@
     },
     "Your saved personalization was made by a newer LemmeType. It was kept, and LemmeType started fresh." : {
 
+    },
+    "Your text is ready in LemmeType. Open the app to copy it." : {
+      "comment" : "Shown on the keyboard when iOS ended background time before the text could be handed over"
     },
     "Your voice" : {
 

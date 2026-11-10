@@ -1,0 +1,14 @@
+// The LemmeType keyboard (ADR 0032). The App Group is its only entitlement, and it reads that without Full Access.
+
+PRODUCT_NAME = LemmeTypeKeyboard
+PRODUCT_BUNDLE_IDENTIFIER = com.lemmetype.LemmeType.iOS.Keyboard
+SDKROOT = iphoneos
+SUPPORTED_PLATFORMS = iphoneos iphonesimulator
+IPHONEOS_DEPLOYMENT_TARGET = 26.0
+TARGETED_DEVICE_FAMILY = 1,2
+ARCHS = arm64
+GENERATE_INFOPLIST_FILE = YES
+INFOPLIST_FILE = App/LemmeTypeKeyboard/Info.plist
+INFOPLIST_KEY_CFBundleDisplayName = LemmeType
+APPLICATION_EXTENSION_API_ONLY = YES
+CODE_SIGN_ENTITLEMENTS = App/LemmeTypeKeyboard/LemmeTypeKeyboard.entitlements

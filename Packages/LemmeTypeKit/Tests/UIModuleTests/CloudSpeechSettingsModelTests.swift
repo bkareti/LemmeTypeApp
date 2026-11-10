@@ -137,4 +137,22 @@ struct CloudSpeechSettingsModelTests {
     @Test func theEngineHasAName() {
         #expect(RecognitionEngineID.cloud.displayName == "Cloud")
     }
+
+    @Test func savingAKeyTellsTheAppItIsReadyAndTurningOffTellsItToTidyUp() async {
+        let model = makeModel()
+        var ready = 0
+        var turnedOff = 0
+        model.onReady = { ready += 1 }
+        model.onTurnedOff = { turnedOff += 1 }
+        await model.acceptConsent()
+        #expect(ready == 0, "consent alone is not ready: there is no key yet")
+        await model.saveKey("   ")
+        #expect(ready == 0, "an empty key is not ready")
+        await model.saveKey("  key-1 \n")
+        #expect(ready == 1)
+        await model.turnOff()
+        #expect(turnedOff == 1)
+        await model.turnOff()
+        #expect(turnedOff == 1, "nothing was removed the second time")
+    }
 }

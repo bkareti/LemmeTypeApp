@@ -288,6 +288,13 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   on phones; `WhisperEngine(availableMemory:)` refuses a load that does not fit. An App Intent
   leaves a one-time `LaunchRequestInbox` request. `DeviceWords` keeps shared text from saying
   "this Mac" on a phone. `HandheldEndToEndTests` covers the path; device steps are MA-66…MA-72.
+- Action Button dictation (ADR 0032, Proposed): `DictateAnywhereIntent` (`AudioRecordingIntent` and
+  `LiveActivityIntent`; it needs both or iOS ends the app) toggles `ActionDictationController` (UI), which
+  drives the normal recorder and pipeline with another app in front and passes the finished text through
+  `AppGroupKeyboardHandoffStore` (Support, erased after `KeyboardHandoff.lifetime`) to the `LemmeTypeKeyboard`
+  target. The keyboard has typing keys, polls that file, inserts, and has no Full Access, microphone, or
+  network. `LemmeTypeiOSWidgets` is the status-only Live Activity. `BackgroundDictationGate` selects a mixable
+  audio session and CPU-only Whisper while the app is in the background.
 - App Store (iPhone and iPad, ADR 0026 addendum): `docs/release/app-store.md` holds the
   metadata, privacy answers, review notes, and the review-risk checklist.
   `scripts/verify-ios-appstore.sh` checks an archive. Guideline 5.1.1: the first-dictation
@@ -322,7 +329,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management; 0023 multilingual dictation; 0024 tone and style; 0025 privacy data and history; 0026 distribution and updates; 0027 iPhone and iPad companion; 0028 Whisper decoding safeguards; 0029 English-only beta scope; 0030 shared local transcription foundation, Proposed; 0031 cloud speech provider).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management; 0023 multilingual dictation; 0024 tone and style; 0025 privacy data and history; 0026 distribution and updates; 0027 iPhone and iPad companion; 0028 Whisper decoding safeguards; 0029 English-only beta scope; 0030 shared local transcription foundation, Proposed; 0031 cloud speech provider; 0032 Action Button dictation and keyboard, Proposed).
 
 ## Planning documents
 

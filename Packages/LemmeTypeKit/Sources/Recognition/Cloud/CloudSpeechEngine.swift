@@ -36,7 +36,8 @@ public struct CloudSpeechEngine: SpeechRecognitionEngine {
     public var descriptor: EngineDescriptor {
         EngineDescriptor(
             id: .cloud, location: .cloud, supportedLanguages: provider.supportedLanguages, assets: .none,
-            capabilities: [.progress], tasks: provider.tasks)
+            capabilities: provider.detectsLanguage ? [.progress, .languageDetection] : [.progress],
+            tasks: provider.tasks)
     }
 
     public func availability() async -> EngineAvailability {

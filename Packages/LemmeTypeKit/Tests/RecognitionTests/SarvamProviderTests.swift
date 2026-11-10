@@ -54,6 +54,16 @@ struct SarvamProviderTests {
         #expect(body(of: request).contains("name=\"mode\"\r\n\r\ntranslate\r\n"))
     }
 
+    @Test func automaticLanguageAsksSarvamToDetectAndTranslates() throws {
+        let request = try provider.request(
+            for: Self.clip, need: RecognitionNeed(language: SpokenLanguages.automatic, task: .translateToEnglish),
+            credential: CloudCredential(secret: "k"))
+        let text = body(of: request)
+        #expect(text.contains("name=\"language_code\"\r\n\r\nunknown\r\n"))
+        #expect(text.contains("name=\"mode\"\r\n\r\ntranslate\r\n"))
+        #expect(provider.detectsLanguage)
+    }
+
     @Test func onlyTeluguIsOfferedForNow() {
         #expect(provider.supportedLanguages == ["te"])
         #expect(throws: RecognitionError.unsupported(.language)) {

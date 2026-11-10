@@ -26,7 +26,7 @@ check "build number is an integer" '[[ "$(value CFBundleVersion)" =~ ^[0-9]+$ ]]
 check "microphone usage string" '[[ -n "$(value NSMicrophoneUsageDescription)" ]]'
 check "speech recognition usage string" '[[ -n "$(value NSSpeechRecognitionUsageDescription)" ]]'
 check "export compliance: no non-exempt encryption" '[[ "$(value ITSAppUsesNonExemptEncryption)" == false ]]'
-check "no background modes (recording stops when the app leaves the screen)" '! value UIBackgroundModes >/dev/null'
+check "only the audio background mode (Action Button dictation, ADR 0032)" '[[ "$(plutil -extract UIBackgroundModes json -o - "$plist")" == "[\"audio\"]" ]]'
 check "launch screen" 'plutil -extract UILaunchScreen xml1 -o - "$plist" >/dev/null 2>&1'
 check "iPhone and iPad" '[[ "$(plutil -extract UIDeviceFamily json -o - "$plist")" == "[1,2]" ]]'
 check "app icon compiled" '[[ -f "$app/Assets.car" ]] && [[ -n "$(plutil -extract CFBundleIcons xml1 -o - "$plist" 2>/dev/null)" ]]'

@@ -65,6 +65,22 @@ public final class ModesSettingsModel {
         if offered { engines.append(.cloud) }
     }
 
+    /// Adds the ready-made Cloud mode (any language, written as English) and makes it the
+    /// default, so saving a key is the only step the user has to take. A user who deleted
+    /// it gets it back only by saving a key again.
+    public func useCloudAnyLanguageMode() {
+        if personalization.library.mode(.cloudAnyLanguageToEnglish) == nil {
+            guard personalization.save(.cloudAnyLanguageToEnglish) == nil else { return }
+        }
+        setDefault(.cloudAnyLanguageToEnglish)
+    }
+
+    /// Removes that mode when cloud speech is turned off, so no mode points at an engine that is gone.
+    public func removeCloudAnyLanguageMode() {
+        guard personalization.library.mode(.cloudAnyLanguageToEnglish) != nil else { return }
+        delete(.cloudAnyLanguageToEnglish)
+    }
+
     // MARK: Modes
 
     /// Built-in modes, then custom ones.

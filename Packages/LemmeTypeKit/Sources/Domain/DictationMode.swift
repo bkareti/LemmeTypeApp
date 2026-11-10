@@ -14,6 +14,8 @@ public struct DictationModeID: RawRepresentable, Hashable, Codable, Sendable, Cu
     public static let clean = DictationModeID(rawValue: "clean")
     public static let message = DictationModeID(rawValue: "message")
     public static let properEnglish = DictationModeID(rawValue: "proper-english")
+    /// A custom mode with a fixed id (see ``DictationMode/cloudAnyLanguageToEnglish``).
+    public static let cloudAnyLanguageToEnglish = DictationModeID(rawValue: "custom-cloud-any-to-english")
 
     public static func newCustom() -> DictationModeID {
         DictationModeID(rawValue: "custom-\(UUID().uuidString.lowercased())")
@@ -72,6 +74,12 @@ public struct DictationMode: Identifiable, Equatable, Codable, Sendable {
     public var output: OutputAction
     /// Add one space after the text so the next dictation can follow on.
     public var appendsSpace: Bool
+
+    /// The mode the app adds when a cloud key is saved: any spoken language, written as
+    /// English, by the Cloud engine. A fixed id keeps adding it idempotent.
+    public static let cloudAnyLanguageToEnglish = DictationMode(
+        id: .cloudAnyLanguageToEnglish, name: "Any Language to English (Cloud)", engine: .cloud,
+        language: SpokenLanguages.automatic, speechOutput: .english, writingMode: .clean)
 
     public init(
         id: DictationModeID = .newCustom(),

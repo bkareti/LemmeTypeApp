@@ -123,6 +123,19 @@ extension RecordingCoordinator {
         }
     }
 
+    /// Deletes the recording behind a result that has already been handed over,
+    /// keeping the text in memory for Copy (ADR 0032). Choices that need the
+    /// recording are no longer offered.
+    public func discardRecordingKeepingText() {
+        session?.discardAudio()
+        attentionActions.removeAll { action in
+            switch action {
+            case .retry, .useEngine, .useLanguage, .saveAudio: true
+            default: false
+            }
+        }
+    }
+
     /// Deletes the kept recording and transcript.
     func discardSession() {
         session?.discardAudio()
