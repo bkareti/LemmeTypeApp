@@ -42,6 +42,8 @@ public protocol CloudSpeechProvider: Sendable {
     /// BCP 47 identifiers such as `"te"`.
     var supportedLanguages: [String] { get }
     var tasks: Set<RecognitionTask> { get }
+    /// Whether the vendor can work out the spoken language itself (``SpokenLanguages/automatic``).
+    var detectsLanguage: Bool { get }
 
     /// The request for one clip. Sends audio only: never hints, context, or text.
     func request(
@@ -51,4 +53,8 @@ public protocol CloudSpeechProvider: Sendable {
     /// The text in a response, or the typed error it stands for. An empty
     /// string means the vendor heard no speech.
     func transcript(from response: CloudHTTPResponse) throws(RecognitionError) -> String
+}
+
+extension CloudSpeechProvider {
+    public var detectsLanguage: Bool { false }
 }

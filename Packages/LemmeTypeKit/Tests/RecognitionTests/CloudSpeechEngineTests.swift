@@ -54,6 +54,21 @@ struct CloudSpeechEngineTests {
             clock: clock, diagnostics: diagnostics)
     }
 
+    @Test func anyLanguageToEnglishIsReadyOnTheCloudEngineOnly() async {
+        let cloud = engine(FakeCloudSpeechTransport([]))
+        let preference = EnginePreference(selected: .cloud)
+        let readiness = await LanguageReadiness.evaluate(
+            language: SpokenLanguages.automatic, output: .english, engines: [cloud], preference: preference)
+        #expect(readiness == .ready(engine: .cloud))
+        // A provider that cannot detect the language is not offered "auto".
+        let example = CloudSpeechEngine(
+            provider: ExampleCloudProvider(), transport: FakeCloudSpeechTransport([]),
+            credentials: FakeCloudCredentials(secret: "k"))
+        let other = await LanguageReadiness.evaluate(
+            language: SpokenLanguages.automatic, output: .english, engines: [example], preference: preference)
+        #expect(other == .noEngine)
+    }
+
     func tone(seconds: Double = 1, language: String = "te") throws -> RecognitionRequest {
         try fixtures.make(.tone(seconds: seconds), language: language)
     }

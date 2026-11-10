@@ -175,6 +175,15 @@ struct IOSComposition {
             modes?.setOffersCloudEngine(offered)
             dictation?.refreshInBackground()
         }
+        // Saving a key is the only step: the Cloud mode is added and becomes the default.
+        cloudSpeech?.onReady = { [weak modes, weak dictation] in
+            modes?.useCloudAnyLanguageMode()
+            dictation?.refreshInBackground()
+        }
+        cloudSpeech?.onTurnedOff = { [weak modes, weak dictation] in
+            modes?.removeCloudAnyLanguageMode()
+            dictation?.refreshInBackground()
+        }
         let privacy = PrivacyOverviewModel(
             history: history, personalization: personalization, modes: modes, capture: services.audioCapture,
             modelAssets: services.modelAssets, clearDiagnostics: { diagnostics.removeAll() },

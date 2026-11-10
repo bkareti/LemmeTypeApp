@@ -40,6 +40,29 @@ struct ModesSettingsModelTests {
         #expect(model.currentDefault == .message)
     }
 
+    @Test func savingACloudKeyAddsOneCloudModeAndMakesItTheDefault() {
+        let preferences = FakePreferences()
+        let (model, _) = makeModel(preferences: preferences)
+        model.useCloudAnyLanguageMode()
+        model.useCloudAnyLanguageMode()  // idempotent: no second copy
+        #expect(model.customModes.filter { $0.id == .cloudAnyLanguageToEnglish }.count == 1)
+        #expect(model.currentDefault.id == .cloudAnyLanguageToEnglish)
+        #expect(preferences.dictationMode == .cloudAnyLanguageToEnglish)
+        let mode = model.currentDefault
+        #expect(mode.engine == .cloud)
+        #expect(mode.language == SpokenLanguages.automatic)
+        #expect(mode.speechOutput == .english)
+    }
+
+    @Test func turningCloudSpeechOffRemovesTheModeAndTheDefaultFallsBack() {
+        let (model, _) = makeModel()
+        model.useCloudAnyLanguageMode()
+        model.removeCloudAnyLanguageMode()
+        model.removeCloudAnyLanguageMode()  // nothing left: harmless
+        #expect(model.customModes.isEmpty)
+        #expect(model.currentDefault == .clean)
+    }
+
     @Test func duplicateNamesCopiesUniquely() throws {
         let (model, _) = makeModel()
         let first = try #require(model.duplicate(.message))

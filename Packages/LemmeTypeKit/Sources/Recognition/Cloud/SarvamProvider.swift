@@ -9,10 +9,14 @@ public struct SarvamProvider: CloudSpeechProvider {
     public let host = "api.sarvam.ai"
     public let maximumClipSeconds = 30.0
     public let tasks: Set<RecognitionTask> = [.transcribe, .translateToEnglish]
+    /// Sarvam works out the language when `language_code` is `unknown`.
+    public let detectsLanguage = true
 
     /// BCP 47 language → Sarvam's `language_code`. Languages are added one at a
     /// time, each after it has been measured.
     private static let languageCodes = ["te": "te-IN"]
+    /// Sarvam's value for "detect the language yourself".
+    private static let automaticLanguageCode = "unknown"
     private static let model = "saaras:v4"
 
     private let makeBoundary: @Sendable () -> String
@@ -26,7 +30,12 @@ public struct SarvamProvider: CloudSpeechProvider {
     public func request(
         for clip: CloudAudioClip, need: RecognitionNeed, credential: CloudCredential
     ) throws(RecognitionError) -> CloudHTTPRequest {
-        guard let languageCode = Self.languageCodes[SpokenLanguages.code(of: need.language)] else {
+        let languageCode: String
+        if SpokenLanguages.isAutomatic(need.language) {
+            languageCode = Self.automaticLanguageCode
+        } else if let code = Self.languageCodes[SpokenLanguages.code(of: need.language)] {
+            languageCode = code
+        } else {
             throw .unsupported(.language)
         }
         guard let url = URL(string: "https://\(host)/speech-to-text") else { throw .cloudServiceFailed }
