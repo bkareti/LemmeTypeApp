@@ -3,8 +3,8 @@
 
     /// The iPhone and iPad app: Dictate and Settings, as tabs on a phone and a
     /// sidebar on an iPad (E8-S9). The app-switcher snapshot is covered so a
-    /// result on screen is never shown there, and a recording stops when the app
-    /// goes to the background (E8-S4).
+    /// result on screen is never shown there, and a recording started on this screen
+    /// stops when the app goes to the background (E8-S4).
     public struct MobileRootView: View {
         enum Tab: Hashable {
             case dictate
@@ -14,10 +14,15 @@
         let quick: QuickDictationModel
         let settings: MobileSettingsView
         let dictation: DictationSettingsModel
+        let actionDictation: ActionDictationController?
         @State private var tab: Tab = .dictate
         @Environment(\.scenePhase) private var scenePhase
 
-        public init(quick: QuickDictationModel, dictation: DictationSettingsModel, settings: MobileSettingsView) {
+        public init(
+            quick: QuickDictationModel, dictation: DictationSettingsModel, settings: MobileSettingsView,
+            actionDictation: ActionDictationController? = nil
+        ) {
+            self.actionDictation = actionDictation
             self.quick = quick
             self.dictation = dictation
             self.settings = settings
@@ -42,7 +47,8 @@
                 if scenePhase != .active { PrivacyCover() }
             }
             .onChange(of: scenePhase) { _, phase in
-                if phase == .background { quick.recorder.stopForSystemReason() }
+                // An Action Button dictation is meant to run with another app in front (ADR 0032).
+                if phase == .background, actionDictation?.isActive != true { quick.recorder.stopForSystemReason() }
                 if phase == .active { quick.startIfRequestedByShortcut() }
             }
             .task { quick.recorder.onOpenSettings = { _ in tab = .settings } }

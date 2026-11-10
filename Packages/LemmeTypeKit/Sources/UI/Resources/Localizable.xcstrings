@@ -1887,6 +1887,9 @@
     "Turn On Cloud Speech…" : {
 
     },
+    "Turn on Live Activities for LemmeType in Settings to dictate from other apps." : {
+      "comment" : "Shown on the keyboard when iOS refuses the Live Activity that a background recording needs"
+    },
     "Turns speech in another language into English on %@. You read the translation before anything is inserted." : {
 
     },

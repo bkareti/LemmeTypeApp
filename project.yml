@@ -60,9 +60,36 @@ targets:
       Release: Config/LemmeTypeiOS.xcconfig
     sources:
       - path: App/LemmeTypeiOS
+      - path: App/LemmeTypeiOSShared
     dependencies:
       - package: LemmeTypeKit
         products: [Domain, Support, Audio, Permissions, Lifecycle, Recognition, ModelAssets, Delivery, Editing, UI, TestSupport]
+      - target: LemmeTypeKeyboard
+        embed: true
+      - target: LemmeTypeiOSWidgets
+        embed: true
+  # Typing keys and the Action Button result; no microphone, network, or Full Access (ADR 0032).
+  LemmeTypeKeyboard:
+    type: app-extension
+    platform: iOS
+    configFiles:
+      Debug: Config/LemmeTypeKeyboard.xcconfig
+      Release: Config/LemmeTypeKeyboard.xcconfig
+    sources:
+      - path: App/LemmeTypeKeyboard
+    dependencies:
+      - package: LemmeTypeKit
+        products: [Domain, Support]
+  # The Live Activity for Action Button dictation (ADR 0032).
+  LemmeTypeiOSWidgets:
+    type: app-extension
+    platform: iOS
+    configFiles:
+      Debug: Config/LemmeTypeiOSWidgets.xcconfig
+      Release: Config/LemmeTypeiOSWidgets.xcconfig
+    sources:
+      - path: App/LemmeTypeiOSWidgets
+      - path: App/LemmeTypeiOSShared
   LemmeTypeiOSTests:
     type: bundle.unit-test
     platform: iOS

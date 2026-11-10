@@ -17,7 +17,13 @@
         private var engine: AVAudioEngine?
         private var observers: [any NSObjectProtocol] = []
 
-        public init() {}
+        private let backgroundDictation: BackgroundDictationGate?
+
+        /// `backgroundDictation` selects the session for a recording that runs
+        /// with another app in front (ADR 0032).
+        public init(backgroundDictation: BackgroundDictationGate? = nil) {
+            self.backgroundDictation = backgroundDictation
+        }
 
         public func start(
             input: AudioInputSelection,
@@ -29,7 +35,13 @@
 
             let session = AVAudioSession.sharedInstance()
             do {
-                try session.setCategory(.record, mode: .default, options: [])
+                if backgroundDictation?.isActive == true {
+                    // Only a mixable session could be started from the background on a real iPhone.
+                    try session.setCategory(
+                        .playAndRecord, mode: .default, options: [.mixWithOthers, .defaultToSpeaker])
+                } else {
+                    try session.setCategory(.record, mode: .default, options: [])
+                }
                 try session.setActive(true)
             } catch {
                 throw .engineFailure(code: Int32(truncatingIfNeeded: (error as NSError).code))

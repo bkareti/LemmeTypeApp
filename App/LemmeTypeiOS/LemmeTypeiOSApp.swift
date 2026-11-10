@@ -11,6 +11,7 @@ struct LemmeTypeiOSApp: App {
     init() {
         let composition = IOSComposition.make(arguments: ProcessInfo.processInfo.arguments)
         AppDependencyManager.shared.add(dependency: composition.launchRequests)
+        ActionDictationBridge.controller = composition.actionDictation
         self.composition = composition
     }
 

@@ -28,5 +28,7 @@ INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = If you choose Apple Speech, 
 // Only standard, exempt encryption (HTTPS for the model download, SHA-256 checks).
 INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO
 
-// The mobile app has no entitlements and no background modes (ADR 0027).
-CODE_SIGN_ENTITLEMENTS =
+// One App Group for the keyboard, and audio in the background for Action Button dictation (ADR 0032).
+CODE_SIGN_ENTITLEMENTS = App/LemmeTypeiOS/LemmeTypeiOS.entitlements
+INFOPLIST_FILE = App/LemmeTypeiOS/Info.plist
+INFOPLIST_KEY_NSSupportsLiveActivities = YES

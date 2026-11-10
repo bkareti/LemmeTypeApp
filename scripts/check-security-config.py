@@ -26,6 +26,11 @@ PROJECT_SPEC = "project.yml"
 IOS_CONFIG = "Config/LemmeTypeiOS.xcconfig"
 IOS_APP_DIR = "App/LemmeTypeiOS"
 IOS_PRIVACY_MANIFEST = "App/LemmeTypeiOS/PrivacyInfo.xcprivacy"
+IOS_ENTITLEMENTS = "App/LemmeTypeiOS/LemmeTypeiOS.entitlements"
+IOS_INFO_PLIST = "App/LemmeTypeiOS/Info.plist"
+KEYBOARD_INFO_PLIST = "App/LemmeTypeKeyboard/Info.plist"
+IOS_ENTITLEMENT_FILES = (IOS_ENTITLEMENTS, "App/LemmeTypeKeyboard/LemmeTypeKeyboard.entitlements")
+IOS_APP_GROUP = "group.com.lemmetype.LemmeType"
 SOURCE_DIRS = ("Packages/LemmeTypeKit/Sources", "App")
 
 # Required-reason APIs (Apple's privacy manifest rules): the source tokens that
@@ -167,20 +172,58 @@ def check_hardened_runtime(root: Path, report: Report) -> None:
         report.error(f"{RELEASE_CONFIG}: the App Sandbox setting changes the platform baseline (ADR 0001)")
 
 
+def check_ios_extension_entitlements(root: Path, report: Report) -> None:
+    """The app and its keyboard share one App Group and nothing else (ADR 0032)."""
+    for folder in ("App/LemmeTypeiOS", "App/LemmeTypeKeyboard", "App/LemmeTypeiOSWidgets", "App/LemmeTypeiOSShared"):
+        for path in sorted((root / folder).rglob("*.entitlements")) if (root / folder).is_dir() else []:
+            relative = path.relative_to(root).as_posix()
+            if relative not in IOS_ENTITLEMENT_FILES:
+                report.error(f"{relative}: not an approved iPhone entitlements file; adding one needs a new ADR")
+                continue
+            with path.open("rb") as handle:
+                data = plistlib.load(handle)
+            if data != {"com.apple.security.application-groups": [IOS_APP_GROUP]}:
+                report.error(f"{relative}: only the App Group {IOS_APP_GROUP} is allowed (ADR 0032)")
+
+
+def check_ios_background_modes(root: Path, report: Report) -> None:
+    path = root / IOS_INFO_PLIST
+    if not path.is_file():
+        return
+    with path.open("rb") as handle:
+        modes = plistlib.load(handle).get("UIBackgroundModes", [])
+    if set(modes) - {"audio"}:
+        report.error(f"{IOS_INFO_PLIST}: only the audio background mode is allowed (ADR 0032)")
+
+
+def check_keyboard_open_access(root: Path, report: Report) -> None:
+    path = root / KEYBOARD_INFO_PLIST
+    if not path.is_file():
+        return
+    with path.open("rb") as handle:
+        attributes = plistlib.load(handle).get("NSExtension", {}).get("NSExtensionAttributes", {})
+    if attributes.get("RequestsOpenAccess") is not False:
+        report.error(f"{KEYBOARD_INFO_PLIST}: the keyboard must not request Full Access (ADR 0032)")
+
+
 def check_ios_target(root: Path, report: Report) -> None:
-    """The iPhone and iPad app has no entitlements or background modes, no ATS
-    exceptions, and a privacy manifest that matches the code (E8-S4, E8-S9, ADR 0027)."""
+    """The iPhone and iPad app has only the App Group entitlement and the audio
+    background mode that Action Button dictation needs (ADR 0032), a keyboard that
+    never asks for Full Access, no ATS exceptions, and a privacy manifest that
+    matches the code (E8-S4, E8-S9, ADR 0027)."""
     config = root / IOS_CONFIG
     if not config.is_file():
         return  # no iOS target in this tree
     text = config.read_text(encoding="utf-8")
     if re.search(r"INFOPLIST_KEY_UIBackgroundModes", text):
-        report.error(f"{IOS_CONFIG}: the iPhone app must not declare background modes; recording stops with the screen (ADR 0027)")
-    if re.search(r"^\s*CODE_SIGN_ENTITLEMENTS\s*=\s*\S", text, re.MULTILINE):
-        report.error(f"{IOS_CONFIG}: the iPhone app has no entitlements; adding one needs a new ADR")
+        report.error(f"{IOS_CONFIG}: background modes belong in {IOS_INFO_PLIST}, where only audio is allowed (ADR 0032)")
+    signed = re.search(r"^\s*CODE_SIGN_ENTITLEMENTS\s*=\s*(\S+)", text, re.MULTILINE)
+    if signed and signed.group(1) != IOS_ENTITLEMENTS:
+        report.error(f"{IOS_CONFIG}: the iPhone app may only use {IOS_ENTITLEMENTS}; another one needs a new ADR")
+    check_ios_extension_entitlements(root, report)
+    check_ios_background_modes(root, report)
+    check_keyboard_open_access(root, report)
     app_dir = root / IOS_APP_DIR
-    for entitlements in sorted(app_dir.rglob("*.entitlements")):
-        report.error(f"{entitlements.relative_to(root)}: the iPhone app has no entitlements; adding one needs a new ADR")
     plist_text = text + "".join(p.read_text(encoding="utf-8", errors="ignore") for p in sorted(app_dir.rglob("*.plist")))
     if re.search(r"NSAppTransportSecurity|NSAllowsArbitraryLoads", plist_text):
         report.error("the iPhone app must not relax App Transport Security: its only download is HTTPS")

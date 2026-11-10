@@ -1,0 +1,13 @@
+// The Live Activity for Action Button dictation (ADR 0032). It has no entitlements.
+
+PRODUCT_NAME = LemmeTypeiOSWidgets
+PRODUCT_BUNDLE_IDENTIFIER = com.lemmetype.LemmeType.iOS.Widgets
+SDKROOT = iphoneos
+SUPPORTED_PLATFORMS = iphoneos iphonesimulator
+IPHONEOS_DEPLOYMENT_TARGET = 26.0
+TARGETED_DEVICE_FAMILY = 1,2
+ARCHS = arm64
+GENERATE_INFOPLIST_FILE = YES
+INFOPLIST_FILE = App/LemmeTypeiOSWidgets/Info.plist
+INFOPLIST_KEY_CFBundleDisplayName = LemmeType Status
+APPLICATION_EXTENSION_API_ONLY = YES
