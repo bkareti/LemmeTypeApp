@@ -7,6 +7,7 @@ import Lifecycle
 import ModelAssets
 import Permissions
 import Recognition
+import Subscriptions
 import Support
 import SwiftUI
 import UI
@@ -36,7 +37,13 @@ struct IOSComposition {
         #endif
     }
 
+    /// The one monthly subscription (E13-S4, ADR 0034). Confirm this id before the first App Store Connect save:
+    /// it cannot be reused or renamed afterwards.
+    static let subscriptionProductID = "com.lemmetype.LemmeType.iOS.pro.monthly"
+
     let mode: Mode
+    /// The subscription, its paywall, and the Settings section.
+    let subscription: SubscriptionModel
     /// Turning cloud speech on and off; `nil` when this build doesn't offer it.
     let cloudSpeech: CloudSpeechSettingsModel?
     /// Shared with the App Intent, which leaves a request here (E8-S7).
@@ -76,6 +83,8 @@ struct IOSComposition {
         var limits: RecordingLimits = .handheld
         var cloudSpeech: CloudSpeechServices?
         var actionDictation = ActionDictationServices()
+        var subscription: any SubscriptionProviding
+        var paywallSeen: any PaywallSeenStoring
     }
 
     static func make(arguments: [String]) -> IOSComposition {
@@ -100,7 +109,9 @@ struct IOSComposition {
         let conditions = SystemConditionsMonitor()
         let modelAssets = ModelAssetStore.makeDefault(diagnostics: diagnostics)
         let hardware = HardwareProfile.current
-        let cloudSpeech = liveCloudSpeech()
+        // The same object sells the subscription and shows the gateway its proof (E13-S4, E13-S3).
+        let subscription = StoreKitSubscriptionService(productID: subscriptionProductID)
+        let cloudSpeech = liveCloudSpeech(proofs: subscription)
         let gate = BackgroundDictationGate()
         return Services(
             permissionChecker: checker,
@@ -135,7 +146,8 @@ struct IOSComposition {
             cloudSpeech: cloudSpeech,
             actionDictation: ActionDictationServices(
                 handoff: AppGroupKeyboardHandoffStore.makeDefault(), presenter: IOSActionDictationPresenter(),
-                backgroundTime: IOSBackgroundTime(), gate: gate))
+                backgroundTime: IOSBackgroundTime(), gate: gate),
+            subscription: subscription, paywallSeen: UserDefaultsPaywallSeen())
     }
 
     // MARK: Assembly
@@ -242,8 +254,10 @@ struct IOSComposition {
             recorder: recorder, handoff: services.actionDictation.handoff,
             presenter: services.actionDictation.presenter, backgroundTime: services.actionDictation.backgroundTime,
             gate: services.actionDictation.gate, prepare: prepare)
+        let subscription = SubscriptionModel(service: services.subscription, seen: services.paywallSeen)
         return IOSComposition(
-            mode: mode, cloudSpeech: cloudSpeech, launchRequests: launchRequests, recorder: recorder, quick: quick,
+            mode: mode, subscription: subscription, cloudSpeech: cloudSpeech, launchRequests: launchRequests,
+            recorder: recorder, quick: quick,
             dictation: dictation,
             models: models, personalization: personalization, modes: modes, privacy: privacy,
             permissions: permissions, residency: residency, conditions: conditions,
@@ -257,13 +271,15 @@ struct IOSComposition {
             quick: quick, dictation: dictation,
             settings: MobileSettingsView(
                 dictation: dictation, models: models, personalization: personalization, modes: modes,
-                privacy: privacy, permissions: permissions, cloudSpeech: cloudSpeech),
-            actionDictation: actionDictation)
+                privacy: privacy, permissions: permissions, cloudSpeech: cloudSpeech, subscription: subscription),
+            actionDictation: actionDictation, subscription: subscription)
     }
 
     /// Cleans up after a crash, loads saved data, and follows the system's memory
     /// and heat for as long as the app runs.
     func start() async {
+        // In the background: launching never waits for the App Store.
+        subscription.begin()
         await prepare()
         quick.startIfRequestedByShortcut()
         var previous = conditions.current

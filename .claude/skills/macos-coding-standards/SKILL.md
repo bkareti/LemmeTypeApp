@@ -39,6 +39,7 @@ Code lives in the local package `Packages/LemmeTypeKit` plus a thin app target:
 | `Delivery` | Accessibility insertion and clipboard fallback (ADR 0015) | Domain, Support |
 | `Editing` | On-device text rewriting with Apple Foundation Models (ADR 0018) | Domain, Support |
 | `Updates` | The update check: one request for release metadata, user-started (ADR 0026) | Domain, Support |
+| `Subscriptions` | The StoreKit subscription and its signed transaction for the gateway; the only module that imports StoreKit (ADR 0034) | Domain, Support |
 | `UI` | SwiftUI views and view models | Domain, Support |
 | App target `LemmeType` | `@main`, `AppComposition` (the only composition root) | everything |
 | App target `LemmeTypeiOS` | `@main`, `IOSComposition`, the App Intent (ADR 0027) | the portable modules |

@@ -93,6 +93,29 @@ Do not add other apps' or companies' names (Guideline 2.3.7): no "Siri", "Whispe
 
 > The first release of LemmeType for iPhone and iPad.
 
+## 3a. Subscription (App Store Connect › Monetization › Subscriptions)
+
+The product is built in the app (`StoreKitSubscriptionService`, ADR 0034) and mirrored in `Config/LemmeType.storekit`.
+Everything below is the maintainer's to do in App Store Connect; nothing sells until it is done.
+
+1. **Agreements, Tax, and Banking:** sign the **Paid Applications Agreement** and complete the tax and bank forms.
+   Subscriptions cannot be created or tested end to end without it.
+2. **Subscription group:** create *LemmeType Pro* (the group name is the reference name shown to people in
+   Apple's manage-subscriptions screen).
+3. **Product:** an auto-renewing subscription, product id `com.lemmetype.LemmeType.iOS.pro.monthly`, duration 1 month.
+   **The id cannot be reused or renamed once saved**, so confirm it first (it is also `IOSComposition.subscriptionProductID`).
+4. **Price:** US$1.99 as the base; let Apple fill the other countries with its equivalent prices (adjust any you want).
+5. **Introductory offer:** free for 1 week, new subscribers only. Family Sharing off.
+6. **Localization:** a display name and a description of the subscription for each language of the page.
+7. **Review screenshot:** a screenshot of the paywall (Settings › Subscription › *Start 7-day Free Trial*), plus review
+   notes saying how to reach it and that a Sandbox account is enough to test.
+8. **Terms of Use and Privacy Policy links:** add the Terms of Use link (`docs/terms-of-use.md` on GitHub, or Apple's
+   standard EULA) in App Information. The paywall already shows both links beside the price (Guideline 3.1.2).
+9. **Notifications:** App Information › App Store Server Notifications: set the URL for **Production** and **Sandbox**
+   to the gateway's `/v1/apple/notifications` (ADR 0033, E13-S2) and choose **Version 2**.
+10. Add the app's numeric **Apple ID** to the gateway's `apps.yaml` (`appAppleId`) before the first real purchase.
+11. **Sandbox testers:** create at least one Sandbox Apple Account for MA-74.
+
 ## 4. App Privacy (App Store Connect › App Privacy)
 
 - **Do you or your third-party partners collect data from this app?** No → label

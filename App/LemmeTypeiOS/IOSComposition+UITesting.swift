@@ -100,7 +100,11 @@
                 limits: scenario.recordingLimit,
                 cloudSpeech: CloudSpeechServices(
                     provider: GatewaySpeechProvider(host: "gateway.test"), consent: FakeCloudSpeechConsent(),
-                    gateway: FakeGatewayAccess()))
+                    gateway: FakeGatewayAccess()),
+                // Subscribed, so the paywall does not cover the screens the UI tests are about.
+                subscription: FakeSubscriptionService(
+                    state: .subscribed(renews: Date(timeIntervalSince1970: 4_000_000_000), willRenew: true)),
+                paywallSeen: FakePaywallSeen(true))
         }
     }
 #endif

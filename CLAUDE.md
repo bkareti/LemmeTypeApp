@@ -78,7 +78,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
 - Feature code lives in the local package `Packages/LemmeTypeKit`, one target per
   module: `Domain` (models, protocols, state, no OS frameworks), `Support`
   (`Log`, `BuildInfo`, `UserDefaultsPreferences`; depends on Domain), platform modules `Audio` / `Permissions` / `Shortcuts` /
-  `Lifecycle` / `Recognition` / `ModelAssets` / `Delivery` / `Editing` / `Updates` (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
+  `Lifecycle` / `Recognition` / `ModelAssets` / `Delivery` / `Editing` / `Updates` / `Subscriptions` (depend on Domain + Support), `UI` (SwiftUI, depends on Domain + Support only),
   and `TestSupport` (fakes, plus the Debug-only `DictationBenchmark` and evaluation
   harness: `EvaluationRunner`, `FileAudioSource`, `AudioClip`, `TranscriptScore`, and the
   corpus `CorpusManifest`/`CorpusItem`, `CorpusEvaluation` → `EvaluationReport`, and the
@@ -249,6 +249,12 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   `GatewayCredentials` (Domain) lets the engine run only with consent to the current version and a subscription.
   `LegacyCloudKeyEraser` (Support) deletes a key an earlier build kept. A Debug build can use a staging token with
   `-LemmeTypeGatewayToken`. The real-service test needs `LEMMETYPE_REAL_CLOUD=1`.
+- Subscription (ADR 0034, E13-S4): one monthly StoreKit 2 product (`IOSComposition.subscriptionProductID`, mirrored in
+  `Config/LemmeType.storekit`). `StoreKitSubscriptionService` (`Subscriptions`, the only StoreKit importer) implements
+  `SubscriptionProviding` (state, product, purchase, restore, manage) and `SubscriptionProofProviding` (the signed
+  transaction `GatewayService` shows the gateway). `SubscriptionModel` (UI) backs `PaywallView` and the Settings section;
+  price and trial length come only from StoreKit. Tests: pure state mapping in `SubscriptionsTests`, the model with
+  `FakeSubscriptionService`, and `StoreKitSubscriptionServiceTests` against `SKTestSession` in the iPhone app's unit tests.
 - Engine/mode selection (ADR 0016): `DictationSettingsModel` (UI) backs
   Settings › Dictation and the status menu. Mode, language, and
   `EnginePreference` are captured when recording starts and stored in the
@@ -334,7 +340,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management; 0023 multilingual dictation; 0024 tone and style; 0025 privacy data and history; 0026 distribution and updates; 0027 iPhone and iPad companion; 0028 Whisper decoding safeguards; 0029 English-only beta scope; 0030 shared local transcription foundation, Proposed; 0031 cloud speech provider; 0032 Action Button dictation and keyboard, Proposed; 0033 speech gateway, Proposed).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management; 0023 multilingual dictation; 0024 tone and style; 0025 privacy data and history; 0026 distribution and updates; 0027 iPhone and iPad companion; 0028 Whisper decoding safeguards; 0029 English-only beta scope; 0030 shared local transcription foundation, Proposed; 0031 cloud speech provider; 0032 Action Button dictation and keyboard, Proposed; 0033 speech gateway, Proposed; 0034 StoreKit subscription, Proposed).
 
 ## Planning documents
 

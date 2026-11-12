@@ -8,6 +8,10 @@ public enum PublicLinks {
     public static let privacyPolicy =
         URL(string: "https://github.com/bkareti/LemmeTypeApp/blob/main/docs/privacy-policy.md")
         ?? URL(fileURLWithPath: "/")
+    /// The terms of use the subscription paywall links to (Guideline 3.1.2), the same text as `docs/terms-of-use.md`.
+    public static let termsOfUse =
+        URL(string: "https://github.com/bkareti/LemmeTypeApp/blob/main/docs/terms-of-use.md")
+        ?? URL(fileURLWithPath: "/")
     /// Help and contact (`docs/support.md`).
     public static let support =
         URL(string: "https://github.com/bkareti/LemmeTypeApp/blob/main/docs/support.md")

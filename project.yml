@@ -63,7 +63,7 @@ targets:
       - path: App/LemmeTypeiOSShared
     dependencies:
       - package: LemmeTypeKit
-        products: [Domain, Support, Audio, Permissions, Lifecycle, Recognition, ModelAssets, Delivery, Editing, UI, TestSupport]
+        products: [Domain, Support, Audio, Permissions, Lifecycle, Recognition, ModelAssets, Delivery, Editing, Subscriptions, UI, TestSupport]
       - target: LemmeTypeKeyboard
         embed: true
       - target: LemmeTypeiOSWidgets
@@ -95,6 +95,9 @@ targets:
     platform: iOS
     sources:
       - App/LemmeTypeiOSTests
+      # The same product, price, and trial as App Store Connect, for SKTestSession (ADR 0034).
+      - path: Config/LemmeType.storekit
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.lemmetype.LemmeTypeiOSTests
@@ -103,11 +106,15 @@ targets:
         SUPPORTED_PLATFORMS: iphoneos iphonesimulator
         TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: YES
+        # Apple's StoreKitTest header uses a type Apple has deprecated, and warnings are errors. Only this test
+        # target silences that one C deprecation; every Swift warning stays an error (ADR 0034).
+        OTHER_SWIFT_FLAGS: "$(inherited) -Xcc -Wno-deprecated-declarations"
         # The app's product is LemmeType.app (its name is the same as the Mac app's).
         TEST_HOST: $(BUILT_PRODUCTS_DIR)/LemmeType.app/LemmeType
         BUNDLE_LOADER: $(TEST_HOST)
     dependencies:
       - target: LemmeTypeiOS
+      - sdk: StoreKitTest.framework
   LemmeTypeiOSUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -131,6 +138,8 @@ schemes:
         LemmeTypeiOS: all
     run:
       config: Debug
+      # Purchases in Xcode runs use the local product (ADR 0034), not the App Store.
+      storeKitConfiguration: Config/LemmeType.storekit
     test:
       config: Debug
       targets:

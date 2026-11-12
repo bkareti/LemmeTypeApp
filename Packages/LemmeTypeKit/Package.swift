@@ -26,6 +26,7 @@ let package = Package(
         .library(name: "Delivery", targets: ["Delivery"]),
         .library(name: "Editing", targets: ["Editing"]),
         .library(name: "Updates", targets: ["Updates"]),
+        .library(name: "Subscriptions", targets: ["Subscriptions"]),
         .library(name: "UI", targets: ["UI"]),
         .library(name: "TestSupport", targets: ["TestSupport"]),
     ],
@@ -50,6 +51,8 @@ let package = Package(
         .target(name: "Editing", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
         // The update check: one request for release metadata (docs/decisions/0026-distribution-and-updates.md).
         .target(name: "Updates", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
+        // The StoreKit subscription (docs/decisions/0034-storekit-subscription.md).
+        .target(name: "Subscriptions", dependencies: ["Domain", "Support"], swiftSettings: strictSettings),
         .target(
             name: "UI",
             dependencies: ["Domain", "Support"],
@@ -67,6 +70,7 @@ let package = Package(
         .testTarget(name: "RecognitionTests", dependencies: ["Recognition", "Editing", "Domain", "TestSupport"]),
         .testTarget(name: "ModelAssetsTests", dependencies: ["ModelAssets", "Domain"]),
         .testTarget(name: "DeliveryTests", dependencies: ["Delivery", "Domain", "TestSupport"]),
+        .testTarget(name: "SubscriptionsTests", dependencies: ["Subscriptions", "Domain"]),
         .testTarget(name: "UpdatesTests", dependencies: ["Updates", "Domain", "Support", "TestSupport"]),
         .testTarget(name: "EditingTests", dependencies: ["Editing", "Domain", "TestSupport"]),
         // Shortcut → context → recorder → pipeline → delivery with fakes at the OS edges (E2-S10, E3-S7).
