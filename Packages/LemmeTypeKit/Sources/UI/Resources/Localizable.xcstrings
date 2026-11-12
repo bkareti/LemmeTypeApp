@@ -52,12 +52,34 @@
     "%@ for this app · On this Mac" : {
 
     },
+    "%@ free, then %@ per %@" : {
+      "comment" : "The price line of the subscription: a free trial, then the price",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ free, then %2$@ per %3$@"
+          }
+        }
+      }
+    },
     "%@ isn’t ready: %@. LemmeType will ask before using another engine." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ isn’t ready: %2$@. LemmeType will ask before using another engine."
+          }
+        }
+      }
+    },
+    "%@ per %@" : {
+      "comment" : "The price line of the subscription when there is no free trial",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ per %2$@"
           }
         }
       }
@@ -370,11 +392,17 @@
     "Clipboard only" : {
 
     },
+    "Close" : {
+
+    },
     "Cloud" : {
       "comment" : "The name of the speech engine that sends audio online"
     },
     "Cloud speech" : {
       "comment" : "A settings section title"
+    },
+    "Cloud speech for Telugu and more, with nothing to set up." : {
+      "comment" : "A benefit listed in the paywall"
     },
     "Cloud speech is part of your LemmeType subscription, with a monthly allowance. There is nothing to set up. How long the speech service keeps audio is set by its own terms." : {
       "comment" : "Third paragraph of the cloud speech agreement"
@@ -463,6 +491,9 @@
     "custom modes" : {
 
     },
+    "day" : {
+      "comment" : "One day, as in 'price per day'"
+    },
     "Default mode" : {
 
     },
@@ -534,6 +565,9 @@
     },
     "Dictate Again" : {
 
+    },
+    "Dictate on your iPhone, with your voice kept on the device." : {
+      "comment" : "A benefit listed in the paywall"
     },
     "Dictate: %@" : {
 
@@ -746,6 +780,9 @@
     "Free space" : {
 
     },
+    "Free trial. It ends %@." : {
+      "comment" : "Subscription status during the free trial"
+    },
     "Friendly" : {
       "comment" : "Adjective: a warm tone for rewritten text"
     },
@@ -876,6 +913,9 @@
     "Leave out the final period" : {
 
     },
+    "LemmeType" : {
+      "comment" : "The app's name in the paywall"
+    },
     "LemmeType %@ is available." : {
 
     },
@@ -969,6 +1009,9 @@
     "Manage Models…" : {
 
     },
+    "Manage Subscription" : {
+
+    },
     "Memory only." : {
 
     },
@@ -1004,6 +1047,9 @@
     },
     "Modes" : {
 
+    },
+    "month" : {
+      "comment" : "One month, as in 'price per month'"
     },
     "Most accurate" : {
 
@@ -1065,6 +1111,9 @@
     },
     "New Word" : {
 
+    },
+    "No active subscription was found for this Apple Account." : {
+      "comment" : "Shown after restoring purchases found nothing"
     },
     "No download" : {
 
@@ -1165,6 +1214,9 @@
     },
     "Not rewritten: the text is too long for the on-device model. Your original text is shown." : {
 
+    },
+    "Not subscribed." : {
+      "comment" : "Subscription status when there is none"
     },
     "Nothing is pasted automatically; the overlay offers Copy Text." : {
 
@@ -1268,6 +1320,12 @@
           }
         }
       }
+    },
+    "Payment problem. Access continues until %@. Update your payment method." : {
+      "comment" : "Subscription status during the payment grace period"
+    },
+    "Payment problem. Update your payment method to continue." : {
+      "comment" : "Subscription status while Apple retries a failed payment"
     },
     "Performance" : {
 
@@ -1435,6 +1493,9 @@
     "Removes your vocabulary, snippets, modes, and downloaded models from this device." : {
 
     },
+    "Renews automatically each %@ until you cancel. Cancel any time in Settings › Apple Account › Subscriptions. Payment is charged to your Apple Account." : {
+      "comment" : "The renewal and cancellation terms shown with the subscription price"
+    },
     "Replace Mine" : {
 
     },
@@ -1451,6 +1512,9 @@
 
     },
     "Restore clipboard after" : {
+
+    },
+    "Restore Purchases" : {
 
     },
     "Restricted" : {
@@ -1503,6 +1567,9 @@
     },
     "Say only the trigger, and the saved text is inserted exactly as written. A trigger inside a longer sentence never expands." : {
 
+    },
+    "See Subscription Options" : {
+      "comment" : "Button that opens the subscription offer when its price is not loaded"
     },
     "Select text, hold the shortcut, and say what to change — “make this shorter”, “fix the grammar”, “turn this into a list”, or “translate to Spanish”. Only the selection is read, and Apple’s on-device model rewrites it on this Mac." : {
 
@@ -1603,6 +1670,9 @@
     "Spoken punctuation (“comma”, “new line”)" : {
 
     },
+    "Start %@ Free Trial" : {
+      "comment" : "Button that starts the free trial of the subscription"
+    },
     "Start Dictating" : {
 
     },
@@ -1636,7 +1706,33 @@
     "Style" : {
       "comment" : "Noun: the tone, format, and length settings"
     },
+    "Subscribe for %@ per %@" : {
+      "comment" : "Button that starts the paid subscription, naming its price",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Subscribe for %1$@ per %2$@"
+          }
+        }
+      }
+    },
+    "Subscribed." : {
+      "comment" : "Subscription status when active"
+    },
+    "Subscribed. Ends %@; it will not renew." : {
+      "comment" : "Subscription status when renewal is turned off"
+    },
+    "Subscribed. Renews %@." : {
+      "comment" : "Subscription status when it renews on a date"
+    },
+    "Subscription" : {
+      "comment" : "A settings section title"
+    },
     "System Default" : {
+
+    },
+    "Terms of Use" : {
 
     },
     "Test" : {
@@ -1680,6 +1776,9 @@
     },
     "The app opens and recording starts on screen. Your iPhone must be unlocked. Nothing is recorded in the background." : {
 
+    },
+    "The App Store’s answer could not be checked, so nothing was unlocked. Try again." : {
+      "comment" : "Shown when a purchase could not be verified"
     },
     "The clipboard" : {
 
@@ -1738,6 +1837,15 @@
     "the on-device model isn’t available." : {
 
     },
+    "The purchase didn’t go through. Check your connection and try again." : {
+      "comment" : "Shown when a purchase fails"
+    },
+    "The purchase is waiting for approval. It will start when it is approved." : {
+      "comment" : "Shown when a purchase needs approval, for example Ask to Buy"
+    },
+    "The purchase was cancelled. You have not been charged." : {
+      "comment" : "Shown after the person closed the purchase sheet"
+    },
     "The report couldn’t be saved. Choose another location." : {
 
     },
@@ -1770,6 +1878,15 @@
     },
     "The sound of your voice while you dictate." : {
 
+    },
+    "The subscription couldn’t be loaded. Check your connection." : {
+      "comment" : "Shown in the paywall when the App Store gives no product"
+    },
+    "The subscription ended %@." : {
+      "comment" : "Subscription status after it expired"
+    },
+    "The subscription was refunded." : {
+      "comment" : "Subscription status after a refund"
     },
     "The text is left on the clipboard for you to paste with ⌘V. Your previous clipboard is replaced." : {
 
@@ -2049,6 +2166,9 @@
     "Voice editing shortcut" : {
 
     },
+    "week" : {
+      "comment" : "One week, as in 'price per week'"
+    },
     "Welcome to LemmeType" : {
 
     },
@@ -2096,6 +2216,9 @@
     },
     "Written text" : {
 
+    },
+    "year" : {
+      "comment" : "One year, as in 'price per year'"
     },
     "You can keep up to %lld %@." : {
       "localizations" : {

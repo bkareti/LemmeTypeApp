@@ -15,13 +15,16 @@
         let settings: MobileSettingsView
         let dictation: DictationSettingsModel
         let actionDictation: ActionDictationController?
+        /// The subscription offer is shown over everything when this says so. `nil` in a build without it.
+        let subscription: SubscriptionModel?
         @State private var tab: Tab = .dictate
         @Environment(\.scenePhase) private var scenePhase
 
         public init(
             quick: QuickDictationModel, dictation: DictationSettingsModel, settings: MobileSettingsView,
-            actionDictation: ActionDictationController? = nil
+            actionDictation: ActionDictationController? = nil, subscription: SubscriptionModel? = nil
         ) {
+            self.subscription = subscription
             self.actionDictation = actionDictation
             self.quick = quick
             self.dictation = dictation
@@ -52,6 +55,14 @@
                 if phase == .active { quick.startIfRequestedByShortcut() }
             }
             .task { quick.recorder.onOpenSettings = { _ in tab = .settings } }
+            .sheet(isPresented: paywallBinding) {
+                if let subscription { PaywallView(model: subscription) }
+            }
+        }
+
+        private var paywallBinding: Binding<Bool> {
+            Binding(
+                get: { subscription?.isShowingPaywall ?? false }, set: { subscription?.isShowingPaywall = $0 })
         }
     }
 

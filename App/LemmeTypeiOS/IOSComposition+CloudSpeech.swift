@@ -36,19 +36,15 @@ extension IOSComposition {
         let gateway: any GatewayServing
     }
 
-    /// The subscription proof is StoreKit's signed transaction (E13-S4). Until that exists there is none, so
-    /// Cloud speech cannot be used in a build without a staging test token.
-    struct NoSubscriptionProof: SubscriptionProofProviding {
-        func signedTransaction() async -> String? { nil }
-    }
-
-    static func liveCloudSpeech() -> CloudSpeechServices? {
+    /// `proofs` is the StoreKit subscription (E13-S4): its signed transaction is what the gateway checks. A
+    /// Debug build can instead use a staging test token.
+    static func liveCloudSpeech(proofs: any SubscriptionProofProviding) -> CloudSpeechServices? {
         guard offersCloudSpeech else { return nil }
         // An earlier build asked for the user's own API key. Nothing reads one any more, so remove it.
         LegacyCloudKeyEraser().erase()
         let host = gatewayHost
         let gateway = GatewayService(
-            host: host, transport: URLSessionCloudSpeechTransport(allowedHost: host), proofs: NoSubscriptionProof(),
+            host: host, transport: URLSessionCloudSpeechTransport(allowedHost: host), proofs: proofs,
             fixedToken: stagingToken)
         return CloudSpeechServices(
             provider: GatewaySpeechProvider(host: host), consent: UserDefaultsCloudSpeechConsent(), gateway: gateway)

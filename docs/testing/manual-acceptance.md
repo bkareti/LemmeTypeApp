@@ -812,3 +812,13 @@ Use a physical iPhone and iPad with the app installed from Xcode. Record results
 7. Raise the gateway's `consentVersion` in `apps.yaml` on staging and redeploy: Settings says Cloud speech needs a new agreement, and a Cloud dictation is refused until *Review and Agree…* is tapped.
 8. Turn it off: the section returns to *Turn On Cloud Speech…*. Install an old build that stored an API key, then this build: the key is gone from the Keychain.
 
+**MA-74 Subscription and free trial (E13-S4)**
+1. On a physical iPhone signed in with a **Sandbox Apple Account**, open a fresh install. After the first screen the paywall appears once, with the price and "free, then price per month" taken from the App Store, a *Restore Purchases* button, *Terms of Use* and *Privacy Policy* links, and a *Close* button. Close it: Settings, Models, and Privacy still open.
+2. Settings › Subscription says *Not subscribed*. Tap the *Start … Free Trial* button, confirm in Apple's sheet: Settings says *Free trial* with an end date a week away, and the paywall closes by itself.
+3. Settings › Cloud speech › turn on and dictate Telugu: the gateway accepts the purchase (check the gateway log for a `/v1/session` 200 and, with Cloud speech used, a `/v1/speech/transcriptions` 200).
+4. On a second device with the same Sandbox account, install the app and tap *Restore Purchases*: Settings shows the same subscription.
+5. Settings › Subscription › *Manage Subscription* opens Apple's screen; cancel there. Back in the app, Settings still says *Free trial* or *Subscribed* until the end date, then says it will not renew.
+6. Let the sandbox subscription expire (it accelerates renewals): Settings says the subscription ended and offers *Subscribe*; the trial wording is gone because the Apple Account has used its free week.
+7. Ask a family organiser (or use Ask to Buy in Sandbox) to leave a purchase pending: the app says it is waiting for approval and unlocks nothing.
+8. With VoiceOver on, every control in the paywall is reachable and named; at the largest text size the price, renewal terms, and both links are readable by scrolling; nothing relies on colour alone.
+

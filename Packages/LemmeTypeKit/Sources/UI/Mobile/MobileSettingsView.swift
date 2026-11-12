@@ -14,15 +14,18 @@
         let permissions: PermissionsModel
         /// `nil` when this build does not offer cloud speech.
         let cloudSpeech: CloudSpeechSettingsModel?
+        /// `nil` in a build without the subscription.
+        let subscription: SubscriptionModel?
         @AppStorage(CopiedTextLifetime.storageKey) private var lifetimeRaw = CopiedTextLifetime.default.rawValue
         @State private var kind: PersonalizationDraft.Kind = .vocabulary
 
         public init(
             dictation: DictationSettingsModel, models: ModelsSettingsModel, personalization: PersonalizationModel,
             modes: ModesSettingsModel, privacy: PrivacyOverviewModel, permissions: PermissionsModel,
-            cloudSpeech: CloudSpeechSettingsModel? = nil
+            cloudSpeech: CloudSpeechSettingsModel? = nil, subscription: SubscriptionModel? = nil
         ) {
             self.cloudSpeech = cloudSpeech
+            self.subscription = subscription
             self.dictation = dictation
             self.models = models
             self.personalization = personalization
@@ -33,6 +36,7 @@
 
         public var body: some View {
             List {
+                if let subscription { MobileSubscriptionSection(model: subscription) }
                 Section(String(localized: "Dictation", bundle: .module)) {
                     Picker(
                         String(localized: "Language you speak", bundle: .module),
