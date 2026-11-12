@@ -822,3 +822,13 @@ Use a physical iPhone and iPad with the app installed from Xcode. Record results
 7. Ask a family organiser (or use Ask to Buy in Sandbox) to leave a purchase pending: the app says it is waiting for approval and unlocks nothing.
 8. With VoiceOver on, every control in the paywall is reachable and named; at the largest text size the price, renewal terms, and both links are readable by scrolling; nothing relies on colour alone.
 
+**MA-75 The subscription gate (E13-S5)**
+1. On a physical iPhone with a Sandbox Apple Account and **no** subscription: tap record on the Dictate screen. The paywall opens, the microphone indicator never appears, and no recording is made. Close it: you are back on the Dictate screen.
+2. Press the Action Button (and run the Shortcut and Back Tap, if set). The keyboard shows that a subscription is needed, the Live Activity does not start recording, and nothing is inserted. Settings › Subscription is still open.
+3. Start the free trial, then record again: it works at once. With Airplane Mode on, record again: it still works and nothing is sent.
+4. Let the Sandbox trial and subscription expire. With Airplane Mode **on**, dictate: it keeps working for up to three days after the end (the App Store cannot confirm a renewal). Turn Airplane Mode off: the next start is refused, because the App Store confirms it ended.
+5. After it ended, still reachable: Settings, Subscription, Manage Subscription, Restore Purchases, Privacy › Delete All Local Data, the Privacy Policy, Terms of Use, Acknowledgements, and the LemmeType keyboard's normal typing keys. Saved modes, vocabulary, and history are still there.
+6. Set the iPhone's clock back by 30 days after the subscription ended: dictation is still refused.
+7. With one day left in the trial, the Dictate screen shows the ending notice once. Close it: it does not come back. Settings › Subscription shows "N days left in your free trial" while the trial runs.
+8. Privacy › Delete All Local Data: the subscription summary in the App Group is gone (use Xcode › Devices › the app container, or the keyboard no longer shows a state).
+

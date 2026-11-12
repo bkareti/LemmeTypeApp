@@ -155,6 +155,8 @@ public enum DictationIssue: Equatable, Sendable {
     /// Plain dictated text to read before it is copied; only on a platform that
     /// cannot insert into other apps (E8-S6).
     case reviewText
+    /// Dictation needs an active trial or subscription; nothing was recorded (E13-S5).
+    case subscriptionRequired(EntitlementBlockReason)
 
     /// Stable lowercase name for diagnostics.
     public var identifier: String {
@@ -170,6 +172,7 @@ public enum DictationIssue: Equatable, Sendable {
         case .reviewTranslation: "review.translation"
         case .reviewRewrite(let notice): notice.map { "review.\($0.identifier)" } ?? "review.rewrite"
         case .reviewText: "review.text"
+        case .subscriptionRequired(let reason): "subscription.\(reason.rawValue)"
         }
     }
 }
@@ -191,6 +194,8 @@ public enum DictationAction: Equatable, Sendable {
     /// Try delivering the transcript to the original field again.
     case retryDelivery
     case openPermissions
+    /// Show the subscription offer (E13-S5).
+    case openSubscription
     /// Open Settings › Context (voice editing and context controls).
     case openContextSettings
     /// Process the recording again in this language (E9-S2).
@@ -231,9 +236,15 @@ extension DictationIssue {
             return [.copyText, .openPermissions, .discard]
         case .deliveryFailed:
             return [.copyText, .discard]
-        case .editingUnavailable, .rewriterUnavailable, .rewriteFailed:
-            return editingActions
+        case .editingUnavailable, .rewriterUnavailable, .rewriteFailed, .subscriptionRequired:
+            return refusedActions
         }
+    }
+
+    /// Choices when a start was refused before recording: a voice edit that can't run, or no subscription (E13-S5).
+    private var refusedActions: [DictationAction] {
+        if case .subscriptionRequired = self { return [.openSubscription, .discard] }
+        return editingActions
     }
 
     /// A missing API key for the cloud engine is not solved by Speech Recognition access.

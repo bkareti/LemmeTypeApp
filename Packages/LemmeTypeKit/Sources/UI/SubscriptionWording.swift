@@ -65,6 +65,24 @@ enum SubscriptionWording {
             comment: "The renewal and cancellation terms shown with the subscription price")
     }
 
+    /// "3 days left in your free trial": the number comes from the trial's own end date.
+    static func trialCountdown(daysLeft: Int) -> String {
+        if daysLeft <= 1 {
+            return String(
+                localized: "One day left in your free trial.", bundle: .module,
+                comment: "Shown in Settings when a day or less is left of the free trial")
+        }
+        return String(
+            localized: "\(daysLeft) days left in your free trial.", bundle: .module,
+            comment: "Shown in Settings with the number of days left of the free trial")
+    }
+
+    static var trialEndingNotice: String {
+        String(
+            localized: "Your free trial ends soon. Subscribe to keep dictating.", bundle: .module,
+            comment: "Notice shown once, in the app, when the free trial is about to end")
+    }
+
     static func message(_ message: SubscriptionModel.Message) -> String {
         switch message {
         case .cancelled:

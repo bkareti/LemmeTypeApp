@@ -255,6 +255,10 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   transaction `GatewayService` shows the gateway). `SubscriptionModel` (UI) backs `PaywallView` and the Settings section;
   price and trial length come only from StoreKit. Tests: pure state mapping in `SubscriptionsTests`, the model with
   `FakeSubscriptionService`, and `StoreKitSubscriptionServiceTests` against `SKTestSession` in the iPhone app's unit tests.
+  The dictation gate (E13-S5): `EntitlementPolicy` (Domain, pure) + `EntitlementGate` decide `allowed` / `allowedUnconfirmed`
+  (3 days, only while the App Store is out of reach) / `blocked`; `RecordingCoordinator(entitlement:)` asks before every start and refuses with
+  `DictationIssue.subscriptionRequired` before the microphone opens (one choke point for the app, Action Button, Shortcuts, keyboard); the
+  high-water mark (`UserDefaultsEntitlementLedger`) stops a clock set back; `EntitlementSummary` goes to the App Group for the keyboard.
 - Engine/mode selection (ADR 0016): `DictationSettingsModel` (UI) backs
   Settings › Dictation and the status menu. Mode, language, and
   `EnginePreference` are captured when recording starts and stored in the

@@ -122,6 +122,12 @@ public actor StoreKitSubscriptionService: SubscriptionProviding, SubscriptionPro
         #endif
     }
 
+    public func canReachAppStore() async -> Bool {
+        // A fresh request, not the product kept from before: only the App Store itself can answer it.
+        guard let products = try? await Product.products(for: [productID]) else { return false }
+        return !products.isEmpty
+    }
+
     // MARK: SubscriptionProofProviding
 
     /// The signed transaction for the gateway (E13-S3), from a verified entitlement or, in a grace period,

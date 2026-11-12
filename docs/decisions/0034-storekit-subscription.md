@@ -43,3 +43,21 @@ subscriber. The gateway already accepts StoreKit 2 signed transactions (E13-S2).
   Applications Agreement, tax, and banking forms are the maintainer's to complete (`docs/release/app-store.md`).
 - Tests that need StoreKit run in the iPhone app's unit-test target (`make test-ios`), because StoreKit's test
   session needs the Simulator.
+
+## Addition: the dictation gate (E13-S5)
+
+- **One rule, one place.** `EntitlementPolicy` (Domain, pure) turns the subscription state, the time, and the latest
+  moment the device has seen into `allowed`, `allowedUnconfirmed`, or `blocked(reason)`. `EntitlementGate` reads
+  StoreKit and applies it. `RecordingCoordinator` asks it before every start, so the app, the Action Button, Shortcuts,
+  and the keyboard are all covered by the same check, and a refused start records nothing (`DictationIssue.subscriptionRequired`).
+- **Offline.** StoreKit keeps verified transactions on the device, so a subscription inside its period needs no network.
+  An ended period is assumed renewed for **3 days** only while the App Store cannot be reached; when it answers, an
+  ended period is ended. A failed payment is never assumed renewed.
+- **Clock guard.** The latest moment the device has seen is kept (`EntitlementLedgerStoring`); a clock set back never
+  counts as more time.
+- **Summary for the keyboard.** `EntitlementSummary` (kind and end date, no identifier) is written to the App Group
+  whenever the state changes and removed by Delete All Local Data. The keyboard reads it in E13-S7.
+- **Never blocked:** Settings, Subscription, Manage, Restore, Export, Delete All, the privacy policy, terms, and the
+  keyboard's typing keys. Saved data is kept.
+- The Mac app passes no check, so it is unchanged.
+

@@ -115,6 +115,10 @@
             Section {
                 Text(SubscriptionWording.statusLine(model.state))
                     .accessibilityIdentifier("settings.subscription.status")
+                if let days = model.trialDaysLeft {
+                    Text(SubscriptionWording.trialCountdown(daysLeft: days)).font(.footnote)
+                        .accessibilityIdentifier("settings.subscription.countdown")
+                }
                 if !model.state.grantsAccess {
                     Button(startTitle) { model.showPaywall() }
                         .accessibilityIdentifier("settings.subscription.start")
@@ -142,6 +146,36 @@
             return String(
                 localized: "See Subscription Options", bundle: .module,
                 comment: "Button that opens the subscription offer when its price is not loaded")
+        }
+    }
+
+    /// The one in-app notice that the free trial is about to end (E13-S5).
+    struct TrialEndingBanner: View {
+        let model: SubscriptionModel
+
+        var body: some View {
+            if model.showsTrialEndingNotice {
+                HStack(spacing: 12) {
+                    Text(SubscriptionWording.trialEndingNotice).font(.footnote)
+                        .accessibilityIdentifier("trial.notice")
+                    Spacer()
+                    Button(String(localized: "Subscribe", bundle: .module)) {
+                        model.dismissTrialEndingNotice()
+                        model.showPaywall()
+                    }
+                    .font(.footnote.bold())
+                    .accessibilityIdentifier("trial.notice.subscribe")
+                    Button {
+                        model.dismissTrialEndingNotice()
+                    } label: {
+                        Image(systemName: "xmark")
+                    }
+                    .accessibilityLabel(String(localized: "Dismiss", bundle: .module))
+                    .accessibilityIdentifier("trial.notice.dismiss")
+                }
+                .padding(12)
+                .background(.thinMaterial)
+            }
         }
     }
 #endif

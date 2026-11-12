@@ -12,12 +12,23 @@ extension RecordingCoordinator {
         let lead =
             if case .languageUnavailable = issue {
                 String(localized: "Dictation can’t start.", bundle: .module)
+            } else if case .subscriptionRequired = issue {
+                String(localized: "Dictation can’t start.", bundle: .module)
             } else {
                 String(localized: "Voice editing can’t start.", bundle: .module)
             }
         feedback.announce("\(lead) \(issue.userMessage)")
         Log.recognition.info("Session refused: \(issue.identifier, privacy: .public)")
         finishSession(displayFor: failureDisplay)
+    }
+
+    /// Refuses a start when there is no active trial or subscription, before anything is recorded (E13-S5).
+    /// Returns whether it was refused.
+    func refusesWithoutSubscription() async -> Bool {
+        guard let entitlement, case .blocked(let reason) = await entitlement.decision() else { return false }
+        refuse(.subscriptionRequired(reason))
+        onOpenSubscription()
+        return true
     }
 
     /// Refuses a dictation whose language or output can't run, before the user

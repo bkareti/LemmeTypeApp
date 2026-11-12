@@ -37,6 +37,9 @@
                 {
                     NavigationStack {
                         QuickDictationView(model: quick, dictation: dictation) { tab = .settings }
+                            .safeAreaInset(edge: .top) {
+                                if let subscription { TrialEndingBanner(model: subscription) }
+                            }
                     }
                 }
                 SwiftUI.Tab(

@@ -35,6 +35,8 @@
             var recognitionError: RecognitionError?
             /// A shortcut left a launch request, as the App Intent does (E8-S7).
             var startsFromShortcut = false
+            /// `-LemmeTypeNotSubscribed`: no trial or subscription, so a dictation start is refused.
+            var isSubscribed = true
             var recognizedText = "hello from lemmetype"
 
             init() {}
@@ -59,6 +61,7 @@
                 interruptsAfter = seconds(after: Self.interruptAfterArgument)
                 if value(after: Self.recognitionArgument) == "no-speech" { recognitionError = .noSpeechDetected }
                 startsFromShortcut = arguments.contains(Self.launchRequestArgument)
+                isSubscribed = !arguments.contains("-LemmeTypeNotSubscribed")
                 if let text = ProcessInfo.processInfo.environment[Self.recognizedTextVariable] { recognizedText = text }
             }
         }
@@ -70,6 +73,16 @@
                 statuses: [.microphone: scenario.microphone], microphoneAnswer: scenario.microphoneAnswer,
                 grantsAccessibilityOnRequest: false)
             let preferences = FakePreferences(hasCompletedOnboarding: true)
+            // Subscribed, so the paywall does not cover the screens the UI tests are about, unless a test asks.
+            let subscription = FakeSubscriptionService(
+                state: scenario.isSubscribed
+                    ? .subscribed(renews: Date(timeIntervalSince1970: 4_000_000_000), willRenew: true)
+                    : .notSubscribed)
+            // Buying from the paywall in a UI test starts a trial, so the flow can be followed to the end.
+            if !scenario.isSubscribed {
+                subscription.willPurchase(
+                    .purchased, leaving: .trialing(until: Date(timeIntervalSince1970: 4_000_000_000)))
+            }
             return Services(
                 permissionChecker: permissions,
                 permissionRequester: permissions,
@@ -101,10 +114,10 @@
                 cloudSpeech: CloudSpeechServices(
                     provider: GatewaySpeechProvider(host: "gateway.test"), consent: FakeCloudSpeechConsent(),
                     gateway: FakeGatewayAccess()),
-                // Subscribed, so the paywall does not cover the screens the UI tests are about.
-                subscription: FakeSubscriptionService(
-                    state: .subscribed(renews: Date(timeIntervalSince1970: 4_000_000_000), willRenew: true)),
-                paywallSeen: FakePaywallSeen(true))
+                subscription: subscription,
+                paywallSeen: FakePaywallSeen(true),
+                entitlement: EntitlementGate(subscription: subscription, ledger: FakeEntitlementLedger()),
+                entitlementSummary: FakeEntitlementSummaryStore())
         }
     }
 #endif

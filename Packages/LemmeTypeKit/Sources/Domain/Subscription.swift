@@ -88,9 +88,13 @@ public protocol SubscriptionProviding: Sendable {
     func restore() async -> Bool
     /// Shows Apple's screen for changing or cancelling the subscription.
     func showManageSubscriptions() async
+    /// Whether the App Store answers right now. Used only to decide whether an ended period is really ended.
+    func canReachAppStore() async -> Bool
 }
 
 /// Whether the paywall has already been shown on its own once, so it is not forced on the person again.
 public protocol PaywallSeenStoring: AnyObject, Sendable {
     var hasSeenPaywall: Bool { get set }
+    /// Whether the one notice that the free trial is about to end has been shown (E13-S5).
+    var hasSeenTrialEndingNotice: Bool { get set }
 }

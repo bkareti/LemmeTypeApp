@@ -18,6 +18,8 @@ public final class FakeSubscriptionService: SubscriptionProviding, SubscriptionP
         var purchases = 0
         var restores = 0
         var manageCalls = 0
+        var reachable = true
+        var reachabilityChecks = 0
         var observers: [UUID: AsyncStream<SubscriptionState>.Continuation] = [:]
     }
 
@@ -48,6 +50,7 @@ public final class FakeSubscriptionService: SubscriptionProviding, SubscriptionP
     }
 
     public func setProduct(_ product: SubscriptionProduct?) { box.withLock { $0.product = product } }
+    public func setReachable(_ reachable: Bool) { box.withLock { $0.reachable = reachable } }
 
     /// Changes the state and tells everyone listening.
     public func setState(_ state: SubscriptionState) {
@@ -97,6 +100,13 @@ public final class FakeSubscriptionService: SubscriptionProviding, SubscriptionP
     }
 
     public func showManageSubscriptions() async { box.withLock { $0.manageCalls += 1 } }
+    public var reachabilityChecks: Int { box.withLock { $0.reachabilityChecks } }
+    public func canReachAppStore() async -> Bool {
+        box.withLock {
+            $0.reachabilityChecks += 1
+            return $0.reachable
+        }
+    }
 
     // MARK: SubscriptionProofProviding
 
