@@ -44,6 +44,18 @@ struct SubscriptionSnapshot: Equatable, Sendable {
         }
     }
 
+    /// What the newest verified transaction says on its own, for when StoreKit cannot be asked for statuses (no
+    /// network). `Transaction.currentEntitlements` leaves out an ended period, so without this a subscription that
+    /// just ended offline would read as "never subscribed" and skip the offline grace (E13-S5).
+    static func fromLatestTransaction(
+        expiration: Date?, isFreeTrial: Bool, revoked: Bool, purchased: Date, now: Date
+    ) -> SubscriptionSnapshot {
+        let kind: Kind = revoked ? .revoked : (expiration.map { $0 > now } == true ? .subscribed : .expired)
+        return SubscriptionSnapshot(
+            kind: kind, expiration: expiration, isFreeTrial: isFreeTrial, willRenew: false, graceUntil: nil,
+            purchased: purchased)
+    }
+
     /// The state for several snapshots (a group can report more than one): the most recent transaction decides,
     /// and between equal ones the more useful state. No snapshots means "not subscribed".
     static func state(of snapshots: [SubscriptionSnapshot]) -> SubscriptionState {

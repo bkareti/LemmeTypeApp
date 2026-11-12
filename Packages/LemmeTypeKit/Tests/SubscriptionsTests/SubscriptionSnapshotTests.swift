@@ -78,4 +78,34 @@ struct SubscriptionSnapshotTests {
         #expect(!SubscriptionState.unknown.grantsAccess)
         #expect(!SubscriptionState.notSubscribed.grantsAccess)
     }
+
+    // MARK: Offline, from the newest transaction alone (E13-S5)
+
+    private func offline(expiration: Date?, trial: Bool = false, revoked: Bool = false, now: Date) -> SubscriptionState
+    {
+        SubscriptionSnapshot.fromLatestTransaction(
+            expiration: expiration, isFreeTrial: trial, revoked: revoked,
+            purchased: Date(timeIntervalSince1970: 1_900_000_000), now: now
+        ).state
+    }
+
+    @Test func aPeriodThatJustEndedReadsAsEndedSoTheOfflineGraceCanApply() {
+        let state = offline(expiration: end, now: end.addingTimeInterval(60))
+        #expect(state == .expired(ended: end), "not 'never subscribed': that would skip the grace")
+        #expect(
+            EntitlementPolicy.decide(
+                state: state, now: end.addingTimeInterval(60), highWaterMark: nil, appStoreReachable: false)
+                == .allowedUnconfirmed(until: end.addingTimeInterval(EntitlementPolicy.unconfirmedGrace)))
+    }
+
+    @Test func aPeriodStillRunningIsActiveEvenWithoutStatuses() {
+        #expect(
+            offline(expiration: end, now: end.addingTimeInterval(-60)) == .subscribed(renews: end, willRenew: false))
+        #expect(offline(expiration: end, trial: true, now: end.addingTimeInterval(-60)) == .trialing(until: end))
+    }
+
+    @Test func aRefundedTransactionIsRevokedAndATransactionWithoutAnEndGrantsNothing() {
+        #expect(offline(expiration: end, revoked: true, now: end.addingTimeInterval(-60)) == .revoked)
+        #expect(offline(expiration: nil, now: end) == .notSubscribed)
+    }
 }
