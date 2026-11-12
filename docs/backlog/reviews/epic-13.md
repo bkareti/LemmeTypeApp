@@ -40,7 +40,7 @@ approved**, because the keyboard design is not yet proven on a device. E13-S8 cl
 | Where the server code lives | New private repository, so MeetQyl does not depend on this one | New ADR in S1, before code |
 | Language and hosting | TypeScript on Node 22, Google Cloud Run in `asia-south1`, Secret Manager | New ADR in S1 |
 | Who is identified | The Apple subscription only; `sub` is an HMAC of the original transaction id | S2 |
-| Cloud allowance | 180 minutes a month paid, 30 minutes during the trial, 15 minutes for Sandbox | S2 PR, maintainer approves |
+| Cloud allowance | 120 minutes per billing period for the $1.99 plan (maintainer, 2026-11-12), 30 minutes during the trial, 15 minutes for Sandbox; set per product in `apps.yaml` so other plans can be added | S2 |
 | Free trial | Apple's introductory offer (the user confirms in Apple's sheet; not charged for 7 days) | S4 |
 | Product id | `com.lemmetype.LemmeType.iOS.pro.monthly`; cannot be reused once saved | S4, before the first App Store Connect save |
 | What an expired user keeps | Settings, export, delete, privacy, subscription screens, typing keys, saved data | S5 |

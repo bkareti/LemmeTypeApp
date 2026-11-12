@@ -86,7 +86,7 @@ MeetQyl can use the same server later.
   - `GET /v1/health`, with no secrets in the answer.
   - `GET /v1/capabilities`: the languages and tasks this app may use, `maximumClipSeconds`, and `consentVersion`.
   - `POST /v1/speech/transcriptions`: multipart with one 16 kHz mono 16-bit WAV (`audio`), `task` (`transcribe` or `translate`), and `language` (BCP-47). Answers `{ text, language, durationSeconds, requestId }`.
-  - One error shape, `{ error: { code, message, retryAfterSeconds? } }`, with the codes `unauthorized`, `subscription_required`, `rate_limited`, `quota_exceeded`, `unsupported_language`, `audio_invalid`, `audio_too_long`, `provider_busy`, `provider_unavailable`, `service_unavailable`.
+  - One error shape, `{ error: { code, message, retryAfterSeconds? } }`, with the codes `bad_request`, `unauthorized`, `subscription_required`, `rate_limited`, `quota_exceeded`, `unsupported_language`, `audio_invalid`, `audio_too_long`, `provider_busy`, `provider_unavailable`, `service_unavailable`.
 - Access in this story is a placeholder: a static test token, off in production. S2 replaces it. Routes already read an `app` and a `subject` from the verified token, so S2 changes only how the token is made.
 - A `SpeechProvider` interface and two implementations: `SarvamProvider` (`saaras:v4`; `codemix` for Telugu with English, `translate` for English output; behaves like the client adapter in `SarvamProvider.swift`) and `FakeProvider`. A contract test suite every provider must pass.
 - Per-app configuration in `apps.yaml`, not in code: app id, allowed tasks and languages, maximum clip length, quotas (S2), and which provider serves each language and task. A second test app, `testapp`, with different limits proves the isolation.
@@ -126,22 +126,22 @@ than the subscription brings in.
 - `POST /v1/session`: the app sends its StoreKit 2 signed transaction (JWS). The gateway verifies the certificate chain to Apple's root (Apple Root CA - G3, pinned in the repository), the bundle id, a product id listed in `apps.yaml`, the environment, that it is an auto-renewing subscription, that it has not expired, and that it is not revoked. Use Apple's App Store Server Library.
 - It answers a short-lived access token (15 minutes, EdDSA) with `app`, `sub`, `plan` (`trial`, `paid`, `sandbox`), and `exp`. `sub` is an HMAC of the original transaction id with a server secret, so the token and the stored data hold no Apple ID and cannot be turned back into one.
 - `POST /v1/apple/notifications`: App Store Server Notifications V2. The gateway verifies each signed payload and keeps, per `sub`, the status and expiry (renewed, expired, refunded, revoked, billing retry, grace period). A refunded or revoked subscription is refused within one token lifetime.
-- The production gateway accepts `Sandbox` transactions (App Review uses them) with a tiny allowance (default 15 minutes a month) and never counts them as paid.
-- Limits, all in `apps.yaml` and changeable without a release. Proposed defaults, to be approved by the maintainer in the PR:
-  - `paid`: 180 minutes of cloud audio per calendar month.
-  - `trial`: 30 minutes in total.
+- The production gateway accepts `Sandbox` transactions (App Review uses them) with a tiny allowance (default 15 minutes in each billing period) and never counts them as paid.
+- Limits, all in `apps.yaml` and changeable without a release. Allowances are set **per App Store product**, so a new plan is a new entry (for example `$2.99` with 300 minutes). Maintainer decision 2026-11-12:
+  - `paid`: **120 minutes** of cloud audio in each billing period of the `$1.99` product. A billing period runs from one renewal to the next, so a person who subscribes on the 28th gets a full period, not a calendar month.
+  - `trial`: 30 minutes in total during the free trial (proposed default).
   - 20 requests a minute per `sub`.
   - A global limiter at 50 requests a minute (the provider allows 60 for the account) with a short queue; beyond it, `provider_busy` with `retryAfterSeconds`.
   - A global monthly budget in provider cost; at 50 %, 80 %, and 100 % the maintainer gets an alert, and at 100 % cloud answers `service_unavailable` while the apps keep working locally.
 - Every success answer carries `X-Quota-Remaining-Seconds`. `quota_exceeded` carries the reset date.
-- Stored per `sub` only: plan, status, expiry, month, seconds used, request count, last request time. Kept 35 days after expiry, then deleted. Nothing about content, devices, or locations. Network addresses are used for rate limiting in memory only.
+- Stored per `sub` only: plan, status, expiry, billing period, seconds used, request count, last request time. Kept 35 days after expiry, then deleted. Nothing about content, devices, or locations. Network addresses are used for rate limiting in memory only.
 - `GET /v1/account/usage` for the signed-in token: seconds used, allowance, and reset date, for the app to show.
 
 **Acceptance criteria**
 
 - A test transaction signed with a test certificate chain is accepted; one with a wrong bundle id, unknown product, expired date, revocation date, broken signature, or untrusted chain is refused with `unauthorized` or `subscription_required` (one test each).
 - Replaying the Apple notification fixtures (`DID_RENEW`, `EXPIRED`, `REFUND`, `REVOKE`, `DID_FAIL_TO_RENEW`, `GRACE_PERIOD_EXPIRED`) moves the stored status as documented, and the next token request after a refund is refused.
-- Two requests that together pass the monthly allowance: the second gets `quota_exceeded`. A new month resets it (clock injected in the test).
+- Two requests that together pass the allowance: the second gets `quota_exceeded` with the reset date. The next billing period starts at zero (clock injected in the test). A second product with a bigger allowance in `apps.yaml` gives that subscriber the bigger allowance with no code change.
 - The 51st request in a minute across all subscribers gets `provider_busy` and never reaches the provider (fake provider call count).
 - At the global budget the gateway answers `service_unavailable` and records one alert event.
 - The token holds no Apple ID, original transaction id, or email (decode test), and `sub` differs between two `apps.yaml` apps for the same transaction.
