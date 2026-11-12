@@ -31,6 +31,7 @@ EPIC_9_PATH = ROOT / "docs" / "backlog" / "epic-09-multilingual-dictation.md"
 EPIC_10_PATH = ROOT / "docs" / "backlog" / "epic-10-tone-and-style.md"
 EPIC_11_PATH = ROOT / "docs" / "backlog" / "epic-11-cloud-speech.md"
 EPIC_12_PATH = ROOT / "docs" / "backlog" / "epic-12-iphone-cloud-english.md"
+EPIC_13_PATH = ROOT / "docs" / "backlog" / "epic-13-paid-launch.md"
 # Refined epics: number -> (backlog file, story phase label, expected story count).
 REFINED_EPICS = {
     1: (EPIC_1_PATH, "phase:mvp", 8),
@@ -45,9 +46,10 @@ REFINED_EPICS = {
     10: (EPIC_10_PATH, "phase:post-mvp", 5),
     11: (EPIC_11_PATH, "phase:post-mvp", 4),
     12: (EPIC_12_PATH, "phase:post-mvp", 4),
+    13: (EPIC_13_PATH, "phase:post-mvp", 8),
 }
-# Epics 9 through 12 are not in roadmap.md; their title comes from the backlog file heading.
-BACKLOG_ONLY_EPICS = (9, 10, 11, 12)
+# Epics 9 through 13 are not in roadmap.md; their title comes from the backlog file heading.
+BACKLOG_ONLY_EPICS = (9, 10, 11, 12, 13)
 EPIC_COUNT = 8 + len(BACKLOG_ONLY_EPICS)
 
 LABELS = {
@@ -74,6 +76,8 @@ LABELS = {
     "area:security": ("b60205", "Network, entitlement, dependency, and threat-model guardrails"),
     "area:release": ("1d76db", "Packaging, signing, notarization, updates, and rollback"),
     "area:quality": ("fbca04", "Accessibility, localization, compatibility, and the quality gate"),
+    "area:backend": ("5319e7", "The speech gateway server, its API, hosting, and operations"),
+    "area:billing": ("fef2c0", "Subscriptions, trials, entitlement checks, and usage limits"),
     "beta-feedback": ("d93f0b", "Report from a beta tester (see docs/release/beta-program.md)"),
     "release-blocker": ("b60205", "A published build that should be withdrawn (see docs/release/rollback.md)"),
 }
@@ -91,10 +95,11 @@ EPIC_LABELS = {
     10: ["epic", "platform:macOS", "phase:post-mvp", "area:voice-editing", "area:modes"],
     11: ["epic", "platform:macOS", "phase:post-mvp", "area:transcription", "area:privacy", "area:security"],
     12: ["epic", "platform:iOS", "phase:post-mvp", "area:mobile", "area:transcription", "area:privacy"],
+    13: ["epic", "platform:iOS", "phase:post-mvp", "area:mobile", "area:backend", "area:billing"],
 }
 
 # Stories carry the macOS label unless their epic is listed here.
-EPIC_PLATFORM_LABELS = {8: "platform:iOS", 12: "platform:iOS"}
+EPIC_PLATFORM_LABELS = {8: "platform:iOS", 12: "platform:iOS", 13: "platform:iOS"}
 
 STORY_AREA_LABELS = {
     "E1-S1": ["area:foundation"],
@@ -183,6 +188,14 @@ STORY_AREA_LABELS = {
     "E12-S2": ["area:mobile", "area:transcription"],
     "E12-S3": ["area:mobile", "area:modes"],
     "E12-S4": ["area:mobile", "area:privacy", "area:quality"],
+    "E13-S1": ["area:backend", "area:transcription", "area:privacy"],
+    "E13-S2": ["area:backend", "area:billing", "area:security"],
+    "E13-S3": ["area:mobile", "area:transcription", "area:privacy"],
+    "E13-S4": ["area:mobile", "area:billing"],
+    "E13-S5": ["area:mobile", "area:billing"],
+    "E13-S6": ["area:mobile", "area:audio", "area:privacy"],
+    "E13-S7": ["area:mobile", "area:audio", "area:security"],
+    "E13-S8": ["area:mobile", "area:privacy", "area:release"],
 }
 
 
