@@ -6,8 +6,11 @@ import Foundation
 /// it can be shared by test targets without linking a test framework into
 /// the app; tests check that the result is empty.
 public enum RecognitionEngineContract {
-    /// Maximum time an engine may take to stop after cancellation.
-    public static let cancellationDeadline: Duration = .seconds(2)
+    /// Maximum time an engine may take to stop after cancellation, counted from the moment the engine is
+    /// called. An engine that ignores cancellation runs its whole job, or never returns, so a generous
+    /// limit still catches it; a tight one only measures how busy the test machine is (seen on CI, where
+    /// everything ran seconds slower under load).
+    public static let cancellationDeadline: Duration = .seconds(10)
 
     /// Runs every check. `request` should point at a real recording the
     /// engine can read; it is never deleted. Only the cloud engine (ADR 0031)
@@ -102,27 +105,34 @@ public enum RecognitionEngineContract {
         _ engine: any SpeechRecognitionEngine,
         request: RecognitionRequest
     ) async -> [String] {
-        let start = ContinuousClock.now
         // The task cancels itself before it calls the engine: with only `task.cancel()` from
         // outside, a fast engine could finish first and the check would race (seen on CI).
-        let task = Task {
+        // The clock starts inside the task, just before the engine is called, so time spent waiting for a
+        // free thread on a busy machine is not blamed on the engine.
+        let task = Task { () async -> (result: Result<Transcript, RecognitionError>, elapsed: Duration) in
             withUnsafeCurrentTask { $0?.cancel() }
-            return try await engine.recognize(request) { _ in }
+            let began = ContinuousClock.now
+            let result: Result<Transcript, RecognitionError>
+            do throws(RecognitionError) {
+                result = .success(try await engine.recognize(request) { _ in })
+            } catch {
+                result = .failure(error)
+            }
+            return (result, ContinuousClock.now - began)
         }
         task.cancel()
-        let result = await task.result
+        let (result, elapsed) = await task.value
         var issues: [String] = []
         switch result {
         case .success:
             issues.append("engine returned a transcript after cancellation")
         case .failure(let error):
             let availability = await engine.availability()
-            let recognitionError = error as? RecognitionError
-            if recognitionError != .cancelled && recognitionError != availability.recognitionError {
+            if error != .cancelled && error != availability.recognitionError {
                 issues.append("cancelled engine threw \(error) instead of recognition.cancelled")
             }
         }
-        if ContinuousClock.now - start > cancellationDeadline {
+        if elapsed > cancellationDeadline {
             issues.append("engine took longer than \(cancellationDeadline) to stop after cancellation")
         }
         return issues
