@@ -153,6 +153,7 @@ public struct CloudSpeechEngine: SpeechRecognitionEngine {
         switch failure {
         case .cancelled: .cancelled
         case .offline: .cloudOffline
+        case .subscriptionRequired: .subscriptionRequired
         case .timedOut, .hostRefused, .failed: .cloudServiceFailed
         }
     }

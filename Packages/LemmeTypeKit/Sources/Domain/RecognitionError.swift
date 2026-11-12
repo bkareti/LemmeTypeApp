@@ -23,14 +23,19 @@ public enum RecognitionError: LemmeTypeError, Equatable {
     case engineFailure(code: Int)
     /// The cloud engine could not reach its provider (ADR 0031).
     case cloudOffline
-    /// The provider refused the API key.
+    /// The gateway refused the access token, even after asking for a new one (E13-S3).
     case cloudKeyRejected
+    /// Cloud speech needs an active trial or subscription (E13-S3).
+    case subscriptionRequired
     /// The provider asked to slow down, and retrying did not help.
     case cloudRateLimited
-    /// The account has no credit left.
+    /// This billing period's cloud speech allowance is used up (E13-S3).
     case cloudQuotaExhausted
     /// The provider failed, timed out, or answered with something unusable.
     case cloudServiceFailed
+    /// The gateway has stopped cloud speech for now (for example its monthly budget is used). Trying again
+    /// at once cannot help (E13-S3).
+    case cloudUnavailable
 
     public var identifier: String {
         switch self {
@@ -46,9 +51,11 @@ public enum RecognitionError: LemmeTypeError, Equatable {
         case .engineFailure: "recognition.engine-failure"
         case .cloudOffline: "recognition.cloud-offline"
         case .cloudKeyRejected: "recognition.cloud-key-rejected"
+        case .subscriptionRequired: "recognition.subscription-required"
         case .cloudRateLimited: "recognition.cloud-rate-limited"
         case .cloudQuotaExhausted: "recognition.cloud-quota-exhausted"
         case .cloudServiceFailed: "recognition.cloud-service-failed"
+        case .cloudUnavailable: "recognition.cloud-unavailable"
         }
     }
 
@@ -59,7 +66,7 @@ public enum RecognitionError: LemmeTypeError, Equatable {
         case .engineFailure, .modelLoadFailed, .audioUnreadable, .cloudOffline, .cloudRateLimited, .cloudServiceFailed:
             true
         case .cancelled, .assetsMissing, .unsupported, .permissionDenied, .noSpeechDetected, .silentAudio,
-            .languageUncertain, .cloudKeyRejected, .cloudQuotaExhausted:
+            .languageUncertain, .cloudKeyRejected, .cloudQuotaExhausted, .subscriptionRequired, .cloudUnavailable:
             false
         }
     }

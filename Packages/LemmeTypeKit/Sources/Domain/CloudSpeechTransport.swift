@@ -1,14 +1,16 @@
 import Foundation
 
-/// A prepared POST. Holds the user's API key and voice, so its description
+/// A prepared request. Holds the user's voice and access token, so its description
 /// names the host only.
 public struct CloudHTTPRequest: Sendable, CustomStringConvertible, CustomDebugStringConvertible {
     public let url: URL
+    public let method: String
     public let headers: [String: String]
     public let body: Data
 
-    public init(url: URL, headers: [String: String], body: Data) {
+    public init(url: URL, method: String = "POST", headers: [String: String], body: Data = Data()) {
         self.url = url
+        self.method = method
         self.headers = headers
         self.body = body
     }
@@ -38,6 +40,8 @@ public enum CloudTransportFailure: Error, Equatable, Sendable {
     case timedOut
     /// The request or a redirect pointed somewhere other than the provider's host.
     case hostRefused
+    /// There is no subscription to show the gateway (E13-S3).
+    case subscriptionRequired
     case failed
 }
 

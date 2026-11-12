@@ -48,6 +48,8 @@ for framework in "$app"/Frameworks/*.framework; do
   fmin="$(plutil -extract MinimumOSVersion raw -o - "$fplist" 2>/dev/null)"
   check "$name: minimum iOS $fmin <= app $app_min" '[[ -n "$fmin" ]] && [[ "$(printf "%s\n%s\n" "$fmin" "$app_min" | sort -V | head -n 1)" == "$fmin" ]]'
 done
+check "no staging gateway host in the app (Debug only, ADR 0033)" '! grep -aq "speech-gateway-staging" "$binary"'
+check "no gateway test-token launch argument in the app (Debug only)" '! grep -aq "LemmeTypeGatewayToken" "$binary"'
 check "no recordings or transcripts inside" '[[ -z "$(find "$app" -type f \( -iname "*.caf" -o -iname "*.wav" -o -iname "*.m4a" -o -iname "*.json" -path "*evaluation*" \) | head -n 1)" ]]'
 if [[ -n "$log" ]]; then
   check "English-only scope compiled in (ADR 0029)" 'grep -q -- "-DENGLISH_ONLY_RELEASE" "$log"'

@@ -99,7 +99,8 @@
                 copiedTextLifetime: { .default },
                 limits: scenario.recordingLimit,
                 cloudSpeech: CloudSpeechServices(
-                    provider: SarvamProvider(), store: FakeCloudCredentialStore(), consent: FakeCloudSpeechConsent()))
+                    provider: GatewaySpeechProvider(host: "gateway.test"), consent: FakeCloudSpeechConsent(),
+                    gateway: FakeGatewayAccess()))
         }
     }
 #endif
