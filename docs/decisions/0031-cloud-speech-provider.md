@@ -159,3 +159,24 @@ not for a shared key at release ([pricing](https://docs.sarvam.ai/api-reference-
 `Support` now imports Security for `KeychainCloudCredentialStore`: a new edge in the module table. Keys stay
 on this device (`kSecAttrAccessibleWhenUnlockedThisDeviceOnly`, no iCloud sync). The iPhone app offers cloud
 speech only in Debug builds until the launch gates above close (`IOSComposition.offersCloudSpeech`).
+
+## Addition: the gateway replaces each user's own key (E13-S3, ADR 0033)
+
+The "Keys" table above chose each user's own key for the friends beta and a relay we run for a public
+release. The relay is now built ([ADR 0033](0033-speech-gateway.md), `speech-gateway`), and the apps use it:
+
+- `GatewaySpeechProvider` is the provider in the apps. It names LemmeType, not a vendor, and sends the audio,
+  a `task`, and a `language` to the gateway. `SarvamProvider` stays in the code as the model for the server's
+  adapter and is not registered in an app.
+- The user enters nothing. `KeychainCloudCredentialStore`, the key field, and `ConsentedCloudCredentials`
+  are gone. `LegacyCloudKeyEraser` deletes a key an earlier build stored.
+- `GatewayService` trades the subscription for a 15-minute access token (E13-S2) and keeps it in memory only.
+  `GatewayTransport` adds it to each request and replaces a refused token once. Until the subscription exists
+  in the app (E13-S4), a Debug build can use a fixed staging token (`-LemmeTypeGatewayToken`).
+- Consent is stored with the gateway's `consentVersion`. A vendor change inside the approved list keeps the
+  number. Anything else raises it, and the app asks again before the next Cloud use.
+- The same `URLSessionCloudSpeechTransport` file remains the only network code for cloud speech, now allowed
+  to reach the gateway host only. `Support` still imports Security, for the legacy eraser.
+
+The launch gates above are unchanged except "How keys reach the app", which the gateway closes once E13-S4 and
+E13-S8 land. Sarvam's data terms stay open.

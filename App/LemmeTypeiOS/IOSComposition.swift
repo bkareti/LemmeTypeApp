@@ -182,13 +182,14 @@ struct IOSComposition {
                 store: services.historyStore, preferences: preferences, diagnostics: diagnostics),
             copier: services.textCopier)
         let cloudSpeech = services.cloudSpeech.map {
-            CloudSpeechSettingsModel(provider: $0.provider, store: $0.store, consent: $0.consent)
+            CloudSpeechSettingsModel(
+                provider: $0.provider, consent: $0.consent, directory: $0.gateway, allowances: $0.gateway)
         }
         cloudSpeech?.onChange = { [weak modes, weak dictation] offered in
             modes?.setOffersCloudEngine(offered)
             dictation?.refreshInBackground()
         }
-        // Saving a key is the only step: the Cloud mode is added and becomes the default.
+        // Agreeing is the only step: the Cloud mode is added and becomes the default.
         cloudSpeech?.onReady = { [weak modes, weak dictation] in
             modes?.useCloudAnyLanguageMode()
             dictation?.refreshInBackground()

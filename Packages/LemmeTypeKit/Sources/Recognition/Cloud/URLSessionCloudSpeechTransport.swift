@@ -39,9 +39,9 @@ public final class URLSessionCloudSpeechTransport: CloudSpeechTransport {
         guard request.url.scheme == "https", request.url.host() == allowedHost else { throw .hostRefused }
         var outgoing = URLRequest(
             url: request.url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: attemptTimeout)
-        outgoing.httpMethod = "POST"
+        outgoing.httpMethod = request.method
         outgoing.allHTTPHeaderFields = request.headers
-        outgoing.httpBody = request.body
+        if !request.body.isEmpty { outgoing.httpBody = request.body }
 
         let body: Data
         let response: URLResponse

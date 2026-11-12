@@ -35,17 +35,17 @@
         }
     }
 
-    /// The Cloud speech section of Settings on iPhone and iPad (E12-S1).
+    /// The Cloud speech section of Settings on iPhone and iPad (E12-S1, E13-S3). One switch and an agreement:
+    /// there is no key to enter, because the LemmeType gateway holds it (ADR 0033).
     struct MobileCloudSpeechSection: View {
         @Bindable var model: CloudSpeechSettingsModel
-        @State private var keyDraft = ""
         @State private var isConfirmingTurnOff = false
 
         var body: some View {
             Section {
                 switch model.status {
                 case .off: offRow
-                case .needsKey: keyEntry
+                case .needsConsentAgain: agreeAgainRows
                 case .turnedOn: onRows
                 }
             } header: {
@@ -54,37 +54,48 @@
                 Text(
                     String(
                         localized:
-                            "Off by default. When on, a mode can use the Cloud engine for more accurate Telugu. Modes that don’t choose it stay on this device.",
-                        bundle: .module)
+                            "Off by default. When on, a mode can use the Cloud engine for more accurate Telugu. It is part of your LemmeType subscription, with nothing to set up. Modes that don’t choose it stay on this device.",
+                        bundle: .module, comment: "Explains cloud speech in Settings")
                 )
             }
+            .task { await model.refreshAllowance() }
         }
 
         private var offRow: some View {
-            Button(String(localized: "Turn On Cloud Speech…", bundle: .module), action: model.requestTurnOn)
+            Group {
+                Button(
+                    String(
+                        localized: "Turn On Cloud Speech…", bundle: .module,
+                        comment: "Button that opens the agreement to send audio to the cloud"),
+                    action: model.requestTurnOn
+                )
                 .accessibilityIdentifier("settings.cloud.turnOn")
                 // On the row: a sheet attached to the whole Section never appears inside a List.
                 .sheet(isPresented: $model.isShowingConsent) { consent }
+                if let problem = model.problem {
+                    Text(message(for: problem)).font(.footnote).foregroundStyle(.red)
+                        .accessibilityIdentifier("settings.cloud.problem")
+                }
+            }
         }
 
-        private var keyEntry: some View {
+        private var agreeAgainRows: some View {
             Group {
-                SecureField(String(localized: "\(model.providerName) API key", bundle: .module), text: $keyDraft)
-                    .textContentType(.password)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                    .accessibilityIdentifier("settings.cloud.key")
-                Button(String(localized: "Save Key", bundle: .module)) {
-                    let key = keyDraft
-                    keyDraft = ""
-                    Task { await model.saveKey(key) }
-                }
-                .disabled(keyDraft.isEmpty)
-                .accessibilityIdentifier("settings.cloud.saveKey")
-                if let problem = model.keyProblem {
-                    Text(message(for: problem)).font(.footnote).foregroundStyle(.red)
-                        .accessibilityIdentifier("settings.cloud.keyProblem")
-                }
+                Text(
+                    String(
+                        localized:
+                            "LemmeType’s speech service has changed. Agree again to keep using Cloud speech.",
+                        bundle: .module, comment: "Shown when the cloud speech terms changed and need a new agreement")
+                )
+                .accessibilityIdentifier("settings.cloud.agreeAgain")
+                Button(
+                    String(
+                        localized: "Review and Agree…", bundle: .module,
+                        comment: "Button that opens the agreement again after the terms changed"),
+                    action: model.requestTurnOn
+                )
+                .accessibilityIdentifier("settings.cloud.turnOn")
+                .sheet(isPresented: $model.isShowingConsent) { consent }
                 turnOffButton
             }
         }
@@ -92,16 +103,32 @@
         private var onRows: some View {
             Group {
                 Label(
-                    String(localized: "On. Your key is saved on this device.", bundle: .module),
+                    String(
+                        localized: "On. Audio from Cloud modes is sent to LemmeType.", bundle: .module,
+                        comment: "Status of cloud speech in Settings when it is on"),
                     systemImage: "cloud.fill"
                 )
                 .accessibilityIdentifier("settings.cloud.status")
+                if let allowance = model.allowance {
+                    Text(
+                        String(
+                            localized:
+                                "About \(allowance.remainingMinutes) minutes of Cloud speech left until \(allowance.periodEnd.formatted(date: .abbreviated, time: .omitted)).",
+                            bundle: .module, comment: "How much cloud speech allowance is left in this billing period")
+                    )
+                    .font(.footnote)
+                    .accessibilityIdentifier("settings.cloud.allowance")
+                }
                 turnOffButton
             }
         }
 
         private var turnOffButton: some View {
-            Button(String(localized: "Turn Off and Remove Key", bundle: .module), role: .destructive) {
+            Button(
+                String(
+                    localized: "Turn Off Cloud Speech", bundle: .module,
+                    comment: "Button that turns cloud speech off"), role: .destructive
+            ) {
                 isConfirmingTurnOff = true
             }
             .accessibilityIdentifier("settings.cloud.turnOff")
@@ -109,7 +136,11 @@
                 String(localized: "Turn off cloud speech?", bundle: .module), isPresented: $isConfirmingTurnOff,
                 titleVisibility: .visible
             ) {
-                Button(String(localized: "Turn Off and Remove Key", bundle: .module), role: .destructive) {
+                Button(
+                    String(
+                        localized: "Turn Off Cloud Speech", bundle: .module,
+                        comment: "Button that confirms turning cloud speech off"), role: .destructive
+                ) {
                     Task { await model.turnOff() }
                 }
                 .accessibilityIdentifier("settings.cloud.confirmTurnOff")
@@ -123,18 +154,18 @@
                         Text(
                             String(
                                 localized:
-                                    "If you turn this on, recordings made with the Cloud engine are sent to \(model.providerName) (\(model.host)) to be turned into text. They are processed in India.",
-                                bundle: .module))
+                                    "If you turn this on, recordings made with the Cloud engine are sent to LemmeType’s server (\(model.host)), which passes them to a speech service in India to be turned into text.",
+                                bundle: .module, comment: "First paragraph of the cloud speech agreement"))
                         Text(
                             String(
                                 localized:
-                                    "Only the audio of those recordings is sent. Your vocabulary, your other modes, and anything else on this device are not.",
-                                bundle: .module))
+                                    "Only the audio of those recordings is sent. Your vocabulary, your other modes, and anything else on this device are not. LemmeType does not keep your audio or the text.",
+                                bundle: .module, comment: "Second paragraph of the cloud speech agreement"))
                         Text(
                             String(
                                 localized:
-                                    "You use your own \(model.providerName) API key and pay \(model.providerName) directly. Its terms decide how long your audio is kept.",
-                                bundle: .module))
+                                    "Cloud speech is part of your LemmeType subscription, with a monthly allowance. There is nothing to set up. How long the speech service keeps audio is set by its own terms.",
+                                bundle: .module, comment: "Third paragraph of the cloud speech agreement"))
                     }
                     .padding()
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -157,10 +188,20 @@
             }
         }
 
-        private func message(for problem: CloudSpeechSettingsModel.KeyProblem) -> String {
+        private func message(for problem: CloudSpeechSettingsModel.Problem) -> String {
             switch problem {
-            case .empty: String(localized: "Paste your API key first.", bundle: .module)
-            case .notSaved: String(localized: "The key couldn’t be saved. Try again.", bundle: .module)
+            case .subscriptionRequired:
+                String(
+                    localized: "Cloud speech needs an active LemmeType subscription or free trial.", bundle: .module,
+                    comment: "Shown when cloud speech is turned on without a subscription")
+            case .offline:
+                String(
+                    localized: "Couldn’t reach LemmeType. Check your connection and try again.", bundle: .module,
+                    comment: "Shown when cloud speech is turned on while offline")
+            case .failed:
+                String(
+                    localized: "Couldn’t turn on Cloud speech. Try again.", bundle: .module,
+                    comment: "Shown when turning on cloud speech fails for another reason")
             }
         }
     }

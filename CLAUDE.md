@@ -241,9 +241,14 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   vendor-neutral engine, `RecognitionEngineID.cloud`, `ProcessingLocation.cloud`. Everything specific to a
   vendor is one pure `CloudSpeechProvider` (`SarvamProvider`); `CloudSpeechProviderContract` (TestSupport)
   is what a replacement must pass. `URLSessionCloudSpeechTransport` is the third allowlisted network file.
-  `EngineSelector` and the pipeline's alternatives never pick it unless it is the preferred engine. The iPhone app registers it in Debug only (`IOSComposition.offersCloudSpeech`, E12-S1); the Mac app does
-  not yet (E11-S3). `CloudSpeechSettingsModel` (UI) owns consent and the key: `ConsentedCloudCredentials` hands the
-  engine a key only for the provider the user agreed to, and `KeychainCloudCredentialStore` (Support) keeps it for this device. The real-service test needs `LEMMETYPE_REAL_CLOUD=1`.
+  `EngineSelector` and the pipeline's alternatives never pick it unless it is the preferred engine. The iPhone app registers it in Debug only (`IOSComposition.offersCloudSpeech`); the Mac app does
+  not yet (E11-S3). Audio goes to the LemmeType gateway (ADR 0033, E13-S3): `GatewaySpeechProvider` is the provider,
+  `GatewayService` (Recognition/Cloud) trades the subscription proof (`SubscriptionProofProviding`, StoreKit in E13-S4) for a
+  15-minute token kept in memory, and `GatewayTransport` adds it to each request and replaces a refused one once. There is no
+  user key. `CloudSpeechSettingsModel` (UI) owns consent, stored with the gateway's `consentVersion` (a new version asks again);
+  `GatewayCredentials` (Domain) lets the engine run only with consent to the current version and a subscription.
+  `LegacyCloudKeyEraser` (Support) deletes a key an earlier build kept. A Debug build can use a staging token with
+  `-LemmeTypeGatewayToken`. The real-service test needs `LEMMETYPE_REAL_CLOUD=1`.
 - Engine/mode selection (ADR 0016): `DictationSettingsModel` (UI) backs
   Settings › Dictation and the status menu. Mode, language, and
   `EnginePreference` are captured when recording starts and stored in the
@@ -329,7 +334,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   both the app and the package. Unit tests use Swift Testing; UI tests use XCTest.
 - Decisions are in `docs/decisions/` (0001 platform baseline: macOS 26, arm64,
   no App Sandbox because Accessibility insertion needs it; 0002 structure;
-  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management; 0023 multilingual dictation; 0024 tone and style; 0025 privacy data and history; 0026 distribution and updates; 0027 iPhone and iPad companion; 0028 Whisper decoding safeguards; 0029 English-only beta scope; 0030 shared local transcription foundation, Proposed; 0031 cloud speech provider; 0032 Action Button dictation and keyboard, Proposed).
+  0003 menu-bar lifecycle; 0004 permission model; 0005 global shortcut; 0006 audio capture; 0007 recorder and overlay; 0008 diagnostics; 0009 recognition-engine contract; 0010 Apple Speech; 0011 model downloads; 0012 whisper.cpp model; 0013 dictation sessions; 0014 writing modes; 0015 text delivery; 0016 engine and mode selection; 0017 cursor context; 0018 on-device rewriting; 0019 voice editing; 0020 personalization data; 0021 dictation modes; 0022 model management; 0023 multilingual dictation; 0024 tone and style; 0025 privacy data and history; 0026 distribution and updates; 0027 iPhone and iPad companion; 0028 Whisper decoding safeguards; 0029 English-only beta scope; 0030 shared local transcription foundation, Proposed; 0031 cloud speech provider; 0032 Action Button dictation and keyboard, Proposed; 0033 speech gateway, Proposed).
 
 ## Planning documents
 

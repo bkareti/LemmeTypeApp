@@ -27,9 +27,6 @@
     "%@ → English" : {
 
     },
-    "%@ API key" : {
-
-    },
     "%@ can be at most %lld characters." : {
       "localizations" : {
         "en" : {
@@ -147,6 +144,17 @@
     },
     "About" : {
       "comment" : "Settings section: version and legal"
+    },
+    "About %lld minutes of Cloud speech left until %@." : {
+      "comment" : "How much cloud speech allowance is left in this billing period",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "About %1$lld minutes of Cloud speech left until %2$@."
+          }
+        }
+      }
     },
     "About and support" : {
 
@@ -368,8 +376,17 @@
     "Cloud speech" : {
       "comment" : "A settings section title"
     },
-    "Cloud speech needs an API key. Your recording is kept." : {
-      "comment" : "Shown when the cloud speech engine has no API key stored"
+    "Cloud speech is part of your LemmeType subscription, with a monthly allowance. There is nothing to set up. How long the speech service keeps audio is set by its own terms." : {
+      "comment" : "Third paragraph of the cloud speech agreement"
+    },
+    "Cloud speech needs an active LemmeType subscription and your agreement in Settings. Your recording is kept." : {
+      "comment" : "Shown when the cloud speech engine cannot run: no agreement or subscription"
+    },
+    "Cloud speech needs an active LemmeType subscription or free trial." : {
+      "comment" : "Shown when cloud speech is turned on without a subscription"
+    },
+    "Cloud speech needs an active LemmeType subscription or free trial. Your recording is kept." : {
+      "comment" : "Shown when cloud speech is used without a subscription"
     },
     "Concise" : {
       "comment" : "Adjective: shorter rewritten text"
@@ -425,6 +442,9 @@
     "Couldn’t reach GitHub. Check your connection and try again." : {
 
     },
+    "Couldn’t reach LemmeType. Check your connection and try again." : {
+      "comment" : "Shown when cloud speech is turned on while offline"
+    },
     "Couldn’t reach the cloud speech service. Check your connection. Your recording is kept." : {
       "comment" : "Shown when the cloud speech service cannot be reached"
     },
@@ -433,6 +453,9 @@
     },
     "Couldn’t start" : {
 
+    },
+    "Couldn’t turn on Cloud speech. Try again." : {
+      "comment" : "Shown when turning on cloud speech fails for another reason"
     },
     "custom modes" : {
 
@@ -753,15 +776,8 @@
     "If my engine isn’t ready, use another on-device engine without asking" : {
 
     },
-    "If you turn this on, recordings made with the Cloud engine are sent to %@ (%@) to be turned into text. They are processed in India." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "If you turn this on, recordings made with the Cloud engine are sent to %1$@ (%2$@) to be turned into text. They are processed in India."
-          }
-        }
-      }
+    "If you turn this on, recordings made with the Cloud engine are sent to LemmeType’s server (%@), which passes them to a speech service in India to be turned into text." : {
+      "comment" : "First paragraph of the cloud speech agreement"
     },
     "Import personalization?" : {
 
@@ -869,6 +885,9 @@
     "LemmeType couldn’t confirm the text was inserted. Check the field, or copy the text." : {
 
     },
+    "LemmeType couldn’t confirm your subscription for cloud speech. Your recording is kept." : {
+      "comment" : "Shown when the cloud speech gateway refuses the access token"
+    },
     "LemmeType couldn’t create a temporary recording. Check free disk space." : {
 
     },
@@ -916,6 +935,9 @@
     },
     "LemmeType works on this Mac. This page says what it uses, what it keeps, and how to remove it." : {
 
+    },
+    "LemmeType’s speech service has changed. Agree again to keep using Cloud speech." : {
+      "comment" : "Shown when the cloud speech terms changed and need a new agreement"
     },
     "Length" : {
       "comment" : "Noun: how long the rewritten text should be"
@@ -1156,8 +1178,8 @@
     "Off" : {
       "comment" : "State of a switch: turned off"
     },
-    "Off by default. When on, a mode can use the Cloud engine for more accurate Telugu. Modes that don’t choose it stay on this device." : {
-
+    "Off by default. When on, a mode can use the Cloud engine for more accurate Telugu. It is part of your LemmeType subscription, with nothing to set up. Modes that don’t choose it stay on this device." : {
+      "comment" : "Explains cloud speech in Settings"
     },
     "Off. LemmeType keeps no record of what you dictate. If you turn this on, only the text you insert or copy is saved, on this Mac." : {
 
@@ -1174,14 +1196,14 @@
     "On-device recognition isn’t installed for this language. Add it in System Settings › Keyboard › Dictation." : {
 
     },
-    "On. Your key is saved on this device." : {
-
+    "On. Audio from Cloud modes is sent to LemmeType." : {
+      "comment" : "Status of cloud speech in Settings when it is on"
     },
     "Only modes that use Cloud speech go online, and only during their dictation. The only download is a speech model, and only after you confirm it." : {
 
     },
-    "Only the audio of those recordings is sent. Your vocabulary, your other modes, and anything else on this device are not." : {
-
+    "Only the audio of those recordings is sent. Your vocabulary, your other modes, and anything else on this device are not. LemmeType does not keep your audio or the text." : {
+      "comment" : "Second paragraph of the cloud speech agreement"
     },
     "Open Context Settings" : {
 
@@ -1226,9 +1248,6 @@
 
     },
     "password managers and Keychain Access" : {
-
-    },
-    "Paste your API key first." : {
 
     },
     "Paste, then restore my clipboard" : {
@@ -1443,6 +1462,9 @@
     "Retry Insert" : {
 
     },
+    "Review and Agree…" : {
+      "comment" : "Button that opens the agreement again after the terms changed"
+    },
     "Review rewrite" : {
 
     },
@@ -1465,9 +1487,6 @@
       "comment" : "Button label (verb): keep the changes"
     },
     "Save Audio…" : {
-
-    },
-    "Save Key" : {
 
     },
     "Save…" : {
@@ -1668,9 +1687,6 @@
     "The cloud speech service is busy. Try again in a moment. Your recording is kept." : {
       "comment" : "Shown when the cloud speech provider rate limits requests"
     },
-    "The cloud speech service refused your API key. Your recording is kept." : {
-      "comment" : "Shown when the cloud speech provider rejects the API key"
-    },
     "The download failed. Check your connection and try again." : {
 
     },
@@ -1687,9 +1703,6 @@
 
     },
     "The internet and tracking" : {
-
-    },
-    "The key couldn’t be saved. Try again." : {
 
     },
     "The microphone couldn’t be started. Try again or choose another input." : {
@@ -1875,8 +1888,8 @@
     "Turn it on in System Settings › Privacy & Security." : {
 
     },
-    "Turn Off and Remove Key" : {
-
+    "Turn Off Cloud Speech" : {
+      "comment" : "Button that confirms turning cloud speech off\nButton that turns cloud speech off"
     },
     "Turn off cloud speech?" : {
 
@@ -1885,7 +1898,7 @@
 
     },
     "Turn On Cloud Speech…" : {
-
+      "comment" : "Button that opens the agreement to send audio to the cloud"
     },
     "Turn on Live Activities for LemmeType in Settings to dictate from other apps." : {
       "comment" : "Shown on the keyboard when iOS refuses the Live Activity that a background recording needs"
@@ -2094,21 +2107,11 @@
     "You turned off context for this app in Settings › Context." : {
 
     },
-    "You use your own %@ API key and pay %@ directly. Its terms decide how long your audio is kept." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "You use your own %1$@ API key and pay %2$@ directly. Its terms decide how long your audio is kept."
-          }
-        }
-      }
+    "You’ve used this period’s Cloud speech allowance. It starts again when your subscription renews. Your recording is kept." : {
+      "comment" : "Shown when the cloud speech allowance for the billing period is used up"
     },
     "Your clipboard holds something LemmeType can’t put back, so it wasn’t used. Copying the text will replace it." : {
 
-    },
-    "Your cloud speech account has no credit left. Your recording is kept." : {
-      "comment" : "Shown when the cloud speech account balance is used up"
     },
     "your cloud speech key and consent" : {
 

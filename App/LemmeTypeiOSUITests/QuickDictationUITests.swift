@@ -56,7 +56,7 @@ final class QuickDictationUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["quick.result"].exists)
     }
 
-    func testCloudSpeechAsksFirstThenTakesAKeyAndTurnsOff() {
+    func testCloudSpeechAsksFirstThenAgreesWithNoKeyAndTurnsOff() {
         app.tabBars.buttons.element(boundBy: 1).tap()
         func element(_ identifier: String) -> XCUIElement { app.descendants(matching: .any)[identifier] }
 
@@ -72,11 +72,7 @@ final class QuickDictationUITests: XCTestCase {
         element("settings.cloud.turnOn").tap()
         XCTAssertTrue(element("settings.cloud.agree").waitForExistence(timeout: 5))
         element("settings.cloud.agree").tap()
-        let key = app.secureTextFields["settings.cloud.key"]
-        XCTAssertTrue(key.waitForExistence(timeout: 5))
-        key.tap()
-        key.typeText("test-key")
-        element("settings.cloud.saveKey").tap()
+        XCTAssertFalse(app.secureTextFields["settings.cloud.key"].exists, "there is no key to enter")
         XCTAssertTrue(element("settings.cloud.status").waitForExistence(timeout: 5))
 
         element("settings.cloud.turnOff").tap()

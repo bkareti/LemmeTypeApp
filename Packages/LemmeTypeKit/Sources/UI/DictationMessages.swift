@@ -61,24 +61,30 @@ extension DictationIssue {
                     bundle: .module)
         case .engineUnavailable(.cloud, .permissionUnavailable):
             String(
-                localized: "Cloud speech needs an API key. Your recording is kept.", bundle: .module,
-                comment: "Shown when the cloud speech engine has no API key stored")
+                localized:
+                    "Cloud speech needs an active LemmeType subscription and your agreement in Settings. Your recording is kept.",
+                bundle: .module, comment: "Shown when the cloud speech engine cannot run: no agreement or subscription")
         case .recognitionFailed(.cloudOffline):
             String(
                 localized: "Couldn’t reach the cloud speech service. Check your connection. Your recording is kept.",
                 bundle: .module, comment: "Shown when the cloud speech service cannot be reached")
         case .recognitionFailed(.cloudKeyRejected):
             String(
-                localized: "The cloud speech service refused your API key. Your recording is kept.", bundle: .module,
-                comment: "Shown when the cloud speech provider rejects the API key")
+                localized: "LemmeType couldn’t confirm your subscription for cloud speech. Your recording is kept.",
+                bundle: .module, comment: "Shown when the cloud speech gateway refuses the access token")
+        case .recognitionFailed(.subscriptionRequired):
+            String(
+                localized: "Cloud speech needs an active LemmeType subscription or free trial. Your recording is kept.",
+                bundle: .module, comment: "Shown when cloud speech is used without a subscription")
         case .recognitionFailed(.cloudRateLimited):
             String(
                 localized: "The cloud speech service is busy. Try again in a moment. Your recording is kept.",
                 bundle: .module, comment: "Shown when the cloud speech provider rate limits requests")
         case .recognitionFailed(.cloudQuotaExhausted):
             String(
-                localized: "Your cloud speech account has no credit left. Your recording is kept.", bundle: .module,
-                comment: "Shown when the cloud speech account balance is used up")
+                localized:
+                    "You’ve used this period’s Cloud speech allowance. It starts again when your subscription renews. Your recording is kept.",
+                bundle: .module, comment: "Shown when the cloud speech allowance for the billing period is used up")
         case .recognitionFailed(.cloudServiceFailed):
             String(
                 localized: "The cloud speech service couldn’t process this recording. Your recording is kept.",

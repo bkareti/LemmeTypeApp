@@ -1,5 +1,6 @@
 import Domain
 import Foundation
+import Security
 import Support
 import Testing
 import UI
@@ -30,15 +31,16 @@ struct IOSCompositionTests {
         #expect(!composition.modes.engines.contains(.cloud))
     }
 
-    @Test func theKeychainKeepsAndRemovesAKey() async throws {
-        let store = KeychainCloudCredentialStore(service: "com.lemmetype.tests.\(UUID().uuidString)")
-        let provider = CloudSpeechProviderID(rawValue: "sarvam")
-        #expect(await store.credential(for: provider) == nil)
-        try store.save(CloudCredential(secret: "first"), for: provider)
-        try store.save(CloudCredential(secret: "second"), for: provider)
-        #expect(await store.credential(for: provider) == CloudCredential(secret: "second"))
-        store.remove(for: provider)
-        #expect(await store.credential(for: provider) == nil)
+    @Test func anOldApiKeyInTheKeychainIsRemoved() throws {
+        let service = "com.lemmetype.tests.\(UUID().uuidString)"
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
+            kSecAttrAccount as String: "sarvam", kSecValueData as String: Data("old-key".utf8),
+        ]
+        #expect(SecItemAdd(query as CFDictionary, nil) == errSecSuccess)
+        let eraser = LegacyCloudKeyEraser(service: service)
+        #expect(eraser.erase(), "a stored key was found and removed")
+        #expect(!eraser.erase(), "nothing is left, and erasing again is harmless")
     }
 
     @Test func aRecordingHasATimeLimit() {

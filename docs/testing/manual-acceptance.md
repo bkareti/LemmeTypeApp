@@ -802,3 +802,13 @@ Use a physical iPhone and iPad with the app installed from Xcode. Record results
 2. Open many apps first, then dictate with Small on an iPad and with Base on a 6 GB iPhone: a model that does not fit is refused with a reason, and the app is not ended.
 3. Compare with the proposed thresholds in `docs/testing/ios-feasibility.md`. A product owner approves them.
 
+**MA-73 Cloud speech through the gateway (E13-S3)**
+1. Install a Debug build on a physical iPhone with a staging token (`-LemmeTypeGatewayToken <token>` in the scheme's arguments). Settings › Cloud speech shows *Turn On Cloud Speech…* and no field for a key.
+2. Tap it, read the agreement (it names LemmeType's server, not an API key), tap *Agree*: the section says it is on, and a Telugu mode appears.
+3. Dictate a Telugu sentence with English words: the text arrives in the review, and nothing reaches the clipboard until *Copy*.
+4. Choose Telugu with English output: the review shows English text. Settings shows about how many minutes are left.
+5. Turn on Airplane Mode and dictate with the Cloud mode: the message says it could not reach the service and the recording is kept. Dictate in English with a local mode: it still works.
+6. Background the app during a Cloud upload: the result is a typed failure with the recording kept, or a finished result, never lost audio.
+7. Raise the gateway's `consentVersion` in `apps.yaml` on staging and redeploy: Settings says Cloud speech needs a new agreement, and a Cloud dictation is refused until *Review and Agree…* is tapped.
+8. Turn it off: the section returns to *Turn On Cloud Speech…*. Install an old build that stored an API key, then this build: the key is gone from the Keychain.
+
