@@ -86,7 +86,7 @@ MeetQyl can use the same server later.
   - `GET /v1/health`, with no secrets in the answer.
   - `GET /v1/capabilities`: the languages and tasks this app may use, `maximumClipSeconds`, and `consentVersion`.
   - `POST /v1/speech/transcriptions`: multipart with one 16 kHz mono 16-bit WAV (`audio`), `task` (`transcribe` or `translate`), and `language` (BCP-47). Answers `{ text, language, durationSeconds, requestId }`.
-  - One error shape, `{ error: { code, message, retryAfterSeconds? } }`, with the codes `unauthorized`, `subscription_required`, `rate_limited`, `quota_exceeded`, `unsupported_language`, `audio_invalid`, `audio_too_long`, `provider_busy`, `provider_unavailable`, `service_unavailable`.
+  - One error shape, `{ error: { code, message, retryAfterSeconds? } }`, with the codes `bad_request`, `unauthorized`, `subscription_required`, `rate_limited`, `quota_exceeded`, `unsupported_language`, `audio_invalid`, `audio_too_long`, `provider_busy`, `provider_unavailable`, `service_unavailable`.
 - Access in this story is a placeholder: a static test token, off in production. S2 replaces it. Routes already read an `app` and a `subject` from the verified token, so S2 changes only how the token is made.
 - A `SpeechProvider` interface and two implementations: `SarvamProvider` (`saaras:v4`; `codemix` for Telugu with English, `translate` for English output; behaves like the client adapter in `SarvamProvider.swift`) and `FakeProvider`. A contract test suite every provider must pass.
 - Per-app configuration in `apps.yaml`, not in code: app id, allowed tasks and languages, maximum clip length, quotas (S2), and which provider serves each language and task. A second test app, `testapp`, with different limits proves the isolation.
