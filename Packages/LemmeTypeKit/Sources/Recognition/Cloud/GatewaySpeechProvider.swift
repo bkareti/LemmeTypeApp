@@ -59,7 +59,7 @@ public struct GatewaySpeechProvider: CloudSpeechProvider {
         "audio_invalid": .cloudServiceFailed,
         "audio_too_long": .cloudServiceFailed,
         "provider_unavailable": .cloudServiceFailed,
-        "service_unavailable": .cloudServiceFailed,
+        "service_unavailable": .cloudUnavailable,
     ]
 
     private static func failure(for response: CloudHTTPResponse) -> RecognitionError {

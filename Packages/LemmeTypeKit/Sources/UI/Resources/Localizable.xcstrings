@@ -379,6 +379,9 @@
     "Cloud speech is part of your LemmeType subscription, with a monthly allowance. There is nothing to set up. How long the speech service keeps audio is set by its own terms." : {
       "comment" : "Third paragraph of the cloud speech agreement"
     },
+    "Cloud speech is unavailable right now. Try again later. Your recording is kept." : {
+      "comment" : "Shown when the cloud speech gateway has stopped cloud speech for now"
+    },
     "Cloud speech needs an active LemmeType subscription and your agreement in Settings. Your recording is kept." : {
       "comment" : "Shown when the cloud speech engine cannot run: no agreement or subscription"
     },
@@ -1743,6 +1746,9 @@
     },
     "The saved history couldn’t be read, so it was set aside and a new one was started. The old file is still on this Mac." : {
 
+    },
+    "The selected engine doesn’t support this language. Your recording is kept." : {
+      "comment" : "Shown when the chosen engine cannot recognise the dictation language"
     },
     "The selected engine isn’t available on %@. Your recording is kept." : {
 

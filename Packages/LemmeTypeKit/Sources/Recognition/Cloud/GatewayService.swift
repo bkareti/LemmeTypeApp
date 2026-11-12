@@ -9,6 +9,8 @@ import Foundation
 public actor GatewayService: GatewayAccessing, GatewayCapabilitiesProviding, GatewayAllowanceProviding {
     private static let refreshMargin: TimeInterval = 60
     private static let capabilitiesLifetime: TimeInterval = 60 * 60
+    /// Long enough that opening Settings twice makes one request, short enough to stay close to the truth.
+    private static let allowanceLifetime: TimeInterval = 30
 
     private let transport: any CloudSpeechTransport
     private let proofs: any SubscriptionProofProviding
@@ -19,7 +21,9 @@ public actor GatewayService: GatewayAccessing, GatewayCapabilitiesProviding, Gat
 
     private var token: (value: String, expiresAt: Date)?
     private var cachedCapabilities: (value: GatewayCapabilities, fetchedAt: Date)?
-    private var lastAllowance: GatewayAllowance?
+    private var lastAllowance: (value: GatewayAllowance, fetchedAt: Date)?
+    /// The token request in progress, so callers that arrive together share one.
+    private var tokenRequest: Task<String, any Error>?
 
     public init(
         host: String, transport: any CloudSpeechTransport, proofs: any SubscriptionProofProviding,
@@ -46,6 +50,23 @@ public actor GatewayService: GatewayAccessing, GatewayCapabilitiesProviding, Gat
     public func accessToken() async throws(GatewayAccessError) -> String {
         if let fixedToken { return fixedToken }
         if let token, now() < token.expiresAt.addingTimeInterval(-Self.refreshMargin) { return token.value }
+        if let tokenRequest { return try await result(of: tokenRequest) }
+        let request = Task<String, any Error> { try await self.fetchToken() }
+        tokenRequest = request
+        defer { tokenRequest = nil }
+        return try await result(of: request)
+    }
+
+    /// `Task` cannot carry a typed error, so anything other than ours is a plain failure.
+    private func result(of request: Task<String, any Error>) async throws(GatewayAccessError) -> String {
+        do {
+            return try await request.value
+        } catch {
+            throw (error as? GatewayAccessError) ?? .failed
+        }
+    }
+
+    private func fetchToken() async throws(GatewayAccessError) -> String {
         guard let signed = await proofs.signedTransaction() else { throw .subscriptionRequired }
         let body = (try? JSONEncoder().encode(["signedTransaction": signed])) ?? Data()
         let response = try await send(try request(path: "/v1/session", method: "POST", body: body, token: nil))
@@ -55,8 +76,11 @@ public actor GatewayService: GatewayAccessing, GatewayCapabilitiesProviding, Gat
             let lifetime = TimeInterval(session.expiresInSeconds)
             token = (session.accessToken, now().addingTimeInterval(lifetime))
             if let end = Self.date(session.periodEnd) {
-                lastAllowance = GatewayAllowance(
-                    allowanceSeconds: session.allowanceSeconds, usedSeconds: session.usedSeconds, periodEnd: end)
+                lastAllowance = (
+                    GatewayAllowance(
+                        allowanceSeconds: session.allowanceSeconds, usedSeconds: session.usedSeconds, periodEnd: end),
+                    now()
+                )
             }
             return session.accessToken
         case 401, 402: throw .subscriptionRequired
@@ -83,12 +107,15 @@ public actor GatewayService: GatewayAccessing, GatewayCapabilitiesProviding, Gat
     // MARK: GatewayAllowanceProviding
 
     public func allowance() async -> GatewayAllowance? {
+        if let last = lastAllowance, now().timeIntervalSince(last.fetchedAt) < Self.allowanceLifetime {
+            return last.value
+        }
         guard let response = try? await authorized(path: "/v1/account/usage"), (200...299).contains(response.status),
             let usage = try? JSONDecoder().decode(Usage.self, from: response.body), let end = Self.date(usage.periodEnd)
-        else { return lastAllowance }
+        else { return lastAllowance?.value }
         let value = GatewayAllowance(
             allowanceSeconds: usage.allowanceSeconds, usedSeconds: usage.usedSeconds, periodEnd: end)
-        lastAllowance = value
+        lastAllowance = (value, now())
         return value
     }
 

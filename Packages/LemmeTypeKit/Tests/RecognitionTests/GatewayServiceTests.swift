@@ -16,7 +16,7 @@ struct GatewayServiceTests {
         #"{"plan":"paid","periodStart":"2026-11-12T12:00:00.000Z","periodEnd":"2026-12-12T12:00:00.000Z","allowanceSeconds":7200,"usedSeconds":1200,"remainingSeconds":6000}"#
             .utf8)
 
-    final class Clock: @unchecked Sendable {
+    final class Clock: Sendable {
         private let value = Mutex(Date(timeIntervalSince1970: 1_800_000_000))
         var now: Date { value.withLock { $0 } }
         func advance(_ seconds: TimeInterval) { value.withLock { $0.addTimeInterval(seconds) } }
@@ -27,6 +27,14 @@ struct GatewayServiceTests {
         init(_ signed: String? = "SIGNED-TRANSACTION") { self.signed = Mutex(signed) }
         func signedTransaction() async -> String? { signed.withLock { $0 } }
         func set(_ value: String?) { signed.withLock { $0 = value } }
+    }
+
+    /// A proof that takes a moment, so callers overlap.
+    struct SlowProof: SubscriptionProofProviding {
+        func signedTransaction() async -> String? {
+            try? await Task.sleep(for: .milliseconds(100))
+            return "SIGNED-TRANSACTION"
+        }
     }
 
     private func service(
@@ -114,12 +122,50 @@ struct GatewayServiceTests {
 
     @Test func theAllowanceComesFromTheSessionAndThenFromUsage() async throws {
         let transport = FakeCloudSpeechTransport([respond(200, Self.session), respond(200, Self.usage)])
-        let service = service(transport)
+        let clock = Clock()
+        let service = service(transport, clock: clock)
         _ = try await service.accessToken()
+        let first = try #require(await service.allowance())
+        #expect(first.usedSeconds == 600, "just after the session, its numbers are used")
+        #expect(transport.requests.count == 1)
+
+        clock.advance(31)
         let current = try #require(await service.allowance())
         #expect(current.allowanceSeconds == 7200)
         #expect(current.usedSeconds == 1200)
         #expect(current.remainingMinutes == 100)
+    }
+
+    @Test func openingSettingsTwiceMakesOneUsageRequest() async throws {
+        let transport = FakeCloudSpeechTransport([respond(200, Self.session), respond(200, Self.usage)])
+        let clock = Clock()
+        let service = service(transport, clock: clock)
+        clock.advance(0)
+        _ = try await service.accessToken()
+        clock.advance(31)
+        _ = await service.allowance()
+        let after = transport.requests.count
+        _ = await service.allowance()
+        clock.advance(10)
+        _ = await service.allowance()
+        #expect(transport.requests.count == after, "inside 30 seconds nothing more is asked")
+        clock.advance(25)
+        _ = await service.allowance()
+        #expect(transport.requests.count == after + 1)
+    }
+
+    @Test func callersThatArriveTogetherShareOneTokenRequest() async throws {
+        let transport = FakeCloudSpeechTransport([respond(200, Self.session)])
+        let slow = SlowProof()
+        let service = GatewayService(
+            host: "gateway.test", transport: transport, proofs: slow,
+            now: { Date(timeIntervalSince1970: 1_800_000_000) })
+        async let first = service.accessToken()
+        async let second = service.accessToken()
+        async let third = service.accessToken()
+        let tokens = try await [first, second, third]
+        #expect(tokens == ["token-A", "token-A", "token-A"])
+        #expect(transport.requests.count == 1, "one session request for three callers")
     }
 
     @Test func theAllowanceIsNilWhenNothingCanBeFoundOut() async {

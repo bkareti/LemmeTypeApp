@@ -85,6 +85,14 @@ extension DictationIssue {
                 localized:
                     "You’ve used this period’s Cloud speech allowance. It starts again when your subscription renews. Your recording is kept.",
                 bundle: .module, comment: "Shown when the cloud speech allowance for the billing period is used up")
+        case .recognitionFailed(.cloudUnavailable):
+            String(
+                localized: "Cloud speech is unavailable right now. Try again later. Your recording is kept.",
+                bundle: .module, comment: "Shown when the cloud speech gateway has stopped cloud speech for now")
+        case .recognitionFailed(.unsupported(.language)):
+            String(
+                localized: "The selected engine doesn’t support this language. Your recording is kept.",
+                bundle: .module, comment: "Shown when the chosen engine cannot recognise the dictation language")
         case .recognitionFailed(.cloudServiceFailed):
             String(
                 localized: "The cloud speech service couldn’t process this recording. Your recording is kept.",

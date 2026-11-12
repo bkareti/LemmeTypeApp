@@ -174,7 +174,8 @@ release. The relay is now built ([ADR 0033](0033-speech-gateway.md), `speech-gat
   `GatewayTransport` adds it to each request and replaces a refused token once. Until the subscription exists
   in the app (E13-S4), a Debug build can use a fixed staging token (`-LemmeTypeGatewayToken`).
 - Consent is stored with the gateway's `consentVersion`. A vendor change inside the approved list keeps the
-  number. Anything else raises it, and the app asks again before the next Cloud use.
+  number. Anything else raises it, and the app asks again before the next Cloud use. The check runs when the
+  Cloud settings are shown and before each Cloud dictation, never at launch, so launching needs no network.
 - The same `URLSessionCloudSpeechTransport` file remains the only network code for cloud speech, now allowed
   to reach the gateway host only. `Support` still imports Security, for the legacy eraser.
 

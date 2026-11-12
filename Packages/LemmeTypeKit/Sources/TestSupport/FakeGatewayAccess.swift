@@ -13,6 +13,7 @@ public final class FakeGatewayAccess: GatewayAccessing, GatewayCapabilitiesProvi
         var allowance: GatewayAllowance?
         var tokensIssued = 0
         var discards = 0
+        var capabilityCalls = 0
         var token = "test-token"
     }
 
@@ -33,6 +34,7 @@ public final class FakeGatewayAccess: GatewayAccessing, GatewayCapabilitiesProvi
     public func setAllowance(_ value: GatewayAllowance?) { state.withLock { $0.allowance = value } }
     public var tokensIssued: Int { state.withLock { $0.tokensIssued } }
     public var discards: Int { state.withLock { $0.discards } }
+    public var capabilityCalls: Int { state.withLock { $0.capabilityCalls } }
 
     public func accessToken() async throws(GatewayAccessError) -> String {
         let result = state.withLock { state -> String? in
@@ -51,7 +53,10 @@ public final class FakeGatewayAccess: GatewayAccessing, GatewayCapabilitiesProvi
     }
 
     public func capabilities() async throws(GatewayAccessError) -> GatewayCapabilities {
-        let (failure, version) = state.withLock { ($0.capabilitiesFail, $0.consentVersion) }
+        let (failure, version) = state.withLock { state -> (GatewayAccessError?, Int) in
+            state.capabilityCalls += 1
+            return (state.capabilitiesFail, state.consentVersion)
+        }
         if let failure { throw failure }
         return GatewayCapabilities(consentVersion: version, maximumClipSeconds: 30)
     }

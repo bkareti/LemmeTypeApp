@@ -89,11 +89,26 @@ struct CloudSpeechSettingsModelTests {
         var offered: [Bool] = []
         model.onChange = { offered.append($0) }
         await model.refresh()
+        #expect(model.status == .turnedOn, "launch trusts what is stored")
+        await model.verifyTerms()
         #expect(model.status == .needsConsentAgain)
         #expect(offered.last == false, "the engine is not offered until the user agrees again")
+        await model.refresh()
+        #expect(model.status == .needsConsentAgain, "a local refresh does not hide the change")
         await model.acceptConsent()
         #expect(model.status == .turnedOn)
         #expect(consent.consentedVersion == 3)
+    }
+
+    @Test func launchingUsesNoNetwork() async {
+        consent.consentedProvider = provider.id
+        consent.consentedVersion = 2
+        let model = makeModel()
+        await model.refresh()
+        #expect(model.status == .turnedOn)
+        #expect(gateway.capabilityCalls == 0, "refresh at launch never asks the gateway")
+        await model.verifyTerms()
+        #expect(gateway.capabilityCalls == 1)
     }
 
     @Test func offlineTheAgreementStands() async {
@@ -102,6 +117,7 @@ struct CloudSpeechSettingsModelTests {
         gateway.setCapabilitiesFailure(.offline)
         let model = makeModel()
         await model.refresh()
+        await model.verifyTerms()
         #expect(model.status == .turnedOn)
     }
 
@@ -133,8 +149,7 @@ struct CloudSpeechSettingsModelTests {
         await model.refreshAllowance()
         #expect(model.allowance == nil)
         await model.acceptConsent()
-        await model.refreshAllowance()
-        #expect(model.allowance == allowance)
+        #expect(model.allowance == allowance, "it is there as soon as Cloud speech is on")
         #expect(model.allowance?.remainingMinutes == 110)
     }
 

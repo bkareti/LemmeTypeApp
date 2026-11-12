@@ -74,6 +74,19 @@ struct CloudSpeechGateTests {
         #expect(transport.requests.first?.headers["Authorization"] == "Bearer test-token-1")
     }
 
+    /// The gateway stops cloud speech at its budget; asking again at once, with the audio, cannot help.
+    @Test func aServiceStopIsNotRetried() async throws {
+        defer { fixtures.removeAll() }
+        let transport = FakeCloudSpeechTransport([
+            .respond(status: 503, body: Data(#"{"error":{"code":"service_unavailable","message":"x"}}"#.utf8))
+        ])
+        let engine = engine(transport, consent: FakeCloudSpeechConsent(gateway.id))
+        await #expect(throws: RecognitionError.cloudUnavailable) {
+            try await engine.recognize(try fixtures.make(.tone(seconds: 1), language: "te")) { _ in }
+        }
+        #expect(transport.requests.count == 1, "one upload, no retries")
+    }
+
     /// iOS can interrupt an upload when the app leaves the screen.
     @Test func anInterruptedUploadOnIPhoneKeepsTheRecordingAndSaysWhy() async throws {
         defer { fixtures.removeAll() }

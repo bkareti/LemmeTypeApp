@@ -82,7 +82,7 @@ struct GatewaySpeechProviderTests {
         (413, "audio_too_long", .cloudServiceFailed),
         (400, "bad_request", .cloudServiceFailed),
         (502, "provider_unavailable", .cloudServiceFailed),
-        (503, "service_unavailable", .cloudServiceFailed),
+        (503, "service_unavailable", .cloudUnavailable),
     ])
     func mapsEachGatewayCodeToOneMessage(status: Int, code: String, expected: RecognitionError) {
         let body = #"{"error":{"code":"\#(code)","message":"CANARY-GATEWAY-MESSAGE"}}"#

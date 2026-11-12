@@ -52,16 +52,24 @@ public final class CloudSpeechSettingsModel {
         self.allowances = allowances
     }
 
+    /// What the app already knows, with no network: whether an agreement to this provider and a version of
+    /// its terms is stored. Safe to await at launch. Whether the gateway has since raised the version is
+    /// checked by ``verifyTerms()``, and again before any Cloud dictation by `GatewayCredentials`.
     public func refresh() async {
-        guard consent.consentedProvider == providerID, let agreed = consent.consentedVersion else {
+        guard consent.consentedProvider == providerID, consent.consentedVersion != nil else {
             setStatus(.off)
             return
         }
-        // Offline, the agreement stands; the request itself will say it could not connect.
+        if status != .needsConsentAgain { setStatus(.turnedOn) }
+    }
+
+    /// Asks the gateway whether the terms the user agreed to are still the current ones. Offline, the
+    /// agreement stands; the request itself will say it could not connect. Uses the network, so it runs
+    /// when the Cloud speech settings are shown, not at launch.
+    public func verifyTerms() async {
+        guard status == .turnedOn, let agreed = consent.consentedVersion else { return }
         if let current = try? await directory.capabilities().consentVersion, current != agreed {
             setStatus(.needsConsentAgain)
-        } else {
-            setStatus(.turnedOn)
         }
     }
 
@@ -95,8 +103,12 @@ public final class CloudSpeechSettingsModel {
             }
             return
         }
+        status = .off
         await refresh()
-        if status == .turnedOn { onReady() }
+        if status == .turnedOn {
+            onReady()
+            await refreshAllowance()
+        }
     }
 
     public func turnOff() async {

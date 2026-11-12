@@ -245,7 +245,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   not yet (E11-S3). Audio goes to the LemmeType gateway (ADR 0033, E13-S3): `GatewaySpeechProvider` is the provider,
   `GatewayService` (Recognition/Cloud) trades the subscription proof (`SubscriptionProofProviding`, StoreKit in E13-S4) for a
   15-minute token kept in memory, and `GatewayTransport` adds it to each request and replaces a refused one once. There is no
-  user key. `CloudSpeechSettingsModel` (UI) owns consent, stored with the gateway's `consentVersion` (a new version asks again);
+  user key. `CloudSpeechSettingsModel` (UI) owns consent, stored with the gateway's `consentVersion` (a new version asks again, checked when the Cloud settings are shown and before each Cloud dictation, never at launch);
   `GatewayCredentials` (Domain) lets the engine run only with consent to the current version and a subscription.
   `LegacyCloudKeyEraser` (Support) deletes a key an earlier build kept. A Debug build can use a staging token with
   `-LemmeTypeGatewayToken`. The real-service test needs `LEMMETYPE_REAL_CLOUD=1`.

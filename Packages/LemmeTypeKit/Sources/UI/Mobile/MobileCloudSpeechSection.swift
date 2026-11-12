@@ -58,7 +58,10 @@
                         bundle: .module, comment: "Explains cloud speech in Settings")
                 )
             }
-            .task { await model.refreshAllowance() }
+            .task {
+                await model.verifyTerms()
+                await model.refreshAllowance()
+            }
         }
 
         private var offRow: some View {

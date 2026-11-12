@@ -66,6 +66,8 @@ struct CloudEngineSelectionTests {
             (.cloudRateLimited, "recognition.cloud-rate-limited"),
             (.cloudQuotaExhausted, "recognition.cloud-quota-exhausted"),
             (.cloudServiceFailed, "recognition.cloud-service-failed"),
+            (.subscriptionRequired, "recognition.subscription-required"),
+            (.cloudUnavailable, "recognition.cloud-unavailable"),
         ]
         for (error, identifier) in identifiers {
             #expect(error.identifier == identifier)
@@ -75,6 +77,8 @@ struct CloudEngineSelectionTests {
         #expect(RecognitionError.cloudServiceFailed.isRetryable)
         #expect(!RecognitionError.cloudKeyRejected.isRetryable)
         #expect(!RecognitionError.cloudQuotaExhausted.isRetryable)
+        #expect(!RecognitionError.subscriptionRequired.isRetryable)
+        #expect(!RecognitionError.cloudUnavailable.isRetryable, "a stopped service cannot be helped by trying at once")
     }
 
     @Test func aMissingKeyDoesNotAskForSpeechRecognitionAccess() {
