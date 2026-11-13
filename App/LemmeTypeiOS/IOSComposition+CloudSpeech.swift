@@ -5,24 +5,32 @@ import Support
 
 /// Cloud speech on iPhone and iPad (E12-S1, E13-S3, ADRs 0031 and 0033).
 extension IOSComposition {
-    /// Whether this build offers cloud speech at all (ADR 0031). Debug only until
-    /// every launch gate is closed: E13-S8 changes this one line.
+    /// Whether this build offers cloud speech at all (ADR 0031). Debug always does (staging). A Release build does
+    /// only when `LEMMETYPE_GATEWAY_HOST` names the production gateway (`Config/LemmeTypeiOS.xcconfig`), which is
+    /// set only once the launch gates in `docs/release/app-store.md` are closed (E13-S8).
     static var offersCloudSpeech: Bool {
         #if DEBUG
             true
         #else
-            false
+            releaseGatewayHost(from: Bundle.main.infoDictionary) != nil
         #endif
     }
 
-    /// The LemmeType gateway (ADR 0033), the only host audio is sent to in Cloud mode. Debug builds use
-    /// staging. A Release build has cloud speech off, so its host is a placeholder that cannot resolve; E13-S8
-    /// sets the production host when the gateway has its own domain.
+    /// The production gateway host from the app's Info.plist, or `nil` when none is set (Cloud stays off).
+    static func releaseGatewayHost(from info: [String: Any]?) -> String? {
+        guard let host = (info?["LemmeTypeGatewayHost"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
+            !host.isEmpty
+        else { return nil }
+        return host
+    }
+
+    /// The LemmeType gateway (ADR 0033), the only host audio is sent to in Cloud mode. Debug builds use staging.
+    /// A Release build uses the production host, or a placeholder that cannot resolve while Cloud is off.
     static var gatewayHost: String {
         #if DEBUG
             "speech-gateway-staging-625772045363.asia-south1.run.app"
         #else
-            "gateway.invalid"
+            releaseGatewayHost(from: Bundle.main.infoDictionary) ?? "gateway.invalid"
         #endif
     }
 

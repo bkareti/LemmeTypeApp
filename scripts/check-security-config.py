@@ -206,6 +206,27 @@ def check_keyboard_open_access(root: Path, report: Report) -> None:
         report.error(f"{KEYBOARD_INFO_PLIST}: the keyboard must not request Full Access (ADR 0032)")
 
 
+# What Cloud speech and the subscription send (E13-S8, docs/release/app-store.md section 4): the recording, the
+# subscription's standing, and minutes used. Anything else, or any other purpose, needs a reviewed change here.
+ALLOWED_COLLECTED_DATA = {
+    "NSPrivacyCollectedDataTypeAudioData",
+    "NSPrivacyCollectedDataTypePurchaseHistory",
+    "NSPrivacyCollectedDataTypeOtherUsageData",
+}
+APP_FUNCTIONALITY = "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+
+
+def check_collected_data(items: list, report: Report) -> None:
+    for item in items:
+        kind = item.get("NSPrivacyCollectedDataType") if isinstance(item, dict) else None
+        if kind not in ALLOWED_COLLECTED_DATA:
+            report.error(f"{IOS_PRIVACY_MANIFEST}: {kind} is not a data type the paid launch collects (E13-S8)")
+        elif item.get("NSPrivacyCollectedDataTypeTracking") is not False:
+            report.error(f"{IOS_PRIVACY_MANIFEST}: {kind} must not be used for tracking")
+        elif item.get("NSPrivacyCollectedDataTypePurposes") != [APP_FUNCTIONALITY]:
+            report.error(f"{IOS_PRIVACY_MANIFEST}: {kind} may be used for app functionality only")
+
+
 def check_ios_target(root: Path, report: Report) -> None:
     """The iPhone and iPad app has only the App Group entitlement and the audio
     background mode that Action Button dictation needs (ADR 0032), a keyboard that
@@ -238,8 +259,7 @@ def check_ios_target(root: Path, report: Report) -> None:
         report.error(f"{IOS_PRIVACY_MANIFEST}: NSPrivacyTracking must be false")
     if data.get("NSPrivacyTrackingDomains"):
         report.error(f"{IOS_PRIVACY_MANIFEST}: the app contacts no tracking domains")
-    if data.get("NSPrivacyCollectedDataTypes"):
-        report.error(f"{IOS_PRIVACY_MANIFEST}: the app collects no data; nothing leaves the device")
+    check_collected_data(data.get("NSPrivacyCollectedDataTypes") or [], report)
     declared = {item.get("NSPrivacyAccessedAPIType") for item in data.get("NSPrivacyAccessedAPITypes", [])}
     sources = "".join(
         path.read_text(encoding="utf-8", errors="ignore")

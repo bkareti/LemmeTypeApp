@@ -90,10 +90,13 @@ final class QuickDictationUITests: XCTestCase {
         func element(_ identifier: String) -> XCUIElement { app.descendants(matching: .any)[identifier].firstMatch }
         XCTAssertTrue(element("settings.language").waitForExistence(timeout: 10))
         XCTAssertTrue(element("settings.models").exists)
-        XCTAssertTrue(element("settings.lifetime").exists)
 
-        // The list creates rows lazily; Privacy is below the first screen.
-        app.swipeUp()
-        XCTAssertTrue(element("settings.privacy").waitForExistence(timeout: 5))
+        // The list creates rows lazily, and the Subscription section pushes the rest below the first screen.
+        func scrollTo(_ identifier: String) {
+            for _ in 0..<5 where !element(identifier).exists { app.swipeUp() }
+            XCTAssertTrue(element(identifier).waitForExistence(timeout: 5), identifier)
+        }
+        scrollTo("settings.lifetime")
+        scrollTo("settings.privacy")
     }
 }

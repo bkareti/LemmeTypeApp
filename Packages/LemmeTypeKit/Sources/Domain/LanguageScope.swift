@@ -11,6 +11,9 @@ import Foundation
 public enum LanguageScope: String, CaseIterable, Sendable {
     /// English only: no Automatic detection, no translation, English-only models.
     case englishOnly = "english-only"
+    /// English on the device, plus Telugu through Cloud speech (E13-S8): the languages the paid launch offers.
+    /// No Automatic detection and no translation; English models only.
+    case englishWithCloud = "english-with-cloud"
     /// Every language in ``SpokenLanguages``, with their support status shown.
     case allLanguages = "all-languages"
 
@@ -19,6 +22,7 @@ public enum LanguageScope: String, CaseIterable, Sendable {
         switch self {
         case .allLanguages: true
         case .englishOnly: SpokenLanguages.isEnglish(language)
+        case .englishWithCloud: SpokenLanguages.isEnglish(language) || SpokenLanguages.code(of: language) == "te"
         }
     }
 
@@ -27,7 +31,7 @@ public enum LanguageScope: String, CaseIterable, Sendable {
     public var speechOutputs: [SpeechOutput] {
         switch self {
         case .allLanguages: SpeechOutput.allCases
-        case .englishOnly: [.original]
+        case .englishOnly, .englishWithCloud: [.original]
         }
     }
 
@@ -37,7 +41,8 @@ public enum LanguageScope: String, CaseIterable, Sendable {
     public func lists(_ asset: ModelAsset) -> Bool {
         switch self {
         case .allLanguages: true
-        case .englishOnly: !asset.languages.isEmpty && asset.languages.allSatisfy(SpokenLanguages.isEnglish)
+        case .englishOnly, .englishWithCloud:
+            !asset.languages.isEmpty && asset.languages.allSatisfy(SpokenLanguages.isEnglish)
         }
     }
 }

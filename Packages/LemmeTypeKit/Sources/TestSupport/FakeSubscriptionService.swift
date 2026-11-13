@@ -4,8 +4,10 @@ import Synchronization
 
 /// A subscription that needs no App Store: its state, product, and answers are set by the test.
 public final class FakeSubscriptionService: SubscriptionProviding, SubscriptionProofProviding {
+    /// Same name, price, period, and trial as `Config/LemmeType.storekit`, so a screenshot made against the fake
+    /// never shows a price that StoreKit would not (E13-S8).
     public static let sampleProduct = SubscriptionProduct(
-        id: "test.pro.monthly", displayName: "Test Pro", displayPrice: "$9.99",
+        id: "com.lemmetype.LemmeType.iOS.pro.monthly", displayName: "LemmeType Pro", displayPrice: "$1.99",
         period: SubscriptionLength(value: 1, unit: .month), freeTrial: SubscriptionLength(value: 1, unit: .week))
 
     private struct State {

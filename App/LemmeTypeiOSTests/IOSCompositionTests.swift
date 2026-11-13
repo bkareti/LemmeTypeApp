@@ -31,6 +31,15 @@ struct IOSCompositionTests {
         #expect(!composition.modes.engines.contains(.cloud))
     }
 
+    @Test func aReleaseBuildOffersCloudSpeechOnlyWhenTheProductionHostIsSet() {
+        #expect(IOSComposition.releaseGatewayHost(from: nil) == nil)
+        #expect(IOSComposition.releaseGatewayHost(from: [:]) == nil)
+        #expect(IOSComposition.releaseGatewayHost(from: ["LemmeTypeGatewayHost": ""]) == nil, "an empty setting is off")
+        #expect(IOSComposition.releaseGatewayHost(from: ["LemmeTypeGatewayHost": " \n"]) == nil)
+        #expect(
+            IOSComposition.releaseGatewayHost(from: ["LemmeTypeGatewayHost": "api.example.com"]) == "api.example.com")
+    }
+
     @Test func anOldApiKeyInTheKeychainIsRemoved() throws {
         let service = "com.lemmetype.tests.\(UUID().uuidString)"
         let query: [String: Any] = [

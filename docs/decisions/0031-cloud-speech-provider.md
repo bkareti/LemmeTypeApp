@@ -109,9 +109,14 @@ No user audio goes to Sarvam until these are closed.
 |---|---|---|
 | Written confirmation or a DPA on training and retention for API accounts | Sarvam's documents disagree (below) | Open |
 | Training opt-out and retention set on the account | Belt and braces while the terms disagree | Open |
-| How keys reach the app | A shared key cannot ship inside the app (below) | Decided for the friends beta: each user's own key. Open for a public release |
-| Run the 34-sentence Telugu–English test | The accepted risk above; it costs about ₹2 | Recommended before any beta |
-| Network allowlist, threat model, privacy checklist, App Store labels, product brief wording | They say nothing leaves the device | Open |
+| How keys reach the app | A shared key cannot ship inside the app (below) | **Closed** for the public release by the gateway (ADR 0033, E13-S3). The friends-beta own-key route is gone |
+| Run the 34-sentence Telugu–English test | The accepted risk above; it costs about ₹2 | Open (to be run against the production gateway) |
+| Production gateway live | The App Store build needs a real host, `appAppleId`, and notification URLs | Open |
+| Network allowlist, threat model, privacy checklist, App Store labels, product brief wording | They said nothing leaves the device | **Closed** by E13-S8: all updated for Cloud speech and the subscription |
+
+The release gate list, with the evidence to link for each, is section 9 of `docs/release/app-store.md`;
+`scripts/verify-ios-appstore.sh` refuses an App Store archive while a row there is Open. Closing the first,
+second, and fourth gates is a maintainer action.
 
 ### Sarvam's data terms disagree
 
@@ -181,3 +186,12 @@ release. The relay is now built ([ADR 0033](0033-speech-gateway.md), `speech-gat
 
 The launch gates above are unchanged except "How keys reach the app", which the gateway closes once E13-S4 and
 E13-S8 land. Sarvam's data terms stay open.
+
+## Addendum (E13-S8, 2026-11-13): the paid launch includes Cloud speech
+
+The first App Store release offers Cloud speech through the gateway (maintainer decision, 2026-11-13). A Release
+build turns it on only when `LEMMETYPE_GATEWAY_HOST` names the production gateway; it also widens the language
+scope to `LanguageScope.englishWithCloud` (English on the device, Telugu through Cloud; no Automatic, no
+translation, no multilingual download). With the host empty, the build is English-only and Cloud speech is off, but
+it cannot be submitted: the App Store text, the privacy manifest, and the microphone text all describe Cloud speech,
+and the archive check refuses it.

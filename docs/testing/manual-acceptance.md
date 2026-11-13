@@ -832,3 +832,14 @@ Use a physical iPhone and iPad with the app installed from Xcode. Record results
 7. With one day left in the trial, the Dictate screen shows the ending notice once. Close it: it does not come back. Settings › Subscription shows "N days left in your free trial" while the trial runs.
 8. Privacy › Delete All Local Data: the subscription summary in the App Group is gone (use Xcode › Devices › the app container, or the keyboard no longer shows a state).
 
+**MA-76 The paid launch from a clean install (E13-S8)**
+Use the TestFlight build that will be submitted, on a physical iPhone (and an iPad), signed in with a Sandbox Apple Account. Record the device, the iOS version, the build number, and the result for each step.
+1. Delete the app, install the build, open it. The paywall shows the price and the free week once. Close it: Settings and the privacy pages are reachable, recording is not.
+2. Start the trial in Apple's sheet. Run the first dictation: the explanation appears, the microphone and Speech Recognition prompts follow, and English dictation works.
+3. Airplane Mode on: English dictation still works, and a Cloud dictation says it could not reach the service and keeps the recording.
+4. Airplane Mode off. Settings › Cloud speech › Turn On: the screen names LemmeType's server, the speech service, and India. Agree, create a Cloud mode for Telugu, and dictate a Telugu sentence: the text appears, and Settings shows the remaining allowance.
+5. Press the Action Button: the LemmeType keyboard inserts the result in Notes; Cancel mid-recording discards it.
+6. Settings › Privacy: the text matches the App Privacy answers (audio only for Cloud; purchases and usage under a code). Delete All Local Data: Cloud speech is off and asks for agreement again.
+7. Let the Sandbox subscription expire (accelerated renewals): the next record shows the offer, and Settings, Export, and Delete stay available.
+8. Read the privacy policy on its public address and the App Store listing text next to the app: no sentence says nothing leaves the phone without saying "Local".
+

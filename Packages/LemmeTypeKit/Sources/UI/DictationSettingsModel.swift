@@ -130,15 +130,15 @@ public final class DictationSettingsModel {
     /// the other evaluation languages an engine supports. An English-only
     /// ``languageScope`` offers the English values alone.
     public var languageChoices: [String] {
-        var choices: [String] = []
-        let englishOnly = languageScope == .englishOnly
-        if !englishOnly, rows.contains(where: { $0.capabilities.contains(.languageDetection) }) {
-            choices.append(SpokenLanguages.automatic)
-        }
+        let detects =
+            languageScope.offers(language: SpokenLanguages.automatic)
+            && rows.contains { $0.capabilities.contains(.languageDetection) }
+        var choices: [String] = detects ? [SpokenLanguages.automatic] : []
         let regional = languages.filter { SpokenLanguages.isEnglish($0) && $0.contains("-") }
         choices += regional.isEmpty ? [SpokenLanguages.english.settingValue] : regional
-        for other in SpokenLanguages.all where !SpokenLanguages.isEnglish(other.code) && !englishOnly {
-            if rows.contains(where: { supports($0, other.settingValue) }) { choices.append(other.settingValue) }
+        let others = SpokenLanguages.all.filter { !SpokenLanguages.isEnglish($0.code) }.map(\.settingValue)
+        choices += others.filter { value in
+            languageScope.offers(language: value) && rows.contains { supports($0, value) }
         }
         // A stored language that is no longer offered stays visible.
         return choices.contains(language) ? choices : choices + [language]

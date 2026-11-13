@@ -6,5 +6,5 @@
 # A new usage string means a new permission prompt for every user: review it
 # with the Privacy pane text (E6-S5) and the threat model.
 
-NSMicrophoneUsageDescription  # Dictation records the microphone while the shortcut is held
+NSMicrophoneUsageDescription  # Dictation records the microphone while the shortcut is held; the text says Local stays on the device and Cloud speech sends the recording to LemmeType's server (E13-S8)
 NSSpeechRecognitionUsageDescription  # Only if the user chooses the Apple Speech engine (on-device mode)

@@ -195,11 +195,11 @@
                         usesCloudSpeech
                             ? String(
                                 localized:
-                                    "Only modes that use Cloud speech go online, and only during their dictation. The only download is a speech model, and only after you confirm it.",
+                                    "Local dictation never uses the network. Only modes that use Cloud speech send anything to LemmeType, and only during their dictation. Apple checks your subscription. The only download is a speech model, and only after you confirm it.",
                                 bundle: .module)
                             : String(
                                 localized:
-                                    "Dictation never uses the network. The only download is a speech model, and only after you confirm it.",
+                                    "Local dictation never uses the network. Apple checks your subscription. The only download is a speech model, and only after you confirm it.",
                                 bundle: .module))
                     row(
                         "doc.on.clipboard", String(localized: "The clipboard", bundle: .module),

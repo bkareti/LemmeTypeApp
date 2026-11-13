@@ -27,11 +27,11 @@ struct IOSComposition {
 
     static let uiTestingArgument = "-LemmeTypeUITesting"
 
-    /// Which languages this build offers (ADR 0029): English only in Release
-    /// (the friends beta), every language in Debug for evaluation work.
+    /// Which languages this build offers (ADR 0029): English only in Release, plus Telugu through Cloud speech
+    /// when the build offers it (E13-S8); every language in Debug for evaluation work.
     static var languageScope: LanguageScope {
         #if ENGLISH_ONLY_RELEASE
-            .englishOnly
+            offersCloudSpeech ? .englishWithCloud : .englishOnly
         #else
             .allLanguages
         #endif

@@ -21,9 +21,9 @@ INFOPLIST_KEY_UILaunchScreen_Generation = YES
 INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES
 INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
 INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
-INFOPLIST_KEY_NSMicrophoneUsageDescription = LemmeType records your voice only while the recording is showing on screen, and turns it into text on this device.
-// Cloud speech exists only in Debug until E12-S4 closes the gates in ADR 0031.
-INFOPLIST_KEY_NSMicrophoneUsageDescription[config=Debug] = LemmeType records your voice only while the recording is showing. It turns it into text on this device, unless you turn on Cloud speech for a mode.
+// True for Local and Cloud (E13-S8): Local modes keep the voice on the device; a Cloud mode, which the person
+// turns on, sends the recording to LemmeType's server to be turned into text.
+INFOPLIST_KEY_NSMicrophoneUsageDescription = LemmeType records your voice only while the recording is showing on screen. It turns it into text on this device, unless you use a mode with Cloud speech, which you turn on yourself and which sends the recording to LemmeType's server to be turned into text.
 INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = If you choose Apple Speech, LemmeType uses on-device speech recognition to turn your dictation into text. Audio never leaves this device.
 // Only standard, exempt encryption (HTTPS for the model download, SHA-256 checks).
 INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO
@@ -32,3 +32,8 @@ INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO
 CODE_SIGN_ENTITLEMENTS = App/LemmeTypeiOS/LemmeTypeiOS.entitlements
 INFOPLIST_FILE = App/LemmeTypeiOS/Info.plist
 INFOPLIST_KEY_NSSupportsLiveActivities = YES
+
+// The production speech gateway (ADR 0033, E13-S8): a host name only, no scheme. Empty keeps Cloud speech, and the
+// Telugu choice that depends on it, off in a Release build. Set it only when every launch gate in
+// docs/release/app-store.md is Closed; scripts/verify-ios-appstore.sh refuses a build otherwise.
+LEMMETYPE_GATEWAY_HOST =
