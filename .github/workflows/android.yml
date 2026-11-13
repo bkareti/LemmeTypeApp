@@ -1,0 +1,44 @@
+# Android core (ADR 0035, E14-S7 … E14-S9): the pure-Kotlin modules in android/ and the
+# shared fixtures they are tested against. Runs only when those files change, on Linux,
+# and never touches the Apple jobs in ci.yml. The full Android app job (SDK, emulator)
+# arrives with E14-S6.
+name: Android
+
+on:
+  pull_request:
+    paths:
+      - "android/**"
+      - "shared/**"
+      - ".github/workflows/android.yml"
+  push:
+    branches: [main]
+    paths:
+      - "android/**"
+      - "shared/**"
+      - ".github/workflows/android.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  core:
+    name: Android core (JVM)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Build, unit tests, shared fixtures, import rule
+        run: make android-core-test

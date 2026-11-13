@@ -1,0 +1,479 @@
+{
+  "version": 1,
+  "notes": "RecorderStateMachine (Domain): every (state, event) pair; to = null means rejected. Payloads (fail error, attention issue) are carried through unchanged.",
+  "states": [
+    "idle",
+    "preparing",
+    "recording",
+    "stopping",
+    "processing",
+    "completed",
+    "cancelled",
+    "failed",
+    "needs-attention"
+  ],
+  "events": [
+    "activate",
+    "capture-started",
+    "stop-requested",
+    "capture-finished",
+    "processing-finished",
+    "cancel",
+    "fail",
+    "processing-needs-attention",
+    "retry",
+    "reset"
+  ],
+  "transitions": [
+    {
+      "from": "idle",
+      "event": "activate",
+      "to": "preparing"
+    },
+    {
+      "from": "idle",
+      "event": "capture-started",
+      "to": null
+    },
+    {
+      "from": "idle",
+      "event": "stop-requested",
+      "to": null
+    },
+    {
+      "from": "idle",
+      "event": "capture-finished",
+      "to": null
+    },
+    {
+      "from": "idle",
+      "event": "processing-finished",
+      "to": null
+    },
+    {
+      "from": "idle",
+      "event": "cancel",
+      "to": null
+    },
+    {
+      "from": "idle",
+      "event": "fail",
+      "to": null
+    },
+    {
+      "from": "idle",
+      "event": "processing-needs-attention",
+      "to": null
+    },
+    {
+      "from": "idle",
+      "event": "retry",
+      "to": null
+    },
+    {
+      "from": "idle",
+      "event": "reset",
+      "to": null
+    },
+    {
+      "from": "preparing",
+      "event": "activate",
+      "to": null
+    },
+    {
+      "from": "preparing",
+      "event": "capture-started",
+      "to": "recording"
+    },
+    {
+      "from": "preparing",
+      "event": "stop-requested",
+      "to": null
+    },
+    {
+      "from": "preparing",
+      "event": "capture-finished",
+      "to": null
+    },
+    {
+      "from": "preparing",
+      "event": "processing-finished",
+      "to": null
+    },
+    {
+      "from": "preparing",
+      "event": "cancel",
+      "to": "cancelled"
+    },
+    {
+      "from": "preparing",
+      "event": "fail",
+      "to": "failed"
+    },
+    {
+      "from": "preparing",
+      "event": "processing-needs-attention",
+      "to": "needs-attention"
+    },
+    {
+      "from": "preparing",
+      "event": "retry",
+      "to": null
+    },
+    {
+      "from": "preparing",
+      "event": "reset",
+      "to": null
+    },
+    {
+      "from": "recording",
+      "event": "activate",
+      "to": null
+    },
+    {
+      "from": "recording",
+      "event": "capture-started",
+      "to": null
+    },
+    {
+      "from": "recording",
+      "event": "stop-requested",
+      "to": "stopping"
+    },
+    {
+      "from": "recording",
+      "event": "capture-finished",
+      "to": null
+    },
+    {
+      "from": "recording",
+      "event": "processing-finished",
+      "to": null
+    },
+    {
+      "from": "recording",
+      "event": "cancel",
+      "to": "cancelled"
+    },
+    {
+      "from": "recording",
+      "event": "fail",
+      "to": "failed"
+    },
+    {
+      "from": "recording",
+      "event": "processing-needs-attention",
+      "to": null
+    },
+    {
+      "from": "recording",
+      "event": "retry",
+      "to": null
+    },
+    {
+      "from": "recording",
+      "event": "reset",
+      "to": null
+    },
+    {
+      "from": "stopping",
+      "event": "activate",
+      "to": null
+    },
+    {
+      "from": "stopping",
+      "event": "capture-started",
+      "to": null
+    },
+    {
+      "from": "stopping",
+      "event": "stop-requested",
+      "to": null
+    },
+    {
+      "from": "stopping",
+      "event": "capture-finished",
+      "to": "processing"
+    },
+    {
+      "from": "stopping",
+      "event": "processing-finished",
+      "to": null
+    },
+    {
+      "from": "stopping",
+      "event": "cancel",
+      "to": null
+    },
+    {
+      "from": "stopping",
+      "event": "fail",
+      "to": "failed"
+    },
+    {
+      "from": "stopping",
+      "event": "processing-needs-attention",
+      "to": null
+    },
+    {
+      "from": "stopping",
+      "event": "retry",
+      "to": null
+    },
+    {
+      "from": "stopping",
+      "event": "reset",
+      "to": null
+    },
+    {
+      "from": "processing",
+      "event": "activate",
+      "to": null
+    },
+    {
+      "from": "processing",
+      "event": "capture-started",
+      "to": null
+    },
+    {
+      "from": "processing",
+      "event": "stop-requested",
+      "to": null
+    },
+    {
+      "from": "processing",
+      "event": "capture-finished",
+      "to": null
+    },
+    {
+      "from": "processing",
+      "event": "processing-finished",
+      "to": "completed"
+    },
+    {
+      "from": "processing",
+      "event": "cancel",
+      "to": "cancelled"
+    },
+    {
+      "from": "processing",
+      "event": "fail",
+      "to": "failed"
+    },
+    {
+      "from": "processing",
+      "event": "processing-needs-attention",
+      "to": "needs-attention"
+    },
+    {
+      "from": "processing",
+      "event": "retry",
+      "to": null
+    },
+    {
+      "from": "processing",
+      "event": "reset",
+      "to": null
+    },
+    {
+      "from": "completed",
+      "event": "activate",
+      "to": "preparing"
+    },
+    {
+      "from": "completed",
+      "event": "capture-started",
+      "to": null
+    },
+    {
+      "from": "completed",
+      "event": "stop-requested",
+      "to": null
+    },
+    {
+      "from": "completed",
+      "event": "capture-finished",
+      "to": null
+    },
+    {
+      "from": "completed",
+      "event": "processing-finished",
+      "to": null
+    },
+    {
+      "from": "completed",
+      "event": "cancel",
+      "to": null
+    },
+    {
+      "from": "completed",
+      "event": "fail",
+      "to": null
+    },
+    {
+      "from": "completed",
+      "event": "processing-needs-attention",
+      "to": null
+    },
+    {
+      "from": "completed",
+      "event": "retry",
+      "to": null
+    },
+    {
+      "from": "completed",
+      "event": "reset",
+      "to": "idle"
+    },
+    {
+      "from": "cancelled",
+      "event": "activate",
+      "to": "preparing"
+    },
+    {
+      "from": "cancelled",
+      "event": "capture-started",
+      "to": null
+    },
+    {
+      "from": "cancelled",
+      "event": "stop-requested",
+      "to": null
+    },
+    {
+      "from": "cancelled",
+      "event": "capture-finished",
+      "to": null
+    },
+    {
+      "from": "cancelled",
+      "event": "processing-finished",
+      "to": null
+    },
+    {
+      "from": "cancelled",
+      "event": "cancel",
+      "to": null
+    },
+    {
+      "from": "cancelled",
+      "event": "fail",
+      "to": null
+    },
+    {
+      "from": "cancelled",
+      "event": "processing-needs-attention",
+      "to": null
+    },
+    {
+      "from": "cancelled",
+      "event": "retry",
+      "to": null
+    },
+    {
+      "from": "cancelled",
+      "event": "reset",
+      "to": "idle"
+    },
+    {
+      "from": "failed",
+      "event": "activate",
+      "to": "preparing"
+    },
+    {
+      "from": "failed",
+      "event": "capture-started",
+      "to": null
+    },
+    {
+      "from": "failed",
+      "event": "stop-requested",
+      "to": null
+    },
+    {
+      "from": "failed",
+      "event": "capture-finished",
+      "to": null
+    },
+    {
+      "from": "failed",
+      "event": "processing-finished",
+      "to": null
+    },
+    {
+      "from": "failed",
+      "event": "cancel",
+      "to": null
+    },
+    {
+      "from": "failed",
+      "event": "fail",
+      "to": null
+    },
+    {
+      "from": "failed",
+      "event": "processing-needs-attention",
+      "to": null
+    },
+    {
+      "from": "failed",
+      "event": "retry",
+      "to": null
+    },
+    {
+      "from": "failed",
+      "event": "reset",
+      "to": "idle"
+    },
+    {
+      "from": "needs-attention",
+      "event": "activate",
+      "to": "preparing"
+    },
+    {
+      "from": "needs-attention",
+      "event": "capture-started",
+      "to": null
+    },
+    {
+      "from": "needs-attention",
+      "event": "stop-requested",
+      "to": null
+    },
+    {
+      "from": "needs-attention",
+      "event": "capture-finished",
+      "to": null
+    },
+    {
+      "from": "needs-attention",
+      "event": "processing-finished",
+      "to": "completed"
+    },
+    {
+      "from": "needs-attention",
+      "event": "cancel",
+      "to": "cancelled"
+    },
+    {
+      "from": "needs-attention",
+      "event": "fail",
+      "to": null
+    },
+    {
+      "from": "needs-attention",
+      "event": "processing-needs-attention",
+      "to": null
+    },
+    {
+      "from": "needs-attention",
+      "event": "retry",
+      "to": "processing"
+    },
+    {
+      "from": "needs-attention",
+      "event": "reset",
+      "to": "idle"
+    }
+  ]
+}

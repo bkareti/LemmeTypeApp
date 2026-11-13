@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "notes": "RecognitionError (Domain): stable identifiers and whether the same engine may be retried.",
+  "errors": [
+    {
+      "case": "cancelled",
+      "identifier": "recognition.cancelled",
+      "retryable": false
+    },
+    {
+      "case": "assets-missing",
+      "identifier": "recognition.assets-missing",
+      "retryable": false
+    },
+    {
+      "case": "unsupported",
+      "identifier": "recognition.unsupported",
+      "retryable": false
+    },
+    {
+      "case": "permission-denied",
+      "identifier": "recognition.permission-denied",
+      "retryable": false
+    },
+    {
+      "case": "audio-unreadable",
+      "identifier": "recognition.audio-unreadable",
+      "retryable": true
+    },
+    {
+      "case": "no-speech-detected",
+      "identifier": "recognition.no-speech",
+      "retryable": false
+    },
+    {
+      "case": "silent-audio",
+      "identifier": "recognition.silent-audio",
+      "retryable": false
+    },
+    {
+      "case": "model-load-failed",
+      "identifier": "recognition.model-load-failed",
+      "retryable": true
+    },
+    {
+      "case": "language-uncertain",
+      "identifier": "recognition.language-uncertain",
+      "retryable": false
+    },
+    {
+      "case": "engine-failure",
+      "identifier": "recognition.engine-failure",
+      "retryable": true
+    },
+    {
+      "case": "cloud-offline",
+      "identifier": "recognition.cloud-offline",
+      "retryable": true
+    },
+    {
+      "case": "cloud-key-rejected",
+      "identifier": "recognition.cloud-key-rejected",
+      "retryable": false
+    },
+    {
+      "case": "subscription-required",
+      "identifier": "recognition.subscription-required",
+      "retryable": false
+    },
+    {
+      "case": "cloud-rate-limited",
+      "identifier": "recognition.cloud-rate-limited",
+      "retryable": true
+    },
+    {
+      "case": "cloud-quota-exhausted",
+      "identifier": "recognition.cloud-quota-exhausted",
+      "retryable": false
+    },
+    {
+      "case": "cloud-service-failed",
+      "identifier": "recognition.cloud-service-failed",
+      "retryable": true
+    },
+    {
+      "case": "cloud-unavailable",
+      "identifier": "recognition.cloud-unavailable",
+      "retryable": false
+    }
+  ]
+}

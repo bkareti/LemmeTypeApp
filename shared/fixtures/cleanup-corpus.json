@@ -1,0 +1,388 @@
+{
+  "version": 1,
+  "notes": "Exact Dictation and Clean Writing before/after cases (ADR 0014). Swift: SharedFixturesTests (EndToEndTests). Kotlin: TextCleanerFixtureTest. Synthetic text only.",
+  "cases": [
+    {
+      "category": "normal",
+      "input": "thanks for the update",
+      "clean": "Thanks for the update.",
+      "rules": [
+        "capitalization",
+        "terminal-punctuation"
+      ]
+    },
+    {
+      "category": "normal",
+      "input": "Thanks for the update.",
+      "clean": "Thanks for the update.",
+      "rules": []
+    },
+    {
+      "category": "normal",
+      "input": "um can you send me the slides",
+      "clean": "Can you send me the slides.",
+      "rules": [
+        "capitalization",
+        "filler-words",
+        "terminal-punctuation"
+      ]
+    },
+    {
+      "category": "normal",
+      "input": "i think i'm free tomorrow.",
+      "clean": "I think I'm free tomorrow.",
+      "rules": [
+        "capitalization"
+      ]
+    },
+    {
+      "category": "normal",
+      "input": "I saw the the movie.",
+      "clean": "I saw the movie.",
+      "rules": [
+        "repeated-words"
+      ]
+    },
+    {
+      "category": "normal",
+      "input": "She said that that was fine.",
+      "clean": "She said that that was fine.",
+      "rules": []
+    },
+    {
+      "category": "normal",
+      "input": "He had had enough.",
+      "clean": "He had had enough.",
+      "rules": []
+    },
+    {
+      "category": "normal",
+      "input": "great. see you then.",
+      "clean": "Great. See you then.",
+      "rules": [
+        "capitalization"
+      ]
+    },
+    {
+      "category": "normal",
+      "input": "Uh, I guess so.",
+      "clean": "I guess so.",
+      "rules": [
+        "filler-words"
+      ]
+    },
+    {
+      "category": "normal",
+      "input": "Sounds good, um.",
+      "clean": "Sounds good.",
+      "rules": [
+        "filler-words"
+      ]
+    },
+    {
+      "category": "spoken",
+      "input": "hello comma how are you question mark",
+      "clean": "Hello, how are you?",
+      "rules": [
+        "capitalization",
+        "spoken-punctuation"
+      ]
+    },
+    {
+      "category": "spoken",
+      "input": "first point new line second point",
+      "clean": "First point\nSecond point.",
+      "rules": [
+        "capitalization",
+        "spoken-punctuation",
+        "terminal-punctuation"
+      ]
+    },
+    {
+      "category": "spoken",
+      "input": "that's all period",
+      "clean": "That's all.",
+      "rules": [
+        "capitalization",
+        "spoken-punctuation"
+      ]
+    },
+    {
+      "category": "spoken",
+      "input": "The period of time was short.",
+      "clean": "The period of time was short.",
+      "rules": []
+    },
+    {
+      "category": "spoken",
+      "input": "Wow exclamation mark",
+      "clean": "Wow!",
+      "rules": [
+        "spoken-punctuation"
+      ]
+    },
+    {
+      "category": "correction",
+      "input": "Let's meet on Tuesday—sorry—Wednesday at noon.",
+      "clean": "Let's meet on Wednesday at noon.",
+      "rules": [
+        "self-correction"
+      ]
+    },
+    {
+      "category": "correction",
+      "input": "Let's meet on Tuesday, sorry, Wednesday.",
+      "clean": "Let's meet on Wednesday.",
+      "rules": [
+        "self-correction"
+      ]
+    },
+    {
+      "category": "correction",
+      "input": "Book it for June no wait July.",
+      "clean": "Book it for July.",
+      "rules": [
+        "self-correction"
+      ]
+    },
+    {
+      "category": "correction",
+      "input": "Order 5 sorry 6 boxes.",
+      "clean": "Order 6 boxes.",
+      "rules": [
+        "self-correction"
+      ]
+    },
+    {
+      "category": "correction",
+      "input": "Sorry I'm late.",
+      "clean": "Sorry I'm late.",
+      "rules": []
+    },
+    {
+      "category": "correction",
+      "input": "Call Tuesday, sorry about that.",
+      "clean": "Call Tuesday, sorry about that.",
+      "rules": []
+    },
+    {
+      "category": "correction",
+      "input": "I mean it.",
+      "clean": "I mean it.",
+      "rules": []
+    },
+    {
+      "category": "correction",
+      "input": "Tell Anna sorry Ben is out.",
+      "clean": "Tell Anna sorry Ben is out.",
+      "rules": []
+    },
+    {
+      "category": "technical",
+      "input": "rename getUserName to fetchUserName",
+      "clean": "Rename getUserName to fetchUserName.",
+      "rules": [
+        "capitalization",
+        "terminal-punctuation"
+      ]
+    },
+    {
+      "category": "technical",
+      "input": "set max_retries to three.",
+      "clean": "Set max_retries to three.",
+      "rules": [
+        "capitalization"
+      ]
+    },
+    {
+      "category": "technical",
+      "input": "open config/app.yaml please",
+      "clean": "Open config/app.yaml please.",
+      "rules": [
+        "capitalization",
+        "terminal-punctuation"
+      ]
+    },
+    {
+      "category": "technical",
+      "input": "run `make test` now.",
+      "clean": "Run `make test` now.",
+      "rules": [
+        "capitalization"
+      ]
+    },
+    {
+      "category": "technical",
+      "input": "increment retry_count",
+      "clean": "Increment retry_count.",
+      "rules": [
+        "capitalization",
+        "terminal-punctuation"
+      ]
+    },
+    {
+      "category": "technical",
+      "input": "edit main.swift",
+      "clean": "Edit main.swift",
+      "rules": [
+        "capitalization"
+      ]
+    },
+    {
+      "category": "numeric",
+      "input": "the total is $420.50",
+      "clean": "The total is $420.50",
+      "rules": [
+        "capitalization"
+      ]
+    },
+    {
+      "category": "numeric",
+      "input": "We grew 18% in Q2.",
+      "clean": "We grew 18% in Q2.",
+      "rules": []
+    },
+    {
+      "category": "numeric",
+      "input": "call 555-123-4567",
+      "clean": "Call 555-123-4567",
+      "rules": [
+        "capitalization"
+      ]
+    },
+    {
+      "category": "numeric",
+      "input": "the the 2 2 options.",
+      "clean": "The 2 2 options.",
+      "rules": [
+        "capitalization",
+        "repeated-words"
+      ]
+    },
+    {
+      "category": "url",
+      "input": "visit example.com",
+      "clean": "Visit example.com",
+      "rules": [
+        "capitalization"
+      ]
+    },
+    {
+      "category": "url",
+      "input": "https://lemmetype.app/docs is the link.",
+      "clean": "https://lemmetype.app/docs is the link.",
+      "rules": []
+    },
+    {
+      "category": "email",
+      "input": "email me at ana@example.com",
+      "clean": "Email me at ana@example.com",
+      "rules": [
+        "capitalization"
+      ]
+    },
+    {
+      "category": "email",
+      "input": "ana@example.com wrote back.",
+      "clean": "ana@example.com wrote back.",
+      "rules": []
+    },
+    {
+      "category": "quote",
+      "input": "she wrote \"um the the plan\" yesterday.",
+      "clean": "She wrote \"um the the plan\" yesterday.",
+      "rules": [
+        "capitalization"
+      ]
+    },
+    {
+      "category": "code",
+      "input": "if x == nil return",
+      "clean": "If x == nil return.",
+      "rules": [
+        "capitalization",
+        "terminal-punctuation"
+      ]
+    },
+    {
+      "category": "unicode",
+      "input": "étude is done",
+      "clean": "Étude is done.",
+      "rules": [
+        "capitalization",
+        "terminal-punctuation"
+      ]
+    },
+    {
+      "category": "unicode",
+      "input": "i’m on my way",
+      "clean": "I’m on my way.",
+      "rules": [
+        "capitalization",
+        "terminal-punctuation"
+      ]
+    },
+    {
+      "category": "unicode",
+      "input": "she said “um the the plan” today.",
+      "clean": "She said “um the the plan” today.",
+      "rules": [
+        "capitalization"
+      ]
+    },
+    {
+      "category": "correction",
+      "input": "Meet Friday–sorry–Saturday.",
+      "clean": "Meet Saturday.",
+      "rules": [
+        "self-correction"
+      ]
+    },
+    {
+      "category": "spoken",
+      "input": "one new paragraph two",
+      "clean": "One\n\nTwo.",
+      "rules": [
+        "capitalization",
+        "spoken-punctuation",
+        "terminal-punctuation"
+      ]
+    },
+    {
+      "category": "normal",
+      "input": "hmm okay",
+      "clean": "Okay.",
+      "rules": [
+        "capitalization",
+        "filler-words",
+        "terminal-punctuation"
+      ]
+    }
+  ],
+  "whitespace": [
+    {
+      "input": "a  b\n\n\n\nc\t d \n",
+      "exact": "a b\n\nc d"
+    }
+  ],
+  "transformations": [
+    {
+      "input": "Meet Tuesday—sorry—Wednesday.",
+      "expected": [
+        {
+          "rule": "self-correction",
+          "before": "Tuesday — sorry — Wednesday.",
+          "after": "Wednesday."
+        }
+      ]
+    }
+  ],
+  "protected": [
+    "420.50",
+    "18%",
+    "https://lemmetype.app/docs",
+    "ana@example.com",
+    "getUserName",
+    "max_retries"
+  ]
+}
