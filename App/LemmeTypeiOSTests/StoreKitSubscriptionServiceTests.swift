@@ -20,7 +20,10 @@ private func knownToBeOrderDependent(_ body: () async throws -> Void) async {
 /// E13-S4: the real StoreKit service against Apple's local test session and the repository's
 /// `LemmeType.storekit` (the same product, price, and offer as App Store Connect). Serial, because StoreKit's
 /// test session is shared by the whole process.
-@Suite(.serialized)
+///
+/// A time limit applies to each test: on the hosted CI simulator `AppStore.sync()` (Restore) never returned and held
+/// the whole iPhone job until its 40-minute timeout. A test that hangs now fails after a minute instead.
+@Suite(.serialized, .timeLimit(.minutes(1)))
 struct StoreKitSubscriptionServiceTests {
     static let productID = "com.lemmetype.LemmeType.iOS.pro.monthly"
 

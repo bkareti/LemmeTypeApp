@@ -52,12 +52,17 @@ public final class RecordingCoordinator {
     public var onOpenSettings: @MainActor (SettingsNavigation.Pane) -> Void = { _ in }
     /// Saves a copy of a kept recording where the user chooses (Save Audio…).
     public var onSaveAudio: @MainActor (URL) async -> Void = { _ in }
+    /// Shows the subscription offer: called when a start is refused for want of a subscription, and by the
+    /// "See Subscription" choice (E13-S5).
+    public var onOpenSubscription: @MainActor () -> Void = {}
 
     var machine = RecorderStateMachine()
     public let capture: any AudioCapturing
     let processor: any DictationProcessing
     let feedback: any RecordingFeedback
     let preferences: any AppPreferences
+    /// Asked before every start; `nil` where the app is not sold by subscription (the Mac app).
+    let entitlement: (any EntitlementChecking)?
     let speechAuthorizer: (any SpeechRecognitionAuthorizing)?
     let textCopier: (any TextCopying)?
     /// Records text the user copies from a review or an issue (E6-S3).
@@ -107,8 +112,10 @@ public final class RecordingCoordinator {
         residency: (any ModelResidencyManaging)? = nil,
         diagnostics: any DiagnosticsRecording = DiscardingDiagnostics(),
         limits: RecordingLimits = .none,
-        limitClock: any Clock<Duration> = ContinuousClock()
+        limitClock: any Clock<Duration> = ContinuousClock(),
+        entitlement: (any EntitlementChecking)? = nil
     ) {
+        self.entitlement = entitlement
         self.limits = limits
         self.limitClock = limitClock
         self.residency = residency
@@ -200,6 +207,8 @@ public final class RecordingCoordinator {
         activeSettings = SessionSettings(preferences: preferences, library: personalization(), target: target)
         activePurpose = purpose
         activeContext = target?.context
+        // Without a trial or subscription nothing is recorded, from any way of starting.
+        if await refusesWithoutSubscription() { return }
         // A voice edit that can't run is refused before the user speaks.
         if purpose == .editing,
             let issue = await processor.editingIssue(

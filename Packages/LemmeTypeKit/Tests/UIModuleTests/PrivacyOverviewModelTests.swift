@@ -22,7 +22,8 @@ struct PrivacyOverviewModelTests {
 
     private func make(
         history: [String] = ["one", "two"], vocabulary: [String] = ["LemmeType"],
-        installed: Set<ModelAssetID> = [.whisperBaseEnglish], staleAudio: Bool = true
+        installed: Set<ModelAssetID> = [.whisperBaseEnglish], staleAudio: Bool = true,
+        eraseSubscriptionSummary: @escaping @MainActor () -> Void = {}
     ) throws -> Setup {
         let preferences = FakePreferences()
         preferences.historyRetention = .oneWeek
@@ -54,13 +55,22 @@ struct PrivacyOverviewModelTests {
         let assets = FakeModelAssetManager(installed: installed)
         let model = PrivacyOverviewModel(
             history: historyModel, personalization: personalization, modes: modes, capture: capture,
-            modelAssets: assets, clearDiagnostics: { diagnostics.removeAll() })
+            modelAssets: assets, clearDiagnostics: { diagnostics.removeAll() },
+            eraseSubscriptionSummary: eraseSubscriptionSummary)
         return Setup(
             model: model, historyStore: historyStore, personalizationStore: personalizationStore,
             diagnostics: diagnostics, assets: assets, sessions: sessions)
     }
 
     private func clean(_ setup: Setup) { try? FileManager.default.removeItem(at: setup.sessions) }
+
+    @Test func deleteAllRemovesTheSubscriptionSummaryTheKeyboardReads() async throws {
+        var erased = 0
+        let setup = try make(eraseSubscriptionSummary: { erased += 1 })
+        defer { clean(setup) }
+        await setup.model.eraseAll()
+        #expect(erased == 1)
+    }
 
     @Test func deleteAllRemovesHistoryPersonalizationAudioAndDiagnostics() async throws {
         let setup = try make()

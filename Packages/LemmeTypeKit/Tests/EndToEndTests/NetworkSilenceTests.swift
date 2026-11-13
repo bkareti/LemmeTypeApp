@@ -7,6 +7,7 @@
     import TestSupport
     import Testing
 
+    @testable import Audio
     @testable import UI
 
     /// E6-S2: Local mode is network-silent. Complete sessions run through the real
@@ -56,6 +57,36 @@
             defer { close(descriptor) }
             let watch = SocketWatch(interval: .milliseconds(1))
             #expect(watch.stop().isEmpty)
+        }
+
+        // MARK: The subscription check (E13-S5)
+
+        /// A verified trial dictates locally with the App Store out of reach: the check asks nobody and opens no socket.
+        @Test func aVerifiedTrialStartsADictationWithoutTheNetwork() async throws {
+            let watch = SocketWatch()
+            let storage = AudioSessionStorage(
+                directory: FileManager.default.temporaryDirectory
+                    .appendingPathComponent("LemmeTypeTests-Entitlement-\(UUID().uuidString)", isDirectory: true))
+            defer { try? FileManager.default.removeItem(at: storage.directory) }
+            let source = FakeAudioSource()
+            let service = FakeSubscriptionService(state: .trialing(until: Date().addingTimeInterval(7 * 86_400)))
+            service.setReachable(false)  // Airplane Mode
+            let coordinator = RecordingCoordinator(
+                capture: AudioCaptureService(
+                    source: source, storage: storage, permissions: FakePermissions(statuses: [.microphone: .granted])),
+                processor: TranscriptionPipeline(
+                    engines: [FakeRecognitionEngine(id: .appleSpeech)], delivery: FakeTextDelivery()),
+                feedback: SilentFeedback(), preferences: FakePreferences(),
+                entitlement: EntitlementGate(subscription: service, ledger: FakeEntitlementLedger()))
+
+            coordinator.handle(.start(FakeTargetCapturer.textEdit))
+            await coordinator.settle()
+            #expect(source.isRunning, "the microphone opened: the start was allowed")
+            coordinator.requestCancel()
+            await coordinator.settle()
+
+            #expect(service.reachabilityChecks == 0, "inside the period, nobody is asked")
+            #expect(watch.stop().isEmpty, "no internet socket was opened")
         }
 
         // MARK: Full sessions

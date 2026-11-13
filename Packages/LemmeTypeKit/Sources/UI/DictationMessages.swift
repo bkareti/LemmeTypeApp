@@ -54,6 +54,8 @@ extension DictationIssue {
             String(
                 localized: "Read your dictation. It is copied only when you choose Copy, and never sent.",
                 bundle: .module)
+        case .subscriptionRequired(let reason):
+            reason.userMessage
         case .reviewRewrite(let notice):
             notice?.userMessage
                 ?? String(
@@ -231,7 +233,7 @@ extension DictationAction {
         case .copyText: String(localized: "Copy Text", bundle: .module)
         case .retryDelivery: String(localized: "Retry Insert", bundle: .module)
         case .openPermissions, .openContextSettings, .useLanguage, .chooseLanguage, .insertText, .useOriginal,
-            .regenerate:
+            .regenerate, .openSubscription:
             settingsTitle
         case .discard:
             String(
@@ -245,6 +247,10 @@ extension DictationAction {
         switch self {
         case .openPermissions: String(localized: "Open Permissions", bundle: .module)
         case .openContextSettings: String(localized: "Context Settings…", bundle: .module)
+        case .openSubscription:
+            String(
+                localized: "See Subscription Options", bundle: .module,
+                comment: "Button that opens the subscription offer when dictation needs one")
         case .useLanguage(let code):
             String(
                 localized: "Use \(SpokenLanguages.language(for: code)?.englishName ?? code)", bundle: .module)
@@ -269,6 +275,7 @@ extension DictationAction {
         case .copyText: "copy-text"
         case .retryDelivery: "retry-delivery"
         case .openPermissions: "open-permissions"
+        case .openSubscription: "open-subscription"
         case .openContextSettings: "open-context-settings"
         case .useLanguage(let code): "use-language-\(code)"
         case .chooseLanguage: "choose-language"
@@ -330,6 +337,35 @@ extension ProcessingPhase {
         case .writing: String(localized: "Writing…", bundle: .module)
         case .rewriting: String(localized: "Rewriting on \(DeviceWords.thisDevice)…", bundle: .module)
         case .delivering: String(localized: "Inserting…", bundle: .module)
+        }
+    }
+}
+
+extension EntitlementBlockReason {
+    /// Plain words for why dictation is not available, naming the way forward.
+    var userMessage: String {
+        switch self {
+        case .noSubscription:
+            String(
+                localized: "Dictation needs a free trial or a subscription. Your settings and data are untouched.",
+                bundle: .module, comment: "Shown when dictation is refused because there is no subscription")
+        case .expired:
+            String(
+                localized:
+                    "Your subscription has ended. Subscribe to keep dictating. Your settings and data are untouched.",
+                bundle: .module, comment: "Shown when dictation is refused because the subscription ended")
+        case .revoked:
+            String(
+                localized: "Your subscription was refunded. Subscribe again to keep dictating.", bundle: .module,
+                comment: "Shown when dictation is refused because the subscription was refunded")
+        case .paymentProblem:
+            String(
+                localized: "There is a problem with your payment. Update your payment method to keep dictating.",
+                bundle: .module, comment: "Shown when dictation is refused because a renewal payment failed")
+        case .unconfirmed:
+            String(
+                localized: "LemmeType couldn’t check your subscription yet. Try again in a moment.", bundle: .module,
+                comment: "Shown when dictation is refused because the subscription could not be checked")
         }
     }
 }

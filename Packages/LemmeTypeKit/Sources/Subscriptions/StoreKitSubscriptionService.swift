@@ -122,6 +122,12 @@ public actor StoreKitSubscriptionService: SubscriptionProviding, SubscriptionPro
         #endif
     }
 
+    public func canReachAppStore() async -> Bool {
+        // A fresh request, not the product kept from before: only the App Store itself can answer it.
+        guard let products = try? await Product.products(for: [productID]) else { return false }
+        return !products.isEmpty
+    }
+
     // MARK: SubscriptionProofProviding
 
     /// The signed transaction for the gateway (E13-S3), from a verified entitlement or, in a grace period,
@@ -171,7 +177,16 @@ public actor StoreKitSubscriptionService: SubscriptionProviding, SubscriptionPro
             let isTrial = transaction.offer?.type == .introductory && transaction.offer?.paymentMode == .freeTrial
             return isTrial ? .trialing(until: expiration) : .subscribed(renews: expiration, willRenew: true)
         }
-        return .notSubscribed
+        // Nothing active. The newest transaction (kept on the device, ended periods included) says whether the
+        // period only just ended, which is what the offline grace needs to know.
+        guard let latest = await Transaction.latest(for: productID), case .verified(let transaction) = latest else {
+            return .notSubscribed
+        }
+        return SubscriptionSnapshot.fromLatestTransaction(
+            expiration: transaction.expirationDate,
+            isFreeTrial: transaction.offer?.type == .introductory && transaction.offer?.paymentMode == .freeTrial,
+            revoked: transaction.revocationDate != nil, purchased: transaction.purchaseDate, now: Date()
+        ).state
     }
 
     private func publish(_ new: SubscriptionState) {

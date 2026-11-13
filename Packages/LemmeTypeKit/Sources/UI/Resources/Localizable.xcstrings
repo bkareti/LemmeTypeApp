@@ -84,6 +84,9 @@
         }
       }
     },
+    "%lld days left in your free trial." : {
+      "comment" : "Shown in Settings with the number of days left of the free trial"
+    },
     "%lld diagnostic events" : {
 
     },
@@ -587,6 +590,9 @@
     "Dictation can’t start." : {
 
     },
+    "Dictation needs a free trial or a subscription. Your settings and data are untouched." : {
+      "comment" : "Shown when dictation is refused because there is no subscription"
+    },
     "Dictation needs your attention. %@" : {
 
     },
@@ -925,6 +931,9 @@
     "LemmeType closed unexpectedly last time." : {
 
     },
+    "LemmeType couldn’t check your subscription yet. Try again in a moment." : {
+      "comment" : "Shown when dictation is refused because the subscription could not be checked"
+    },
     "LemmeType couldn’t confirm the text was inserted. Check the field, or copy the text." : {
 
     },
@@ -1254,6 +1263,9 @@
     "On. Audio from Cloud modes is sent to LemmeType." : {
       "comment" : "Status of cloud speech in Settings when it is on"
     },
+    "One day left in your free trial." : {
+      "comment" : "Shown in Settings when a day or less is left of the free trial"
+    },
     "Only modes that use Cloud speech go online, and only during their dictation. The only download is a speech model, and only after you confirm it." : {
 
     },
@@ -1569,7 +1581,7 @@
 
     },
     "See Subscription Options" : {
-      "comment" : "Button that opens the subscription offer when its price is not loaded"
+      "comment" : "Button that opens the subscription offer when dictation needs one\nButton that opens the subscription offer when its price is not loaded"
     },
     "Select text, hold the shortcut, and say what to change — “make this shorter”, “fix the grammar”, “turn this into a list”, or “translate to Spanish”. Only the selection is read, and Apple’s on-device model rewrites it on this Mac." : {
 
@@ -1705,6 +1717,9 @@
     },
     "Style" : {
       "comment" : "Noun: the tone, format, and length settings"
+    },
+    "Subscribe" : {
+
     },
     "Subscribe for %@ per %@" : {
       "comment" : "Button that starts the paid subscription, naming its price",
@@ -1896,6 +1911,9 @@
     },
     "The words LemmeType writes for you." : {
 
+    },
+    "There is a problem with your payment. Update your payment method to keep dictating." : {
+      "comment" : "Shown when dictation is refused because a renewal payment failed"
     },
     "There was no text field to insert into. Copy the text instead." : {
 
@@ -2245,6 +2263,9 @@
     "your cloud speech key and consent" : {
 
     },
+    "Your free trial ends soon. Subscribe to keep dictating." : {
+      "comment" : "Notice shown once, in the app, when the free trial is about to end"
+    },
     "your iPad" : {
       "comment" : "The user's tablet"
     },
@@ -2262,6 +2283,12 @@
     },
     "Your saved personalization was made by a newer LemmeType. It was kept, and LemmeType started fresh." : {
 
+    },
+    "Your subscription has ended. Subscribe to keep dictating. Your settings and data are untouched." : {
+      "comment" : "Shown when dictation is refused because the subscription ended"
+    },
+    "Your subscription was refunded. Subscribe again to keep dictating." : {
+      "comment" : "Shown when dictation is refused because the subscription was refunded"
     },
     "Your text is ready in LemmeType. Open the app to copy it." : {
       "comment" : "Shown on the keyboard when iOS ended background time before the text could be handed over"

@@ -85,6 +85,9 @@ struct IOSComposition {
         var actionDictation = ActionDictationServices()
         var subscription: any SubscriptionProviding
         var paywallSeen: any PaywallSeenStoring
+        /// Whether dictation needs an active trial or subscription, and the summary the keyboard reads.
+        var entitlement: any EntitlementChecking
+        var entitlementSummary: any EntitlementSummaryStoring
     }
 
     static func make(arguments: [String]) -> IOSComposition {
@@ -147,7 +150,9 @@ struct IOSComposition {
             actionDictation: ActionDictationServices(
                 handoff: AppGroupKeyboardHandoffStore.makeDefault(), presenter: IOSActionDictationPresenter(),
                 backgroundTime: IOSBackgroundTime(), gate: gate),
-            subscription: subscription, paywallSeen: UserDefaultsPaywallSeen())
+            subscription: subscription, paywallSeen: UserDefaultsPaywallSeen(),
+            entitlement: EntitlementGate(subscription: subscription, ledger: UserDefaultsEntitlementLedger()),
+            entitlementSummary: AppGroupEntitlementSummaryStore.makeDefault())
     }
 
     // MARK: Assembly
@@ -172,7 +177,12 @@ struct IOSComposition {
             speechAuthorizer: services.speechAuthorizer, textCopier: services.textCopier,
             attentionDisplay: .seconds(600),
             personalization: { [weak personalization] in personalization?.library ?? .empty },
-            residency: residency, diagnostics: diagnostics, limits: services.limits)
+            residency: residency, diagnostics: diagnostics, limits: services.limits,
+            entitlement: services.entitlement)
+        let subscription = SubscriptionModel(
+            service: services.subscription, seen: services.paywallSeen, summary: services.entitlementSummary)
+        // A dictation refused for want of a subscription shows the offer, and so does its "See Subscription" choice.
+        recorder.onOpenSubscription = { [weak subscription] in subscription?.showPaywall() }
         let permissions = PermissionsModel(
             checker: services.permissionChecker, requester: services.permissionRequester, diagnostics: diagnostics)
         let dictation = DictationSettingsModel(
@@ -213,7 +223,8 @@ struct IOSComposition {
         let privacy = PrivacyOverviewModel(
             history: history, personalization: personalization, modes: modes, capture: services.audioCapture,
             modelAssets: services.modelAssets, clearDiagnostics: { diagnostics.removeAll() },
-            eraseCloudSpeech: { await cloudSpeech?.eraseAll() ?? false })
+            eraseCloudSpeech: { await cloudSpeech?.eraseAll() ?? false },
+            eraseSubscriptionSummary: { [weak subscription] in subscription?.eraseSummary() })
         let launchRequests = LaunchRequestInbox()
         let checker = services.permissionChecker
         let requester = services.permissionRequester
@@ -254,7 +265,6 @@ struct IOSComposition {
             recorder: recorder, handoff: services.actionDictation.handoff,
             presenter: services.actionDictation.presenter, backgroundTime: services.actionDictation.backgroundTime,
             gate: services.actionDictation.gate, prepare: prepare)
-        let subscription = SubscriptionModel(service: services.subscription, seen: services.paywallSeen)
         return IOSComposition(
             mode: mode, subscription: subscription, cloudSpeech: cloudSpeech, launchRequests: launchRequests,
             recorder: recorder, quick: quick,

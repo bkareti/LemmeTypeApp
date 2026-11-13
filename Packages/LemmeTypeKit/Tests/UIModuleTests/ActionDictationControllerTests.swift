@@ -68,12 +68,13 @@ final class ActionDictationControllerTests {
     private static let review = DictationOutcome.needsAttention(
         .reviewTranslation, engine: nil, alternatives: [], transcript: "English text")
 
-    private func makeRecorder() -> RecordingCoordinator {
+    private func makeRecorder(entitlement: (any EntitlementChecking)? = nil) -> RecordingCoordinator {
         RecordingCoordinator(
             capture: AudioCaptureService(
                 source: source, storage: storage, permissions: FakePermissions(statuses: [.microphone: .granted])),
             processor: processor, feedback: FakeFeedback(), preferences: FakePreferences(),
-            finishedDisplay: .milliseconds(50), failureDisplay: .seconds(60), attentionDisplay: .seconds(60))
+            finishedDisplay: .milliseconds(50), failureDisplay: .seconds(60), attentionDisplay: .seconds(60),
+            entitlement: entitlement)
     }
 
     private func makeController(
@@ -218,6 +219,24 @@ final class ActionDictationControllerTests {
         #expect(!source.isRunning)
         #expect(presenter.began == 1)
         await waitUntil { finishedText() != nil }
+    }
+
+    /// E13-S5: without a subscription the Action Button records nothing and tells the keyboard why.
+    @Test func withoutASubscriptionThePressRecordsNothingAndTheKeyboardIsToldWhy() async {
+        let recorder = makeRecorder(entitlement: FakeEntitlement(.blocked(.expired)))
+        var offered = 0
+        recorder.onOpenSubscription = { offered += 1 }
+        let controller = makeController(recorder)
+
+        await controller.toggle()
+        await recorder.settle()
+
+        #expect(!source.isRunning, "the microphone never opened")
+        #expect(recordings.isEmpty)
+        #expect(handoff.published.last?.phase == .failed)
+        #expect(handoff.published.last?.failureMessage?.isEmpty == false)
+        #expect(handoff.published.last?.text == nil)
+        #expect(offered == 1)
     }
 
     @Test func aRefusedLiveActivityMeansNoRecording() async {

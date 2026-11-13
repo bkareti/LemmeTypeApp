@@ -176,7 +176,7 @@ extension RecordingCoordinator {
             await allowSpeechRecognition()
         case .saveAudio:
             await onSaveAudio(session.audio.fileURL)
-        case .chooseEngine, .chooseLanguage, .openPermissions, .openContextSettings, .discard:
+        case .chooseEngine, .chooseLanguage, .openPermissions, .openContextSettings, .openSubscription, .discard:
             break  // handled above
         }
     }
@@ -188,6 +188,7 @@ extension RecordingCoordinator {
         case .chooseEngine, .chooseLanguage: onOpenSettings(.dictation)
         case .openPermissions: onOpenSettings(.permissions)
         case .openContextSettings: onOpenSettings(.context)
+        case .openSubscription: onOpenSubscription()
         case .discard: dismiss()
         default: return false
         }

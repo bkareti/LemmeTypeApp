@@ -124,6 +124,65 @@ struct SubscriptionModelTests {
         model.stop()
     }
 
+    // MARK: The trial countdown and the summary (E13-S5)
+
+    private func model(
+        state: SubscriptionState, summary: FakeEntitlementSummaryStore? = nil, seen: FakePaywallSeen? = nil,
+        now: Date
+    ) -> SubscriptionModel {
+        SubscriptionModel(
+            service: FakeSubscriptionService(state: state), seen: seen ?? FakePaywallSeen(true), summary: summary,
+            now: { now })
+    }
+
+    @Test func theTrialCountdownCountsWholeDaysLeftRoundedUp() async {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let threeDays = model(state: .trialing(until: now.addingTimeInterval(3 * 86_400 - 60)), now: now)
+        await threeDays.start()
+        #expect(threeDays.trialDaysLeft == 3)
+        #expect(SubscriptionWording.trialCountdown(daysLeft: 3).contains("3 days"))
+        #expect(SubscriptionWording.trialCountdown(daysLeft: 1).localizedCaseInsensitiveContains("one day"))
+        let none = model(state: .subscribed(renews: later, willRenew: true), now: now)
+        await none.start()
+        #expect(none.trialDaysLeft == nil)
+        threeDays.stop()
+        none.stop()
+    }
+
+    @Test func theTrialEndingNoticeShowsOnceAtADayLeftAndNeverForAPaidPlan() async {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let seen = FakePaywallSeen(true)
+        let soon = model(state: .trialing(until: now.addingTimeInterval(20 * 3_600)), seen: seen, now: now)
+        await soon.start()
+        #expect(soon.showsTrialEndingNotice)
+        soon.dismissTrialEndingNotice()
+        #expect(!soon.showsTrialEndingNotice)
+        #expect(seen.hasSeenTrialEndingNotice, "it is not shown again later")
+
+        let again = model(state: .trialing(until: now.addingTimeInterval(20 * 3_600)), seen: seen, now: now)
+        await again.start()
+        #expect(!again.showsTrialEndingNotice)
+
+        let early = model(state: .trialing(until: now.addingTimeInterval(5 * 86_400)), now: now)
+        await early.start()
+        #expect(!early.showsTrialEndingNotice, "five days left is too early to nag")
+        let paid = model(state: .subscribed(renews: now.addingTimeInterval(3_600), willRenew: true), now: now)
+        await paid.start()
+        #expect(!paid.showsTrialEndingNotice)
+        for item in [soon, again, early, paid] { item.stop() }
+    }
+
+    @Test func theSummaryFollowsTheStateAndIsRemovedOnDeleteAll() async {
+        let store = FakeEntitlementSummaryStore()
+        let end = Date(timeIntervalSince1970: 1_900_000_000)
+        let model = model(state: .trialing(until: end), summary: store, now: Date(timeIntervalSince1970: 1_800_000_000))
+        await model.start()
+        #expect(store.read() == EntitlementSummary(status: .trial, endsAt: end))
+        model.eraseSummary()
+        #expect(store.read() == nil)
+        model.stop()
+    }
+
     @Test func manageSubscriptionsAsksTheService() async {
         let model = makeModel()
         await model.manage()

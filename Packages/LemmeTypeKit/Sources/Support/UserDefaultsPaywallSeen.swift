@@ -1,9 +1,11 @@
 import Domain
 import Foundation
 
-/// Remembers that the paywall was shown once. It holds one yes or no and nothing about the person.
+/// Remembers that the paywall and the trial-ending notice were shown once each. Two yes-or-no values and nothing
+/// about the person.
 public final class UserDefaultsPaywallSeen: PaywallSeenStoring {
     private static let key = "paywallShownOnFirstLaunch"
+    private static let noticeKey = "trialEndingNoticeShown"
     // `UserDefaults` is documented as thread-safe.
     private nonisolated(unsafe) let defaults: UserDefaults
 
@@ -14,5 +16,10 @@ public final class UserDefaultsPaywallSeen: PaywallSeenStoring {
     public var hasSeenPaywall: Bool {
         get { defaults.bool(forKey: Self.key) }
         set { defaults.set(newValue, forKey: Self.key) }
+    }
+
+    public var hasSeenTrialEndingNotice: Bool {
+        get { defaults.bool(forKey: Self.noticeKey) }
+        set { defaults.set(newValue, forKey: Self.noticeKey) }
     }
 }

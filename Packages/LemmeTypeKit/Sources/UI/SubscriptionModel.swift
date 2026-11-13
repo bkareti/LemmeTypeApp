@@ -20,17 +20,52 @@ public final class SubscriptionModel {
     public private(set) var product: SubscriptionProduct?
     public private(set) var isWorking = false
     public private(set) var message: Message?
-    /// The paywall is on screen. Settings and E13-S5 set this too.
+    /// The paywall is on screen. Settings, and a refused dictation, set this too.
     public var isShowingPaywall = false
+    /// The trial-ending notice was closed (it is shown once; see ``showsTrialEndingNotice``).
+    public private(set) var trialNoticeDismissed = false
 
     private let service: any SubscriptionProviding
     private let seen: any PaywallSeenStoring
+    private let summary: (any EntitlementSummaryStoring)?
+    private let now: @Sendable () -> Date
     private var startTask: Task<Void, Never>?
     private var updatesTask: Task<Void, Never>?
 
-    public init(service: any SubscriptionProviding, seen: any PaywallSeenStoring) {
+    public init(
+        service: any SubscriptionProviding, seen: any PaywallSeenStoring,
+        summary: (any EntitlementSummaryStoring)? = nil, now: @escaping @Sendable () -> Date = { Date() }
+    ) {
         self.service = service
         self.seen = seen
+        self.summary = summary
+        self.now = now
+    }
+
+    /// Whole days left in the free trial, rounded up, or `nil` when not in a trial.
+    public var trialDaysLeft: Int? {
+        guard case .trialing(let until) = state, until > now() else { return nil }
+        return Int((until.timeIntervalSince(now()) / 86_400).rounded(.up))
+    }
+
+    /// One notice, in the app, when a day or less is left in the trial. It is not a push notification.
+    public var showsTrialEndingNotice: Bool {
+        guard let days = trialDaysLeft, days <= 1 else { return false }
+        return !trialNoticeDismissed && !seen.hasSeenTrialEndingNotice
+    }
+
+    public func dismissTrialEndingNotice() {
+        trialNoticeDismissed = true
+        seen.hasSeenTrialEndingNotice = true
+    }
+
+    /// Removes the summary the keyboard and intents read (Delete All Local Data).
+    public func eraseSummary() {
+        summary?.clear()
+    }
+
+    private func publishSummary() {
+        summary?.write(EntitlementSummary(state))
     }
 
     /// Starts loading in the background, so launching never waits for the App Store.
@@ -42,10 +77,14 @@ public final class SubscriptionModel {
     public func start() async {
         await service.start()
         state = await service.currentState()
+        publishSummary()
         product = await service.product()
         if updatesTask == nil {
             updatesTask = Task { [service] in
-                for await update in service.stateUpdates { self.state = update }
+                for await update in service.stateUpdates {
+                    self.state = update
+                    self.publishSummary()
+                }
             }
         }
         offerThePaywallOnce()
@@ -83,6 +122,7 @@ public final class SubscriptionModel {
         switch await service.purchase() {
         case .purchased:
             state = await service.currentState()
+            publishSummary()
             isShowingPaywall = false
         case .pending: message = .pending
         case .cancelled: message = .cancelled
@@ -98,6 +138,7 @@ public final class SubscriptionModel {
         message = nil
         if await service.restore() {
             state = await service.currentState()
+            publishSummary()
             isShowingPaywall = false
         } else {
             message = .nothingToRestore

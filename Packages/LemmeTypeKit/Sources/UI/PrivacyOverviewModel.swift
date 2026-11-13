@@ -39,6 +39,8 @@ public final class PrivacyOverviewModel {
     private let modelAssets: any ModelAssetManaging
     private let clearDiagnostics: @MainActor () -> Int
     private let eraseCloudSpeech: (@MainActor () async -> Bool)?
+    /// Removes what the keyboard and intents read about the subscription (E13-S5).
+    private let eraseSubscriptionSummary: @MainActor () -> Void
 
     public init(
         history: HistorySettingsModel,
@@ -47,8 +49,10 @@ public final class PrivacyOverviewModel {
         capture: any AudioCapturing,
         modelAssets: any ModelAssetManaging,
         clearDiagnostics: @escaping @MainActor () -> Int,
-        eraseCloudSpeech: (@MainActor () async -> Bool)? = nil
+        eraseCloudSpeech: (@MainActor () async -> Bool)? = nil,
+        eraseSubscriptionSummary: @escaping @MainActor () -> Void = {}
     ) {
+        self.eraseSubscriptionSummary = eraseSubscriptionSummary
         self.history = history
         self.personalization = personalization
         self.modes = modes
@@ -105,6 +109,7 @@ public final class PrivacyOverviewModel {
         await capture.purgeLeftovers()
         result.diagnosticsEvents = clearDiagnostics()
         if let eraseCloudSpeech { result.cloudSpeechRemoved = await eraseCloudSpeech() }
+        eraseSubscriptionSummary()
 
         if removesModels {
             for asset in ModelCatalog.all where await modelAssets.state(of: asset.id) != .notInstalled {
