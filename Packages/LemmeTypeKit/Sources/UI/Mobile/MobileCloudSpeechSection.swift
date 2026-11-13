@@ -162,7 +162,7 @@
                         Text(
                             String(
                                 localized:
-                                    "Only the audio of those recordings is sent. Your vocabulary, your other modes, and anything else on this device are not. LemmeType does not keep your audio or the text.",
+                                    "Only the audio of those recordings is sent. Your vocabulary, your other modes, and anything else on this device are not. LemmeType does not keep your audio or the text. It keeps only how many minutes you use, under a code that does not identify you, and deletes that 35 days after your billing period ends.",
                                 bundle: .module, comment: "Second paragraph of the cloud speech agreement"))
                         Text(
                             String(

@@ -34,7 +34,19 @@ check "app icon compiled" '[[ -f "$app/Assets.car" ]] && [[ -n "$(plutil -extrac
 manifest="$app/PrivacyInfo.xcprivacy"
 check "privacy manifest present" '[[ -f "$manifest" ]]'
 check "privacy manifest: no tracking" '[[ "$(plutil -extract NSPrivacyTracking raw -o - "$manifest")" == false ]]'
-check "privacy manifest: no collected data" '[[ "$(plutil -extract NSPrivacyCollectedDataTypes json -o - "$manifest")" == "[]" ]]'
+# The manifest, the App Privacy answers, and the policy agree (E13-S8, docs/release/app-store.md section 4).
+collected_types() {
+  python3 -I -c 'import plistlib,sys; d=plistlib.load(open(sys.argv[1],"rb")); print(" ".join(sorted(i["NSPrivacyCollectedDataType"] for i in d.get("NSPrivacyCollectedDataTypes",[]))))' "$manifest"
+}
+check "privacy manifest: audio, purchases, and usage data, nothing else" '[[ "$(collected_types)" == "NSPrivacyCollectedDataTypeAudioData NSPrivacyCollectedDataTypeOtherUsageData NSPrivacyCollectedDataTypePurchaseHistory" ]]'
+
+# Cloud speech is part of this release, so a build without a production gateway, or while a launch gate is
+# still Open, is refused: it would say one thing and do another.
+gateway="$(value LemmeTypeGatewayHost)"
+check "production gateway host is set (LEMMETYPE_GATEWAY_HOST)" '[[ -n "$gateway" ]]'
+check "gateway host is a plain production host name" '[[ "$gateway" =~ ^[A-Za-z0-9.-]+$ && "$gateway" != *staging* && "$gateway" != *.invalid && "$gateway" != localhost ]]'
+check "microphone text names Cloud speech" 'value NSMicrophoneUsageDescription | grep -q "Cloud speech"'
+check "every ADR 0031 launch gate is Closed in docs/release/app-store.md" '! sed -n "/^## 9\. Launch gates/,\$p" "$root/docs/release/app-store.md" | grep -qE "\| Open \|"'
 
 binary="$app/$(value CFBundleExecutable)"
 check "executable is arm64 only" '[[ "$(lipo -archs "$binary")" == arm64 ]]'

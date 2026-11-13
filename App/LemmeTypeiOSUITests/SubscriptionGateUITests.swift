@@ -24,6 +24,10 @@ final class SubscriptionGateUITests: XCTestCase {
         XCTAssertTrue(app.links["paywall.privacy"].exists || app.buttons["paywall.privacy"].exists)
 
         app.buttons["paywall.close"].tap()
+        // The refusal stays on the Dictate screen until it is dismissed; nothing was recorded.
+        XCTAssertTrue(app.staticTexts["quick.attention"].waitForExistence(timeout: 5), "the screen says why")
+        XCTAssertFalse(app.buttons["quick.stop"].exists)
+        app.buttons["quick.action.discard"].tap()
         XCTAssertTrue(app.buttons["quick.record"].waitForExistence(timeout: 5), "back on the same screen")
     }
 

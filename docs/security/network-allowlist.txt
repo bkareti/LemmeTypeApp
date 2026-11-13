@@ -7,4 +7,4 @@
 
 Packages/LemmeTypeKit/Sources/ModelAssets/URLSessionModelDownloader.swift  # Downloads a model only after the user confirms the size (ADR 0011)
 Packages/LemmeTypeKit/Sources/Updates/GitHubReleaseFeed.swift  # The update check: one GET for release metadata, only when the user asks or turned on the weekly check (ADR 0026)
-Packages/LemmeTypeKit/Sources/Recognition/Cloud/URLSessionCloudSpeechTransport.swift  # Opt-in cloud speech: sends audio to the one consented provider host, only for a mode that names the cloud engine (ADR 0031)
+Packages/LemmeTypeKit/Sources/Recognition/Cloud/URLSessionCloudSpeechTransport.swift  # Opt-in Cloud speech and the subscription check: talks only to the LemmeType speech gateway host (ADR 0031, 0033); the host is checked in the transport, and the recording is sent only for a mode that names the cloud engine, after the person agreed

@@ -596,9 +596,6 @@
     "Dictation needs your attention. %@" : {
 
     },
-    "Dictation never uses the network. The only download is a speech model, and only after you confirm it." : {
-
-    },
     "Dictation recording" : {
 
     },
@@ -994,6 +991,12 @@
     "Length" : {
       "comment" : "Noun: how long the rewritten text should be"
     },
+    "Local dictation never uses the network. Apple checks your subscription. The only download is a speech model, and only after you confirm it." : {
+
+    },
+    "Local dictation never uses the network. Only modes that use Cloud speech send anything to LemmeType, and only during their dictation. Apple checks your subscription. The only download is a speech model, and only after you confirm it." : {
+
+    },
     "Looking for a new version sends your app’s version number and, like any web request, your IP address to GitHub. LemmeType never downloads or installs an update by itself. It opens the release page in your browser." : {
 
     },
@@ -1266,10 +1269,7 @@
     "One day left in your free trial." : {
       "comment" : "Shown in Settings when a day or less is left of the free trial"
     },
-    "Only modes that use Cloud speech go online, and only during their dictation. The only download is a speech model, and only after you confirm it." : {
-
-    },
-    "Only the audio of those recordings is sent. Your vocabulary, your other modes, and anything else on this device are not. LemmeType does not keep your audio or the text." : {
+    "Only the audio of those recordings is sent. Your vocabulary, your other modes, and anything else on this device are not. LemmeType does not keep your audio or the text. It keeps only how many minutes you use, under a code that does not identify you, and deletes that 35 days after your billing period ends." : {
       "comment" : "Second paragraph of the cloud speech agreement"
     },
     "Open Context Settings" : {

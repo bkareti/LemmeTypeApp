@@ -18,6 +18,10 @@ Release: ____  Build: ____  Mac / macOS: ____  Checked by: ____  Date: ____
 - [ ] No captured audio is left behind by the tests. — `make privacy-check`
 - [ ] The iPhone and iPad app has no background modes, entitlements, or ATS exceptions, and its privacy manifest matches the code. — `make security-check`
 - [ ] On iPhone and iPad, a dictation is copied only on request, and Cancel and Discard never touch the clipboard. — `HandheldEndToEndTests`
+- [ ] The iPhone app's privacy manifest declares only audio, purchase, and usage data, for app functionality, and tracking is off. — `make security-check`
+- [ ] Only the speech gateway host is contacted for Cloud speech, and no key or token reaches disk. — `make network-check`, `IOSCompositionTests`
+- [ ] Nothing is sent to the gateway without consent, or when Cloud speech is off. — `CloudSpeechSettingsModelTests`, `CloudSpeechEngineTests`
+- [ ] Dictation is refused before the microphone opens without a trial or subscription. — `RecordingCoordinatorEntitlementTests`
 - [ ] The threat model and this checklist still match the code. — `make privacy-docs-check`
 
 ## Release artifact
@@ -39,6 +43,8 @@ Release: ____  Build: ____  Mac / macOS: ____  Checked by: ____  Date: ____
 - [ ] A killed app starts cleanly and tells the user once. — `MA-62`
 - [ ] On an iPhone and an iPad, recording stops on interruption and in the background, and copied text expires. — `MA-69`, `MA-67`
 - [ ] The iPhone app works in Airplane Mode and makes no connection while dictating. — `MA-70`
+- [ ] Cloud speech through the production gateway, consent, a refused start without a subscription, and Delete All. — `MA-73`, `MA-75`, `MA-76`
+- [ ] The App Privacy answers, privacy policy, in-app text, and privacy manifest agree, and every launch gate is Closed. — `docs/release/app-store.md`, `docs/backlog/reviews/epic-13-s8-agreement.md`
 
 ## Release notes
 

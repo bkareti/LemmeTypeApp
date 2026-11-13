@@ -241,7 +241,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   vendor-neutral engine, `RecognitionEngineID.cloud`, `ProcessingLocation.cloud`. Everything specific to a
   vendor is one pure `CloudSpeechProvider` (`SarvamProvider`); `CloudSpeechProviderContract` (TestSupport)
   is what a replacement must pass. `URLSessionCloudSpeechTransport` is the third allowlisted network file.
-  `EngineSelector` and the pipeline's alternatives never pick it unless it is the preferred engine. The iPhone app registers it in Debug only (`IOSComposition.offersCloudSpeech`); the Mac app does
+  `EngineSelector` and the pipeline's alternatives never pick it unless it is the preferred engine. The iPhone app registers it in Debug, and in Release only when `LEMMETYPE_GATEWAY_HOST` (`Config/LemmeTypeiOS.xcconfig`, read from Info.plist) names the production gateway (`IOSComposition.offersCloudSpeech`, E13-S8); then `LanguageScope.englishWithCloud` offers English locally plus Telugu through Cloud. `scripts/verify-ios-appstore.sh` refuses an archive with no production host or an Open launch gate (`docs/release/app-store.md` §9). The Mac app does
   not yet (E11-S3). Audio goes to the LemmeType gateway (ADR 0033, E13-S3): `GatewaySpeechProvider` is the provider,
   `GatewayService` (Recognition/Cloud) trades the subscription proof (`SubscriptionProofProviding`, StoreKit in E13-S4) for a
   15-minute token kept in memory, and `GatewayTransport` adds it to each request and replaces a refused one once. There is no

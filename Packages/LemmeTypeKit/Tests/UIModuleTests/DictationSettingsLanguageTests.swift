@@ -70,6 +70,12 @@ struct DictationSettingsLanguageTests {
         #expect(model.speechOutputChoices == SpeechOutput.allCases)
     }
 
+    @Test func theCloudScopeOffersTeluguButNeitherAutomaticNorHindi() async {
+        let model = await makeModel(scope: .englishWithCloud)
+        #expect(model.languageChoices == ["en-US", "en-GB", "te"])
+        #expect(model.speechOutputChoices == [.original])
+    }
+
     @Test func automaticIsOfferedOnlyWhenAnEngineCanDetect() async {
         let model = await makeModel(engines: [apple])
         #expect(model.languageChoices == ["en-US", "en-GB"])

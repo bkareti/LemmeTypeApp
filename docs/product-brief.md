@@ -49,7 +49,7 @@ It is a focused, keyboard-driven voice-writing tool.
 
 ## Non-goals for the first release
 
-- Cloud accounts or mandatory cloud processing.
+- LemmeType accounts (the subscription is identified by the Apple ID only) or mandatory cloud processing.
 - Meeting recording and speaker diarization.
 - Team workspaces and shared vocabulary.
 - Continuous screen monitoring.
@@ -60,7 +60,7 @@ It is a focused, keyboard-driven voice-writing tool.
 
 - A new user completes onboarding and their first dictation without support.
 - A short dictation is delivered quickly enough to feel faster than typing.
-- The app never uploads audio, transcript, or cursor context in Local mode.
+- The app never uploads audio, transcript, or cursor context in Local mode, and Local mode is network-silent. Cloud speech is optional, off by default, sends only the recording of that dictation, and stores nothing on LemmeType's server (ADR 0031, 0033).
 - Insertion succeeds in the supported application test matrix or presents a safe fallback.
 - Exact Dictation preserves meaning without hidden rewriting.
 - A user can undo or recover from every insertion failure.

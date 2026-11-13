@@ -9,13 +9,15 @@ Release use: [privacy release checklist](privacy-release-checklist.md).
 
 | Asset | Where it lives | Sensitivity |
 |---|---|---|
-| Voice recording | A temporary file during a session | High |
+| Voice recording | A temporary file during a session; in a Cloud dictation also in memory on LemmeType's server and the speech service (E13) | High |
 | Dictated text | Memory; the target app; optionally the history | High |
 | Text near the cursor and the selection | Memory during a session | High |
 | Clipboard | System pasteboard during a paste fallback | High |
 | History file | Application Support, owner-only, opt-in | High |
 | Vocabulary, snippets, modes | Application Support, owner-only | Medium |
 | Diagnostics | Memory; a report only if the user saves one | Medium |
+| Subscription proof and access token | StoreKit on the device; a 15-minute token in memory (E13-S2, S3) | Medium |
+| Subscription summary | A small file in the App Group (kind and end date, no identifiers) (E13-S5) | Low |
 | Downloaded models | Application Support | Low (large, not private) |
 | Build and release pipeline | Maintainer's Mac and CI | High (supply chain) |
 
@@ -33,7 +35,7 @@ Release use: [privacy release checklist](privacy-release-checklist.md).
 
 1. LemmeType ↔ other apps (Accessibility reads and writes, the pasteboard).
 2. LemmeType ↔ macOS services (Speech Recognition on device, Foundation Models on device).
-3. LemmeType ↔ the network (only the model host, after the user confirms).
+3. LemmeType ↔ the network: the model host after the user confirms, and, for the iPhone app, the LemmeType speech gateway for a Cloud dictation or a subscription check (ADR 0031, 0033). Local mode uses neither.
 4. LemmeType ↔ the disk, as the user's account.
 
 ## Threats
@@ -67,6 +69,10 @@ manual steps in backticks; the checker resolves every one.
 | T-22 | A stale shortcut starts the microphone by surprise | The intent only opens the app; a one-time request expires after 10 seconds; the device must be unlocked; the app records only once its screen is showing | `LaunchRequestInboxTests`, `QuickDictationModelTests`, `MA-68` | None known |
 | T-23 | A model that does not fit gets the app ended, or models end up in a backup | Memory is checked before loading; models and recordings are excluded from backup | `WhisperEngineMemoryTests`, `ModelBackupExclusionTests`, `RecordingBackupExclusionTests`, `MA-70`, `MA-72` | Memory figures are estimates until measured on devices |
 | T-24 | The iPhone app gains a permission, background mode, or network exception unreviewed | Rules in the security checker with fixture tests; a privacy manifest that must match the code | `scripts/check-security-config.py`, `scripts/tests/test-security-config.py`, `make security-check` | A reviewer approving a bad rule change |
+| T-25 | A Cloud recording is intercepted, stored, or read by a person or used to train a model | Cloud is off until the person agrees to a screen that names the server, the provider, and India; only the recording is sent, over TLS, to the one allowlisted gateway host; the gateway keeps no audio or text and logs none; the provider's retention is a launch gate | `CloudSpeechSettingsModelTests`, `CloudSpeechEngineTests`, `GatewayTransportTests`, `URLSessionCloudSpeechTransportTests`, `make network-check`, `MA-73` | The speech provider's own retention until its written answer is on file (launch gate 1, `docs/release/app-store.md`) |
+| T-26 | The subscription code or an access token identifies a person or leaks from the device | The server keeps a one-way code, never the Apple ID or transaction id; the token holds only the code, plan, and period and lives 15 minutes in memory; no token or key is written to disk; an old pasted key is erased | `GatewayServiceTests`, `GatewaySpeechProviderTests`, `IOSCompositionTests`, `MA-73` | The code is an identifier tied to one subscription for 35 days after it ends; the App Privacy answers say "linked" |
+| T-27 | Dictation or Cloud speech is used without a trial or subscription, or an ended one keeps working by changing the clock or going offline | One rule (`EntitlementPolicy`) checked before the microphone opens from every way of starting; a clock set back adds no time; an ended period is trusted for 3 days only while the App Store cannot be reached | `EntitlementPolicyTests`, `EntitlementGateTests`, `RecordingCoordinatorEntitlementTests`, `MA-75` | Airplane Mode gives up to 3 extra days after an ended period; a clock set forward blocks until real time catches up |
+| T-28 | The keyboard sees or sends more than it should (typing, audio, subscription) | No Full Access, no network, and no microphone code in the keyboard; the shared files hold one result or a kind-and-date summary, excluded from backup and removed after use | `make security-check`, `EntitlementSummaryTests`, `ActionDictationControllerTests`, `MA-68` | The keyboard mic key (E13-S7) will change this row and needs its own review |
 
 ## Accepted risks
 
@@ -82,3 +88,4 @@ manual steps in backticks; the checker resolves every one.
 
 1. App-level encryption or a lock for the history (owner: product).
 2. The update check (Epic 7) is the second network file; its threat is T-16.
+3. The speech gateway (E13) is the third and the subscription check the fourth; their threats are T-25 to T-27.

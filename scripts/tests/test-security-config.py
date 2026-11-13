@@ -185,12 +185,16 @@ class SecurityConfigTests(unittest.TestCase):
         self.edit("App/LemmeTypeiOS/PrivacyInfo.xcprivacy", "<key>NSPrivacyTracking</key>\n\t<false/>", "<key>NSPrivacyTracking</key>\n\t<true/>")
         self.assertIn("NSPrivacyTracking must be false", self.errors())
 
-    def test_the_privacy_manifest_may_not_declare_collected_data(self) -> None:
-        self.edit(
-            "App/LemmeTypeiOS/PrivacyInfo.xcprivacy", "<key>NSPrivacyCollectedDataTypes</key>\n\t<array/>",
-            "<key>NSPrivacyCollectedDataTypes</key>\n\t<array><dict/></array>",
-        )  # fmt: skip
-        self.assertIn("collects no data", self.errors())
+    def test_the_privacy_manifest_declares_only_what_cloud_speech_and_the_subscription_send(self) -> None:
+        self.assertEqual("", self.errors())  # the committed manifest declares the three allowed types
+
+    def test_the_privacy_manifest_may_not_declare_another_data_type(self) -> None:
+        self.edit("App/LemmeTypeiOS/PrivacyInfo.xcprivacy", "NSPrivacyCollectedDataTypeOtherUsageData", "NSPrivacyCollectedDataTypeLocation")  # fmt: skip
+        self.assertIn("NSPrivacyCollectedDataTypeLocation is not a data type the paid launch collects", self.errors())
+
+    def test_collected_data_may_not_be_used_for_advertising(self) -> None:
+        self.edit("App/LemmeTypeiOS/PrivacyInfo.xcprivacy", "NSPrivacyCollectedDataTypePurposeAppFunctionality", "NSPrivacyCollectedDataTypePurposeThirdPartyAdvertising")  # fmt: skip
+        self.assertIn("app functionality only", self.errors())
 
     def test_an_api_that_needs_a_declared_reason_must_be_in_the_manifest(self) -> None:
         probe = self.root / "App/LemmeTypeiOS/Probe.swift"

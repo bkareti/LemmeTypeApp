@@ -29,4 +29,15 @@ struct LanguageScopeTests {
             #expect(LanguageScope.allLanguages.offers(language: language))
         }
     }
+
+    @Test func theCloudScopeOffersEnglishAndTeluguOnly() {
+        let scope = LanguageScope.englishWithCloud
+        #expect(scope.offers(language: "en-US"))
+        #expect(scope.offers(language: "te"))
+        #expect(!scope.offers(language: "hi"))
+        #expect(!scope.offers(language: SpokenLanguages.automatic))
+        #expect(scope.speechOutputs == [.original])
+        let listed = ModelCatalog.all.filter(scope.lists).map(\.id)
+        #expect(listed == [.whisperTinyEnglish, .whisperBaseEnglish, .whisperSmallEnglish], "no multilingual download")
+    }
 }
