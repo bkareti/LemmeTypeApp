@@ -243,7 +243,7 @@ on one side cannot silently differ on the other.
 
 **Scope**
 
-- `shared/fixtures/`: `cleanup-corpus.json` (from `TextCleanerTests` cases), `model-catalog.json`, `modes-builtin.json`, `recorder-transitions.json`, `diagnostics-events.json`, one synthetic `personalization-archive-v1.json`.
+- `shared/fixtures/`: `cleanup-corpus.json` (from `TextCleanerTests` cases), `model-catalog.json`, `recorder-transitions.json`, `recognition-errors.json`. The mode, archive, and diagnostics-event fixtures move to the stories that use them (E16-S1, E16-S2, E14-S16).
 - Swift: new tests only (in existing test targets) that assert each file equals what Swift produces. No Swift source changes.
 - Kotlin: `core-testing` fixture loader.
 - `README.md` in the folder: synthetic data only, how to regenerate, who reviews.

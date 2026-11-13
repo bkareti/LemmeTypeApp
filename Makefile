@@ -9,8 +9,10 @@ IOS_DESTINATION := platform=iOS Simulator,name=iPhone 17
 IOS_XCODEBUILD := xcodebuild -project $(PROJECT) -scheme LemmeTypeiOS -destination '$(IOS_DESTINATION)' -derivedDataPath $(DERIVED)-ios
 XCODEBUILD  := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED)
 SWIFT_DIRS  := App Packages/LemmeTypeKit/Sources Packages/LemmeTypeKit/Tests Packages/LemmeTypeKit/Package.swift
+# Android core (ADR 0035): JDK 21. Homebrew's openjdk@21 when JAVA_HOME is not set.
+ANDROID_JAVA_HOME ?= $(or $(JAVA_HOME),$(wildcard /opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home))
 
-.PHONY: bootstrap generate build build-ios test-ios test-ui-ios evaluation-ios test test-unit test-app test-ui lint format app-icons privacy-check network-check security-check privacy-docs-check l10n-check l10n-update docs-check corpus-check evaluation-check evaluation quality-gate ios-appstore-check ios-appstore release-build release-verify release-notarize release-script-tests ci run clean benchmark release-check
+.PHONY: bootstrap generate build build-ios test-ios test-ui-ios evaluation-ios test test-unit test-app test-ui lint format app-icons privacy-check network-check security-check privacy-docs-check l10n-check l10n-update docs-check corpus-check evaluation-check evaluation quality-gate ios-appstore-check ios-appstore release-build release-verify release-notarize release-script-tests ci run clean benchmark release-check android-core-test
 
 bootstrap: ## Verify required tools are installed
 	@command -v xcodegen >/dev/null || { echo "Missing xcodegen: brew install xcodegen"; exit 1; }
@@ -74,6 +76,9 @@ l10n-update: ## Refresh the string catalog from the Swift sources
 docs-check: ## Fail if the release and support documents point at something that does not exist
 	python3 -I scripts/tests/test-doc-links.py
 	python3 -I scripts/check-doc-links.py
+
+android-core-test: ## Android pure-Kotlin core: build, unit tests, shared fixtures, import rule (needs JDK 21; not part of make ci)
+	cd android && JAVA_HOME="$(ANDROID_JAVA_HOME)" ./gradlew --console=plain check
 
 corpus-check: ## Corpus script tests and the committed corpus manifests (no audio needed)
 	python3 -I scripts/tests/test-corpus.py
