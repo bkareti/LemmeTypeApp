@@ -27,7 +27,7 @@ extension RecordingCoordinator {
         }
     }
 
-    private func run(
+    func run(
         _ session: DictationSession,
         work:
             @escaping @Sendable (any DictationProcessing, AsyncStream<ProcessingUpdate>.Continuation) async ->
@@ -74,6 +74,7 @@ extension RecordingCoordinator {
         processingTask = nil
         processingPhase = nil
         processingProgress = nil
+        if finishReviewChange(outcome) { return }
         switch outcome {
         case .delivered(let method):
             complete(with: method)
@@ -81,8 +82,10 @@ extension RecordingCoordinator {
             guard machine.handle(.processingNeedsAttention(issue)) else { return }
             if let engine { session?.engine = engine }
             pendingTranscript = transcript
+            forgetRewriteIfNewResult(issue)
             attentionActions = issue.actions(alternatives: alternatives).filter(isOffered)
             sync()
+            rememberFirstReview()
             feedback.announce(
                 String(localized: "Dictation needs your attention. \(issue.userMessage)", bundle: .module))
             Log.recognition.info("Session needs attention: \(issue.identifier, privacy: .public)")
@@ -96,6 +99,7 @@ extension RecordingCoordinator {
             reviewShowsOriginal = false
             attentionActions = issue.actions(alternatives: []).filter(isOffered)
             sync()
+            rememberFirstReview()
             feedback.announce(
                 String(localized: "Dictation needs your attention. \(issue.userMessage)", bundle: .module))
             Log.recognition.info("Session needs attention: \(issue.identifier, privacy: .public)")
@@ -144,6 +148,7 @@ extension RecordingCoordinator {
         pendingReview = nil
         reviewShowsOriginal = false
         attentionActions = []
+        forgetReviewHistory()
     }
 
     // MARK: Decisions
@@ -169,9 +174,7 @@ extension RecordingCoordinator {
         case .copyText, .retryDelivery, .insertText, .useOriginal:
             await useTranscript(for: action, session: session)
         case .regenerate:
-            guard let original = pendingReview?.original, machine.handle(.retry) else { return }
-            beginRetry()
-            startRegeneration(original, for: session)
+            regenerateReview(for: session)
         case .allowSpeechRecognition:
             await allowSpeechRecognition()
         case .saveAudio:
@@ -218,11 +221,12 @@ extension RecordingCoordinator {
 
     private func retry(_ session: DictationSession) {
         guard machine.handle(.retry) else { return }
+        forgetReviewHistory()  // recognised again: the new result is the first one
         beginRetry()
         startProcessing(session)
     }
 
-    private func beginRetry() {
+    func beginRetry() {
         cancelPendingDismiss()
         attentionActions = []
         sync()

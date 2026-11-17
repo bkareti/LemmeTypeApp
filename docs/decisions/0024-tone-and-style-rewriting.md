@@ -90,3 +90,14 @@ on-device model to fix grammar, spelling, and punctuation and keep the speaker's
 ADR's whole path: a fixed instruction, `PreservationChecker`, and a review with the original one tap
 away. The built-in **Proper English** mode turns it on and fixes the language to English, so it needs
 no network and works under the English-only scope (ADR 0029).
+
+## Addition: choosing a tone on the review screen (E12-S5, 2026-11-17)
+
+On iPhone and iPad the review screen offers Neutral, Casual, and Professional for **English text
+only** — a dictation in English or a translation to English. `DictationProcessing.restyle` rewrites
+the words before any rewrite with the mode's style and the chosen tone, through this ADR's path (fixed
+instruction, `PreservationChecker`, a review with the original one tap away). It never recognises the
+audio again and never sends text anywhere. The mode's own tone shows the first result without the
+model; Cancel or a failure goes back to the review. The review keeps its kind, so a translation keeps
+*Translate Again*. Telugu and mixed text get no tone choices: Apple's on-device model does not support
+them, and a cloud model would need text to leave the device, which ADR 0031 does not allow.

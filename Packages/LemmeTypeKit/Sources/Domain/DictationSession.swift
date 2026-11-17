@@ -323,6 +323,17 @@ public protocol DictationProcessing: Sendable {
         updates: @escaping @Sendable (ProcessingUpdate) -> Void
     ) async -> DictationOutcome
 
+    /// Rewrites `text` in `style`, chosen on the review screen (E12-S5), without
+    /// recognising the audio again. `language` is the language of `text`. Ends in
+    /// another review.
+    func restyle(
+        _ text: String,
+        style: StyleOptions,
+        language: String,
+        for session: DictationSession,
+        updates: @escaping @Sendable (ProcessingUpdate) -> Void
+    ) async -> DictationOutcome
+
     /// Why voice editing can't start for `target`, checked before recording
     /// so the user doesn't speak for nothing; `nil` when it can.
     func editingIssue(for target: ActivationTarget?, language: String) async -> DictationIssue?
@@ -338,6 +349,16 @@ public protocol DictationProcessing: Sendable {
 extension DictationProcessing {
     public func regenerate(
         _ original: String,
+        for session: DictationSession,
+        updates: @escaping @Sendable (ProcessingUpdate) -> Void
+    ) async -> DictationOutcome {
+        .cancelled
+    }
+
+    public func restyle(
+        _ text: String,
+        style: StyleOptions,
+        language: String,
         for session: DictationSession,
         updates: @escaping @Sendable (ProcessingUpdate) -> Void
     ) async -> DictationOutcome {

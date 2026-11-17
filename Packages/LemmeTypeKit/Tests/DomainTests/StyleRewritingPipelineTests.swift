@@ -203,6 +203,57 @@ struct StyleRewritingPipelineTests {
         #expect(rewriter.rewriteCount == 0)
     }
 
+    // MARK: Tone chosen on the review screen (E12-S5)
+
+    @Test func restyleRewritesInTheChosenToneWithoutRecognisingAgain() async throws {
+        let rewriter = FakeTextRewriter(script: .text("Hey, can you send it Friday?"))
+        let recogniser = engine(text: "send it Friday")
+        let casual = StyleOptions(tone: .casual)
+
+        let outcome = await pipeline(recogniser, rewriter: rewriter)
+            .restyle("Can you send it Friday?", style: casual, language: "en", for: try session(mode: .clean)) { _ in }
+        let result = try #require(review(outcome))
+
+        #expect(result.text == "Hey, can you send it Friday?")
+        #expect(result.original == "Can you send it Friday?")
+        #expect(result.style == casual && result.isRewritten)
+        #expect(rewriter.instructions == [try #require(StyleInstruction.make(casual))])
+        #expect(rewriter.languages == ["en"])
+        #expect(recogniser.recognizeCount == 0, "the audio is not recognised again")
+    }
+
+    @Test func restyleKeepsTheTextWhenTheRewriteChangesAFact() async throws {
+        let rewriter = FakeTextRewriter(script: .text("Hey, can you send it Monday?"))
+        let outcome = await pipeline(engine(text: "x"), rewriter: rewriter)
+            .restyle(
+                "Can you send it Friday?", style: StyleOptions(tone: .casual), language: "en",
+                for: try session(mode: .clean)
+            ) { _ in }
+        let result = try #require(review(outcome))
+
+        #expect(result.text == "Can you send it Friday?")
+        #expect(result.notice == .meaningChanged([.dateChanged]))
+    }
+
+    @Test func restyleWithoutTheModelKeepsTheTextWithAReason() async throws {
+        let rewriter = FakeTextRewriter(availability: .notEnabled)
+        let spoken = try session(mode: .clean)
+        let professional = StyleOptions(tone: .professional)
+        let outcome = await pipeline(engine(text: "x"), rewriter: rewriter)
+            .restyle("Send it.", style: professional, language: "en", for: spoken) { _ in }
+        let result = try #require(review(outcome))
+        #expect(result.text == "Send it.")
+        #expect(result.notice == .unavailable(.notEnabled))
+    }
+
+    @Test func restyleWithNoStyleDoesNothing() async throws {
+        let rewriter = FakeTextRewriter()
+        let outcome = await pipeline(engine(text: "x"), rewriter: rewriter)
+            .restyle("Text.", style: .none, language: "en", for: try session(mode: .clean)) { _ in }
+        #expect(outcome == .cancelled)
+        #expect(rewriter.rewriteCount == 0)
+    }
+
     // MARK: Privacy
 
     @Test func reviewsAreRedactedAndDiagnosticsNeverHoldText() async throws {

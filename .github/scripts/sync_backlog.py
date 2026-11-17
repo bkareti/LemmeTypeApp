@@ -45,7 +45,7 @@ REFINED_EPICS = {
     9: (EPIC_9_PATH, "phase:post-mvp", 6),
     10: (EPIC_10_PATH, "phase:post-mvp", 5),
     11: (EPIC_11_PATH, "phase:post-mvp", 4),
-    12: (EPIC_12_PATH, "phase:post-mvp", 4),
+    12: (EPIC_12_PATH, "phase:post-mvp", 6),
     13: (EPIC_13_PATH, "phase:post-mvp", 8),
 }
 # Epics 9 through 13 are not in roadmap.md; their title comes from the backlog file heading.
@@ -188,6 +188,8 @@ STORY_AREA_LABELS = {
     "E12-S2": ["area:mobile", "area:transcription"],
     "E12-S3": ["area:mobile", "area:modes"],
     "E12-S4": ["area:mobile", "area:privacy", "area:quality"],
+    "E12-S5": ["area:mobile", "area:modes"],
+    "E12-S6": ["area:mobile", "area:transcription"],
     "E13-S1": ["area:backend", "area:transcription", "area:privacy"],
     "E13-S2": ["area:backend", "area:billing", "area:security"],
     "E13-S3": ["area:mobile", "area:transcription", "area:privacy"],

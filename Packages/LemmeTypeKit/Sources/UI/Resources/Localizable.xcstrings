@@ -1988,10 +1988,13 @@
 
     },
     "Tone" : {
-      "comment" : "Noun: how the text sounds, such as friendly or professional"
+      "comment" : "Label of the tone choices on the review screen\nNoun: how the text sounds, such as friendly or professional"
     },
     "Tone and format" : {
 
+    },
+    "Tone changes aren’t available: %@" : {
+      "comment" : "Under the disabled tone choices on the review screen; the reason is a short sentence"
     },
     "Transcribing…" : {
 

@@ -32,19 +32,36 @@ extension TranscriptionPipeline {
         let style = session.dictationMode.effectiveStyle
         guard !style.isNone else { return .cancelled }
         updates(.phase(.rewriting))
-        let language = session.language
+        return await rewriteForReview(
+            original, style: style, language: Self.rewriteLanguage(for: session), session: session,
+            event: "session.regenerated")
+    }
+
+    /// Rewrites `text` in a style the user chose on the review screen (E12-S5), without
+    /// recognising the audio again. The result is a review, like the first one.
+    public func restyle(
+        _ text: String, style: StyleOptions, language: String, for session: DictationSession,
+        updates: @escaping @Sendable (ProcessingUpdate) -> Void
+    ) async -> DictationOutcome {
+        guard !style.isNone else { return .cancelled }
+        updates(.phase(.rewriting))
+        return await rewriteForReview(
+            text, style: style, language: language, session: session, event: "session.restyled")
+    }
+
+    private func rewriteForReview(
+        _ original: String, style: StyleOptions, language: String, session: DictationSession, event: StaticString
+    ) async -> DictationOutcome {
         let start = ContinuousClock.now
-        let result = await applyStyle(style, to: original, language: Self.rewriteLanguage(for: session))
+        let result = await applyStyle(style, to: original, language: language)
         if Task.isCancelled { return .cancelled }
-        let review = review(
-            of: result, original: original, language: Self.rewriteLanguage(for: session), style: style,
-            session: session)
+        let review = review(of: result, original: original, language: language, style: style, session: session)
         diagnostics.record(
-            .recognition, "session.regenerated",
+            .recognition, event,
             [
                 "style": .id(style.identifier), "rewritten": .flag(review.isRewritten),
                 "rewriteSeconds": .seconds(Self.seconds(ContinuousClock.now - start)),
-                "language": .id(Self.languageIdentifier(language)),
+                "language": .id(Self.languageIdentifier(session.language)),
             ])
         return .review(review, engine: session.engine)
     }
