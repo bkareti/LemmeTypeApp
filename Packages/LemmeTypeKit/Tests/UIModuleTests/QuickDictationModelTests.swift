@@ -22,12 +22,13 @@ struct QuickDictationModelTests {
         inbox: LaunchRequestInbox? = nil,
         lifetime: CopiedTextLifetime = .twoMinutes,
         speech: FakeSpeechAuthorizer? = nil,
-        rewriter: RewriterAvailability = .unavailable
+        rewriter: RewriterAvailability = .unavailable,
+        language: String = "en-US"
     ) -> QuickDictationModel {
         let recorder = RecordingCoordinator(
             capture: AudioCaptureService(
                 source: source, storage: storage, permissions: FakePermissions(statuses: [.microphone: microphone])),
-            processor: processor, feedback: feedback, preferences: FakePreferences(),
+            processor: processor, feedback: feedback, preferences: FakePreferences(dictationLanguage: language),
             textCopier: copier, finishedDisplay: .milliseconds(50), failureDisplay: .milliseconds(50))
         return QuickDictationModel(
             recorder: recorder, feedback: feedback, microphoneStatus: { microphone },
@@ -242,6 +243,32 @@ struct QuickDictationModelTests {
 
         #expect(copier.copied.isEmpty)
         #expect(model.screen == .ready)
+    }
+
+    // MARK: Spoken language (E12-S6)
+
+    @Test func aTranslationOffersItsSpokenLanguageByNameAndBack() async {
+        processor.script([
+            .needsAttention(.reviewTranslation, engine: .cloud, alternatives: [], transcript: "Send it tomorrow"),
+            .needsAttention(.reviewText, engine: .cloud, alternatives: [], transcript: "రేపు send చేయి"),
+        ])
+        let model = makeModel(language: "te")
+        await dictate(model)
+
+        #expect(model.canShowSpokenLanguage && model.spokenLanguageNeedsUpload)
+        #expect(model.showSpokenLanguageTitle.hasPrefix("Show in Telugu"))
+
+        model.showSpokenLanguage()
+        await model.recorder.settle()
+        #expect(model.screen == .review(text: "రేపు send చేయి"))
+        #expect(model.canShowEnglish && !model.canChangeTone)
+
+        model.showEnglish()
+        await model.recorder.settle()
+        #expect(model.screen == .review(text: "Send it tomorrow"))
+        #expect(model.spokenLanguageFailureMessage == nil)
+        model.discard()
+        await model.recorder.settle()
     }
 
     // MARK: Tone (E12-S5)

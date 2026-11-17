@@ -1592,6 +1592,9 @@
     "Self-corrections (“Tuesday—sorry—Wednesday”)" : {
 
     },
+    "Send Again" : {
+      "comment" : "Confirms uploading the recording to the cloud again"
+    },
     "Send Audio to the Cloud?" : {
 
     },
@@ -1618,6 +1621,15 @@
     },
     "Shortcut Unavailable — Choose Another…" : {
 
+    },
+    "Show English" : {
+      "comment" : "Review button: go back to the English translation"
+    },
+    "Show in %@" : {
+      "comment" : "Review button: show the text in the spoken language; the value is a language name such as Telugu"
+    },
+    "Show in Original Language" : {
+      "comment" : "Review button: show the text in the language that was spoken, not translated"
     },
     "Show original" : {
 
@@ -1983,6 +1995,9 @@
     },
     "This needs a Mac with Apple silicon." : {
 
+    },
+    "This sends the recording to the cloud speech service again and uses some of your cloud allowance." : {
+      "comment" : "Explains, before uploading again, what showing the spoken language costs"
     },
     "Toggle — press to start and stop" : {
 

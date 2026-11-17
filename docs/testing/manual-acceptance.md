@@ -852,3 +852,13 @@ Use a physical iPhone with Apple Intelligence (iPhone 15 Pro or later) and one w
 5. Choose Casual and tap Cancel while it is rewriting: the review comes back with the previous text and tone.
 6. Turn Apple Intelligence off in Settings (or use a phone without it): the Tone row is greyed out and says why. Copy still copies the text shown.
 7. With VoiceOver on, the Tone row is read as "Tone" with its three choices and the selected one.
+
+**MA-78 Showing a translation in the language that was spoken (E12-S6)**
+Use a physical iPhone with cloud speech on (Debug build against staging, or a TestFlight build with Cloud enabled). Record the device, iOS version, build, and result for each step.
+1. Choose a Telugu-to-English Cloud mode and say a Telugu sentence mixed with English words. The English translation shows *Show in Telugu*.
+2. Tap it: a dialog says the recording is sent again and uses allowance. Tap Cancel: nothing is sent (the gateway log shows no new request) and the translation stays.
+3. Tap it again and choose *Send Again*: the text appears in Telugu script with the English words in English letters. Settings › Cloud speech shows the allowance used by the second upload.
+4. Tap *Show English*: the translation comes back at once (no "Working…", no new gateway request). *Translate Again* is no longer offered. Tap *Show in Telugu*: the Telugu text comes back at once.
+5. With the Telugu text on screen, there is no Tone row. Back on the English text, the Tone row is there; choose Casual, switch to Telugu and back: the casual text and tone come back.
+6. Turn on Airplane Mode before step 3: the translation stays on screen with a message that the cloud service could not be reached, and *Show in Telugu* can be tried again.
+7. Copy while the Telugu text is shown: exactly the Telugu text is pasted in Notes.

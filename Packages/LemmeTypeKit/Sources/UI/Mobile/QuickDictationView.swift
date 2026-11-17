@@ -173,6 +173,7 @@
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("quick.notice")
                 }
+                ReviewLanguageSwitch(model: model)
                 if model.canCompareWithOriginal {
                     Button(
                         model.showsOriginal
