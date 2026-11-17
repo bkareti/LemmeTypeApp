@@ -153,6 +153,37 @@ public final class QuickDictationModel {
         recorder.changeReviewTone(tone)
     }
 
+    // MARK: Spoken language (E12-S6)
+
+    /// A translation is shown and the text in the spoken language can be shown instead.
+    public var canShowSpokenLanguage: Bool { recorder.canShowSpokenLanguage }
+
+    /// The spoken-language text is shown and the translation is one tap away.
+    public var canShowEnglish: Bool { recorder.canShowEnglishTranslation }
+
+    /// Showing the spoken language sends the recording to the cloud again: ask first.
+    public var spokenLanguageNeedsUpload: Bool { recorder.spokenLanguageNeedsUpload }
+
+    /// "Show in Telugu", or "Show in Original Language" when the language was detected.
+    public var showSpokenLanguageTitle: String {
+        guard let language = recorder.reviewSpokenLanguage else {
+            return String(
+                localized: "Show in Original Language", bundle: .module,
+                comment: "Review button: show the text in the language that was spoken, not translated")
+        }
+        let name = DictationSettingsModel.settingLanguageName(language)
+        return String(
+            localized: "Show in \(name)", bundle: .module,
+            comment: "Review button: show the text in the spoken language; the value is a language name such as Telugu")
+    }
+
+    /// Why the spoken-language text could not be shown; the translation is on screen again.
+    public var spokenLanguageFailureMessage: String? { recorder.spokenLanguageFailure?.userMessage }
+
+    public func showSpokenLanguage() { recorder.showSpokenLanguage() }
+
+    public func showEnglish() { recorder.showEnglishTranslation() }
+
     // MARK: Recording
 
     /// Starts a dictation. The first time, the user reads why the microphone (and,

@@ -102,6 +102,8 @@ public final class RecordingCoordinator {
     var reviewChange: ReviewChange?
     /// The tone of the text under review (E12-S5): the mode's at first, then the user's choice.
     public internal(set) var reviewTone: Tone?
+    /// The translation and the text in the spoken language, when both have been shown (E12-S6).
+    var reviewLanguages = ReviewLanguages()
 
     public init(
         capture: any AudioCapturing,
