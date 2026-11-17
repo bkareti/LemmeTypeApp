@@ -213,6 +213,7 @@ final class RecordingSpy: DictationProcessing {
         var outcomes: [DictationOutcome] = []
         var deliveries: [String] = []
         var regenerations: [String] = []
+        var restylings: [Restyling] = []
         var delay: Duration = .zero
     }
 
@@ -229,6 +230,15 @@ final class RecordingSpy: DictationProcessing {
     var deliveries: [String] { state.withLock { $0.deliveries } }
     /// The texts rewritten again by Regenerate (E10-S4).
     var regenerations: [String] { state.withLock { $0.regenerations } }
+
+    /// A rewrite in a tone chosen on the review screen (E12-S5).
+    struct Restyling: Equatable {
+        let text: String
+        let style: StyleOptions
+        let language: String
+    }
+
+    var restylings: [Restyling] { state.withLock { $0.restylings } }
 
     /// Makes every recording start be refused with `issue` (E9-S3).
     func refuseLanguage(with issue: DictationIssue?) {
@@ -282,6 +292,21 @@ final class RecordingSpy: DictationProcessing {
             state.regenerations.append(original)
             return state.outcomes.isEmpty ? DictationOutcome.cancelled : state.outcomes.removeFirst()
         }
+    }
+
+    func restyle(
+        _ text: String, style: StyleOptions, language: String, for session: DictationSession,
+        updates: @escaping @Sendable (ProcessingUpdate) -> Void
+    ) async -> DictationOutcome {
+        let (outcome, delay) = state.withLock { state in
+            state.restylings.append(Restyling(text: text, style: style, language: language))
+            return (state.outcomes.isEmpty ? DictationOutcome.cancelled : state.outcomes.removeFirst(), state.delay)
+        }
+        if delay > .zero {
+            try? await Task.sleep(for: delay)
+            if Task.isCancelled { return .cancelled }
+        }
+        return outcome
     }
 
     func deliver(_ transcript: String, for session: DictationSession) async -> DictationOutcome {

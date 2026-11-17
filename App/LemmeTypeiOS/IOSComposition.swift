@@ -244,7 +244,8 @@ struct IOSComposition {
                 await dictation?.refresh()
             },
             launchRequests: launchRequests,
-            isCloudSpeechOn: { cloudSpeech?.status == .turnedOn })
+            isCloudSpeechOn: { cloudSpeech?.status == .turnedOn },
+            rewriterAvailability: { [rewriter = services.rewriter] in await rewriter.availability(language: $0) })
         // Purges old audio and loads settings once, before any recording, whether the
         // screen or the Action Button launched the app.
         let startup = StartupOnce()

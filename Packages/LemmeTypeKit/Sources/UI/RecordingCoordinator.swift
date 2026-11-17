@@ -96,6 +96,12 @@ public final class RecordingCoordinator {
     var pendingReview: DictationReview?
     /// Whether the original is shown instead of the rewrite; Copy copies what is shown (E10-S4).
     public internal(set) var reviewShowsOriginal = false
+    /// The first result under review, before the user chose another tone (E12-S5); never logged.
+    var reviewFirst: ReviewSnapshot?
+    /// A tone change being processed, and the review to show again if it does not finish (E12-S5).
+    var reviewChange: ReviewChange?
+    /// The tone of the text under review (E12-S5): the mode's at first, then the user's choice.
+    public internal(set) var reviewTone: Tone?
 
     public init(
         capture: any AudioCapturing,
@@ -273,6 +279,7 @@ public final class RecordingCoordinator {
     }
 
     private func cancel() async {
+        if cancelReviewChange() { return }
         guard machine.handle(.cancel) else { return }
         cancelLimitTimer()
         stopProcessing()
@@ -361,24 +368,6 @@ extension RecordingCoordinator {
         case .reviewTranslation, .reviewRewrite, .reviewText: pendingTranscript
         default: nil
         }
-    }
-
-    /// The text from before the rewrite, while a rewrite is reviewed (E10-S4).
-    public var reviewOriginal: String? {
-        if case .reviewRewrite = attention, pendingReview?.isRewritten == true { return pendingReview?.original }
-        return nil
-    }
-
-    /// Switches the review between the rewrite and the text it came from.
-    public func toggleReviewOriginal() {
-        guard reviewOriginal != nil else { return }
-        reviewShowsOriginal.toggle()
-    }
-
-    /// The tone, format, and length of the rewrite under review (E10-S4).
-    public var reviewStyle: StyleOptions? {
-        if case .reviewRewrite = attention { return pendingReview?.style }
-        return nil
     }
 
     /// Recording, processing, or holding a recording for a decision.

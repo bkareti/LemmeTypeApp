@@ -40,6 +40,10 @@ public final class QuickDictationModel {
     /// Whether the user has turned cloud speech on, so explanations stay true (ADR 0031).
     public let isCloudSpeechOn: @MainActor () -> Bool
     private let feedback: any RecordingFeedback
+    /// Whether Apple's on-device model can rewrite text in a language (E12-S5).
+    private let rewriterAvailability: @MainActor (String) async -> RewriterAvailability
+    /// Whether a tone can be chosen for English text on this device; `nil` until checked.
+    public private(set) var toneAvailability: RewriterAvailability?
 
     public init(
         recorder: RecordingCoordinator,
@@ -51,9 +55,11 @@ public final class QuickDictationModel {
         needsSpeechRecognition: @escaping @MainActor () -> Bool = { false },
         requestSpeechRecognition: @escaping @MainActor () async -> Void = {},
         launchRequests: LaunchRequestInbox? = nil,
-        isCloudSpeechOn: @escaping @MainActor () -> Bool = { false }
+        isCloudSpeechOn: @escaping @MainActor () -> Bool = { false },
+        rewriterAvailability: @escaping @MainActor (String) async -> RewriterAvailability = { _ in .unavailable }
     ) {
         self.isCloudSpeechOn = isCloudSpeechOn
+        self.rewriterAvailability = rewriterAvailability
         self.recorder = recorder
         self.feedback = feedback
         self.microphoneStatus = microphoneStatus
@@ -110,6 +116,41 @@ public final class QuickDictationModel {
         if offered.contains(.regenerate) { return .regenerate }
         if reviewKind == .translation, offered.contains(.retry) { return .retry }
         return nil
+    }
+
+    // MARK: Tone (E12-S5)
+
+    /// The tones offered for English text under review.
+    public var toneChoices: [Tone] { RecordingCoordinator.reviewToneChoices }
+
+    /// The tone row is shown only for English text: Telugu and mixed text keep their tone.
+    public var canChangeTone: Bool { recorder.canChangeReviewTone }
+
+    /// The tone of the text on screen; `nil` when it is none of ``toneChoices``.
+    public var selectedTone: Tone? { recorder.reviewTone }
+
+    /// Whether choosing a tone can work on this device now.
+    public var isToneReady: Bool { toneAvailability?.isReady == true }
+
+    /// Why the tone row is disabled, or `nil` while it can be used or is still being checked.
+    public var toneUnavailableMessage: String? {
+        guard let toneAvailability, !toneAvailability.isReady else { return nil }
+        return String(
+            localized: "Tone changes aren’t available: \(toneAvailability.rewriteReason)", bundle: .module,
+            comment: "Under the disabled tone choices on the review screen; the reason is a short sentence")
+    }
+
+    /// Why the text on screen is not the rewrite that was asked for, if it isn't.
+    public var reviewNotice: String? { recorder.reviewNotice?.userMessage }
+
+    /// Asks the device once per review whether Apple's model can rewrite English.
+    public func refreshToneAvailability() async {
+        toneAvailability = await rewriterAvailability(SpokenLanguages.english.code)
+    }
+
+    public func chooseTone(_ tone: Tone) {
+        guard isToneReady else { return }
+        recorder.changeReviewTone(tone)
     }
 
     // MARK: Recording

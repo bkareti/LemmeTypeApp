@@ -843,3 +843,12 @@ Use the TestFlight build that will be submitted, on a physical iPhone (and an iP
 7. Let the Sandbox subscription expire (accelerated renewals): the next record shows the offer, and Settings, Export, and Delete stay available.
 8. Read the privacy policy on its public address and the App Store listing text next to the app: no sentence says nothing leaves the phone without saying "Local".
 
+**MA-77 Changing the tone on the review screen (E12-S5)**
+Use a physical iPhone with Apple Intelligence (iPhone 15 Pro or later) and one without, if available. Record the device, iOS version, and result for each step.
+1. Dictate an English sentence in the Clean mode. The review shows a Tone row with Neutral selected. Choose Casual: "Rewriting" shows briefly, then a casual version appears with *Show Original*. Nothing is copied until Copy.
+2. Choose Professional, then Neutral: Professional is rewritten; Neutral shows the first text again at once, without "Rewriting".
+3. Dictate a sentence with a number and a day ("send 3 files on Friday"). Choose Casual: the number and day are unchanged, or the text stays as it was with a "Not rewritten" notice.
+4. With cloud speech on, dictate Telugu in the Cloud mode: the English translation shows the Tone row, and choosing a tone keeps *Translate Again*. With Airplane Mode on, a tone change still works (it runs on the phone).
+5. Choose Casual and tap Cancel while it is rewriting: the review comes back with the previous text and tone.
+6. Turn Apple Intelligence off in Settings (or use a phone without it): the Tone row is greyed out and says why. Copy still copies the text shown.
+7. With VoiceOver on, the Tone row is read as "Tone" with its three choices and the selected one.

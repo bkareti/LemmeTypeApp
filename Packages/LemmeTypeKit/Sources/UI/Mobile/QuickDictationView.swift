@@ -166,6 +166,13 @@
                     .padding()
                     .background(.quaternary, in: RoundedRectangle(cornerRadius: 12))
                     .accessibilityIdentifier("quick.result")
+                if model.canChangeTone { ReviewToneRow(model: model) }
+                if let notice = model.reviewNotice {
+                    Label(notice, systemImage: "info.circle")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("quick.notice")
+                }
                 if model.canCompareWithOriginal {
                     Button(
                         model.showsOriginal

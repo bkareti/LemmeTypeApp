@@ -24,16 +24,21 @@ dictation does not fix grammar. The cloud engine from Epic 11 already builds for
 - Cloud speech on iPhone: off by default, consent, the user's own API key in the Keychain.
 - Two ready-made modes, so the user picks one choice instead of three settings.
 - A grammar option for English that keeps the speaker's words and facts.
+- On the review screen: change the tone of English text (Casual, Professional), and see a
+  cloud translation in the language that was spoken instead (E12-S5, E12-S6).
 - Proof on a real iPhone.
 
 ### Out of scope
 
 - Typing into other apps from iPhone. Delivery stays review, then Copy (ADR 0027).
-- Telugu text as the output on iPhone (Epic 11 covers `codemix`; iPhone can add it later).
+- Telugu text as the output of a mode on iPhone. E12-S6 shows it only on request, from a translation review.
+- Changing the tone of Telugu or mixed text. Apple's on-device model does not support Telugu, and
+  sending text to a cloud model would break ADR 0031's "audio only" rule. Tone is English only.
 - Languages other than Telugu and English.
 - One mode that works out the language by itself (not measured; see the readiness review).
 - A relay server or a key built into the app (ADR 0031).
-- A grammar step after a translation: Sarvam's English goes straight to review.
+- A grammar step after a translation by default: Sarvam's English goes straight to review. The user may
+  still choose a tone for it on the review screen (E12-S5), on the device.
 
 ### Epic acceptance criteria
 
@@ -149,6 +154,81 @@ so that the text is ready to send.
 
 ---
 
+## E12-S5 — Change the tone of English text on the review screen
+
+**User story**
+
+As someone dictating on iPhone, I want to switch the reviewed English text to Casual or
+Professional before I copy it so that the same dictation fits a chat or a work message.
+
+**Scope**
+
+- The review screen shows a tone row: **Neutral**, **Casual**, **Professional**. The selected one
+  is the tone of the text on screen (the mode's tone at first).
+- Choosing a tone rewrites the words before any rewrite (the dictated or translated English) with
+  the mode's style and that tone, through the existing on-device path: `FoundationModelsRewriter`,
+  the fixed `StyleInstruction`, and `PreservationChecker`. No recognition runs again and nothing
+  goes online.
+- Choosing the mode's own tone again shows the first result without calling the model.
+- Offered only when the text under review is English (a dictation in English, or a translation to
+  English). Never for Telugu or mixed text.
+- Shown greyed out with a short reason when Apple Intelligence is not available on the device.
+- A rewrite that changes a fact is not used: the words before the rewrite stay, with a notice.
+- *Show Original* keeps working after a tone change. Copy copies what is shown.
+- iPhone and iPad review screen only; the Mac overlay is unchanged.
+
+**Acceptance criteria**
+
+- Given an English review, when the user chooses Casual, the processor is asked to rewrite the words before any rewrite with tone Casual, and the review shows the result (unit test with a fake processor).
+- Given a translation review, when the user changes the tone, the review stays a translation: Translate Again is still offered (unit test).
+- Choosing the first tone again shows the first result and calls no model (unit test).
+- The tone row is not offered for a review whose language is not English (unit test).
+- A rewrite rejected by `PreservationChecker` leaves the words before the rewrite on screen with a notice (pipeline unit test with `FakeTextRewriter`).
+- With the rewriter unavailable, the row is disabled and says why (model unit test).
+- Copy copies exactly the text on screen, after any tone change (unit test).
+
+**Dependencies:** E12-S3, ADR 0024
+**Estimate:** 5 points
+
+---
+
+## E12-S6 — See a cloud translation in the language that was spoken
+
+**User story**
+
+As a Telugu speaker on iPhone, I want to see what I said in Telugu, with English words kept in
+English, when the English translation is not what I need, so that I can write to people in Telugu.
+
+**Scope**
+
+- A translation review offers **Show in Telugu** (the session's language name; *Show in Original
+  Language* when it is not known). It recognises the same recording again with the task
+  *transcribe*; the gateway serves it with Sarvam `codemix` for Telugu (E13-S1).
+- Before it sends, a cloud session asks once per review: it uploads the recording again and uses
+  allowance. Local engines need no warning.
+- The result is reviewed like any dictation, written Exact (ADR 0023). **Show English** goes back to
+  the translation at once, without another upload.
+- The recording is deleted when the spoken-language text arrives, as for any dictation review
+  (E8-S6); Translate Again is then no longer offered.
+- If the upload fails (offline, quota, rate limit), the translation stays on screen with a short
+  message, and the user can try again.
+- No tone row for the spoken-language text (E12-S5 is English only).
+
+**Acceptance criteria**
+
+- Given a translation review, when the user chooses Show in Telugu, the same recording is processed again with output *original* (unit test with a fake processor).
+- The spoken-language result is shown, and Show English brings back the translation without processing again (unit test).
+- Once the spoken-language text arrives, Translate Again is not offered (unit test).
+- When processing fails, the translation is shown again with its choices and a failure message (unit test).
+- The tone row is not offered for the spoken-language text (unit test).
+- With the cloud engine, the gateway request has `task=transcribe` and `language=te` (provider unit test, existing).
+- A cloud session confirms before uploading again (manual check on a device; UI tests cannot drive the dialog here).
+
+**Dependencies:** E12-S2, E13-S1, E13-S3
+**Estimate:** 5 points
+
+---
+
 ## E12-S4 — Prove it on a real iPhone and close the gates
 
 **User story**
@@ -179,4 +259,6 @@ when it works and its data handling is settled.
 1. E12-S1
 2. E12-S2
 3. E12-S3
-4. E12-S4
+4. E12-S5
+5. E12-S6
+6. E12-S4

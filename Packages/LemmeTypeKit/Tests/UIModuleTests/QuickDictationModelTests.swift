@@ -21,7 +21,8 @@ struct QuickDictationModelTests {
         microphone: PermissionStatus = .granted,
         inbox: LaunchRequestInbox? = nil,
         lifetime: CopiedTextLifetime = .twoMinutes,
-        speech: FakeSpeechAuthorizer? = nil
+        speech: FakeSpeechAuthorizer? = nil,
+        rewriter: RewriterAvailability = .unavailable
     ) -> QuickDictationModel {
         let recorder = RecordingCoordinator(
             capture: AudioCaptureService(
@@ -33,7 +34,7 @@ struct QuickDictationModelTests {
             requestMicrophone: { .granted }, openSettings: {}, lifetime: { lifetime },
             needsSpeechRecognition: { speech?.status() == .notRequested },
             requestSpeechRecognition: { _ = await speech?.requestAuthorization() },
-            launchRequests: inbox)
+            launchRequests: inbox, rewriterAvailability: { _ in rewriter })
     }
 
     private func review(_ text: String) -> DictationOutcome {
@@ -241,6 +242,52 @@ struct QuickDictationModelTests {
 
         #expect(copier.copied.isEmpty)
         #expect(model.screen == .ready)
+    }
+
+    // MARK: Tone (E12-S5)
+
+    @Test func theToneRowIsOfferedForEnglishAndWorksWhenTheModelIsReady() async {
+        processor.script([
+            review("can you send it"),
+            .review(
+                DictationReview(
+                    text: "hey, can you send it?", original: "can you send it", language: "en",
+                    style: StyleOptions(tone: .casual)), engine: .whisper),
+        ])
+        let model = makeModel(rewriter: .ready)
+        await dictate(model)
+        await model.refreshToneAvailability()
+
+        #expect(model.canChangeTone && model.isToneReady)
+        #expect(model.toneUnavailableMessage == nil)
+        #expect(model.selectedTone == .neutral)
+        #expect(model.toneChoices == [.neutral, .casual, .professional])
+
+        model.chooseTone(.casual)
+        await model.recorder.settle()
+
+        #expect(model.screen == .review(text: "hey, can you send it?"))
+        #expect(model.selectedTone == .casual)
+        #expect(model.canCompareWithOriginal)
+        model.discard()
+        await model.recorder.settle()
+    }
+
+    @Test func withoutAppleIntelligenceTheToneRowIsDisabledAndSaysWhy() async {
+        processor.script([review("can you send it")])
+        let model = makeModel(rewriter: .notEnabled)
+        await dictate(model)
+        await model.refreshToneAvailability()
+
+        #expect(model.canChangeTone && !model.isToneReady)
+        #expect(model.toneUnavailableMessage?.contains("Apple Intelligence is turned off") == true)
+
+        model.chooseTone(.professional)
+        await model.recorder.settle()
+        #expect(processor.restylings.isEmpty)
+        #expect(model.screen == .review(text: "can you send it"))
+        model.discard()
+        await model.recorder.settle()
     }
 }
 
