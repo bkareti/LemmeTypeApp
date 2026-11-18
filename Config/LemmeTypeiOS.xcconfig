@@ -21,11 +21,22 @@ INFOPLIST_KEY_UILaunchScreen_Generation = YES
 INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES
 INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
 INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
-// True for Local and Cloud (E13-S8): Local modes keep the voice on the device; a Cloud mode, which the person
-// turns on, sends the recording to LemmeType's server to be turned into text.
-INFOPLIST_KEY_NSMicrophoneUsageDescription = LemmeType records your voice only while the recording is showing on screen. It turns it into text on this device, unless you use a mode with Cloud speech, which you turn on yourself and which sends the recording to LemmeType's server to be turned into text.
+// What a Release build offers (docs/release/app-store.md, "Release scope"):
+//   local  Version 1.0: Local dictation only. No Cloud speech, LEMMETYPE_GATEWAY_HOST must be empty, the
+//          privacy manifest declares no collected data, and the store text never mentions Cloud.
+//   cloud  The Cloud release: only once every launch gate in docs/release/app-store.md section 9 is Closed.
+//          Also swap in Config/PrivacyInfo-Cloud.xcprivacy and the Cloud store text.
+// scripts/verify-ios-appstore.sh checks that the archive, the manifest, and the docs agree with this value.
+LEMMETYPE_RELEASE_SCOPE = local
+
+// The microphone text follows the scope, so it never names a feature the build doesn't have (E13-S8).
+LEMMETYPE_MICROPHONE_TEXT_local = LemmeType records your voice only while the recording is showing on screen, and turns it into text on this device.
+LEMMETYPE_MICROPHONE_TEXT_cloud = LemmeType records your voice only while the recording is showing on screen. It turns it into text on this device, unless you use a mode with Cloud speech, which you turn on yourself and which sends the recording to LemmeType's server to be turned into text.
+INFOPLIST_KEY_NSMicrophoneUsageDescription = $(LEMMETYPE_MICROPHONE_TEXT_$(LEMMETYPE_RELEASE_SCOPE))
+// Debug always offers Cloud speech (staging), so it always says so.
+INFOPLIST_KEY_NSMicrophoneUsageDescription[config=Debug] = $(LEMMETYPE_MICROPHONE_TEXT_cloud)
 INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = If you choose Apple Speech, LemmeType uses on-device speech recognition to turn your dictation into text. Audio never leaves this device.
-// Only standard, exempt encryption (HTTPS for the model download, SHA-256 checks).
+// Only standard, exempt encryption: HTTPS for the model download (and, in the cloud scope, the speech gateway).
 INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO
 
 // One App Group for the keyboard, and audio in the background for Action Button dictation (ADR 0032).
@@ -34,6 +45,7 @@ INFOPLIST_FILE = App/LemmeTypeiOS/Info.plist
 INFOPLIST_KEY_NSSupportsLiveActivities = YES
 
 // The production speech gateway (ADR 0033, E13-S8): a host name only, no scheme. Empty keeps Cloud speech, and the
-// Telugu choice that depends on it, off in a Release build. Set it only when every launch gate in
-// docs/release/app-store.md is Closed; scripts/verify-ios-appstore.sh refuses a build otherwise.
+// Telugu choice that depends on it, off in a Release build. A Release build uses it only in the cloud scope, and
+// only when every launch gate in docs/release/app-store.md is Closed; scripts/verify-ios-appstore.sh refuses a
+// build otherwise.
 LEMMETYPE_GATEWAY_HOST =

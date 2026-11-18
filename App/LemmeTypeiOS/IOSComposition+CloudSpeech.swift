@@ -6,8 +6,9 @@ import Support
 /// Cloud speech on iPhone and iPad (E12-S1, E13-S3, ADRs 0031 and 0033).
 extension IOSComposition {
     /// Whether this build offers cloud speech at all (ADR 0031). Debug always does (staging). A Release build does
-    /// only when `LEMMETYPE_GATEWAY_HOST` names the production gateway (`Config/LemmeTypeiOS.xcconfig`), which is
-    /// set only once the launch gates in `docs/release/app-store.md` are closed (E13-S8).
+    /// only in the `cloud` release scope and when `LEMMETYPE_GATEWAY_HOST` names the production gateway
+    /// (`Config/LemmeTypeiOS.xcconfig`); both are set only once the launch gates in `docs/release/app-store.md` are
+    /// closed (E13-S8). Version 1.0 is the `local` scope.
     static var offersCloudSpeech: Bool {
         #if DEBUG
             true
@@ -16,9 +17,12 @@ extension IOSComposition {
         #endif
     }
 
-    /// The production gateway host from the app's Info.plist, or `nil` when none is set (Cloud stays off).
+    /// The production gateway host from the app's Info.plist, or `nil` when Cloud stays off: no host is set, or the
+    /// build's release scope is not `cloud`. A host alone is not enough, because the `local` scope's microphone text,
+    /// privacy manifest, and store answers all say nothing leaves the device.
     static func releaseGatewayHost(from info: [String: Any]?) -> String? {
-        guard let host = (info?["LemmeTypeGatewayHost"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
+        guard (info?["LemmeTypeReleaseScope"] as? String) == "cloud",
+            let host = (info?["LemmeTypeGatewayHost"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
             !host.isEmpty
         else { return nil }
         return host

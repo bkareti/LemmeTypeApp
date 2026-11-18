@@ -24,6 +24,9 @@ public final class SubscriptionModel {
     public var isShowingPaywall = false
     /// The trial-ending notice was closed (it is shown once; see ``showsTrialEndingNotice``).
     public private(set) var trialNoticeDismissed = false
+    /// Whether the subscription includes Cloud speech in this build. The paywall lists it only then, so a build
+    /// without Cloud speech never sells it (Guidelines 2.3 and 3.1.2).
+    public let includesCloudSpeech: Bool
 
     private let service: any SubscriptionProviding
     private let seen: any PaywallSeenStoring
@@ -34,11 +37,13 @@ public final class SubscriptionModel {
 
     public init(
         service: any SubscriptionProviding, seen: any PaywallSeenStoring,
-        summary: (any EntitlementSummaryStoring)? = nil, now: @escaping @Sendable () -> Date = { Date() }
+        summary: (any EntitlementSummaryStoring)? = nil, includesCloudSpeech: Bool = false,
+        now: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.service = service
         self.seen = seen
         self.summary = summary
+        self.includesCloudSpeech = includesCloudSpeech
         self.now = now
     }
 

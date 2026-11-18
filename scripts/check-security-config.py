@@ -26,6 +26,8 @@ PROJECT_SPEC = "project.yml"
 IOS_CONFIG = "Config/LemmeTypeiOS.xcconfig"
 IOS_APP_DIR = "App/LemmeTypeiOS"
 IOS_PRIVACY_MANIFEST = "App/LemmeTypeiOS/PrivacyInfo.xcprivacy"
+# The manifest the Cloud release swaps in (docs/release/app-store.md section 9.1). Not bundled; checked so it stays valid.
+CLOUD_PRIVACY_MANIFEST = "Config/PrivacyInfo-Cloud.xcprivacy"
 IOS_ENTITLEMENTS = "App/LemmeTypeiOS/LemmeTypeiOS.entitlements"
 IOS_INFO_PLIST = "App/LemmeTypeiOS/Info.plist"
 KEYBOARD_INFO_PLIST = "App/LemmeTypeKeyboard/Info.plist"
@@ -216,15 +218,28 @@ ALLOWED_COLLECTED_DATA = {
 APP_FUNCTIONALITY = "NSPrivacyCollectedDataTypePurposeAppFunctionality"
 
 
-def check_collected_data(items: list, report: Report) -> None:
+def check_collected_data(items: list, report: Report, manifest: str = IOS_PRIVACY_MANIFEST) -> None:
     for item in items:
         kind = item.get("NSPrivacyCollectedDataType") if isinstance(item, dict) else None
         if kind not in ALLOWED_COLLECTED_DATA:
-            report.error(f"{IOS_PRIVACY_MANIFEST}: {kind} is not a data type the paid launch collects (E13-S8)")
+            report.error(f"{manifest}: {kind} is not a data type the paid launch collects (E13-S8)")
         elif item.get("NSPrivacyCollectedDataTypeTracking") is not False:
-            report.error(f"{IOS_PRIVACY_MANIFEST}: {kind} must not be used for tracking")
+            report.error(f"{manifest}: {kind} must not be used for tracking")
         elif item.get("NSPrivacyCollectedDataTypePurposes") != [APP_FUNCTIONALITY]:
-            report.error(f"{IOS_PRIVACY_MANIFEST}: {kind} may be used for app functionality only")
+            report.error(f"{manifest}: {kind} may be used for app functionality only")
+
+
+def check_cloud_manifest(root: Path, report: Report) -> None:
+    """The Cloud release's manifest (version 1.0 ships the local one) follows the same rules, so the swap in
+    docs/release/app-store.md section 9.1 cannot bring in tracking or another data type."""
+    path = root / CLOUD_PRIVACY_MANIFEST
+    if not path.is_file():
+        return
+    with path.open("rb") as handle:
+        data = plistlib.load(handle)
+    if data.get("NSPrivacyTracking") is not False or data.get("NSPrivacyTrackingDomains"):
+        report.error(f"{CLOUD_PRIVACY_MANIFEST}: no tracking and no tracking domains")
+    check_collected_data(data.get("NSPrivacyCollectedDataTypes") or [], report, CLOUD_PRIVACY_MANIFEST)
 
 
 def check_ios_target(root: Path, report: Report) -> None:
@@ -260,6 +275,7 @@ def check_ios_target(root: Path, report: Report) -> None:
     if data.get("NSPrivacyTrackingDomains"):
         report.error(f"{IOS_PRIVACY_MANIFEST}: the app contacts no tracking domains")
     check_collected_data(data.get("NSPrivacyCollectedDataTypes") or [], report)
+    check_cloud_manifest(root, report)
     declared = {item.get("NSPrivacyAccessedAPIType") for item in data.get("NSPrivacyAccessedAPITypes", [])}
     sources = "".join(
         path.read_text(encoding="utf-8", errors="ignore")

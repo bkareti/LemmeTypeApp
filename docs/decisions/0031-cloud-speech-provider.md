@@ -195,3 +195,22 @@ scope to `LanguageScope.englishWithCloud` (English on the device, Telugu through
 translation, no multilingual download). With the host empty, the build is English-only and Cloud speech is off, but
 it cannot be submitted: the App Store text, the privacy manifest, and the microphone text all describe Cloud speech,
 and the archive check refuses it.
+
+## Addendum (2026-11-18): version 1.0 ships Local only
+
+The maintainer reversed the 2026-11-13 decision for the first App Store release: **version 1.0 for iPhone and
+iPad ships Local dictation only**, so the store launch no longer waits on gates 1, 2, 4, and 5, which depend on
+Sarvam's written terms and the production gateway. Cloud speech follows in a later version, unchanged, once
+those gates close.
+
+A build setting, `LEMMETYPE_RELEASE_SCOPE` (`local` or `cloud`, in `Config/LemmeTypeiOS.xcconfig`, copied to the
+Info.plist as `LemmeTypeReleaseScope`), now decides what a Release build may do:
+
+- `local`: `IOSComposition.releaseGatewayHost` returns nothing even if a host is set, so Cloud speech, the Telugu
+  choice, and the paywall's Cloud benefit are absent; the microphone text says the voice stays on the device; the
+  privacy manifest declares no collected data; the App Privacy answer is "Data Not Collected".
+- `cloud`: everything in the E13-S8 addendum above. The Cloud manifest is kept in `Config/PrivacyInfo-Cloud.xcprivacy`.
+
+`scripts/verify-ios-appstore.sh` refuses an archive whose scope, manifest, microphone text, gateway host, and
+`docs/release/app-store.md` (`Release scope: **…**`) disagree; the launch gates are checked in the `cloud` scope
+only. How to switch is in `docs/release/app-store.md` section 9.1. Debug builds keep offering Cloud speech on staging.

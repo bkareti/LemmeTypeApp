@@ -1,10 +1,15 @@
 # LemmeType privacy policy
 
-Effective 13 November 2026. Applies to LemmeType for iPhone, iPad, and Mac.
+Effective 18 November 2026. Applies to LemmeType for iPhone, iPad, and Mac.
 
 **In short: in Local mode your voice and your words are turned into text on your
 device and never leave it. Cloud speech is a separate choice you turn on yourself;
 it sends the recording to LemmeType's server to be turned into text, and nothing else.**
+
+**Version 1.0 for iPhone and iPad has Local mode only.** Cloud speech is not in it yet, so
+nothing you say or write leaves your device. The parts of this policy about Cloud speech
+apply only once a version that offers it is released; that version will explain it in the
+app and ask you to agree before anything is sent.
 
 ## Two ways to turn your voice into text
 
@@ -15,7 +20,7 @@ it sends the recording to LemmeType's server to be turned into text, and nothing
 | What leaves your device | Nothing | The recording of that dictation only |
 | Needs the internet | No (it works in Airplane Mode) | Yes |
 
-Cloud speech is on iPhone and iPad only. It is off until you turn it on in Settings and agree to the screen that
+Cloud speech will be on iPhone and iPad only, in a later version. It is off until you turn it on in Settings and agree to the screen that
 explains it. A mode uses it only if you chose the Cloud engine for that mode. You can
 turn it off at any time.
 
@@ -78,8 +83,8 @@ agree again before the next Cloud dictation.
 LemmeType is sold as an auto-renewing monthly subscription with a 7-day free trial,
 through the App Store. **Apple takes the payment.** LemmeType never sees your card,
 your Apple Account, or your billing details. You manage or cancel the subscription in
-your Apple Account settings. Local dictation and Cloud speech are both part of the
-one subscription.
+your Apple Account settings. The subscription includes Local dictation, and Cloud
+speech once a version that offers it is released.
 
 The app asks Apple on your device whether you are subscribed. That check works
 offline, using records Apple keeps on your device. The app shares only the kind of

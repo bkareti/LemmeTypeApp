@@ -2,16 +2,21 @@ import XCTest
 
 /// App Store screenshots of the real screens, against the UI-test fakes (no microphone,
 /// no engine). Runs only with LEMMETYPE_SCREENSHOTS=1; `scripts/make-app-store-screenshots.sh`
-/// sets it, fixes the status bar, and collects the images.
+/// sets it, fixes the status bar, and collects the images. LEMMETYPE_SCREENSHOT_SCOPE=cloud
+/// shows Cloud speech; anything else is the `local` release scope of version 1.0.
 @MainActor
 final class AppStoreScreenshotsUITests: XCTestCase {
     private let app = XCUIApplication()
+    private let showsCloudSpeech = ProcessInfo.processInfo.environment["LEMMETYPE_SCREENSHOT_SCOPE"] == "cloud"
+    private var baseArguments: [String] {
+        showsCloudSpeech ? ["-LemmeTypeUITesting"] : ["-LemmeTypeUITesting", "-LemmeTypeLocalOnly"]
+    }
 
     override func setUpWithError() throws {
         try XCTSkipUnless(
             ProcessInfo.processInfo.environment["LEMMETYPE_SCREENSHOTS"] == "1", "screenshots are made on request")
         continueAfterFailure = false
-        app.launchArguments = ["-LemmeTypeUITesting"]
+        app.launchArguments = baseArguments
         app.launchEnvironment["LEMMETYPE_RECOGNIZED_TEXT"] =
             "Running ten minutes late. Start without me, and I’ll catch up on the notes after the call."
         app.launch()
@@ -52,8 +57,9 @@ final class AppStoreScreenshotsUITests: XCTestCase {
         capture("06-privacy")
     }
 
-    /// The Cloud speech switch in Settings (E13-S8): off until the person turns it on.
-    func testCaptureTheCloudSpeechSwitch() {
+    /// The Cloud speech switch in Settings (E13-S8): off until the person turns it on. Only for the cloud scope.
+    func testCaptureTheCloudSpeechSwitch() throws {
+        try XCTSkipUnless(showsCloudSpeech, "version 1.0 (the local scope) has no Cloud speech")
         let settingsTab =
             app.tabBars.buttons["Settings"].exists
             ? app.tabBars.buttons["Settings"] : app.buttons.matching(identifier: "Settings").firstMatch
@@ -68,7 +74,7 @@ final class AppStoreScreenshotsUITests: XCTestCase {
     /// The subscription offer, with the price StoreKit's test file also uses (E13-S8, Guideline 3.1.2).
     func testCaptureThePaywall() {
         app.terminate()
-        app.launchArguments = ["-LemmeTypeUITesting", "-LemmeTypeNotSubscribed"]
+        app.launchArguments = baseArguments + ["-LemmeTypeNotSubscribed"]
         app.launch()
         let record = app.buttons["quick.record"]
         XCTAssertTrue(record.waitForExistence(timeout: 10))

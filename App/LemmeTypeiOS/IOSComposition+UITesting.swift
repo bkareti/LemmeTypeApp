@@ -19,6 +19,7 @@
             static let interruptAfterArgument = "-LemmeTypeInterruptAfter"
             static let recognitionArgument = "-LemmeTypeRecognition"
             static let launchRequestArgument = "-LemmeTypeLaunchRequest"
+            static let localOnlyArgument = "-LemmeTypeLocalOnly"
             /// The words the fake engine "hears" (App Store screenshots), from the environment so
             /// punctuation survives; otherwise a fixed phrase.
             static let recognizedTextVariable = "LEMMETYPE_RECOGNIZED_TEXT"
@@ -37,6 +38,9 @@
             var startsFromShortcut = false
             /// `-LemmeTypeNotSubscribed`: no trial or subscription, so a dictation start is refused.
             var isSubscribed = true
+            /// `-LemmeTypeLocalOnly`: the build offers no Cloud speech, like a Release build in the `local`
+            /// scope (App Store screenshots of version 1.0).
+            var offersCloudSpeech = true
             var recognizedText = "hello from lemmetype"
 
             init() {}
@@ -62,8 +66,17 @@
                 if value(after: Self.recognitionArgument) == "no-speech" { recognitionError = .noSpeechDetected }
                 startsFromShortcut = arguments.contains(Self.launchRequestArgument)
                 isSubscribed = !arguments.contains("-LemmeTypeNotSubscribed")
+                offersCloudSpeech = !arguments.contains(Self.localOnlyArgument)
                 if let text = ProcessInfo.processInfo.environment[Self.recognizedTextVariable] { recognizedText = text }
             }
+        }
+
+        /// Cloud speech against a fake gateway, or none for `-LemmeTypeLocalOnly` (the `local` release scope).
+        static func uiTestingCloudSpeech(_ scenario: UITestScenario) -> CloudSpeechServices? {
+            guard scenario.offersCloudSpeech else { return nil }
+            return CloudSpeechServices(
+                provider: GatewaySpeechProvider(host: "gateway.test"), consent: FakeCloudSpeechConsent(),
+                gateway: FakeGatewayAccess())
         }
 
         static func uiTesting(_ scenario: UITestScenario) -> Services {
@@ -111,9 +124,7 @@
                 hardware: HardwareProfile(isAppleSilicon: true, physicalMemoryBytes: 8 << 30, deviceClass: .iPhone),
                 copiedTextLifetime: { .default },
                 limits: scenario.recordingLimit,
-                cloudSpeech: CloudSpeechServices(
-                    provider: GatewaySpeechProvider(host: "gateway.test"), consent: FakeCloudSpeechConsent(),
-                    gateway: FakeGatewayAccess()),
+                cloudSpeech: uiTestingCloudSpeech(scenario),
                 subscription: subscription,
                 paywallSeen: FakePaywallSeen(true),
                 entitlement: EntitlementGate(subscription: subscription, ledger: FakeEntitlementLedger()),
