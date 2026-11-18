@@ -237,6 +237,8 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   (`reviewText/reviewOriginal`) with Insert, Use Original, Regenerate (no new
   recognition), Copy, Discard. On iPhone the review also offers a tone (E12-S5, English text only):
   `RecordingCoordinator+Review` keeps the first result and calls `DictationProcessing.restyle`.
+  A translation review can also show the same recording in the spoken language (E12-S6,
+  `RecordingCoordinator+SpokenLanguage`): processed again with output original, both texts kept in memory.
 - Cloud speech (ADR 0031, Epic 11, in progress): `SpeechSplitter` cuts long recordings at pauses into
   provider-sized parts, sent one at a time (E11-S2). `CloudSpeechEngine` (Recognition/Cloud) is the one
   vendor-neutral engine, `RecognitionEngineID.cloud`, `ProcessingLocation.cloud`. Everything specific to a

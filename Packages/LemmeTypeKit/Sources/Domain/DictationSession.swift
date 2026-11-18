@@ -50,7 +50,7 @@ public struct DictationSession: Identifiable, Sendable {
     /// when the user picks a language after uncertain detection (E9-S2).
     public var language: String
     /// Original text or English, captured when recording started (E9-S3).
-    public let speechOutput: SpeechOutput
+    public var speechOutput: SpeechOutput
     /// The engine choice in Settings when recording started.
     public let enginePreference: EnginePreference
     /// `nil` until the pipeline picks one; retries reuse it.

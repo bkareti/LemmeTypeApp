@@ -18,6 +18,8 @@ struct ReviewSnapshot {
 enum ReviewChange {
     /// `replacesFirst`: a Regenerate in the mode's own style, whose result becomes the first one.
     case tone(previous: ReviewSnapshot, previousTone: Tone?, replacesFirst: Bool)
+    /// The same recording, recognised again in the language that was spoken (E12-S6).
+    case spokenLanguage(translation: ReviewLanguageState)
 }
 
 extension DictationIssue {
@@ -104,6 +106,7 @@ extension RecordingCoordinator {
         reviewFirst = nil
         reviewChange = nil
         reviewTone = nil
+        forgetReviewLanguages()
     }
 
     private func snapshotOfReview(_ issue: DictationIssue) -> ReviewSnapshot {
@@ -183,6 +186,8 @@ extension RecordingCoordinator {
             feedback.announce(
                 String(localized: "Dictation needs your attention. \(issue.userMessage)", bundle: .module))
             finishSession(displayFor: attentionDisplay)
+        case .spokenLanguage(let translation):
+            finishSpokenLanguage(outcome, translation: translation)
         }
         return true
     }

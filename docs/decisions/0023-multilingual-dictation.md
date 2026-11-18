@@ -85,3 +85,14 @@ removes (ADR 0011, 0022).
   `availability(for:)`; existing engines keep their behaviour through defaults.
 - A `RecognitionError.languageUncertain` and a `DictationAction.useLanguage`
   join the stable identifiers.
+
+## Addition: the spoken language from a translation review (E12-S6, 2026-11-17)
+
+A translation review on iPhone and iPad offers *Show in Telugu* (the session's language; *Show in
+Original Language* when it was detected). It processes the same recording again with output
+*original* — for the cloud engine the gateway's `transcribe` task, which is Sarvam `codemix` for
+Telugu — and shows the result like any dictation review, written Exact. A cloud session asks first,
+because the recording is uploaded again and uses allowance. Both texts stay in memory for the review,
+so *Show English* needs no new upload. The recording is deleted when the spoken-language text arrives
+(E8-S6), so *Translate Again* is then no longer offered. A failure or Cancel puts the translation back
+with its choices. Only audio is sent, as before (ADR 0031); no text leaves the device.
