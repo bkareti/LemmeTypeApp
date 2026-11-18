@@ -34,19 +34,31 @@ check "app icon compiled" '[[ -f "$app/Assets.car" ]] && [[ -n "$(plutil -extrac
 manifest="$app/PrivacyInfo.xcprivacy"
 check "privacy manifest present" '[[ -f "$manifest" ]]'
 check "privacy manifest: no tracking" '[[ "$(plutil -extract NSPrivacyTracking raw -o - "$manifest")" == false ]]'
-# The manifest, the App Privacy answers, and the policy agree (E13-S8, docs/release/app-store.md section 4).
+# The release scope (LEMMETYPE_RELEASE_SCOPE in Config/LemmeTypeiOS.xcconfig) decides what the build may do, and
+# the manifest, the microphone text, and the App Privacy answers must say the same (docs/release/app-store.md,
+# "Release scope" and section 4). A build that says one thing and does another is refused.
 collected_types() {
   python3 -I -c 'import plistlib,sys; d=plistlib.load(open(sys.argv[1],"rb")); print(" ".join(sorted(i["NSPrivacyCollectedDataType"] for i in d.get("NSPrivacyCollectedDataTypes",[]))))' "$manifest"
 }
-check "privacy manifest: audio, purchases, and usage data, nothing else" '[[ "$(collected_types)" == "NSPrivacyCollectedDataTypeAudioData NSPrivacyCollectedDataTypeOtherUsageData NSPrivacyCollectedDataTypePurchaseHistory" ]]'
-
-# Cloud speech is part of this release, so a build without a production gateway, or while a launch gate is
-# still Open, is refused: it would say one thing and do another.
+scope="$(value LemmeTypeReleaseScope)"
 gateway="$(value LemmeTypeGatewayHost)"
-check "production gateway host is set (LEMMETYPE_GATEWAY_HOST)" '[[ -n "$gateway" ]]'
-check "gateway host is a plain production host name" '[[ "$gateway" =~ ^[A-Za-z0-9.-]+$ && "$gateway" != *staging* && "$gateway" != *.invalid && "$gateway" != localhost ]]'
-check "microphone text names Cloud speech" 'value NSMicrophoneUsageDescription | grep -q "Cloud speech"'
-check "every ADR 0031 launch gate is Closed in docs/release/app-store.md" '! sed -n "/^## 9\. Launch gates/,\$p" "$root/docs/release/app-store.md" | grep -qE "\| Open \|"'
+check "release scope is local or cloud (LEMMETYPE_RELEASE_SCOPE)" '[[ "$scope" == local || "$scope" == cloud ]]'
+if [[ "$scope" == cloud ]]; then
+  # Cloud speech is part of this release, so a build without a production gateway, or while a launch gate is
+  # still Open, is refused.
+  check "privacy manifest: audio, purchases, and usage data, nothing else" '[[ "$(collected_types)" == "NSPrivacyCollectedDataTypeAudioData NSPrivacyCollectedDataTypeOtherUsageData NSPrivacyCollectedDataTypePurchaseHistory" ]]'
+  check "production gateway host is set (LEMMETYPE_GATEWAY_HOST)" '[[ -n "$gateway" ]]'
+  check "gateway host is a plain production host name" '[[ "$gateway" =~ ^[A-Za-z0-9.-]+$ && "$gateway" != *staging* && "$gateway" != *.invalid && "$gateway" != localhost ]]'
+  check "microphone text names Cloud speech" 'value NSMicrophoneUsageDescription | grep -q "Cloud speech"'
+  check "every ADR 0031 launch gate is Closed in docs/release/app-store.md" '! sed -n "/^## 9\. Launch gates/,\$p" "$root/docs/release/app-store.md" | grep -qE "\| Open \|"'
+  check "cloud scope: the App Store text is for the cloud scope" 'grep -q "^Release scope: \*\*cloud\*\*" "$root/docs/release/app-store.md"'
+else
+  # Version 1.0: Local dictation only. Nothing is sent to LemmeType, so nothing is declared as collected.
+  check "local scope: privacy manifest declares no collected data" '[[ -z "$(collected_types)" ]]'
+  check "local scope: no gateway host (LEMMETYPE_GATEWAY_HOST is empty)" '[[ -z "$gateway" ]]'
+  check "local scope: microphone text does not mention Cloud" '! value NSMicrophoneUsageDescription | grep -qi "cloud"'
+  check "local scope: the App Store text is for the local scope" 'grep -q "^Release scope: \*\*local\*\*" "$root/docs/release/app-store.md"'
+fi
 
 binary="$app/$(value CFBundleExecutable)"
 check "executable is arm64 only" '[[ "$(lipo -archs "$binary")" == arm64 ]]'

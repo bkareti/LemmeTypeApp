@@ -4,6 +4,8 @@
 <dict>
 	<key>LemmeTypeGatewayHost</key>
 	<string>$(LEMMETYPE_GATEWAY_HOST)</string>
+	<key>LemmeTypeReleaseScope</key>
+	<string>$(LEMMETYPE_RELEASE_SCOPE)</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

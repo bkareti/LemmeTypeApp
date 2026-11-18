@@ -803,6 +803,7 @@ Use a physical iPhone and iPad with the app installed from Xcode. Record results
 3. Compare with the proposed thresholds in `docs/testing/ios-feasibility.md`. A product owner approves them.
 
 **MA-73 Cloud speech through the gateway (E13-S3)**
+Cloud release only (`cloud` release scope); not part of version 1.0 (`docs/release/app-store.md`, Release scope).
 1. Install a Debug build on a physical iPhone with a staging token (`-LemmeTypeGatewayToken <token>` in the scheme's arguments). Settings › Cloud speech shows *Turn On Cloud Speech…* and no field for a key.
 2. Tap it, read the agreement (it names LemmeType's server, not an API key), tap *Agree*: the section says it is on, and a Telugu mode appears.
 3. Dictate a Telugu sentence with English words: the text arrives in the review, and nothing reaches the clipboard until *Copy*.
@@ -815,7 +816,7 @@ Use a physical iPhone and iPad with the app installed from Xcode. Record results
 **MA-74 Subscription and free trial (E13-S4)**
 1. On a physical iPhone signed in with a **Sandbox Apple Account**, open a fresh install. After the first screen the paywall appears once, with the price and "free, then price per month" taken from the App Store, a *Restore Purchases* button, *Terms of Use* and *Privacy Policy* links, and a *Close* button. Close it: Settings, Models, and Privacy still open.
 2. Settings › Subscription says *Not subscribed*. Tap the *Start … Free Trial* button, confirm in Apple's sheet: Settings says *Free trial* with an end date a week away, and the paywall closes by itself.
-3. Settings › Cloud speech › turn on and dictate Telugu: the gateway accepts the purchase (check the gateway log for a `/v1/session` 200 and, with Cloud speech used, a `/v1/speech/transcriptions` 200).
+3. *(Cloud release only.)* Settings › Cloud speech › turn on and dictate Telugu: the gateway accepts the purchase (check the gateway log for a `/v1/session` 200 and, with Cloud speech used, a `/v1/speech/transcriptions` 200).
 4. On a second device with the same Sandbox account, install the app and tap *Restore Purchases*: Settings shows the same subscription.
 5. Settings › Subscription › *Manage Subscription* opens Apple's screen; cancel there. Back in the app, Settings still says *Free trial* or *Subscribed* until the end date, then says it will not renew.
 6. Let the sandbox subscription expire (it accelerates renewals): Settings says the subscription ended and offers *Subscribe*; the trial wording is gone because the Apple Account has used its free week.
@@ -834,6 +835,7 @@ Use a physical iPhone and iPad with the app installed from Xcode. Record results
 
 **MA-76 The paid launch from a clean install (E13-S8)**
 Use the TestFlight build that will be submitted, on a physical iPhone (and an iPad), signed in with a Sandbox Apple Account. Record the device, the iOS version, the build number, and the result for each step.
+For version 1.0 (`local` release scope) skip the Cloud parts of steps 3, 4, and 6, and check instead: Settings has no Cloud speech section; the paywall lists no Cloud benefit; Settings › Privacy says your voice is turned into text on this device; the microphone prompt does not mention Cloud.
 1. Delete the app, install the build, open it. The paywall shows the price and the free week once. Close it: Settings and the privacy pages are reachable, recording is not.
 2. Start the trial in Apple's sheet. Run the first dictation: the explanation appears, the microphone and Speech Recognition prompts follow, and English dictation works.
 3. Airplane Mode on: English dictation still works, and a Cloud dictation says it could not reach the service and keeps the recording.

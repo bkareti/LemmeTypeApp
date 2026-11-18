@@ -180,7 +180,8 @@ struct IOSComposition {
             residency: residency, diagnostics: diagnostics, limits: services.limits,
             entitlement: services.entitlement)
         let subscription = SubscriptionModel(
-            service: services.subscription, seen: services.paywallSeen, summary: services.entitlementSummary)
+            service: services.subscription, seen: services.paywallSeen, summary: services.entitlementSummary,
+            includesCloudSpeech: services.cloudSpeech != nil)
         // A dictation refused for want of a subscription shows the offer, and so does its "See Subscription" choice.
         recorder.onOpenSubscription = { [weak subscription] in subscription?.showPaywall() }
         let permissions = PermissionsModel(

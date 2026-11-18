@@ -54,10 +54,12 @@
                     String(
                         localized: "Dictate on your iPhone, with your voice kept on the device.", bundle: .module,
                         comment: "A benefit listed in the paywall"), systemImage: "lock.shield")
-                Label(
-                    String(
-                        localized: "Cloud speech for Telugu and more, with nothing to set up.", bundle: .module,
-                        comment: "A benefit listed in the paywall"), systemImage: "cloud")
+                if model.includesCloudSpeech {
+                    Label(
+                        String(
+                            localized: "Cloud speech for Telugu and more, with nothing to set up.", bundle: .module,
+                            comment: "A benefit listed in the paywall"), systemImage: "cloud")
+                }
             }
             .font(.subheadline)
         }

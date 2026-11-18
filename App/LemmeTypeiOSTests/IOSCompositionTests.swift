@@ -31,13 +31,32 @@ struct IOSCompositionTests {
         #expect(!composition.modes.engines.contains(.cloud))
     }
 
-    @Test func aReleaseBuildOffersCloudSpeechOnlyWhenTheProductionHostIsSet() {
+    @Test func aReleaseBuildOffersCloudSpeechOnlyInTheCloudScopeWithTheProductionHostSet() {
+        let cloud = "cloud"
         #expect(IOSComposition.releaseGatewayHost(from: nil) == nil)
         #expect(IOSComposition.releaseGatewayHost(from: [:]) == nil)
-        #expect(IOSComposition.releaseGatewayHost(from: ["LemmeTypeGatewayHost": ""]) == nil, "an empty setting is off")
-        #expect(IOSComposition.releaseGatewayHost(from: ["LemmeTypeGatewayHost": " \n"]) == nil)
         #expect(
-            IOSComposition.releaseGatewayHost(from: ["LemmeTypeGatewayHost": "api.example.com"]) == "api.example.com")
+            IOSComposition.releaseGatewayHost(from: ["LemmeTypeReleaseScope": cloud, "LemmeTypeGatewayHost": ""])
+                == nil,
+            "an empty setting is off")
+        #expect(
+            IOSComposition.releaseGatewayHost(from: ["LemmeTypeReleaseScope": cloud, "LemmeTypeGatewayHost": " \n"])
+                == nil)
+        #expect(
+            IOSComposition.releaseGatewayHost(from: [
+                "LemmeTypeReleaseScope": cloud, "LemmeTypeGatewayHost": "api.example.com",
+            ]) == "api.example.com")
+    }
+
+    @Test func theLocalReleaseScopeKeepsCloudSpeechOffEvenWithAHost() {
+        let host = "api.example.com"
+        #expect(IOSComposition.releaseGatewayHost(from: ["LemmeTypeGatewayHost": host]) == nil, "no scope is local")
+        #expect(
+            IOSComposition.releaseGatewayHost(from: ["LemmeTypeReleaseScope": "local", "LemmeTypeGatewayHost": host])
+                == nil)
+        #expect(
+            IOSComposition.releaseGatewayHost(from: ["LemmeTypeReleaseScope": "Cloud", "LemmeTypeGatewayHost": host])
+                == nil, "only the exact value turns it on")
     }
 
     @Test func anOldApiKeyInTheKeychainIsRemoved() throws {
@@ -111,6 +130,18 @@ struct IOSCompositionTests {
         #expect(scenario.recognitionError == .noSpeechDetected)
         #expect(scenario.startsFromShortcut)
         #expect(Scenario(arguments: [IOSComposition.uiTestingArgument]) == Scenario())
+    }
+
+    @Test func aLocalOnlyScenarioHasNoCloudSpeechAndThePaywallDoesNotSellIt() {
+        let local = IOSComposition.make(arguments: [
+            IOSComposition.uiTestingArgument, IOSComposition.UITestScenario.localOnlyArgument,
+        ])
+        #expect(local.cloudSpeech == nil)
+        #expect(!local.subscription.includesCloudSpeech)
+
+        let cloud = IOSComposition.make(arguments: [IOSComposition.uiTestingArgument])
+        #expect(cloud.cloudSpeech != nil)
+        #expect(cloud.subscription.includesCloudSpeech)
     }
 
     @Test func theScenarioReachesTheRecorderAndTheLaunchInbox() {

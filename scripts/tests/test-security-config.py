@@ -26,6 +26,7 @@ FILES = [
     "Config/LemmeType.xcconfig",
     "Config/LemmeTypeiOS.xcconfig",
     "App/LemmeTypeiOS/PrivacyInfo.xcprivacy",
+    "Config/PrivacyInfo-Cloud.xcprivacy",
     "Config/Release.xcconfig",
     "Config/Version.xcconfig",
     "Packages/LemmeTypeKit/Package.swift",
@@ -186,15 +187,26 @@ class SecurityConfigTests(unittest.TestCase):
         self.assertIn("NSPrivacyTracking must be false", self.errors())
 
     def test_the_privacy_manifest_declares_only_what_cloud_speech_and_the_subscription_send(self) -> None:
-        self.assertEqual("", self.errors())  # the committed manifest declares the three allowed types
+        # Version 1.0 (local scope) declares nothing; the Cloud release's copy declares the three allowed types.
+        self.assertEqual("", self.errors())
 
     def test_the_privacy_manifest_may_not_declare_another_data_type(self) -> None:
-        self.edit("App/LemmeTypeiOS/PrivacyInfo.xcprivacy", "NSPrivacyCollectedDataTypeOtherUsageData", "NSPrivacyCollectedDataTypeLocation")  # fmt: skip
+        self.edit("Config/PrivacyInfo-Cloud.xcprivacy", "NSPrivacyCollectedDataTypeOtherUsageData", "NSPrivacyCollectedDataTypeLocation")  # fmt: skip
         self.assertIn("NSPrivacyCollectedDataTypeLocation is not a data type the paid launch collects", self.errors())
 
     def test_collected_data_may_not_be_used_for_advertising(self) -> None:
-        self.edit("App/LemmeTypeiOS/PrivacyInfo.xcprivacy", "NSPrivacyCollectedDataTypePurposeAppFunctionality", "NSPrivacyCollectedDataTypePurposeThirdPartyAdvertising")  # fmt: skip
+        self.edit("Config/PrivacyInfo-Cloud.xcprivacy", "NSPrivacyCollectedDataTypePurposeAppFunctionality", "NSPrivacyCollectedDataTypePurposeThirdPartyAdvertising")  # fmt: skip
         self.assertIn("app functionality only", self.errors())
+
+    def test_the_bundled_manifest_follows_the_same_rules_when_it_declares_data(self) -> None:
+        shutil.copy(self.root / "Config/PrivacyInfo-Cloud.xcprivacy", self.root / "App/LemmeTypeiOS/PrivacyInfo.xcprivacy")
+        self.assertEqual("", self.errors())
+        self.edit("App/LemmeTypeiOS/PrivacyInfo.xcprivacy", "NSPrivacyCollectedDataTypeAudioData", "NSPrivacyCollectedDataTypeContacts")  # fmt: skip
+        self.assertIn("App/LemmeTypeiOS/PrivacyInfo.xcprivacy: NSPrivacyCollectedDataTypeContacts", self.errors())
+
+    def test_the_cloud_manifest_may_not_declare_tracking(self) -> None:
+        self.edit("Config/PrivacyInfo-Cloud.xcprivacy", "<key>NSPrivacyTracking</key>\n\t<false/>", "<key>NSPrivacyTracking</key>\n\t<true/>")  # fmt: skip
+        self.assertIn("Config/PrivacyInfo-Cloud.xcprivacy: no tracking", self.errors())
 
     def test_an_api_that_needs_a_declared_reason_must_be_in_the_manifest(self) -> None:
         probe = self.root / "App/LemmeTypeiOS/Probe.swift"

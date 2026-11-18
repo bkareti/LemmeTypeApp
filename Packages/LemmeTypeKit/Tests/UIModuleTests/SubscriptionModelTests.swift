@@ -16,6 +16,11 @@ struct SubscriptionModelTests {
         SubscriptionModel(service: service, seen: seen)
     }
 
+    @Test func cloudSpeechIsOnlyOfferedWhenTheBuildIncludesIt() {
+        #expect(!makeModel().includesCloudSpeech, "a build without Cloud speech never sells it")
+        #expect(SubscriptionModel(service: service, seen: seen, includesCloudSpeech: true).includesCloudSpeech)
+    }
+
     @Test func startLoadsTheStateAndTheProductFromTheService() async {
         let model = makeModel()
         await model.start()

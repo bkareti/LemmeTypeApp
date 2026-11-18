@@ -4,7 +4,8 @@
 # from AppStoreScreenshotsUITests, built English-only like the release (ADR 0029). Writes build/app-store-screenshots/<device>/NN-name.png
 # and checks each image has a size App Store Connect accepts.
 #
-#   scripts/make-app-store-screenshots.sh
+#   scripts/make-app-store-screenshots.sh            # version 1.0: the local release scope, no Cloud speech
+#   SCOPE=cloud scripts/make-app-store-screenshots.sh # the Cloud release (docs/release/app-store.md section 9)
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -12,6 +13,8 @@ cd "$root"
 out="$root/build/app-store-screenshots"
 rm -rf "$out"
 mkdir -p "$out"
+scope="${SCOPE:-local}"
+[[ $scope == local || $scope == cloud ]] || { echo "error: SCOPE must be local or cloud" >&2; exit 2; }
 xcodegen generate --quiet
 
 # device name | accepted portrait sizes (App Store Connect, 2026)
@@ -31,7 +34,7 @@ for entry in "${devices[@]}"; do
     --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100
   slug="$(echo "$name" | tr -cs '[:alnum:]' '-' | sed 's/-$//')"
   bundle="$out/$slug.xcresult"
-  TEST_RUNNER_LEMMETYPE_SCREENSHOTS=1 xcodebuild test -project LemmeType.xcodeproj -scheme LemmeTypeiOS \
+  TEST_RUNNER_LEMMETYPE_SCREENSHOTS=1 TEST_RUNNER_LEMMETYPE_SCREENSHOT_SCOPE="$scope" xcodebuild test -project LemmeType.xcodeproj -scheme LemmeTypeiOS \
     -destination "id=$udid" -derivedDataPath build/DerivedData-ios-screens -resultBundlePath "$bundle" \
     -only-testing:LemmeTypeiOSUITests/AppStoreScreenshotsUITests \
     "SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG ENGLISH_ONLY_RELEASE" > "$out/$slug.log" 2>&1 \
@@ -58,4 +61,4 @@ PY
   done
 done
 [[ $failures -eq 0 ]] || exit 1
-echo "Screenshots: $out"
+echo "Screenshots ($scope scope): $out"
