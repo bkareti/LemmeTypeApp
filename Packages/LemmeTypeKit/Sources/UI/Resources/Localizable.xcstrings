@@ -140,6 +140,15 @@
     "1 week" : {
 
     },
+    "1. Add the keyboard" : {
+
+    },
+    "2. Action Button" : {
+
+    },
+    "3. Back Tap (optional)" : {
+
+    },
     "A device policy blocks this permission. Contact your administrator." : {
 
     },
@@ -195,9 +204,6 @@
     },
     "Acknowledgements" : {
       "comment" : "Opens the open-source licences"
-    },
-    "Action Button" : {
-
     },
     "Add a key to the modifiers, for example ⌥Space." : {
 
@@ -329,8 +335,8 @@
     "Back" : {
       "comment" : "Button label: go to the previous setup step"
     },
-    "Back Tap" : {
-
+    "Back Tap lists only your own shortcuts, so make one first: in the Shortcuts app, tap +, add the “Dictate Anywhere” action from LemmeType, and tap Done. Then choose it in Settings › Accessibility › Touch › Back Tap › Double Tap." : {
+      "comment" : "How to run Dictate Anywhere from Back Tap"
     },
     "Balanced" : {
 
@@ -567,6 +573,9 @@
       "comment" : "Title of the main screen"
     },
     "Dictate Again" : {
+
+    },
+    "Dictate in Any App" : {
 
     },
     "Dictate on your iPhone, with your voice kept on the device." : {
@@ -1290,6 +1299,9 @@
     "Open Settings" : {
 
     },
+    "Open Shortcuts" : {
+
+    },
     "Open System Settings…" : {
 
     },
@@ -1371,6 +1383,9 @@
     },
     "Press Esc while dictating to cancel." : {
 
+    },
+    "Press once to start and again to stop. You stay in the app you were using, and the text goes where you were typing. Your iPhone must be unlocked. “Start Dictating” opens LemmeType instead." : {
+      "comment" : "Footnote under the Action Button and Back Tap steps"
     },
     "Press your shortcut to test it." : {
 
@@ -1604,11 +1619,11 @@
     "Settings" : {
 
     },
-    "Settings › Accessibility › Touch › Back Tap, then choose a gesture and the “Start Dictating” shortcut." : {
-
+    "Settings › Action Button › Shortcut › Choose a Shortcut › LemmeType › “Dictate Anywhere”." : {
+      "comment" : "How to put Dictate Anywhere on the Action Button"
     },
-    "Settings › Action Button › Shortcut, then choose “Start Dictating” from LemmeType." : {
-
+    "Settings › General › Keyboard › Keyboards › Add New Keyboard › LemmeType. It does not need Full Access. Switch to it with the globe key in the app you are typing in." : {
+      "comment" : "Step 1 of setting up dictation into other apps"
     },
     "Settings…" : {
 
@@ -1698,9 +1713,6 @@
       "comment" : "Button that starts the free trial of the subscription"
     },
     "Start Dictating" : {
-
-    },
-    "Start From a Button" : {
 
     },
     "Start Test Recording" : {
@@ -1799,9 +1811,6 @@
 
     },
     "The app didn’t take the pasted text in time. Your clipboard was put back; copy the text to paste it yourself." : {
-
-    },
-    "The app opens and recording starts on screen. Your iPhone must be unlocked. Nothing is recorded in the background." : {
 
     },
     "The App Store’s answer could not be checked, so nothing was unlocked. Try again." : {

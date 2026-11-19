@@ -20,8 +20,15 @@ struct StartQuickDictationIntent: AppIntent {
     }
 }
 
+/// "Dictate Anywhere" comes first: it is the one for the Action Button and Back Tap, because it
+/// keeps the current app in front (ADR 0032). "Start Dictating" opens LemmeType.
 struct LemmeTypeShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
+        AppShortcut(
+            intent: DictateAnywhereIntent(),
+            phrases: ["Dictate anywhere with \(.applicationName)"],
+            shortTitle: "Dictate Anywhere",
+            systemImageName: "waveform")
         AppShortcut(
             intent: StartQuickDictationIntent(),
             phrases: [
@@ -30,10 +37,5 @@ struct LemmeTypeShortcuts: AppShortcutsProvider {
             ],
             shortTitle: "Start Dictating",
             systemImageName: "mic.fill")
-        AppShortcut(
-            intent: DictateAnywhereIntent(),
-            phrases: ["Dictate anywhere with \(.applicationName)"],
-            shortTitle: "Dictate Anywhere",
-            systemImageName: "waveform")
     }
 }
