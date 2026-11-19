@@ -16,6 +16,9 @@ public enum PublicLinks {
     public static let support =
         URL(string: "https://github.com/bkareti/LemmeTypeApp/blob/main/docs/support.md")
         ?? URL(fileURLWithPath: "/")
+    /// Opens the Shortcuts app on a new shortcut, so a Back Tap shortcut can be made (Back Tap
+    /// lists only the person's own shortcuts, not an app's built-in ones). Local only.
+    public static let newShortcut = URL(string: "shortcuts://create-shortcut") ?? URL(fileURLWithPath: "/")
 }
 
 /// The open-source licences the app ships, read from the bundled `Acknowledgements.txt`.
