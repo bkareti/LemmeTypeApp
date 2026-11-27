@@ -205,7 +205,7 @@ Update this section, the manifest, and the privacy policy together in the same c
 >
 > Subscription: LemmeType Pro is an auto-renewing monthly subscription with a 7-day free trial. The first launch shows the offer once; it is also in Settings › Subscription. A Sandbox Apple Account can start the trial. Without a trial or subscription, recording is not available; Settings, Restore Purchases, Manage Subscription, Export and Delete All Local Data stay available. Terms of Use and Privacy Policy are linked on the offer and in Settings › About.
 >
-> Cloud speech (optional, off by default): Settings › Cloud speech › Turn On Cloud Speech…, then agree to the screen that explains it. Create or edit a mode, choose the Cloud engine and Telugu, and dictate. Only the recording of that dictation is sent, to LemmeType's server ([production host]) and from there to a speech provider in India; neither keeps the audio or the text. Local modes never use the network. Cloud speech is part of the subscription (a monthly allowance).
+> Cloud speech (optional, off by default): Settings › Cloud speech › Turn On Cloud Speech…, then agree to the screen that explains it. Create or edit a mode, choose the Cloud engine and Telugu, and dictate. Only the recording of that dictation is sent, to LemmeType's server (speech-gateway-production-lgnfoz4hqa-el.a.run.app) and from there to a speech provider in India; neither keeps the audio or the text. Local modes never use the network. Cloud speech is part of the subscription (a monthly allowance).
 >
 > Privacy: Local speech recognition runs on the device only (SFSpeechRecognizer with requiresOnDeviceRecognition, or an open-source model on the device). The app declares Audio Data, Purchases, and Other Usage Data (App Functionality) in its App Privacy answers for Cloud speech and the subscription.
 >
@@ -321,7 +321,7 @@ provider (ADR 0031, "Staying replaceable") means closing gates 1, 2, and 4 again
 | 2. No retention and no training on the provider's production account | Sarvam dashboard, as an Owner: Settings › Organisation › General › model training **off**; Settings › Workspace › Data policy › **No retention (0 days)**. Screenshots of both, linked here. Until then Sarvam keeps API data indefinitely by default | Open |
 | 3. How keys reach the app | The gateway holds the key; no key in the app ([ADR 0033](../decisions/0033-speech-gateway.md), `LegacyCloudKeyEraser`) | Closed |
 | 4. The 34-sentence Telugu–English test | The result, linked here, run against the production gateway | Open |
-| 5. Production gateway live | `speech-gateway` deployed as `production` (its runbook), `appAppleId` set, App Store Server Notifications URLs set, and `LEMMETYPE_GATEWAY_HOST` set to its host | Open |
+| 5. Production gateway live | `speech-gateway` deployed as `production` (its runbook), `appAppleId` set, App Store Server Notifications URLs set, and `LEMMETYPE_GATEWAY_HOST` set to its host. Progress 2026-11-27: deployed (run 46018027474, revision `speech-gateway-production-00001-qqm`, health 200, unauthenticated requests refused) and the host set; `appAppleId` and the notification URLs wait for the App Store Connect app record | Open |
 | 6. Documents say what is true | Network allowlist, threat model (T-25…T-28), privacy checklist, App Store labels, policy, in-app text, and brief updated in E13-S8 (`docs/backlog/reviews/epic-13-s8-agreement.md`) | Closed |
 
 ### 9.1 Switching to the cloud scope
@@ -329,7 +329,7 @@ provider (ADR 0031, "Staying replaceable") means closing gates 1, 2, and 4 again
 Done on 2026-11-27 (branch `release/ios-cloud-1.0`) for version 1.0:
 
 - [x] `Config/LemmeTypeiOS.xcconfig`: `LEMMETYPE_RELEASE_SCOPE = cloud`.
-- [ ] `Config/LemmeTypeiOS.xcconfig`: `LEMMETYPE_GATEWAY_HOST = <production host>` (gate 5).
+- [x] `Config/LemmeTypeiOS.xcconfig`: `LEMMETYPE_GATEWAY_HOST = speech-gateway-production-lgnfoz4hqa-el.a.run.app` (gate 5).
 - [x] `Config/PrivacyInfo-Cloud.xcprivacy` copied over `App/LemmeTypeiOS/PrivacyInfo.xcprivacy`.
 - [x] This document: `Release scope: **cloud**`; sections 3, 4, 5, and 7 carry the Cloud text.
 - [x] `docs/privacy-policy.md`, `docs/support.md`, and https://lemmetype.com: Cloud speech described as available,
