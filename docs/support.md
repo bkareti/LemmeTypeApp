@@ -11,17 +11,25 @@ Telugu through the optional Cloud speech on iPhone and iPad.
 3. Check the text, then tap **Copy**. Paste it into any app (touch and hold, then
    **Paste**).
 
-**Start faster:** add the **Start Dictating** action to the Action Button (iPhone
-15 Pro and later: Settings › Action Button › Shortcut) or to Back Tap (Settings ›
-Accessibility › Touch › Back Tap). LemmeType's Settings › Start From a Button shows the
-steps.
+**Dictate in any app (WhatsApp, Messages, Notes…):**
+
+1. Add the LemmeType keyboard: Settings › General › Keyboard › Keyboards › Add New
+   Keyboard › LemmeType. It does not need Full Access. In the app you are typing in,
+   switch to it with the globe key.
+2. Action Button (iPhone 15 Pro and later): Settings › Action Button › Shortcut ›
+   Choose a Shortcut › LemmeType › **Dictate Anywhere**.
+3. Back Tap (optional): Back Tap lists only your own shortcuts, so make one first. In
+   the Shortcuts app, tap **+**, add the **Dictate Anywhere** action from LemmeType, and
+   tap **Done**. Then choose it in Settings › Accessibility › Touch › Back Tap ›
+   Double Tap (or Triple Tap).
+
+Press once to start and again to stop. You stay in the app you were using, and the text
+goes where you were typing. Your iPhone must be unlocked. The other action, **Start
+Dictating**, opens LemmeType instead. LemmeType's Settings › Dictate in Any App shows
+the same steps.
 
 **Speech engine:** Apple Speech works right away. For a Whisper model, open Settings ›
 Models and download one; it stays on your device.
-
-**Keyboard:** with the LemmeType keyboard, text you dictate with the Action Button goes
-straight into the field you were typing in. Add it in Settings › General › Keyboard ›
-Keyboards. It does not need Full Access.
 
 ### Cloud speech (optional)
 
