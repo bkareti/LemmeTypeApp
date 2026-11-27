@@ -407,7 +407,7 @@
     "Cloud speech for Telugu and more, with nothing to set up." : {
       "comment" : "A benefit listed in the paywall"
     },
-    "Cloud speech is part of your LemmeType subscription, with a monthly allowance. There is nothing to set up. How long the speech service keeps audio is set by its own terms." : {
+    "Cloud speech is part of your LemmeType subscription, with a monthly allowance. There is nothing to set up. The speech service does not keep your audio or the text, and does not use them to train its models." : {
       "comment" : "Third paragraph of the cloud speech agreement"
     },
     "Cloud speech is unavailable right now. Try again later. Your recording is kept." : {
