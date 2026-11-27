@@ -15,11 +15,19 @@ public final class FakeGatewayAccess: GatewayAccessing, GatewayCapabilitiesProvi
         var discards = 0
         var capabilityCalls = 0
         var token = "test-token"
+        var languages = ["te"]
     }
 
     private let state = Mutex(State())
 
-    public init(hasSubscription: Bool = true, consentVersion: Int = 1) {
+    /// Where a real ``GatewayService`` would record the languages it read, if anywhere.
+    private let languageSink: (@Sendable ([String]) -> Void)?
+
+    public init(
+        hasSubscription: Bool = true, consentVersion: Int = 1,
+        recordLanguages: (@Sendable ([String]) -> Void)? = nil
+    ) {
+        languageSink = recordLanguages
         state.withLock {
             $0.hasSubscription = hasSubscription
             $0.consentVersion = consentVersion
@@ -31,6 +39,8 @@ public final class FakeGatewayAccess: GatewayAccessing, GatewayCapabilitiesProvi
     public func setCapabilitiesFailure(_ failure: GatewayAccessError?) {
         state.withLock { $0.capabilitiesFail = failure }
     }
+    /// The languages the next capabilities answer lists.
+    public func setLanguages(_ value: [String]) { state.withLock { $0.languages = value } }
     public func setAllowance(_ value: GatewayAllowance?) { state.withLock { $0.allowance = value } }
     public var tokensIssued: Int { state.withLock { $0.tokensIssued } }
     public var discards: Int { state.withLock { $0.discards } }
@@ -53,12 +63,14 @@ public final class FakeGatewayAccess: GatewayAccessing, GatewayCapabilitiesProvi
     }
 
     public func capabilities() async throws(GatewayAccessError) -> GatewayCapabilities {
-        let (failure, version) = state.withLock { state -> (GatewayAccessError?, Int) in
+        let answer = state.withLock { state -> State in
             state.capabilityCalls += 1
-            return (state.capabilitiesFail, state.consentVersion)
+            return state
         }
-        if let failure { throw failure }
-        return GatewayCapabilities(consentVersion: version, maximumClipSeconds: 30)
+        if let failure = answer.capabilitiesFail { throw failure }
+        languageSink?(answer.languages)
+        return GatewayCapabilities(
+            consentVersion: answer.consentVersion, maximumClipSeconds: 30, languages: answer.languages)
     }
 
     public func allowance() async -> GatewayAllowance? { state.withLock { $0.allowance } }

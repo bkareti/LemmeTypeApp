@@ -57,10 +57,12 @@ public final class FakeRecognitionEngine: SpeechRecognitionEngine {
         supportedLanguages: [String] = ["en"],
         assets: AssetRequirement = .none,
         capabilities: EngineCapabilities = [.partialResults],
-        tasks: Set<RecognitionTask> = [.transcribe]
+        tasks: Set<RecognitionTask> = [.transcribe],
+        location: ProcessingLocation = .onDevice
     ) {
         descriptor = EngineDescriptor(
-            id: id, supportedLanguages: supportedLanguages, assets: assets, capabilities: capabilities, tasks: tasks)
+            id: id, location: location, supportedLanguages: supportedLanguages, assets: assets,
+            capabilities: capabilities, tasks: tasks)
         state = Mutex(State(availability: availability, script: script))
     }
 

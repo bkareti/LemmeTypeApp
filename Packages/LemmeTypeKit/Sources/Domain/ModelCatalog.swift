@@ -70,7 +70,7 @@ public enum ModelCatalog {
 
     /// The languages a multilingual model is listed for: the evaluation set,
     /// not every language Whisper can attempt.
-    public static var multilingualLanguages: [String] { SpokenLanguages.all.map(\.code) }
+    public static var multilingualLanguages: [String] { SpokenLanguages.local.map(\.code) }
 
     public static let all: [ModelAsset] = whisperModels
 

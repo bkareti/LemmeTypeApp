@@ -240,3 +240,20 @@ That turns the first two gates into the evidence for those promises, for whichev
 Switching provider means closing gates 1, 2, and 4 for the new provider before it receives user audio.
 Internal documents (this ADR, the threat model, the gateway's runbook) keep naming the provider in use.
 
+## Addendum (2026-11-27, E12-S7): the gateway decides which languages are live
+
+Hindi, Tamil, Kannada, and Malayalam join Telugu as Cloud speech candidates. The app knows all five
+(`SpokenLanguages.cloudCandidates`, with names and `LanguageSupportMatrix` rows), but offers a Cloud
+language only when the gateway's `GET /v1/capabilities` lists it for transcription. `GatewayService`
+copies that list into `GatewayLanguages`, which `GatewaySpeechProvider.supportedLanguages` reads, so the
+Cloud engine's descriptor, the Language menu, the mode editors, and the readiness check follow without
+other changes. The last list is kept in preferences (`UserDefaultsCloudLanguageStore`, language codes
+only), and is Telugu until the gateway first answers.
+
+In the `cloud` release scope, a language other than English is offered only on an engine whose
+location is `.cloud` (`LanguageScope.offers(language:at:)`): the scope lists English models only, so a
+local engine that names Hindi or Telugu could never run it.
+
+A language goes live by adding its route to the production `apps.yaml` after its test
+(`docs/testing/cloud-speech-evaluation.md`), with no app update. Same provider, same country, same
+terms, so the consent version does not change. On-device Whisper keeps English, Hindi, and Telugu.

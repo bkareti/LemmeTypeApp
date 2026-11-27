@@ -30,11 +30,22 @@ public struct GatewayCapabilities: Equatable, Sendable {
     /// Raised by the gateway when audio would go somewhere the user has not agreed to.
     public let consentVersion: Int
     public let maximumClipSeconds: Double
+    /// The languages the gateway serves for this app, as lowercase codes (`"te"`), in its order (E12-S7).
+    /// A language is listed when it can be transcribed; the gateway decides by its routes.
+    public let languages: [String]
 
-    public init(consentVersion: Int, maximumClipSeconds: Double) {
+    public init(consentVersion: Int, maximumClipSeconds: Double, languages: [String] = ["te"]) {
         self.consentVersion = consentVersion
         self.maximumClipSeconds = maximumClipSeconds
+        self.languages = languages
     }
+}
+
+/// Where the last list of Cloud speech languages the gateway gave is kept (E12-S7). Language codes
+/// only: it is the gateway's configuration, not the user's data.
+public protocol CloudLanguageStoring: Sendable {
+    /// `nil` until the gateway has answered once.
+    var cloudLanguages: [String]? { get nonmutating set }
 }
 
 public protocol GatewayCapabilitiesProviding: Sendable {

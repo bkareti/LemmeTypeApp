@@ -34,7 +34,7 @@ dictation does not fix grammar. The cloud engine from Epic 11 already builds for
 - Telugu text as the output of a mode on iPhone. E12-S6 shows it only on request, from a translation review.
 - Changing the tone of Telugu or mixed text. Apple's on-device model does not support Telugu, and
   sending text to a cloud model would break ADR 0031's "audio only" rule. Tone is English only.
-- Languages other than Telugu and English.
+- Languages other than Telugu and English, until E12-S7 (Hindi, Tamil, Kannada, Malayalam through Cloud).
 - One mode that works out the language by itself (not measured; see the readiness review).
 - A relay server or a key built into the app (ADR 0031).
 - A grammar step after a translation by default: Sarvam's English goes straight to review. The user may
@@ -254,6 +254,68 @@ when it works and its data handling is settled.
 **Dependencies:** E12-S1, E12-S2, E12-S3, a written answer from Sarvam, recordings from the maintainer  
 **Estimate:** 3 points
 
+---
+
+## E12-S7 — Offer more Indian languages through Cloud speech
+
+**User story**
+
+As an iPhone user who speaks Hindi, Tamil, Kannada, Malayalam, or Telugu, often mixed with
+English, I want to choose my language in Cloud speech so that I get my words as English (or in
+my language) without typing.
+
+**Scope**
+
+- Cloud speech candidates: Telugu, Hindi, Tamil, Kannada, Malayalam. English stays on the device.
+- **The gateway decides which are live.** The app knows the five languages (codes, names in
+  English and in their own script), but offers a Cloud language only when the gateway's
+  `GET /v1/capabilities` lists it (`languages[].language` and its `tasks`). A language goes live
+  by adding its route to `apps.yaml` in the gateway, with no app update.
+- `GatewayCapabilities` carries the language list. The app keeps the last list it saw in
+  preferences (codes only, no user data), starting from Telugu, and refreshes it when it already
+  asks for capabilities (Cloud settings shown, before a Cloud dictation). Never at launch.
+- `GatewaySpeechProvider.supportedLanguages` reads that list, so the Cloud engine's descriptor,
+  the Language menu, mode editors, and `LanguageReadiness` follow it with no other change.
+- `SpokenLanguages` adds Tamil, Kannada, and Malayalam for Cloud only. Local Whisper keeps
+  English, Hindi, and Telugu (detection candidates and multilingual model languages do not change).
+- `LanguageScope.englishWithCloud` offers English and any Cloud candidate; the Cloud engine's
+  list does the real gating.
+- `LanguageSupportMatrix` rows for the four new languages on `.cloud`, transcribe and translate,
+  status `evaluation`.
+- The Cloud speech section names the live languages from the list instead of Telugu alone. The
+  paywall keeps "Telugu and more", which stays true whatever is live.
+- Gateway (separate repository `speech-gateway`): the Sarvam provider maps `hi`, `ta`, `kn`, `ml`
+  to `hi-IN`, `ta-IN`, `kn-IN`, `ml-IN`. Production `apps.yaml` keeps Telugu only; the runbook
+  says how to add a route after the language passes its test.
+- Docs: ADR 0031 addendum, language support matrix, privacy policy, support page, App Store
+  text for the update that ships it, and a short test per language in
+  `docs/testing/cloud-speech-evaluation.md`.
+
+**Out of scope**
+
+- Turning a language on in production. Each goes live only after a native speaker reviews
+  10 real dictations (mixed with English, and translated), recorded in the evaluation doc.
+- Other Indian languages Sarvam serves (Bengali, Marathi, Gujarati, Punjabi, Odia); the same
+  steps add them later.
+- Automatic language detection through the gateway, and changes to the "Any Language to English
+  (Cloud)" mode (a separate check).
+- Local Whisper for the new languages; the Mac app.
+
+**Acceptance criteria**
+
+- Given capabilities listing `te` and `hi`, the Language menu offers English, Telugu, and Hindi, and not Tamil, Kannada, or Malayalam (unit test).
+- Given a later answer that drops a language, that language is no longer offered; a mode or setting that already uses it stays visible and reports it as not available, and never runs on another engine (unit test).
+- The list survives a relaunch, and before any answer arrives only Telugu is offered (unit test with fake preferences).
+- A Hindi Cloud dictation sends `language=hi` and the right `task` to the gateway (provider unit test).
+- A request for a language the gateway did not list is refused before anything is sent (unit test).
+- Whisper's detection candidates and the multilingual model languages are unchanged (unit test).
+- The Cloud speech section names the live languages, and `make l10n-check` passes.
+- Gateway: Sarvam receives `hi-IN`, `ta-IN`, `kn-IN`, `ml-IN` for those languages, and capabilities list only routed languages (gateway tests).
+- `make test-unit`, `make lint`, and the gateway's `npm test` pass.
+
+**Dependencies:** E12-S1, E12-S6, E13-S1, E13-S3
+**Estimate:** 5 points
+
 ## Epic 12 story order
 
 1. E12-S1
@@ -262,3 +324,4 @@ when it works and its data handling is settled.
 4. E12-S5
 5. E12-S6
 6. E12-S4
+7. E12-S7

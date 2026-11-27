@@ -12,7 +12,8 @@ only when a measurement record is linked from its row.
 | Hindi | Transcribe, translate to English | Whisper (multilingual) | Small | Evaluation — measured below threshold (see [Measurements](#measurements-2026-11)) |
 | Telugu | Transcribe | Whisper (multilingual) | Small | **Not reliable** — measured; Whisper Small gets most of it wrong (see [Measurements](#measurements-2026-11)) |
 | Telugu | Translate to English | Whisper (multilingual) | Small | Evaluation — not measured on its own |
-| Tamil, Malayalam, Kannada | — | — | — | Not selectable; next candidates |
+| Telugu, Hindi, Tamil, Kannada, Malayalam | Transcribe, translate to English | Cloud (LemmeType gateway) | — | Evaluation — offered only when the gateway lists the language (E12-S7); each is measured before its production route is added |
+| Tamil, Malayalam, Kannada | — | Whisper | — | Not offered on the device; Cloud only |
 
 Evaluation means the language can be chosen and is expected to work. It does
 not mean any accuracy is promised. Settings labels these languages

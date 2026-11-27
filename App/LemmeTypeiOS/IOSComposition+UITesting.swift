@@ -74,9 +74,11 @@
         /// Cloud speech against a fake gateway, or none for `-LemmeTypeLocalOnly` (the `local` release scope).
         static func uiTestingCloudSpeech(_ scenario: UITestScenario) -> CloudSpeechServices? {
             guard scenario.offersCloudSpeech else { return nil }
+            let languages = GatewayLanguages(store: FakeCloudLanguageStore())
             return CloudSpeechServices(
-                provider: GatewaySpeechProvider(host: "gateway.test"), consent: FakeCloudSpeechConsent(),
-                gateway: FakeGatewayAccess())
+                provider: GatewaySpeechProvider(host: "gateway.test", languages: languages),
+                consent: FakeCloudSpeechConsent(),
+                gateway: FakeGatewayAccess(recordLanguages: { languages.update($0) }))
         }
 
         static func uiTesting(_ scenario: UITestScenario) -> Services {

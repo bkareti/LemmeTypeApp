@@ -138,7 +138,7 @@ public final class DictationSettingsModel {
         choices += regional.isEmpty ? [SpokenLanguages.english.settingValue] : regional
         let others = SpokenLanguages.all.filter { !SpokenLanguages.isEnglish($0.code) }.map(\.settingValue)
         choices += others.filter { value in
-            languageScope.offers(language: value) && rows.contains { supports($0, value) }
+            rows.contains { languageScope.offers(language: value, at: $0.location) && supports($0, value) }
         }
         // A stored language that is no longer offered stays visible.
         return choices.contains(language) ? choices : choices + [language]

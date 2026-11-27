@@ -54,8 +54,11 @@
                 Text(
                     String(
                         localized:
-                            "Off by default. When on, a mode can use the Cloud engine for more accurate Telugu. It is part of your LemmeType subscription, with nothing to set up. Modes that don’t choose it stay on this device.",
-                        bundle: .module, comment: "Explains cloud speech in Settings")
+                            "Off by default. When on, a mode can use the Cloud engine for \(model.languageNames). It is part of your LemmeType subscription, with nothing to set up. Modes that don’t choose it stay on this device.",
+                        bundle: .module,
+                        comment:
+                            "Explains cloud speech in Settings; the value lists language names, such as Telugu and Hindi"
+                    )
                 )
             }
             .task {

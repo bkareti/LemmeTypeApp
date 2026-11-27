@@ -269,7 +269,7 @@ extension DictationIssue {
     /// Choices for language problems and translation review (E9-S2, E9-S3, E9-S5).
     private var languageActions: [DictationAction] {
         switch self {
-        case .recognitionFailed(.languageUncertain): SpokenLanguages.all.map { .useLanguage($0.code) } + [.discard]
+        case .recognitionFailed(.languageUncertain): SpokenLanguages.local.map { .useLanguage($0.code) } + [.discard]
         case .languageUnavailable: [.chooseLanguage, .discard]
         default: [.insertText, .copyText, .retry, .discard]
         }

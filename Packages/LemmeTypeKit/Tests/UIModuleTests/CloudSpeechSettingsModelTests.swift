@@ -1,5 +1,6 @@
 import Domain
 import Foundation
+import Synchronization
 import TestSupport
 import Testing
 
@@ -20,6 +21,72 @@ private struct ExampleProvider: CloudSpeechProvider {
     }
 
     func transcript(from response: CloudHTTPResponse) throws(RecognitionError) -> String { "" }
+}
+
+/// A gateway provider whose languages change when the gateway answers, as `GatewaySpeechProvider` does (E12-S7).
+private final class LanguageBox: Sendable {
+    let value = Mutex(["te"])
+}
+
+private struct ChangingProvider: CloudSpeechProvider {
+    let box: LanguageBox
+    let id = CloudSpeechProviderID(rawValue: "lemmetype-gateway")
+    let displayName = "LemmeType"
+    let host = "gateway.example.test"
+    let maximumClipSeconds = 30.0
+    var supportedLanguages: [String] { box.value.withLock { $0 } }
+    let tasks: Set<RecognitionTask> = [.transcribe, .translateToEnglish]
+
+    func request(
+        for clip: CloudAudioClip, need: RecognitionNeed, credential: CloudCredential
+    ) throws(RecognitionError) -> CloudHTTPRequest {
+        throw .cloudServiceFailed
+    }
+
+    func transcript(from response: CloudHTTPResponse) throws(RecognitionError) -> String { "" }
+}
+
+/// E12-S7: the section names the languages the gateway serves, and a change reaches the Language menu.
+@MainActor
+struct CloudSpeechLanguageTests {
+    private let box = LanguageBox()
+    let consent = FakeCloudSpeechConsent()
+
+    private func make(_ gateway: FakeGatewayAccess) -> CloudSpeechSettingsModel {
+        CloudSpeechSettingsModel(
+            provider: ChangingProvider(box: box), consent: consent, directory: gateway, allowances: gateway)
+    }
+
+    @Test func theSectionNamesTheLiveLanguages() async {
+        let box = box
+        let gateway = FakeGatewayAccess(recordLanguages: { languages in box.value.withLock { $0 = languages } })
+        let model = make(gateway)
+        #expect(model.languageNames == "Telugu")
+        gateway.setLanguages(["te", "hi", "ta"])
+        model.requestTurnOn()
+        await model.acceptConsent()
+        #expect(model.languages == ["te", "hi", "ta"])
+        #expect(model.languageNames == "Telugu, Hindi, and Tamil")
+    }
+
+    @Test func aNewListFromTheGatewayRefreshesTheEngines() async {
+        let box = box
+        let gateway = FakeGatewayAccess(recordLanguages: { languages in box.value.withLock { $0 = languages } })
+        consent.consentedProvider = CloudSpeechProviderID(rawValue: "lemmetype-gateway")
+        consent.consentedVersion = 1
+        let model = make(gateway)
+        await model.refresh()
+        var offered: [Bool] = []
+        model.onChange = { offered.append($0) }
+
+        await model.verifyTerms()
+        #expect(offered.isEmpty, "the same list changes nothing")
+
+        gateway.setLanguages(["te", "kn"])
+        await model.verifyTerms()
+        #expect(offered == [true], "the Language menu and modes are rebuilt")
+        #expect(model.languageNames == "Telugu and Kannada")
+    }
 }
 
 /// E12-S1 and E13-S3: turning cloud speech on and off. There is no key to enter.

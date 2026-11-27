@@ -28,6 +28,8 @@ public final class CloudSpeechSettingsModel {
     public private(set) var allowance: GatewayAllowance?
     public let providerName: String
     public let host: String
+    /// The languages Cloud speech serves now, as the gateway last listed them (E12-S7).
+    public private(set) var languages: [String]
     /// Told whether the cloud engine can be offered, whenever that may have changed.
     public var onChange: @MainActor (Bool) -> Void = { _ in }
     /// The user just agreed, so cloud speech is ready: the place to set up a mode that uses it.
@@ -36,6 +38,7 @@ public final class CloudSpeechSettingsModel {
     public var onTurnedOff: @MainActor () -> Void = {}
 
     private let providerID: CloudSpeechProviderID
+    private let liveLanguages: @Sendable () -> [String]
     private let consent: any CloudSpeechConsentStoring
     private let directory: any GatewayCapabilitiesProviding
     private let allowances: any GatewayAllowanceProviding
@@ -47,6 +50,8 @@ public final class CloudSpeechSettingsModel {
         providerID = provider.id
         providerName = provider.displayName
         host = provider.host
+        liveLanguages = { provider.supportedLanguages }
+        languages = provider.supportedLanguages
         self.consent = consent
         self.directory = directory
         self.allowances = allowances
@@ -68,9 +73,27 @@ public final class CloudSpeechSettingsModel {
     /// when the Cloud speech settings are shown, not at launch.
     public func verifyTerms() async {
         guard status == .turnedOn, let agreed = consent.consentedVersion else { return }
-        if let current = try? await directory.capabilities().consentVersion, current != agreed {
+        guard let current = try? await directory.capabilities() else { return }
+        if current.consentVersion != agreed {
             setStatus(.needsConsentAgain)
+        } else if takeLanguages() {
+            // The gateway now serves other languages: the Language menu and modes must follow.
+            onChange(true)
         }
+    }
+
+    /// The names of the live languages for the view, such as "Telugu and Hindi".
+    public var languageNames: String {
+        ListFormatter.localizedString(
+            byJoining: languages.map { SpokenLanguages.language(for: $0)?.englishName ?? $0 })
+    }
+
+    /// Copies the provider's list, which reading the capabilities just refreshed. `true` when it changed.
+    private func takeLanguages() -> Bool {
+        let live = liveLanguages()
+        guard live != languages else { return false }
+        languages = live
+        return true
     }
 
     public func refreshAllowance() async {
@@ -92,6 +115,7 @@ public final class CloudSpeechSettingsModel {
         isShowingConsent = false
         do throws(GatewayAccessError) {
             let capabilities = try await directory.capabilities()
+            _ = takeLanguages()
             consent.consentedProvider = providerID
             consent.consentedVersion = capabilities.consentVersion
             problem = nil

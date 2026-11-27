@@ -70,10 +70,39 @@ struct DictationSettingsLanguageTests {
         #expect(model.speechOutputChoices == SpeechOutput.allCases)
     }
 
-    @Test func theCloudScopeOffersTeluguButNeitherAutomaticNorHindi() async {
+    @Test func theCloudScopeOffersNoOtherLanguageWithoutTheCloudEngine() async {
         let model = await makeModel(scope: .englishWithCloud)
-        #expect(model.languageChoices == ["en-US", "en-GB", "te"])
+        // Whisper names Hindi and Telugu, but this scope lists no model for them.
+        #expect(model.languageChoices == ["en-US", "en-GB"])
         #expect(model.speechOutputChoices == [.original])
+    }
+
+    // MARK: Cloud languages come from the gateway (E12-S7)
+
+    private func cloud(_ languages: [String]) -> FakeRecognitionEngine {
+        FakeRecognitionEngine(
+            id: .cloud, supportedLanguages: languages, tasks: [.transcribe, .translateToEnglish], location: .cloud)
+    }
+
+    @Test func theCloudScopeOffersWhatTheGatewayListsAndNothingElse() async {
+        let model = await makeModel(engines: [apple, whisper, cloud(["te", "hi"])], scope: .englishWithCloud)
+        #expect(model.languageChoices == ["en-US", "en-GB", "hi", "te"])
+        #expect(!model.languageChoices.contains("ta"), "Tamil is not live until the gateway lists it")
+    }
+
+    @Test func everyCloudLanguageIsOfferedOnceTheGatewayListsIt() async {
+        let model = await makeModel(
+            engines: [apple, cloud(["te", "hi", "ta", "kn", "ml"])], scope: .englishWithCloud)
+        #expect(model.languageChoices == ["en-US", "en-GB", "hi", "te", "ta", "kn", "ml"])
+        #expect(DictationSettingsModel.settingLanguageName("ml") == "Malayalam · മലയാളം")
+    }
+
+    @Test func aLanguageTheGatewayDroppedStaysVisibleAndIsNotReady() async {
+        preferences.dictationLanguage = "ta"
+        let model = await makeModel(engines: [apple, whisper, cloud(["te"])], scope: .englishWithCloud)
+        // The stored choice stays visible so it can be changed.
+        #expect(model.languageChoices == ["en-US", "en-GB", "te", "ta"])
+        #expect(model.readiness == .noEngine, "no engine serves it, and none is swapped in")
     }
 
     @Test func automaticIsOfferedOnlyWhenAnEngineCanDetect() async {
