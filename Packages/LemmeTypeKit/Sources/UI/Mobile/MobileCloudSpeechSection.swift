@@ -167,7 +167,7 @@
                         Text(
                             String(
                                 localized:
-                                    "Cloud speech is part of your LemmeType subscription, with a monthly allowance. There is nothing to set up. How long the speech service keeps audio is set by its own terms.",
+                                    "Cloud speech is part of your LemmeType subscription, with a monthly allowance. There is nothing to set up. The speech service does not keep your audio or the text, and does not use them to train its models.",
                                 bundle: .module, comment: "Third paragraph of the cloud speech agreement"))
                     }
                     .padding()

@@ -803,7 +803,7 @@ Use a physical iPhone and iPad with the app installed from Xcode. Record results
 3. Compare with the proposed thresholds in `docs/testing/ios-feasibility.md`. A product owner approves them.
 
 **MA-73 Cloud speech through the gateway (E13-S3)**
-Cloud release only (`cloud` release scope); not part of version 1.0 (`docs/release/app-store.md`, Release scope).
+Part of version 1.0 (`cloud` release scope, `docs/release/app-store.md`, Release scope).
 1. Install a Debug build on a physical iPhone with a staging token (`-LemmeTypeGatewayToken <token>` in the scheme's arguments). Settings › Cloud speech shows *Turn On Cloud Speech…* and no field for a key.
 2. Tap it, read the agreement (it names LemmeType's server, not an API key), tap *Agree*: the section says it is on, and a Telugu mode appears.
 3. Dictate a Telugu sentence with English words: the text arrives in the review, and nothing reaches the clipboard until *Copy*.
