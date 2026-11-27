@@ -42,7 +42,9 @@ archive=(xcodebuild archive -project LemmeType.xcodeproj -scheme LemmeTypeiOS -c
 if [[ $mode == check ]]; then
   archive+=(CODE_SIGNING_ALLOWED=NO)
 else
-  archive+=(CODE_SIGN_STYLE=Automatic "DEVELOPMENT_TEAM=$team" -allowProvisioningUpdates)
+  # Base.xcconfig signs ad hoc (CODE_SIGN_IDENTITY = -) for local and CI builds; an upload archives with the
+  # team's development identity, and the export below re-signs it for App Store distribution.
+  archive+=(CODE_SIGN_STYLE=Automatic "CODE_SIGN_IDENTITY=Apple Development" "DEVELOPMENT_TEAM=$team" -allowProvisioningUpdates)
 fi
 "${archive[@]}" > "$out/archive.log" 2>&1 || { tail -n 30 "$out/archive.log" >&2; echo "error: archive failed (see $out/archive.log)" >&2; exit 1; }
 
