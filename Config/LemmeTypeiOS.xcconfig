@@ -27,7 +27,8 @@ INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPort
 //   cloud  The Cloud release: only once every launch gate in docs/release/app-store.md section 9 is Closed.
 //          Also swap in Config/PrivacyInfo-Cloud.xcprivacy and the Cloud store text.
 // scripts/verify-ios-appstore.sh checks that the archive, the manifest, and the docs agree with this value.
-LEMMETYPE_RELEASE_SCOPE = local
+// Version 1.0 ships the cloud scope (ADR 0031 addendum 2026-11-27).
+LEMMETYPE_RELEASE_SCOPE = cloud
 
 // The microphone text follows the scope, so it never names a feature the build doesn't have (E13-S8).
 LEMMETYPE_MICROPHONE_TEXT_local = LemmeType records your voice only while the recording is showing on screen, and turns it into text on this device.
@@ -48,4 +49,5 @@ INFOPLIST_KEY_NSSupportsLiveActivities = YES
 // Telugu choice that depends on it, off in a Release build. A Release build uses it only in the cloud scope, and
 // only when every launch gate in docs/release/app-store.md is Closed; scripts/verify-ios-appstore.sh refuses a
 // build otherwise.
-LEMMETYPE_GATEWAY_HOST =
+// The production gateway (speech-gateway-production on Cloud Run, Mumbai), deployed 2026-11-27.
+LEMMETYPE_GATEWAY_HOST = speech-gateway-production-lgnfoz4hqa-el.a.run.app

@@ -1,26 +1,22 @@
 # LemmeType privacy policy
 
-Effective 18 November 2026. Applies to LemmeType for iPhone, iPad, and Mac.
+Effective 27 November 2026. Applies to LemmeType for iPhone, iPad, and Mac.
 
 **In short: in Local mode your voice and your words are turned into text on your
 device and never leave it. Cloud speech is a separate choice you turn on yourself;
-it sends the recording to LemmeType's server to be turned into text, and nothing else.**
-
-**Version 1.0 for iPhone and iPad has Local mode only.** Cloud speech is not in it yet, so
-nothing you say or write leaves your device. The parts of this policy about Cloud speech
-apply only once a version that offers it is released; that version will explain it in the
-app and ask you to agree before anything is sent.
+it sends the recording to LemmeType's server to be turned into text, and nothing else.
+Neither LemmeType nor the speech provider it uses keeps your recording.**
 
 ## Two ways to turn your voice into text
 
 | | Local (the default) | Cloud speech (you turn it on) |
 |---|---|---|
-| Where your voice is turned into text | On your device | On a speech service, through LemmeType's server |
-| Used for | English, and the other languages your device supports | Telugu (and English if a mode asks for it) |
+| Where your voice is turned into text | On your device | By a speech provider, through LemmeType's server |
+| Used for | English, and the other languages your device supports | Telugu, and translation into English (and English if a mode asks for it) |
 | What leaves your device | Nothing | The recording of that dictation only |
 | Needs the internet | No (it works in Airplane Mode) | Yes |
 
-Cloud speech will be on iPhone and iPad only, in a later version. It is off until you turn it on in Settings and agree to the screen that
+Cloud speech is on iPhone and iPad. It is off until you turn it on in Settings and agree to the screen that
 explains it. A mode uses it only if you chose the Cloud engine for that mode. You can
 turn it off at any time.
 
@@ -46,20 +42,23 @@ turn it off at any time.
 Only for a dictation made with the Cloud engine:
 
 1. The recording goes from your device over an encrypted connection to **LemmeType's
-   server**, which runs on Google Cloud in Mumbai, India.
-2. The server passes it to the **speech service** that turns it into text:
-   **Sarvam AI**, which says it stores customer data in India. So your recording is
-   sent to India, even if you are somewhere else.
+   server**, which runs with a cloud hosting provider in India.
+2. The server passes it to a **speech provider** that turns it into text, or
+   translates it into English. LemmeType chooses this provider and may change it. Today
+   it processes the recording in India, so your recording is sent to India, even if
+   you are somewhere else.
 3. The text comes back to your device. **LemmeType's server does not store the audio
    or the text**, does not write them to its logs, and forgets them as soon as the
    request ends.
-4. The speech service keeps and uses the recording under its own terms
-   (<https://www.sarvam.ai/terms-of-service>), privacy policy
-   (<https://www.sarvam.ai/privacy-policy>), and the settings of LemmeType's account.
-   Its published terms (29 July 2026) say that, by default, customer content is kept
-   for up to 30 days and may be used to improve its models unless that is switched off,
-   and that data may be transferred to other countries. Before Cloud speech is released,
-   this section will say which settings LemmeType uses.
+
+**What we require of the speech provider.** We use a speech provider only under an
+agreement and account settings that mean it:
+
+- does **not keep** your recording or the text after it has processed the request;
+- does **not use** them to train or improve its models, or for any purpose other than
+  turning your recording into text for you;
+- processes them in the country this policy names (India today);
+- protects them while it handles them, as a processor acting on our instructions.
 
 Only the recording is sent. Your vocabulary, your other modes, your history, and
 anything else on your device are not.
@@ -78,18 +77,19 @@ limit abuse, and are never stored.
 short-lived access token (15 minutes). The token holds that code and the plan, and
 nothing else. The app keeps it in memory only.
 
-**Changing the speech service.** LemmeType may change the speech service behind the
-server. A change that keeps the same country and terms needs no new agreement. Any
-other change is described in the app and in this policy first, and the app asks you to
-agree again before the next Cloud dictation.
+**Changing the speech provider.** LemmeType may change the speech provider behind the
+server, for example for better accuracy or cost. A new provider that meets every
+requirement above, in the same country, needs no new agreement from you. Any other change
+is described in the app and in this policy first, and the app asks you to agree again
+before the next Cloud dictation.
 
 ## Subscription and payment
 
 LemmeType is sold as an auto-renewing monthly subscription with a 7-day free trial,
 through the App Store. **Apple takes the payment.** LemmeType never sees your card,
 your Apple Account, or your billing details. You manage or cancel the subscription in
-your Apple Account settings. The subscription includes Local dictation, and Cloud
-speech once a version that offers it is released.
+your Apple Account settings. The subscription includes Local dictation and a monthly
+allowance of Cloud speech.
 
 The app asks Apple on your device whether you are subscribed. That check works
 offline, using records Apple keeps on your device. The app shares only the kind of
@@ -111,12 +111,12 @@ Only in these cases:
 
 | When | What is sent | To |
 |---|---|---|
-| You use Cloud speech | The recording, and an access token that holds a one-way subscription code | LemmeType's server (Google Cloud, Mumbai), then the speech service (Sarvam AI, India) |
+| You use Cloud speech | The recording, and an access token that holds a one-way subscription code | LemmeType's server (India), then its speech provider (India) |
 | You open Settings › Cloud speech | A request for the current agreement version and for your remaining allowance, with the access token | LemmeType's server |
 | You subscribe, restore, or the app checks your subscription | Handled by Apple's StoreKit under Apple's privacy policy | Apple |
 | You choose to download a speech model | A request for the model file, like any web request (your IP address and the app's standard network headers). No audio, text, or personal data. | huggingface.co |
 | Mac only: you press Check for Updates, or turn on the weekly check | A request for the list of LemmeType releases. No audio, text, or personal data. | github.com |
-| You tap Privacy Policy, Terms of Use, or Help and Support | Your browser opens that page. | github.com |
+| You tap Privacy Policy, Terms of Use, or Help and Support | Your browser opens that page. | lemmetype.com |
 
 Those services handle requests under their own privacy policies. In Local mode,
 recording, recognition, cleanup, rewriting, and history use no internet at all.

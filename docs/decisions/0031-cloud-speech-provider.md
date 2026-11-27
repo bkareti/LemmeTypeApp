@@ -214,3 +214,29 @@ Info.plist as `LemmeTypeReleaseScope`), now decides what a Release build may do:
 `scripts/verify-ios-appstore.sh` refuses an archive whose scope, manifest, microphone text, gateway host, and
 `docs/release/app-store.md` (`Release scope: **…**`) disagree; the launch gates are checked in the `cloud` scope
 only. How to switch is in `docs/release/app-store.md` section 9.1. Debug builds keep offering Cloud speech on staging.
+
+## Addendum (2026-11-27): version 1.0 ships with Cloud speech; the policy names no provider
+
+The maintainer reversed the 2026-11-18 addendum: **version 1.0 for iPhone and iPad ships the `cloud` scope**
+(`LEMMETYPE_RELEASE_SCOPE = cloud`), with the Cloud privacy manifest and the Cloud store text and App Privacy
+answers (`docs/release/app-store.md` sections 3 to 5). The archive check still refuses the build until every
+launch gate is Closed and `LEMMETYPE_GATEWAY_HOST` names the production gateway.
+
+Because the gateway exists so the provider can be swapped for accuracy or cost ("Staying replaceable"), the
+published privacy policy (`docs/privacy-policy.md`, https://lemmetype.com/privacy) and the in-app agreement no
+longer name the speech provider or the hosting company. Instead they state what any provider must meet: it keeps
+neither the recording nor the text after processing, does not train or improve models with them, processes them
+in the country the policy names (India today), and acts as a processor on LemmeType's instructions. A provider
+that meets all of that in the same country needs no new consent; anything else raises the gateway's
+`consentVersion` first.
+
+That turns the first two gates into the evidence for those promises, for whichever provider is in use:
+
+| Gate | For Sarvam, closed by |
+|---|---|
+| 1. The provider's data terms on file | Sarvam's Terms of Service (v2.0, 29 July 2026), its Data Processing Addendum (on request: sarvam.ai/trust-center, dpo@sarvam.ai), and its written answer that speech API audio stays in India |
+| 2. No retention and no training on the production account | Owner settings: Organisation › General › model training off; Workspace › Data policy › No retention (0 days). Sarvam keeps API data indefinitely until a retention period is set, and a change is not retroactive, so set it before any production traffic |
+
+Switching provider means closing gates 1, 2, and 4 for the new provider before it receives user audio.
+Internal documents (this ADR, the threat model, the gateway's runbook) keep naming the provider in use.
+
