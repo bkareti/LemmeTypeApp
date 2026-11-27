@@ -321,7 +321,7 @@ provider (ADR 0031, "Staying replaceable") means closing gates 1, 2, and 4 again
 | 2. No retention and no training on the provider's production account | Sarvam dashboard, as an Owner: Settings › Organisation › General › model training **off**; Settings › Workspace › Data policy › **No retention (0 days)**. Screenshots of both, linked here. Until then Sarvam keeps API data indefinitely by default | Open |
 | 3. How keys reach the app | The gateway holds the key; no key in the app ([ADR 0033](../decisions/0033-speech-gateway.md), `LegacyCloudKeyEraser`) | Closed |
 | 4. The 34-sentence Telugu–English test | The result, linked here, run against the production gateway | Open |
-| 5. Production gateway live | `speech-gateway` deployed as `production` (its runbook), `appAppleId` set, App Store Server Notifications URLs set, and `LEMMETYPE_GATEWAY_HOST` set to its host. Progress 2026-11-27: deployed (run 46018027474, revision `speech-gateway-production-00001-qqm`, health 200, unauthenticated requests refused) and the host set; `appAppleId` and the notification URLs wait for the App Store Connect app record | Open |
+| 5. Production gateway live | `speech-gateway` deployed as `production` (its runbook), `appAppleId` set, App Store Server Notifications URLs set, and `LEMMETYPE_GATEWAY_HOST` set to its host. Progress 2026-11-27: deployed (run 46018027474), host set, and `appAppleId: 6836193229` set and redeployed (speech-gateway #4, run 46032809753, revision `speech-gateway-production-00002-xqg`); left: the App Store Server Notifications URLs in App Store Connect | Open |
 | 6. Documents say what is true | Network allowlist, threat model (T-25…T-28), privacy checklist, App Store labels, policy, in-app text, and brief updated in E13-S8 (`docs/backlog/reviews/epic-13-s8-agreement.md`) | Closed |
 
 ### 9.1 Switching to the cloud scope
@@ -335,7 +335,7 @@ Done on 2026-11-27 (branch `release/ios-cloud-1.0`) for version 1.0:
 - [x] `docs/privacy-policy.md`, `docs/support.md`, and https://lemmetype.com: Cloud speech described as available,
   without naming the speech provider; the policy commits to no retention and no training by the provider.
 - [ ] App Store Server Notifications: set the URL for **Production** and **Sandbox** to the gateway's
-  `/v1/apple/notifications` (ADR 0033, E13-S2), **Version 2**; add the app's numeric **Apple ID** to the gateway's
-  `apps.yaml` (`appAppleId`) before the first real purchase (gate 5).
+  `/v1/apple/notifications` (ADR 0033, E13-S2), **Version 2** (gate 5). The app's Apple ID, 6836193229, is in the
+  gateway's `apps.yaml` (`appAppleId`), deployed 2026-11-27.
 - [ ] The subscription's description in App Store Connect mentions the Cloud speech allowance (section 3a).
 - [ ] `SCOPE=cloud scripts/make-app-store-screenshots.sh`, then `make ios-appstore-check` passes.
