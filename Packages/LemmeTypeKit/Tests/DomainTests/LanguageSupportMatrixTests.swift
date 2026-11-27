@@ -5,11 +5,21 @@ import Testing
 /// never claims more than has been measured.
 struct LanguageSupportMatrixTests {
     @Test func theSelectableLanguagesAreTheEvaluationSet() {
-        #expect(SpokenLanguages.all.map(\.code) == ["en", "hi", "te"])
-        for notYet in ["ta", "ml", "kn"] {
-            #expect(SpokenLanguages.language(for: notYet) == nil)
-            #expect(LanguageSupportMatrix.status(of: notYet) == nil)
+        #expect(SpokenLanguages.all.map(\.code) == ["en", "hi", "te", "ta", "kn", "ml"])
+        #expect(SpokenLanguages.local.map(\.code) == ["en", "hi", "te"])
+        #expect(SpokenLanguages.language(for: "bn") == nil, "a language is named only once it is a candidate")
+    }
+
+    /// E12-S7: Tamil, Kannada, and Malayalam are Cloud-only, under evaluation, with no local row.
+    @Test func theNewIndianLanguagesAreCloudOnlyAndUnderEvaluation() {
+        for code in ["ta", "kn", "ml"] {
+            #expect(LanguageSupportMatrix.status(of: code) == .evaluation)
+            #expect(LanguageSupportMatrix.row(language: code, task: .transcribe, engine: .whisper) == nil)
+            for task in RecognitionTask.allCases {
+                #expect(LanguageSupportMatrix.row(language: code, task: task, engine: .cloud)?.status == .evaluation)
+            }
         }
+        #expect(LanguageSupportMatrix.row(language: "hi", task: .transcribe, engine: .cloud)?.status == .evaluation)
     }
 
     @Test func englishIsValidatedHindiIsUnderEvaluationAndTeluguIsNotReliable() {

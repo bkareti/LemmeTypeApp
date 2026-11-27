@@ -15,6 +15,7 @@ public actor GatewayService: GatewayAccessing, GatewayCapabilitiesProviding, Gat
     private let transport: any CloudSpeechTransport
     private let proofs: any SubscriptionProofProviding
     private let host: String
+    private let languages: GatewayLanguages?
     private let now: @Sendable () -> Date
     /// A fixed token for testing against staging in Debug builds. `nil` in every build that ships.
     private let fixedToken: String?
@@ -27,9 +28,10 @@ public actor GatewayService: GatewayAccessing, GatewayCapabilitiesProviding, Gat
 
     public init(
         host: String, transport: any CloudSpeechTransport, proofs: any SubscriptionProofProviding,
-        fixedToken: String? = nil, now: @escaping @Sendable () -> Date = { Date() }
+        languages: GatewayLanguages? = nil, fixedToken: String? = nil, now: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.host = host
+        self.languages = languages
         self.transport = transport
         self.proofs = proofs
         self.fixedToken = fixedToken
@@ -98,8 +100,11 @@ public actor GatewayService: GatewayAccessing, GatewayCapabilitiesProviding, Gat
         guard (200...299).contains(response.status),
             let answer = try? JSONDecoder().decode(Capabilities.self, from: response.body)
         else { throw response.status == 402 ? .subscriptionRequired : .failed }
+        let transcribed = answer.languages.filter { $0.tasks.contains("transcribe") }.map(\.language)
         let value = GatewayCapabilities(
-            consentVersion: answer.consentVersion, maximumClipSeconds: answer.maximumClipSeconds)
+            consentVersion: answer.consentVersion, maximumClipSeconds: answer.maximumClipSeconds,
+            languages: transcribed)
+        languages?.update(transcribed)
         cachedCapabilities = (value, now())
         return value
     }
@@ -172,6 +177,12 @@ public actor GatewayService: GatewayAccessing, GatewayCapabilitiesProviding, Gat
     private struct Capabilities: Decodable {
         let consentVersion: Int
         let maximumClipSeconds: Double
+        let languages: [CapabilityLanguage]
+    }
+
+    private struct CapabilityLanguage: Decodable {
+        let language: String
+        let tasks: [String]
     }
 
     private struct Usage: Decodable {

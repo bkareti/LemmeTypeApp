@@ -93,6 +93,30 @@ Proposed pass for the chosen service (not yet approved by a product owner): on t
 sentences, character errors at most 15 % and English kept at least 90 %; on the English
 sentences, character errors at most 5 %; no request fails when clips are sent one at a time.
 
+## Hindi, Tamil, Kannada, and Malayalam (E12-S7)
+
+The gateway serves a language only when its production `apps.yaml` routes it, and the app offers
+exactly what the gateway lists, so each language goes live on its own, with no app update. Before a
+route is added (gateway runbook, "Add a language"):
+
+1. Route the language on `staging` and use a Debug build (it talks to staging).
+2. A native speaker dictates at least 10 everyday sentences, at least 7 of them mixed with English,
+   once with a transcribe mode and once with a translate-to-English mode.
+3. The speaker marks each result *usable as is*, *small fixes*, or *wrong meaning*. Pass: no
+   *wrong meaning* in translations, and at least 8 of 10 transcriptions *usable as is* or *small fixes*.
+4. Record the device, build, date, speaker initials, and the counts below. Never commit the audio
+   or the sentences someone actually said; write the scripted sentences only.
+
+| Language | Date | Build | Transcribe usable / 10 | Translate wrong meaning | Result |
+|---|---|---|---|---|---|
+| Hindi | — | — | — | — | Not run |
+| Tamil | — | — | — | — | Not run |
+| Kannada | — | — | — | — | Not run |
+| Malayalam | — | — | — | — | Not run |
+
+The privacy policy, support page, and App Store text name the live languages; update them in the
+release that adds a production route.
+
 ## Privacy
 
 Only corpus audio is uploaded: public FLEURS recordings (CC BY 4.0), or consented

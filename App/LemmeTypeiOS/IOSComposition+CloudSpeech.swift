@@ -55,11 +55,14 @@ extension IOSComposition {
         // An earlier build asked for the user's own API key. Nothing reads one any more, so remove it.
         LegacyCloudKeyEraser().erase()
         let host = gatewayHost
+        // The gateway decides which Cloud languages are live (E12-S7); the app remembers its last answer.
+        let languages = GatewayLanguages(store: UserDefaultsCloudLanguageStore())
         let gateway = GatewayService(
             host: host, transport: URLSessionCloudSpeechTransport(allowedHost: host), proofs: proofs,
-            fixedToken: stagingToken)
+            languages: languages, fixedToken: stagingToken)
         return CloudSpeechServices(
-            provider: GatewaySpeechProvider(host: host), consent: UserDefaultsCloudSpeechConsent(), gateway: gateway)
+            provider: GatewaySpeechProvider(host: host, languages: languages),
+            consent: UserDefaultsCloudSpeechConsent(), gateway: gateway)
     }
 
     /// A fixed gateway token for trying staging in a Debug build: launch with `-LemmeTypeGatewayToken <token>`.

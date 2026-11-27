@@ -30,11 +30,16 @@ struct LanguageScopeTests {
         }
     }
 
-    @Test func theCloudScopeOffersEnglishAndTeluguOnly() {
+    @Test func theCloudScopeOffersEnglishAndTheCloudLanguages() {
         let scope = LanguageScope.englishWithCloud
         #expect(scope.offers(language: "en-US"))
-        #expect(scope.offers(language: "te"))
-        #expect(!scope.offers(language: "hi"))
+        for language in ["te", "hi", "ta", "kn", "ml"] {
+            #expect(scope.offers(language: language))
+            #expect(scope.offers(language: language, at: .cloud))
+            #expect(!scope.offers(language: language, at: .onDevice), "only English models are listed, so not locally")
+        }
+        #expect(scope.offers(language: "en-US", at: .onDevice))
+        #expect(!scope.offers(language: "bn"))
         #expect(!scope.offers(language: SpokenLanguages.automatic))
         #expect(scope.speechOutputs == [.original])
         let listed = ModelCatalog.all.filter(scope.lists).map(\.id)

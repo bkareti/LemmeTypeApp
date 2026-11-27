@@ -32,8 +32,10 @@ public final class ModesSettingsModel {
 
     /// Engines a mode may pick, in recommendation order.
     public private(set) var engines: [RecognitionEngineID]
-    /// Languages a mode may pick.
-    public let languages: [String]
+    /// Languages a mode may pick. Read each time, so a Cloud language the gateway turns on later appears
+    /// without a relaunch (E12-S7).
+    public var languages: [String] { languageSource() }
+    private let languageSource: @MainActor () -> [String]
     /// "Text you get" values a mode may pick (ADR 0029). With one value the
     /// editor hides the choice.
     public let speechOutputs: [SpeechOutput]
@@ -43,6 +45,7 @@ public final class ModesSettingsModel {
         preferences: any AppPreferences,
         engines: [RecognitionEngineID] = [],
         languages: [String] = [],
+        languageChoices: (@MainActor () -> [String])? = nil,
         speechOutputs: [SpeechOutput] = SpeechOutput.allCases,
         runningApplications: @escaping @MainActor () -> [ApplicationIdentity] = { [] },
         applicationName: @escaping @MainActor (String) -> String? = { _ in nil },
@@ -51,7 +54,7 @@ public final class ModesSettingsModel {
         self.personalization = personalization
         self.preferences = preferences
         self.engines = engines
-        self.languages = languages
+        languageSource = languageChoices ?? { languages }
         self.speechOutputs = speechOutputs
         self.runningApplications = runningApplications
         self.applicationName = applicationName

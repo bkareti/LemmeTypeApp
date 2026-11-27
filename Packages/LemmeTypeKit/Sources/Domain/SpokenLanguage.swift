@@ -27,13 +27,33 @@ public enum SpokenLanguages {
         code: "hi", englishName: "Hindi", nativeName: "हिन्दी", settingValue: "hi")
     public static let telugu = SpokenLanguage(
         code: "te", englishName: "Telugu", nativeName: "తెలుగు", settingValue: "te")
+    public static let tamil = SpokenLanguage(
+        code: "ta", englishName: "Tamil", nativeName: "தமிழ்", settingValue: "ta")
+    public static let kannada = SpokenLanguage(
+        code: "kn", englishName: "Kannada", nativeName: "ಕನ್ನಡ", settingValue: "kn")
+    public static let malayalam = SpokenLanguage(
+        code: "ml", englishName: "Malayalam", nativeName: "മലയാളം", settingValue: "ml")
 
-    /// Every selectable language. Tamil, Malayalam, and Kannada are the next
-    /// candidates and stay out until they are evaluated.
-    public static let all: [SpokenLanguage] = [english, hindi, telugu]
+    /// Every language the app can name, in menu order. Which engine serves which is up to the
+    /// engines: see ``local`` and ``cloudCandidates``.
+    public static let all: [SpokenLanguage] = [english, hindi, telugu, tamil, kannada, malayalam]
 
-    /// The languages automatic detection chooses between.
-    public static var detectionCandidates: [String] { all.map(\.code) }
+    /// The languages the on-device models are evaluated for (E9-S1). Tamil, Kannada, and Malayalam
+    /// are offered through Cloud speech only (E12-S7).
+    public static let local: [SpokenLanguage] = [english, hindi, telugu]
+
+    /// The languages Cloud speech may serve (E12-S7). Which of them are live is decided by the
+    /// gateway, not here; English stays on the device.
+    public static let cloudCandidates: [SpokenLanguage] = [telugu, hindi, tamil, kannada, malayalam]
+
+    /// The languages automatic detection chooses between: the on-device ones.
+    public static var detectionCandidates: [String] { local.map(\.code) }
+
+    /// Whether a stored value names a language Cloud speech may serve.
+    public static func isCloudCandidate(_ identifier: String) -> Bool {
+        let code = code(of: identifier)
+        return cloudCandidates.contains { $0.code == code }
+    }
 
     /// The language for a stored value such as `"en-GB"` or `"hi"`; `nil` for
     /// `auto` and for languages that are not offered.

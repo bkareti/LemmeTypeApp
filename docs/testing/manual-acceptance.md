@@ -864,3 +864,11 @@ Use a physical iPhone with cloud speech on (Debug build against staging, or a Te
 5. With the Telugu text on screen, there is no Tone row. Back on the English text, the Tone row is there; choose Casual, switch to Telugu and back: the casual text and tone come back.
 6. Turn on Airplane Mode before step 3: the translation stays on screen with a message that the cloud service could not be reached, and *Show in Telugu* can be tried again.
 7. Copy while the Telugu text is shown: exactly the Telugu text is pasted in Notes.
+
+**MA-79 Cloud languages follow the gateway (E12-S7)**
+Use a physical iPhone with a Debug build against staging and cloud speech on. Record the device, iOS version, build, and result for each step.
+1. With staging routing only Telugu, open Settings › Cloud speech: the footer names Telugu. The Language menu offers English and Telugu only.
+2. Route Hindi and Tamil on staging and redeploy. Open Settings › Cloud speech again: the footer names Telugu, Hindi, and Tamil, and the Language menu offers them, without reinstalling.
+3. Choose Hindi with a Cloud mode and dictate a Hindi sentence mixed with English: the text arrives. With English output chosen, the translation review offers *Show in Hindi*.
+4. Quit and relaunch in Airplane Mode: the Language menu still offers Hindi and Tamil (the last list is remembered).
+5. Remove the Tamil route and redeploy; open Settings › Cloud speech. A mode set to Tamil now says Tamil is not available and does not record with another engine.

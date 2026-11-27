@@ -9,7 +9,9 @@ struct GatewaySpeechProviderTests {
     static let success = Data(
         #"{"text":"రేపు team meeting ఉంది","language":"te","durationSeconds":2,"requestId":"r1"}"#.utf8)
     static let clip = CloudAudioClip(wav: Data("wav-bytes".utf8), seconds: 2)
-    let provider = GatewaySpeechProvider(host: "gateway.test", makeBoundary: { "BOUNDARY" })
+    let provider = GatewaySpeechProvider(
+        host: "gateway.test", languages: GatewayLanguages(store: FakeCloudLanguageStore()),
+        makeBoundary: { "BOUNDARY" })
 
     private func body(of request: CloudHTTPRequest) -> String {
         String(bytes: request.body, encoding: .utf8) ?? ""

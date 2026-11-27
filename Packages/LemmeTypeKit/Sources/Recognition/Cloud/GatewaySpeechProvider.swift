@@ -13,14 +13,21 @@ public struct GatewaySpeechProvider: CloudSpeechProvider {
     public let tasks: Set<RecognitionTask> = [.transcribe, .translateToEnglish]
 
     private let makeBoundary: @Sendable () -> String
+    private let languages: GatewayLanguages
 
-    public init(host: String, makeBoundary: @escaping @Sendable () -> String = { UUID().uuidString }) {
+    /// `languages` is shared with ``GatewayService``, which keeps it up to date from the gateway.
+    public init(
+        host: String, languages: GatewayLanguages,
+        makeBoundary: @escaping @Sendable () -> String = { UUID().uuidString }
+    ) {
         self.host = host
+        self.languages = languages
         self.makeBoundary = makeBoundary
     }
 
-    /// Telugu first; the gateway's `/v1/capabilities` is the source of truth for what it serves.
-    public var supportedLanguages: [String] { ["te"] }
+    /// What the gateway's `/v1/capabilities` last listed (E12-S7): its routes decide, so a language
+    /// goes live without an app update.
+    public var supportedLanguages: [String] { languages.languages }
 
     public func request(
         for clip: CloudAudioClip, need: RecognitionNeed, credential: CloudCredential

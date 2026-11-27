@@ -45,6 +45,15 @@ public enum LanguageSupportMatrix {
         // Opt-in cloud speech (ADR 0031): no local model is involved, so the tier means nothing.
         row("te", .cloud, .transcribe, .balanced, .evaluation),
         row("te", .cloud, .translateToEnglish, .balanced, .evaluation),
+        // More Indian languages through Cloud speech (E12-S7); live only once the gateway routes them.
+        row("hi", .cloud, .transcribe, .balanced, .evaluation),
+        row("hi", .cloud, .translateToEnglish, .balanced, .evaluation),
+        row("ta", .cloud, .transcribe, .balanced, .evaluation),
+        row("ta", .cloud, .translateToEnglish, .balanced, .evaluation),
+        row("kn", .cloud, .transcribe, .balanced, .evaluation),
+        row("kn", .cloud, .translateToEnglish, .balanced, .evaluation),
+        row("ml", .cloud, .transcribe, .balanced, .evaluation),
+        row("ml", .cloud, .translateToEnglish, .balanced, .evaluation),
     ]
 
     private static func row(

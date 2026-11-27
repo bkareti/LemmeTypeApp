@@ -9,7 +9,8 @@ import Testing
 struct CloudSpeechGateTests {
     static let answered = FakeCloudSpeechTransport.Step.respond(status: 200, body: Data(#"{"text":"x"}"#.utf8))
     let fixtures = RecordingFixtures()
-    let gateway = GatewaySpeechProvider(host: "gateway.test")
+    let gateway = GatewaySpeechProvider(
+        host: "gateway.test", languages: GatewayLanguages(store: FakeCloudLanguageStore()))
     let access = FakeGatewayAccess()
 
     private func engine(_ transport: FakeCloudSpeechTransport, consent: FakeCloudSpeechConsent) -> CloudSpeechEngine {
