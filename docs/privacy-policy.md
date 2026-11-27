@@ -157,5 +157,6 @@ in the app before it happens, and the app would ask you to agree again.
 
 ## Contact
 
-Questions about privacy: open an issue at
-<https://github.com/bkareti/LemmeTypeApp/issues>, or see [Help and Support](support.md).
+Questions about privacy: email <ntwrkplus@gmail.com>, open an issue at
+<https://github.com/bkareti/LemmeTypeApp/issues>, or see [Help and Support](support.md). The published
+version of this policy, which the app links to, is <https://lemmetype.com/privacy>.

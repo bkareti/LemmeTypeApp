@@ -319,7 +319,7 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   explanation (`QuickDictationView`, "Before You Dictate") has only Continue, then
   `QuickDictationModel` asks for the microphone and, when no engine is ready, Speech
   Recognition. Settings › About (`MobileAboutSection`) links `PublicLinks.privacyPolicy` /
-  `support` and shows `Acknowledgements` (bundled `Acknowledgements.txt`, kept equal to
+  `support` (pages on lemmetype.com, the `LemmeType-Web` repository on Vercel; the paywall links `termsOfUse`) and shows `Acknowledgements` (bundled `Acknowledgements.txt`, kept equal to
   `THIRD_PARTY_NOTICES.md` by `AcknowledgementsTests`). The Mac app is not on the Mac App
   Store (sandbox vs Accessibility insertion, MA-61).
 - App icons: `scripts/make-app-icons.py` draws the "L." mark (geometry measured from

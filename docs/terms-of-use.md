@@ -35,4 +35,5 @@ about the licence, Apple's apply.
 
 ## Changes and contact
 
-We may update these terms; the current version is always at this address. Questions: see [Support](support.md).
+We may update these terms; the current version is always at <https://lemmetype.com/terms>. Questions: email
+<ntwrkplus@gmail.com>, or see [Support](support.md).
