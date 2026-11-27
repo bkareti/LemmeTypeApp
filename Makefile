@@ -105,8 +105,8 @@ release-script-tests: ## Fixture tests for the release scripts
 ios-appstore-check: ## Archive the iPhone and iPad app unsigned and run the App Store checks
 	scripts/build-ios-appstore.sh --check
 
-ios-appstore: ## Archive and export the iPhone and iPad app for App Store Connect (UPLOAD=1 uploads; needs TEAM_ID)
-	scripts/build-ios-appstore.sh $(if $(UPLOAD),--upload)
+ios-appstore: ## Archive and export the iPhone and iPad app for App Store Connect (UPLOAD=1 uploads; needs TEAM_ID; TESTFLIGHT=1 allows Open launch gates, TestFlight only)
+	$(if $(TESTFLIGHT),TESTFLIGHT_ONLY=1) scripts/build-ios-appstore.sh $(if $(UPLOAD),--upload)
 
 release-build: ## Build build/release (Developer ID if available; REHEARSAL=1 forces an ad-hoc build)
 	scripts/build-release.sh $(if $(REHEARSAL),--rehearsal)

@@ -12,6 +12,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 app="$archive/Products/Applications/LemmeType.app"
 plist="$app/Info.plist"
 failures=0
+testflight_only=0
 ok() { printf 'ok    %s\n' "$1"; }
 fail() { printf 'FAIL  %s\n' "$1"; failures=$((failures + 1)); }
 check() { if eval "$2"; then ok "$1"; else fail "$1"; fi; }
@@ -50,7 +51,15 @@ if [[ "$scope" == cloud ]]; then
   check "production gateway host is set (LEMMETYPE_GATEWAY_HOST)" '[[ -n "$gateway" ]]'
   check "gateway host is a plain production host name" '[[ "$gateway" =~ ^[A-Za-z0-9.-]+$ && "$gateway" != *staging* && "$gateway" != *.invalid && "$gateway" != localhost ]]'
   check "microphone text names Cloud speech" 'value NSMicrophoneUsageDescription | grep -q "Cloud speech"'
-  check "every ADR 0031 launch gate is Closed in docs/release/app-store.md" '! sed -n "/^## 9\. Launch gates/,\$p" "$root/docs/release/app-store.md" | grep -qE "\| Open \|"'
+  gates_closed='! sed -n "/^## 9\. Launch gates/,\$p" "$root/docs/release/app-store.md" | grep -qE "\| Open \|"'
+  if [[ "${TESTFLIGHT_ONLY:-}" == 1 ]] && ! eval "$gates_closed"; then
+    # TestFlight-only upload (make ios-appstore UPLOAD=1 TESTFLIGHT=1): testers may use Cloud speech before every
+    # gate is Closed. The build must not be submitted for App Review until this check passes without TESTFLIGHT.
+    printf 'WARN  %s\n' "launch gates still Open: allowed for TestFlight only (TESTFLIGHT_ONLY=1); App Review needs them Closed"
+    testflight_only=1
+  else
+    check "every ADR 0031 launch gate is Closed in docs/release/app-store.md" "$gates_closed"
+  fi
   check "cloud scope: the App Store text is for the cloud scope" 'grep -q "^Release scope: \*\*cloud\*\*" "$root/docs/release/app-store.md"'
 else
   # Version 1.0: Local dictation only. Nothing is sent to LemmeType, so nothing is declared as collected.
@@ -82,5 +91,9 @@ fi
 if [[ $failures -gt 0 ]]; then
   echo "$failures check(s) failed."
   exit 1
+fi
+if [[ "${testflight_only:-}" == 1 ]]; then
+  echo "Archive checks passed for TESTFLIGHT ONLY. Do not submit this build for App Review: launch gates are Open."
+  exit 0
 fi
 echo "App Store archive checks passed."
