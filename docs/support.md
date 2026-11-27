@@ -70,5 +70,6 @@ your device only. See the [privacy policy](privacy-policy.md).
 
 ## Contact
 
-Report a problem or ask a question: <https://github.com/bkareti/LemmeTypeApp/issues>
-(a free GitHub account is needed). Please never include recordings or private text.
+Email <ntwrkplus@gmail.com>, or report a problem at
+<https://github.com/bkareti/LemmeTypeApp/issues> (a free GitHub account is needed). Please never
+include recordings or private text. The published version of this page is <https://lemmetype.com/support>.

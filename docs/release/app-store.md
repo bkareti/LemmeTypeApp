@@ -79,14 +79,15 @@ iPad first (section 7), then submit it for review.
 | Age rating | Answer **None / No** to every question → **4+**. Apple's questionnaire changes: read each question again in App Store Connect before answering |
 | Price | Free to download. In-app purchase: LemmeType Pro, auto-renewing monthly subscription, US$1.99 with a 7-day free trial (section 3a). Apple sets the other countries' prices |
 | In-App Purchases | Yes (the subscription) |
-| Terms of Use URL (EULA) | https://github.com/bkareti/LemmeTypeApp/blob/main/docs/terms-of-use.md |
-| Privacy Policy URL | https://github.com/bkareti/LemmeTypeApp/blob/main/docs/privacy-policy.md |
-| Support URL | https://github.com/bkareti/LemmeTypeApp/blob/main/docs/support.md |
-| Marketing URL | leave empty |
+| Terms of Use URL (EULA) | https://lemmetype.com/terms |
+| Privacy Policy URL | https://lemmetype.com/privacy |
+| Support URL | https://lemmetype.com/support |
+| Marketing URL | https://lemmetype.com/ |
 | Copyright | 2026 <your legal name or company> (the seller name App Store Connect shows) |
 | Version | 1.0.0 (build from `Config/Version.xcconfig`) |
 
-The three URLs must open without a GitHub sign-in: check them in a private browser window before submitting.
+The pages are the `LemmeType-Web` repository, deployed on Vercel at lemmetype.com; the app links the same pages
+(`PublicLinks`). Open each one in a private browser window before submitting.
 
 **Promotional text (≤ 170):**
 
@@ -130,8 +131,8 @@ Do not add other apps' or companies' names (Guideline 2.3.7): no "Siri", "Whispe
 > SUBSCRIPTION
 > • LemmeType Pro is US$1.99 a month after a 7-day free trial, in your App Store currency.
 > • Payment is charged to your Apple Account at the end of the trial and renews monthly unless cancelled at least 24 hours before the end of the period. Manage or cancel it in your Apple Account settings.
-> • Terms of Use: https://github.com/bkareti/LemmeTypeApp/blob/main/docs/terms-of-use.md
-> • Privacy Policy: https://github.com/bkareti/LemmeTypeApp/blob/main/docs/privacy-policy.md
+> • Terms of Use: https://lemmetype.com/terms
+> • Privacy Policy: https://lemmetype.com/privacy
 >
 > So the microphone is never left on, a recording stops when you leave the app, when a call comes in, or after five minutes. A recording you start with the Action Button stays visible in a Live Activity until you stop it.
 
@@ -158,7 +159,7 @@ Everything below is the maintainer's to do in App Store Connect; nothing sells u
 7. **Review screenshot:** a screenshot of the paywall (`08-paywall` from the screenshot script, or Settings ›
    Subscription › *Start 7-day Free Trial*), plus review notes saying how to reach it and that a Sandbox account
    is enough to test.
-8. **Terms of Use and Privacy Policy links:** add the Terms of Use link (`docs/terms-of-use.md` on GitHub, or Apple's
+8. **Terms of Use and Privacy Policy links:** add the Terms of Use link (https://lemmetype.com/terms, or Apple's
    standard EULA) in App Information. The paywall already shows both links beside the price (Guideline 3.1.2).
 9. **Sandbox testers:** create at least one Sandbox Apple Account for MA-74.
 

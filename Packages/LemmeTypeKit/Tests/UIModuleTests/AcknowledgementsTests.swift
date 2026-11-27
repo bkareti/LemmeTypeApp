@@ -23,9 +23,9 @@ struct AcknowledgementsTests {
         #expect(shipped.contains("whisper.cpp"))
     }
 
-    @Test func thePrivacyPolicyAndSupportLinksPointAtTheRepositoryPages() {
-        #expect(PublicLinks.privacyPolicy.absoluteString.hasSuffix("docs/privacy-policy.md"))
-        #expect(PublicLinks.support.absoluteString.hasSuffix("docs/support.md"))
-        #expect(PublicLinks.privacyPolicy.scheme == "https")
+    @Test func thePublicLinksPointAtTheWebsitePages() {
+        #expect(PublicLinks.privacyPolicy.absoluteString == "https://lemmetype.com/privacy")
+        #expect(PublicLinks.termsOfUse.absoluteString == "https://lemmetype.com/terms")
+        #expect(PublicLinks.support.absoluteString == "https://lemmetype.com/support")
     }
 }

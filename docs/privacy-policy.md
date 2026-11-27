@@ -48,13 +48,18 @@ Only for a dictation made with the Cloud engine:
 1. The recording goes from your device over an encrypted connection to **LemmeType's
    server**, which runs on Google Cloud in Mumbai, India.
 2. The server passes it to the **speech service** that turns it into text:
-   **Sarvam AI**, in India. So your recording is processed in India, even if
-   you are somewhere else.
+   **Sarvam AI**, which says it stores customer data in India. So your recording is
+   sent to India, even if you are somewhere else.
 3. The text comes back to your device. **LemmeType's server does not store the audio
    or the text**, does not write them to its logs, and forgets them as soon as the
    request ends.
-4. The speech service handles the recording under its own terms and privacy policy
-   (<https://www.sarvam.ai/privacy-policy>).
+4. The speech service keeps and uses the recording under its own terms
+   (<https://www.sarvam.ai/terms-of-service>), privacy policy
+   (<https://www.sarvam.ai/privacy-policy>), and the settings of LemmeType's account.
+   Its published terms (29 July 2026) say that, by default, customer content is kept
+   for up to 30 days and may be used to improve its models unless that is switched off,
+   and that data may be transferred to other countries. Before Cloud speech is released,
+   this section will say which settings LemmeType uses.
 
 Only the recording is sent. Your vocabulary, your other modes, your history, and
 anything else on your device are not.
@@ -157,5 +162,6 @@ in the app before it happens, and the app would ask you to agree again.
 
 ## Contact
 
-Questions about privacy: open an issue at
-<https://github.com/bkareti/LemmeTypeApp/issues>, or see [Help and Support](support.md).
+Questions about privacy: email <ntwrkplus@gmail.com>, open an issue at
+<https://github.com/bkareti/LemmeTypeApp/issues>, or see [Help and Support](support.md). The published
+version of this policy, which the app links to, is <https://lemmetype.com/privacy>.
