@@ -12,6 +12,9 @@ public enum PublicLinks {
     public static let termsOfUse = page("terms")
     /// Help and contact, as in `docs/support.md`.
     public static let support = page("support")
+    /// Opens the Shortcuts app on a new shortcut, so a Back Tap shortcut can be made (Back Tap
+    /// lists only the person's own shortcuts, not an app's built-in ones). Local only.
+    public static let newShortcut = URL(string: "shortcuts://create-shortcut") ?? URL(fileURLWithPath: "/")
 
     private static func page(_ path: String) -> URL {
         URL(string: "\(website)/\(path)") ?? URL(fileURLWithPath: "/")

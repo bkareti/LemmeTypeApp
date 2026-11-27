@@ -108,7 +108,7 @@
                                 "Copied text stays on this device only (it does not travel to your other devices) and is removed after this time.",
                             bundle: .module))
                 }
-                Section(String(localized: "Start From a Button", bundle: .module)) {
+                Section(String(localized: "Dictate in Any App", bundle: .module)) {
                     ShortcutGuide()
                 }
                 Section(String(localized: "Privacy", bundle: .module)) {
@@ -133,28 +133,42 @@
         }
     }
 
-    /// How to start LemmeType from the Action Button or Back Tap (E8-S7). Both run
-    /// a Shortcut; neither calls LemmeType directly.
+    /// How to dictate into another app from the Action Button or Back Tap (E8-S7, ADR 0032).
+    /// Both run the "Dictate Anywhere" shortcut, which records with the current app still in
+    /// front. Back Tap lists only shortcuts in the person's own library, so that one needs a
+    /// shortcut made in the Shortcuts app first.
     struct ShortcutGuide: View {
         var body: some View {
             VStack(alignment: .leading, spacing: 8) {
-                Text(String(localized: "Action Button", bundle: .module)).font(.headline)
+                Text(String(localized: "1. Add the keyboard", bundle: .module)).font(.headline)
                 Text(
                     String(
                         localized:
-                            "Settings › Action Button › Shortcut, then choose “Start Dictating” from LemmeType.",
-                        bundle: .module))
-                Text(String(localized: "Back Tap", bundle: .module)).font(.headline)
+                            "Settings › General › Keyboard › Keyboards › Add New Keyboard › LemmeType. It does not need Full Access. Switch to it with the globe key in the app you are typing in.",
+                        bundle: .module,
+                        comment: "Step 1 of setting up dictation into other apps"))
+                Text(String(localized: "2. Action Button", bundle: .module)).font(.headline)
                 Text(
                     String(
                         localized:
-                            "Settings › Accessibility › Touch › Back Tap, then choose a gesture and the “Start Dictating” shortcut.",
-                        bundle: .module))
+                            "Settings › Action Button › Shortcut › Choose a Shortcut › LemmeType › “Dictate Anywhere”.",
+                        bundle: .module,
+                        comment: "How to put Dictate Anywhere on the Action Button"))
+                Text(String(localized: "3. Back Tap (optional)", bundle: .module)).font(.headline)
                 Text(
                     String(
                         localized:
-                            "The app opens and recording starts on screen. Your iPhone must be unlocked. Nothing is recorded in the background.",
-                        bundle: .module)
+                            "Back Tap lists only your own shortcuts, so make one first: in the Shortcuts app, tap +, add the “Dictate Anywhere” action from LemmeType, and tap Done. Then choose it in Settings › Accessibility › Touch › Back Tap › Double Tap.",
+                        bundle: .module,
+                        comment: "How to run Dictate Anywhere from Back Tap"))
+                Link(String(localized: "Open Shortcuts", bundle: .module), destination: PublicLinks.newShortcut)
+                    .accessibilityIdentifier("settings.shortcut-guide.open-shortcuts")
+                Text(
+                    String(
+                        localized:
+                            "Press once to start and again to stop. You stay in the app you were using, and the text goes where you were typing. Your iPhone must be unlocked. “Start Dictating” opens LemmeType instead.",
+                        bundle: .module,
+                        comment: "Footnote under the Action Button and Back Tap steps")
                 )
                 .font(.footnote)
                 .foregroundStyle(.secondary)
