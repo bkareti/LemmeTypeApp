@@ -46,6 +46,26 @@ private struct ChangingProvider: CloudSpeechProvider {
     func transcript(from response: CloudHTTPResponse) throws(RecognitionError) -> String { "" }
 }
 
+/// A Cloud engine whose languages are whatever the box holds, as the real one reads the gateway's list.
+private struct CloudSpeechEngine: SpeechRecognitionEngine {
+    let box: LanguageBox
+
+    var descriptor: EngineDescriptor {
+        EngineDescriptor(
+            id: .cloud, location: .cloud, supportedLanguages: box.value.withLock { $0 }, assets: .none,
+            capabilities: [.progress], tasks: [.transcribe, .translateToEnglish])
+    }
+
+    func availability() async -> EngineAvailability { .ready }
+    func prepare() async throws(RecognitionError) {}
+    func unload() async {}
+    func recognize(
+        _ request: RecognitionRequest, updates: @escaping @Sendable (RecognitionUpdate) -> Void
+    ) async throws(RecognitionError) -> Transcript {
+        throw .cloudServiceFailed
+    }
+}
+
 /// E12-S7: the section names the languages the gateway serves, and a change reaches the Language menu.
 @MainActor
 struct CloudSpeechLanguageTests {
@@ -86,6 +106,23 @@ struct CloudSpeechLanguageTests {
         await model.verifyTerms()
         #expect(offered == [true], "the Language menu and modes are rebuilt")
         #expect(model.languageNames == "Telugu and Kannada")
+    }
+
+    @Test func theModeEditorOffersALanguageTheGatewayTurnedOnWithoutARelaunch() async {
+        let box = box
+        let cloud = CloudSpeechEngine(box: box)
+        let dictation = DictationSettingsModel(
+            engines: [cloud], modelAssets: FakeModelAssetManager(), preferences: FakePreferences(),
+            languageScope: .englishWithCloud)
+        await dictation.refresh()
+        let modes = ModesSettingsModel(
+            personalization: PersonalizationModel(store: FakePersonalizationStore()), preferences: FakePreferences(),
+            languageChoices: { dictation.languageChoices })
+        #expect(!modes.languages.contains("hi"))
+
+        box.value.withLock { $0 = ["te", "hi"] }
+        await dictation.refresh()
+        #expect(modes.languages.contains("hi"), "the editor reads the Language menu's current choices")
     }
 }
 

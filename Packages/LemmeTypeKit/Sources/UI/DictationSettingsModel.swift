@@ -15,7 +15,8 @@ public final class DictationSettingsModel {
     public struct EngineRow: Identifiable, Equatable, Sendable {
         public let id: RecognitionEngineID
         public let location: ProcessingLocation
-        public let languages: [String]
+        /// Re-read on every refresh: the Cloud engine's languages follow the gateway (E12-S7).
+        public var languages: [String]
         public let assets: AssetRequirement
         public let capabilities: EngineCapabilities
         public let tasks: Set<RecognitionTask>
@@ -174,6 +175,7 @@ public final class DictationSettingsModel {
         let need = need
         for (index, engine) in engines.enumerated() {
             var row = rows[index]
+            row.languages = engine.descriptor.supportedLanguages
             row.availability = await engine.availability(for: need)
             if case .downloadable(let asset) = engine.descriptor.assets, downloads[asset] == nil {
                 row.model = await modelAssets.state(of: asset)

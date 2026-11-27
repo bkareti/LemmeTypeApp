@@ -33,6 +33,7 @@ None beyond what is written. Epic 12's "Languages other than Telugu and English"
 | Acceptance criterion | Verification |
 |---|---|
 | Capabilities with `te`, `hi` → menu offers English, Telugu, Hindi only | `DictationSettingsLanguageTests.theCloudScopeOffersWhatTheGatewayListsAndNothingElse`, `GatewayLanguagesTests.theEngineOffersWhatTheGatewayLastListed` |
+| A newly listed language reaches the Language menu and the mode editor without a relaunch | `CloudSpeechLanguageTests.theModeEditorOffersALanguageTheGatewayTurnedOnWithoutARelaunch` |
 | A dropped language stays visible, reports not available, never switches engine | `DictationSettingsLanguageTests.aLanguageTheGatewayDroppedStaysVisibleAndIsNotReady`, MA-79 step 5 |
 | List survives relaunch; Telugu only before any answer | `GatewayLanguagesTests` (`beforeTheGatewayHasAnsweredOnlyTeluguIsOffered`, `theLastAnswerSurvivesARelaunch`) |
 | Hindi Cloud dictation sends `language=hi` and the task | `GatewayLanguagesTests.aListedLanguageIsSentWithItsTask` |

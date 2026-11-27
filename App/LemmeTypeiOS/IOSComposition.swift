@@ -192,7 +192,8 @@ struct IOSComposition {
             languageScope: Self.languageScope)
         let modes = ModesSettingsModel(
             personalization: personalization, preferences: preferences,
-            engines: services.engines.map(\.descriptor.id).filter { !$0.isCloud }, languages: dictation.languageChoices,
+            engines: services.engines.map(\.descriptor.id).filter { !$0.isCloud },
+            languageChoices: { [weak dictation] in dictation?.languageChoices ?? [] },
             speechOutputs: dictation.speechOutputChoices,
             runningApplications: { [] }, applicationName: { _ in nil }, diagnostics: diagnostics)
         let models = ModelsSettingsModel(
