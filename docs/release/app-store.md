@@ -50,6 +50,7 @@ What the switch to `cloud` changed, and what is still open, is in [section 9.1](
 ```bash
 make ios-appstore-check            # unsigned Release archive + App Store checks (no account needed)
 make ios-appstore UPLOAD=1         # signed archive, checks, upload to App Store Connect
+make ios-appstore UPLOAD=1 TESTFLIGHT=1   # TestFlight only: uploads while launch gates are Open (never submit it for review)
 SCOPE=cloud scripts/make-app-store-screenshots.sh   # 6.9-inch iPhone and 13-inch iPad screenshots (cloud scope)
 ```
 
@@ -68,6 +69,12 @@ Then it checks the **release scope**:
 
 Then, in App Store Connect: install the build from **TestFlight** on a real iPhone and
 iPad first (section 7), then submit it for review.
+
+`TESTFLIGHT=1` (decision of 2026-11-27) lets testers use Cloud speech before every launch gate is Closed: the gate
+check prints `WARN` instead of `FAIL`. Such a build is for TestFlight testers only. Upload a new build without
+`TESTFLIGHT` once the gates are Closed, and submit that one for App Review. In TestFlight, purchases use the
+Sandbox: the 7-day trial starts without payment details and testers are never charged; Apple shortens subscription
+periods there.
 
 ## 3. App information (copy into App Store Connect)
 
