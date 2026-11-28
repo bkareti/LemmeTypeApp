@@ -26,6 +26,9 @@ struct AcknowledgementsTests {
     @Test func thePublicLinksPointAtTheWebsitePages() {
         #expect(PublicLinks.privacyPolicy.absoluteString == "https://lemmetype.com/privacy")
         #expect(PublicLinks.termsOfUse.absoluteString == "https://lemmetype.com/terms")
+        // The ready-made Back Tap shortcut is Apple's shared-shortcut page, opened only when tapped (E8-S10).
+        #expect(PublicLinks.backTapShortcut.host == "www.icloud.com")
+        #expect(PublicLinks.backTapShortcut.path.hasPrefix("/shortcuts/"))
         #expect(PublicLinks.support.absoluteString == "https://lemmetype.com/support")
     }
 }
