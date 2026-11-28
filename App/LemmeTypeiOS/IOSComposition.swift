@@ -255,10 +255,13 @@ struct IOSComposition {
         let startup = StartupOnce()
         let audioCapture = services.audioCapture
         let handoff = services.actionDictation.handoff
+        let presenter = services.actionDictation.presenter
         let prepare: @MainActor () async -> Void = {
             await startup.run {
-                // A result left by a crash or force-quit must not outlive that run.
+                // A result left by a crash or force-quit must not outlive that run, and neither may a
+                // "Listening" banner: iOS keeps a Live Activity until the app that started it ends it.
                 handoff.clear()
+                await presenter.end()
                 await audioCapture.purgeLeftovers()
                 await personalization.load()
                 await cloudSpeech?.refresh()

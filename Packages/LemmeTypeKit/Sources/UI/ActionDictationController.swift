@@ -53,12 +53,37 @@ public final class ActionDictationController {
     /// One press starts a dictation and the next stops it. A press while the
     /// text is being written is ignored, so a double press cannot lose it.
     public func toggle() async {
+        // Read before the startup work, which removes a banner left by an earlier run.
+        let leftover = hasLeftoverBanner
         await prepare()
         switch recorder.state {
         case .recording: stop()
         case .preparing, .stopping, .processing: break
-        default: await start()
+        default:
+            // The banner still says "Listening" but nothing records: iOS ended or froze the run that showed
+            // it, or the person closed the app. To them this press is Stop, so it clears the banner.
+            if leftover {
+                await clearPreviousResult()
+            } else {
+                await start()
+            }
         }
+    }
+
+    /// The Stop button in the Live Activity. It always ends something: the recording, or a banner with
+    /// nothing behind it. Text that is already being written is left to finish.
+    public func stopFromLiveActivity() async {
+        await prepare()
+        if recorder.state == .recording {
+            stop()
+        } else if !isActive {
+            await clearPreviousResult()
+        }
+    }
+
+    /// A Live Activity is on screen that no dictation of this run is behind.
+    private var hasLeftoverBanner: Bool {
+        !isActive && recorder.state != .recording && presenter.isShowing
     }
 
     /// The microphone stops at once; the text follows.

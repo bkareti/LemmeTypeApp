@@ -97,6 +97,9 @@ public enum ActionDictationStatus: Equatable, Sendable {
 /// without opening the app (`AudioRecordingIntent`).
 @MainActor
 public protocol ActionDictationPresenting: Sendable {
+    /// Whether one of this app's Live Activities is on screen, including one left by an earlier run that iOS
+    /// ended or the person closed: iOS keeps those until the app ends them.
+    var isShowing: Bool { get }
     func begin() throws
     func show(_ status: ActionDictationStatus) async
     func end() async

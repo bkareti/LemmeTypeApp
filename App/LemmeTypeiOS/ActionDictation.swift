@@ -10,7 +10,7 @@ enum ActionDictationBridge {
     @MainActor static var controller: ActionDictationController?
 
     @MainActor static func stop() async throws {
-        controller?.stop()
+        await controller?.stopFromLiveActivity()
     }
 }
 
@@ -35,11 +35,23 @@ struct DictateAnywhereIntent: AudioRecordingIntent, LiveActivityIntent {
 
 @MainActor
 struct IOSActionDictationPresenter: ActionDictationPresenting {
+    /// If the app is closed or ended mid-dictation, nothing can end the banner, so iOS marks it stale after
+    /// the longest recording (`RecordingLimits.handheld`) plus a minute, and the widget stops saying "Listening".
+    private nonisolated static let listeningLifetime: TimeInterval = 6 * 60
+    private nonisolated static let writingLifetime: TimeInterval = 2 * 60
+
+    var isShowing: Bool {
+        Activity<ActionDictationAttributes>.activities.contains {
+            $0.activityState == .active || $0.activityState == .stale
+        }
+    }
+
     func begin() throws {
         _ = try Activity.request(
             attributes: ActionDictationAttributes(),
             content: ActivityContent(
-                state: ActionDictationAttributes.ContentState(status: .listening, startedAt: .now), staleDate: nil))
+                state: ActionDictationAttributes.ContentState(status: .listening, startedAt: .now),
+                staleDate: .now.addingTimeInterval(Self.listeningLifetime)))
     }
 
     func show(_ status: ActionDictationStatus) async {
@@ -54,7 +66,8 @@ struct IOSActionDictationPresenter: ActionDictationPresenting {
     // instead of passing a stored one across.
     private nonisolated static func update(to status: ActionDictationActivityStatus) async {
         let content = ActivityContent(
-            state: ActionDictationAttributes.ContentState(status: status, startedAt: .now), staleDate: nil)
+            state: ActionDictationAttributes.ContentState(status: status, startedAt: .now),
+            staleDate: .now.addingTimeInterval(writingLifetime))
         for activity in Activity<ActionDictationAttributes>.activities { await activity.update(content) }
     }
 
@@ -98,6 +111,7 @@ extension IOSComposition {
 
 /// Runs only where there is no Live Activity or keyboard, such as UI tests.
 struct NoActionDictationPresentation: ActionDictationPresenting {
+    var isShowing: Bool { false }
     func begin() throws {}
     func show(_ status: ActionDictationStatus) async {}
     func end() async {}

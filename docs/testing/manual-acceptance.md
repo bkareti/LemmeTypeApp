@@ -886,3 +886,11 @@ Use a physical iPhone and an iPad (or the Simulator for steps 1–6), each from 
 9. Turn on Settings › Accessibility › Motion › Reduce Motion and replay the guide: every picture is still and pages change with a fade.
 10. With VoiceOver, swipe through every step: the pictures are skipped, the title, text, choices, and their states are read, and the progress reads "Step N of 5" (4 on iPad).
 11. Install the previous App Store build, dictate once, then update to this build: the guide does not appear.
+
+**MA-81 A Dictate Anywhere banner never outlives its dictation (ADR 0032)**
+Use a physical iPhone with Dynamic Island and the Dictate Anywhere shortcut on Back Tap or the Action Button. Record the device, iOS version, build, and result for each step.
+1. On the Home Screen (no text field, LemmeType keyboard not open), start Dictate Anywhere. The banner says Listening with a timer and the orange microphone dot shows. Tap Stop in the expanded banner: the dot goes off, the banner shows Writing, then goes away.
+2. Start again and press the shortcut a second time from the Home Screen: same result as step 1.
+3. Start again, then close LemmeType in the app switcher. The orange dot goes off. Tap Stop in the banner: the banner goes away and no new recording starts (no orange dot).
+4. Start again, close LemmeType, then press the shortcut once: the banner goes away and nothing records. Press it again: a new dictation starts as usual.
+5. Start again, close LemmeType, and leave the phone for 7 minutes: the banner says "Dictation ended" with no timer and no Stop button. Opening LemmeType removes it.
