@@ -17,13 +17,17 @@
         let actionDictation: ActionDictationController?
         /// The subscription offer is shown over everything when this says so. `nil` in a build without it.
         let subscription: SubscriptionModel?
+        /// The first-run setup guide (E8-S10), full screen while it is presented. `nil` in a build without it.
+        let setupGuide: SetupGuideModel?
         @State private var tab: Tab = .dictate
         @Environment(\.scenePhase) private var scenePhase
 
         public init(
             quick: QuickDictationModel, dictation: DictationSettingsModel, settings: MobileSettingsView,
-            actionDictation: ActionDictationController? = nil, subscription: SubscriptionModel? = nil
+            actionDictation: ActionDictationController? = nil, subscription: SubscriptionModel? = nil,
+            setupGuide: SetupGuideModel? = nil
         ) {
+            self.setupGuide = setupGuide
             self.subscription = subscription
             self.actionDictation = actionDictation
             self.quick = quick
@@ -61,11 +65,25 @@
             .sheet(isPresented: paywallBinding) {
                 if let subscription { PaywallView(model: subscription) }
             }
+            .fullScreenCover(isPresented: setupGuideBinding) {
+                if let setupGuide { SetupGuideView(model: setupGuide) }
+            }
+            .onChange(of: setupGuide?.isPresented) { _, presented in
+                if presented == false { tab = .dictate }
+            }
         }
 
+        /// While the guide is up it shows the paywall itself: a sheet here could not appear over it.
         private var paywallBinding: Binding<Bool> {
             Binding(
-                get: { subscription?.isShowingPaywall ?? false }, set: { subscription?.isShowingPaywall = $0 })
+                get: { setupGuide?.isPresented != true && subscription?.isShowingPaywall == true },
+                set: { subscription?.isShowingPaywall = $0 })
+        }
+
+        private var setupGuideBinding: Binding<Bool> {
+            Binding(
+                get: { setupGuide?.isPresented ?? false },
+                set: { if !$0, setupGuide?.isPresented == true { setupGuide?.finish() } })
         }
     }
 

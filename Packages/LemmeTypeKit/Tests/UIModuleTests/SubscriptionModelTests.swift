@@ -46,6 +46,40 @@ struct SubscriptionModelTests {
         again.stop()
     }
 
+    @Test func theOneTimeOfferWaitsWhileHeld() async {
+        let model = makeModel()
+        model.holdOneTimeOffer()
+        await model.start()
+        #expect(!model.isShowingPaywall)
+        #expect(!seen.hasSeenPaywall, "held, it is not used up")
+        model.releaseOneTimeOffer()
+        #expect(model.isShowingPaywall)
+        #expect(seen.hasSeenPaywall)
+        model.stop()
+    }
+
+    @Test func openingThePaywallWhileHeldCountsAsTheOneTime() async {
+        let model = makeModel()
+        model.holdOneTimeOffer()
+        await model.start()
+        model.showPaywall()
+        model.isShowingPaywall = false
+        model.releaseOneTimeOffer()
+        #expect(!model.isShowingPaywall, "it is not shown a second time")
+        #expect(seen.hasSeenPaywall)
+        model.stop()
+    }
+
+    @Test func releasingWithNothingWaitingShowsNothing() async {
+        let subscribed = FakeSubscriptionService(state: .subscribed(renews: later, willRenew: true))
+        let model = SubscriptionModel(service: subscribed, seen: seen)
+        model.holdOneTimeOffer()
+        await model.start()
+        model.releaseOneTimeOffer()
+        #expect(!model.isShowingPaywall)
+        model.stop()
+    }
+
     @Test func aSubscriberIsNeverShownThePaywallOnItsOwn() async {
         let subscribed = FakeSubscriptionService(state: .subscribed(renews: later, willRenew: true))
         let model = SubscriptionModel(service: subscribed, seen: seen)

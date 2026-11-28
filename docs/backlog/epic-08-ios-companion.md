@@ -429,6 +429,93 @@ to work for me, and as any user I want the app to show exactly what it keeps.
 
 ---
 
+## E8-S10 — Guide first-run setup with animated steps
+
+**User story**
+
+As someone opening LemmeType on an iPhone or iPad for the first time, I want a short,
+animated walk-through that gets the microphone, a way to hear me (a model or Cloud
+speech), and the Action Button or Back Tap set up, so that I can dictate in another app
+without reading instructions in Settings.
+
+**Scope**
+
+- A first-run flow, `SetupGuideView` (UI/Mobile) backed by `SetupGuideModel` (UI), shown
+  full screen over the Dictate tab on a fresh install. Steps: **Welcome** → **Microphone**
+  → **How LemmeType listens** → **Dictate in any app** (iPhone only) → **All set**. A
+  progress indicator shows the step; Back works on every step after Welcome.
+- **Microphone:** an animated microphone with sound rings and the existing explanation
+  (`CloudSpeechNotice.microphoneExplanation`). Before the system prompt the only button is
+  **Continue** (App Review Guideline 5.1.1). After the prompt the step shows the answer:
+  allowed (a check), or denied with **Open Settings** and **Next**.
+- **How LemmeType listens:** choices that come from the existing models, not new logic:
+  - **On this device:** the recommended Whisper model for this device (first model in
+    the `PerformancePlan` order that fits), with its size. Download goes through
+    `ModelsSettingsModel.offerDownload` / `confirmDownload` (same confirmation, space
+    check, and consent as Settings) and shows an animated progress ring. The download
+    keeps going if the user moves on.
+  - **Apple Speech, ready now:** asks for Speech Recognition (with an explanation that has
+    only Continue) when it is not yet requested.
+  - **Cloud speech** (only in a build that offers it): opens the existing consent sheet
+    from `CloudSpeechSettingsModel`. Without a subscription it says so and offers the
+    subscription (the paywall); it never turns Cloud on without consent and a
+    subscription.
+  - **Decide later:** moves on; the Dictate screen keeps its existing readiness message.
+- **Dictate in any app:** three animated cards — **Add the keyboard** (globe key),
+  **Action Button** (a phone outline whose side button presses, "iPhone 15 Pro and
+  later"), and **Back Tap** (two taps on the back of a phone). Each card has the same
+  steps as today's `ShortcutGuide`; Back Tap keeps **Open Shortcuts**. iPad skips this
+  step (no Action Button or Back Tap).
+- **All set:** a checklist of what is ready and what was skipped, then **Start
+  Dictating**. The one-time paywall (`SubscriptionModel.offerThePaywallOnce`) waits until
+  the flow ends instead of appearing over it.
+- **Reuse in Settings:** the "Dictate in Any App" section uses the same animated cards
+  instead of the text guide, and Settings › About gets **Show Setup Guide**, which opens
+  the flow again from Welcome (nothing is reset).
+- **Who sees it:** a fresh install (`hasCompletedOnboarding` false and the microphone
+  never requested). Someone upgrading who already used the app is marked done silently.
+  Finishing or closing (×) marks it done. On the microphone step, × and Back appear only after iOS has asked.
+- **Motion:** native SwiftUI only (SF Symbol effects, springs, keyframes, small drawn
+  shapes); no new dependency, no video, no images of Apple's Settings. With Reduce Motion
+  on, every illustration is a still picture. Illustrations are hidden from VoiceOver;
+  every step makes sense from its text alone. Nothing is communicated by animation alone.
+  Animations run only while their step is on screen.
+
+**Acceptance criteria**
+
+- A fresh install shows the flow; an install where the microphone was already asked
+  shows Dictate directly and is marked done (model tests).
+- The Microphone step has only Continue before the system prompt and shows allowed or
+  denied after it; denied offers Open Settings (model tests; UI test with the fake
+  permission).
+- "On this device" offers the model the Models screen would recommend for this device,
+  and starts its download only after the same confirmation (model tests with
+  `FakeModelAssetStore`).
+- "Cloud speech" is offered only when the build offers it; without a subscription it
+  shows the paywall and Cloud stays off; with one it turns on only after Agree (model
+  tests with the fake gateway and subscription).
+- The Dictate in any app step is skipped on iPad (model test).
+- The paywall does not appear while the flow is showing and appears once after it ends
+  when it would have before (subscription model tests).
+- Show Setup Guide reopens the flow from Welcome without changing any setting (test).
+- With Reduce Motion on, illustrations do not animate (view test of the motion setting
+  or manual check); VoiceOver reads every step (manual check, `MA-` step).
+- Existing UI tests start past the flow; one UI test walks the flow with the fakes.
+- `make l10n-check`, `make lint`, `make test-unit`, and `make test-ios` pass.
+
+**Out of scope**
+
+- The Mac onboarding (`OnboardingModel`), which already exists.
+- Detecting whether this iPhone has an Action Button (the card says which models do).
+- Opening the system Action Button, Back Tap, or Keyboards screens directly (iOS has no
+  supported link to them).
+- New illustrations from a designer, Lottie, or video.
+
+**Dependencies:** E8-S5, E8-S7, E13-S4  
+**Estimate:** 5 points
+
+---
+
 ## E8-S2 — Deliver and validate the approved iPhone voice-writing flow
 
 **User story**
@@ -485,4 +572,5 @@ it automatically.
 6. E8-S7
 7. E8-S8
 8. E8-S9
-9. E8-S2
+9. E8-S10
+10. E8-S2

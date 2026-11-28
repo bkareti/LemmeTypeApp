@@ -77,9 +77,9 @@
                 )
                 .accessibilityIdentifier("settings.cloud.turnOn")
                 // On the row: a sheet attached to the whole Section never appears inside a List.
-                .sheet(isPresented: $model.isShowingConsent) { consent }
+                .sheet(isPresented: $model.isShowingConsent) { CloudSpeechConsentView(model: model) }
                 if let problem = model.problem {
-                    Text(message(for: problem)).font(.footnote).foregroundStyle(.red)
+                    Text(Self.message(for: problem)).font(.footnote).foregroundStyle(.red)
                         .accessibilityIdentifier("settings.cloud.problem")
                 }
             }
@@ -101,7 +101,7 @@
                     action: model.requestTurnOn
                 )
                 .accessibilityIdentifier("settings.cloud.turnOn")
-                .sheet(isPresented: $model.isShowingConsent) { consent }
+                .sheet(isPresented: $model.isShowingConsent) { CloudSpeechConsentView(model: model) }
                 turnOffButton
             }
         }
@@ -153,7 +153,29 @@
             }
         }
 
-        private var consent: some View {
+        static func message(for problem: CloudSpeechSettingsModel.Problem) -> String {
+            switch problem {
+            case .subscriptionRequired:
+                String(
+                    localized: "Cloud speech needs an active LemmeType subscription or free trial.", bundle: .module,
+                    comment: "Shown when cloud speech is turned on without a subscription")
+            case .offline:
+                String(
+                    localized: "Couldn’t reach LemmeType. Check your connection and try again.", bundle: .module,
+                    comment: "Shown when cloud speech is turned on while offline")
+            case .failed:
+                String(
+                    localized: "Couldn’t turn on Cloud speech. Try again.", bundle: .module,
+                    comment: "Shown when turning on cloud speech fails for another reason")
+            }
+        }
+    }
+
+    /// The agreement before any audio goes to the cloud (ADR 0031), shown from Settings and the setup guide.
+    struct CloudSpeechConsentView: View {
+        let model: CloudSpeechSettingsModel
+
+        var body: some View {
             NavigationStack {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 14) {
@@ -191,23 +213,6 @@
                         .accessibilityIdentifier("settings.cloud.agree")
                     }
                 }
-            }
-        }
-
-        private func message(for problem: CloudSpeechSettingsModel.Problem) -> String {
-            switch problem {
-            case .subscriptionRequired:
-                String(
-                    localized: "Cloud speech needs an active LemmeType subscription or free trial.", bundle: .module,
-                    comment: "Shown when cloud speech is turned on without a subscription")
-            case .offline:
-                String(
-                    localized: "Couldn’t reach LemmeType. Check your connection and try again.", bundle: .module,
-                    comment: "Shown when cloud speech is turned on while offline")
-            case .failed:
-                String(
-                    localized: "Couldn’t turn on Cloud speech. Try again.", bundle: .module,
-                    comment: "Shown when turning on cloud speech fails for another reason")
             }
         }
     }

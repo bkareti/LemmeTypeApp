@@ -12,7 +12,7 @@ personalization and modes, model management and performance, multilingual
 dictation and speech-to-English, and tone and style rewriting. Epics 6
 (privacy, security, and data controls) and 7 (quality, packaging, and release
 readiness) are refined into stories in `docs/backlog/` and in progress. Epic 8
-(iPhone and iPad companion) is refined into nine stories in
+(iPhone and iPad companion) is refined into ten stories in
 `docs/backlog/epic-08-ios-companion.md` and its main-app baseline is built (ADR 0027:
 Quick Dictation, Copy, Action Button and Shortcuts, `LemmeTypeiOS`); real-device evidence
 (E8-S1, E8-S2) and approved thresholds are still pending.
@@ -306,6 +306,14 @@ xcodebuild -project LemmeType.xcodeproj -scheme LemmeType -destination 'platform
   on phones; `WhisperEngine(availableMemory:)` refuses a load that does not fit. An App Intent
   leaves a one-time `LaunchRequestInbox` request. `DeviceWords` keeps shared text from saying
   "this Mac" on a phone. `HandheldEndToEndTests` covers the path; device steps are MA-66…MA-72.
+  First-run setup guide (E8-S10): `SetupGuideModel` (UI, portable) + `SetupGuideView` (UI/Mobile, full
+  screen from `MobileRootView`): Welcome → Microphone (only Continue before the prompt) → How LemmeType
+  listens (`ModelsSettingsModel.suggestedModel`, Apple Speech, Cloud via `CloudSpeechConsentView`) →
+  Dictate in any app (`AnyAppSetupCards`, also in Settings; iPhone only) → All set. Shown on a fresh
+  install (`hasCompletedOnboarding` false and the microphone never asked), replayed from Settings › About;
+  `SubscriptionModel.holdOneTimeOffer()` keeps the paywall until it ends. Animations are SwiftUI only
+  (`SetupIllustrations`, `AnyAppIllustrations`) and still with Reduce Motion. UI tests start past it
+  unless `-LemmeTypeSetupGuide`; device steps are MA-80.
 - Action Button dictation (ADR 0032, Proposed): `DictateAnywhereIntent` (`AudioRecordingIntent` and
   `LiveActivityIntent`; it needs both or iOS ends the app) toggles `ActionDictationController` (UI), which
   drives the normal recorder and pipeline with another app in front and passes the finished text through
@@ -391,7 +399,7 @@ sub-issues on `bkareti/LemmeTypeApp` (needs authenticated `gh`).
   `# Epic N — Title` heading (first letter capitalised), so 13 epics in total.
 - Refined epics are listed in `REFINED_EPICS` (backlog file, story phase
   label, story count: 8 for Epic 1, 10 for Epic 2, 7 for Epic 3, 9 for Epic 4,
-  7 for Epic 5, 8 for Epic 6, 9 for Epic 7, 9 for Epic 8, 6 for Epic 9, 5 for Epic 10, 4 for Epic 11, 7 for Epic 12, 8 for Epic 13).
+  7 for Epic 5, 8 for Epic 6, 9 for Epic 7, 10 for Epic 8, 6 for Epic 9, 5 for Epic 10, 4 for Epic 11, 7 for Epic 12, 8 for Epic 13).
   Epic 8's two original issues are E8-S1 and E8-S2; E8-S2 is the last story in the file.
   Stories carry `platform:macOS` unless the epic is in `EPIC_PLATFORM_LABELS`.
   Adding or removing a story requires updating `STORY_AREA_LABELS` and that count.

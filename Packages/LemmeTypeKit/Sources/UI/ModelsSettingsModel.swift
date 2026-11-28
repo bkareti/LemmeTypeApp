@@ -66,6 +66,16 @@ public final class ModelsSettingsModel {
 
     public var whisperRows: [Row] { rows.filter { $0.asset.engine == .whisper } }
 
+    /// The model the setup guide offers (E8-S10): the first in the plan's order that this device runs at
+    /// its recommended memory, else the first it runs at all, else none. Only models in this build's catalog.
+    public var suggestedModel: Row? {
+        let ordered = plan.whisperModelOrder.compactMap { id in rows.first { $0.id == id } }
+        return ordered.first { $0.fit == .recommended } ?? ordered.first { $0.fit.canRun }
+    }
+
+    /// A row by id, for following one model's download.
+    public func row(_ id: ModelAssetID) -> Row? { rows.first { $0.id == id } }
+
     public func isDownloading(_ asset: ModelAssetID) -> Bool { downloads[asset] != nil }
 
     /// Quitting waits for these to pause so their progress is kept.
