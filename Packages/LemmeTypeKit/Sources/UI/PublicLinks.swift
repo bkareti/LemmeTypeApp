@@ -15,6 +15,11 @@ public enum PublicLinks {
     /// Opens the Shortcuts app on a new shortcut, so a Back Tap shortcut can be made (Back Tap
     /// lists only the person's own shortcuts, not an app's built-in ones). Local only.
     public static let newShortcut = URL(string: "shortcuts://create-shortcut") ?? URL(fileURLWithPath: "/")
+    /// The ready-made "Dictate Anywhere" shortcut (one action, `DictateAnywhereIntent`), shared from the
+    /// maintainer's iCloud. Opening it shows Apple's Add Shortcut page, so Back Tap can list it after one tap.
+    /// Apple's signature on it expires on 22 Dec 2027: share it again before then and replace this link.
+    public static let backTapShortcut =
+        URL(string: "https://www.icloud.com/shortcuts/1401a765eac547fc82021541697b2c0c") ?? URL(fileURLWithPath: "/")
 
     private static func page(_ path: String) -> URL {
         URL(string: "\(website)/\(path)") ?? URL(fileURLWithPath: "/")

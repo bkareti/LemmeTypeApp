@@ -40,7 +40,7 @@ final class SetupGuideUITests: XCTestCase {
         XCTAssertTrue(element("setup.anyApp").waitForExistence(timeout: 5))
         XCTAssertTrue(element("settings.shortcut-guide").exists)
         XCTAssertTrue(element("settings.shortcut-guide.back-tap-steps").exists, "Back Tap is set up step by step")
-        XCTAssertTrue(element("settings.shortcut-guide.open-shortcuts").exists)
+        XCTAssertTrue(element("settings.shortcut-guide.add-back-tap-shortcut").exists, "one tap adds the shortcut")
         primary.tap()
 
         XCTAssertTrue(element("setup.done").waitForExistence(timeout: 5))

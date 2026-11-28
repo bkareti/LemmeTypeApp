@@ -228,6 +228,9 @@
     "Add at most %lld “sounds like” spellings." : {
 
     },
+    "Add Back Tap Shortcut" : {
+      "comment" : "Opens Apple's page to add the Dictate Anywhere shortcut"
+    },
     "Add Replacement…" : {
 
     },
@@ -349,8 +352,8 @@
     "Back" : {
       "comment" : "Button label: go to the previous setup step"
     },
-    "Back Tap can run only shortcuts from your own library, so LemmeType is not listed there until you add one." : {
-      "comment" : "Why Back Tap needs a shortcut made in the Shortcuts app first"
+    "Back Tap can run only shortcuts in your library. Add LemmeType’s with one tap, then choose it." : {
+      "comment" : "Why Back Tap needs the Dictate Anywhere shortcut added to the Shortcuts library first"
     },
     "Balanced" : {
 
@@ -905,7 +908,7 @@
 
     },
     "In Settings › Accessibility › Touch › Back Tap › Double Tap, scroll to the bottom and choose “Dictate Anywhere” under Shortcuts." : {
-      "comment" : "Back Tap setup, step 5"
+      "comment" : "Back Tap setup: choose the shortcut in Settings"
     },
     "Include ⌘, ⌥, or ⌃ so the shortcut doesn’t interfere with typing." : {
 
@@ -1096,6 +1099,9 @@
     },
     "macOS couldn’t update Launch at Login. Try again, or change it in System Settings › Login Items." : {
 
+    },
+    "Make It Yourself Instead" : {
+      "comment" : "Shows how to make the Back Tap shortcut by hand"
     },
     "Manage Models…" : {
 
@@ -1389,9 +1395,6 @@
     },
     "Open System Settings…" : {
 
-    },
-    "Open the Shortcuts app." : {
-      "comment" : "Back Tap setup, step 1"
     },
     "Optional. LemmeType rewrites on %@ and shows you the result before anything is used. Neutral, Plain text, and Original change nothing." : {
 
@@ -1899,6 +1902,9 @@
     },
     "Tap ‹ or Done to save it. It is named “Dictate Anywhere”." : {
       "comment" : "Back Tap setup, step 4"
+    },
+    "Tap Add Back Tap Shortcut, then Add Shortcut." : {
+      "comment" : "Back Tap setup, step 1: add the ready-made shortcut"
     },
     "Tap Start Dictating, speak, then copy the text into any app." : {
       "comment" : "Last setup guide step text"
