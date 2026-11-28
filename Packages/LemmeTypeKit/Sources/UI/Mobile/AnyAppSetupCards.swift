@@ -66,14 +66,13 @@
                     title: String(localized: "3. Back Tap (optional)", bundle: .module),
                     text: String(
                         localized:
-                            "Back Tap lists only your own shortcuts, so make one first: in the Shortcuts app, tap +, add the “Dictate Anywhere” action from LemmeType, and tap Done. Then choose it in Settings › Accessibility › Touch › Back Tap › Double Tap.",
+                            "Back Tap can run only shortcuts from your own library, so LemmeType is not listed there until you add one.",
                         bundle: .module,
-                        comment: "How to run Dictate Anywhere from Back Tap")
+                        comment: "Why Back Tap needs a shortcut made in the Shortcuts app first")
                 ) {
                     BackTapIllustration()
                 } footer: {
-                    Link(String(localized: "Open Shortcuts", bundle: .module), destination: PublicLinks.newShortcut)
-                        .accessibilityIdentifier("settings.shortcut-guide.open-shortcuts")
+                    BackTapSteps()
                 }
                 Text(
                     String(
@@ -87,6 +86,75 @@
             }
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("settings.shortcut-guide")
+        }
+    }
+
+    /// Making the "Dictate Anywhere" shortcut and choosing it in Back Tap, one step per line. Written for both
+    /// Shortcuts layouts: iOS 26 (+, Add Action, Done) and iOS 27, which opens on "Describe a shortcut" with
+    /// Edit and saves with the back arrow.
+    struct BackTapSteps: View {
+        var body: some View {
+            VStack(alignment: .leading, spacing: 10) {
+                step(1) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(
+                            String(
+                                localized: "Open the Shortcuts app.", bundle: .module,
+                                comment: "Back Tap setup, step 1"))
+                        Link(destination: PublicLinks.newShortcut) {
+                            Label(
+                                String(localized: "Open Shortcuts", bundle: .module),
+                                systemImage: "arrow.up.forward.app")
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.setupJade)
+                        .accessibilityIdentifier("settings.shortcut-guide.open-shortcuts")
+                    }
+                }
+                step(2) {
+                    Text(
+                        String(
+                            localized:
+                                "If it asks you to describe a shortcut, tap Edit. Otherwise tap + to make a new shortcut.",
+                            bundle: .module, comment: "Back Tap setup, step 2"))
+                }
+                step(3) {
+                    Text(
+                        String(
+                            localized: "Search for “Dictate Anywhere” and tap it.", bundle: .module,
+                            comment: "Back Tap setup, step 3"))
+                }
+                step(4) {
+                    Text(
+                        String(
+                            localized: "Tap ‹ or Done to save it. It is named “Dictate Anywhere”.", bundle: .module,
+                            comment: "Back Tap setup, step 4"))
+                }
+                step(5) {
+                    Text(
+                        String(
+                            localized:
+                                "In Settings › Accessibility › Touch › Back Tap › Double Tap, scroll to the bottom and choose “Dictate Anywhere” under Shortcuts.",
+                            bundle: .module, comment: "Back Tap setup, step 5"))
+                }
+            }
+            .font(.subheadline)
+            .padding(.top, 4)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("settings.shortcut-guide.back-tap-steps")
+        }
+
+        private func step<Content: View>(_ number: Int, @ViewBuilder content: () -> Content) -> some View {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text(number, format: .number)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 22, height: 22)
+                    .background(Color.setupJade, in: .circle)
+                    .accessibilityHidden(true)
+                content()
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
     }
 #endif
