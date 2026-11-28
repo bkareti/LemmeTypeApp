@@ -68,6 +68,16 @@ struct ModelsSettingsModelTests {
         #expect(changes == 1)
     }
 
+    @Test func theSuggestedModelIsTheFirstInThePlanThatFitsWell() {
+        // Balanced plan order: Base, Small, Tiny (English). 16 GB recommends all of them.
+        #expect(makeModel().suggestedModel?.id == .whisperBaseEnglish)
+        let lowPower = FakePreferences()
+        lowPower.performanceProfile = .lowPower
+        #expect(makeModel(preferences: lowPower).suggestedModel?.id == .whisperTinyEnglish)
+        let intel = HardwareProfile(isAppleSilicon: false, physicalMemoryBytes: 32 << 30)
+        #expect(makeModel(hardware: intel).suggestedModel == nil, "nothing is suggested that cannot run")
+    }
+
     @Test func unsupportedModelsCantBeOffered() async {
         let model = makeModel(hardware: HardwareProfile(isAppleSilicon: false, physicalMemoryBytes: 32 << 30))
         await model.offerDownload(of: .whisperBaseEnglish)

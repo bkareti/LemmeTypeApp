@@ -63,6 +63,17 @@
         }
       }
     },
+    "%@ is on %@. Works offline; your voice never leaves it." : {
+      "comment" : "Setup guide: the on-device choice once its model is installed; the value is the model name",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ is on %2$@. Works offline; your voice never leaves it."
+          }
+        }
+      }
+    },
     "%@ isn’t ready: %@. LemmeType will ask before using another engine." : {
       "localizations" : {
         "en" : {
@@ -260,6 +271,9 @@
     "Allow Speech Recognition" : {
 
     },
+    "Allow the Microphone" : {
+      "comment" : "Setup guide step title"
+    },
     "Allowed" : {
 
     },
@@ -285,7 +299,7 @@
 
     },
     "Apple Speech" : {
-
+      "comment" : "Setup guide choice: Apple's speech engine"
     },
     "Apple Speech needs Speech Recognition access. Your recording is kept until you decide." : {
 
@@ -380,11 +394,17 @@
     "Check once a week" : {
 
     },
+    "Checking the download…" : {
+      "comment" : "Setup guide status"
+    },
     "Checking…" : {
 
     },
     "Choose Engine…" : {
 
+    },
+    "Choose one now. You can change it in Settings at any time." : {
+      "comment" : "Setup guide: under the listening title"
     },
     "Clean Writing" : {
 
@@ -404,11 +424,14 @@
     "Close" : {
 
     },
+    "Close Setup" : {
+      "comment" : "Closes the first-run setup guide"
+    },
     "Cloud" : {
       "comment" : "The name of the speech engine that sends audio online"
     },
     "Cloud speech" : {
-      "comment" : "A settings section title"
+      "comment" : "A settings section title\nSetup guide choice: cloud speech"
     },
     "Cloud speech for Telugu and more, with nothing to set up." : {
       "comment" : "A benefit listed in the paywall"
@@ -503,6 +526,9 @@
     "day" : {
       "comment" : "One day, as in 'price per day'"
     },
+    "Decide Later" : {
+      "comment" : "Setup guide choice: skip for now"
+    },
     "Default mode" : {
 
     },
@@ -578,6 +604,9 @@
     "Dictate in Any App" : {
 
     },
+    "Dictate in Any App is in Settings whenever you want it." : {
+      "comment" : "Setup guide checklist line"
+    },
     "Dictate on your iPhone, with your voice kept on the device." : {
       "comment" : "A benefit listed in the paywall"
     },
@@ -635,6 +664,17 @@
     "Download %@" : {
 
     },
+    "Download %@ (%@). Works offline; your voice never leaves %@." : {
+      "comment" : "Setup guide: the model download choice; values are the model name and its size",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Download %1$@ (%2$@). Works offline; your voice never leaves %3$@."
+          }
+        }
+      }
+    },
     "Download %@?" : {
 
     },
@@ -653,6 +693,9 @@
     "Downloaded models" : {
 
     },
+    "Downloading" : {
+      "comment" : "Setup guide checklist: still downloading"
+    },
     "Downloading %@ of %@" : {
       "localizations" : {
         "en" : {
@@ -662,6 +705,9 @@
           }
         }
       }
+    },
+    "Downloading… %lld%%. You can go on; it finishes in the background." : {
+      "comment" : "Setup guide: model download progress"
     },
     "Downloads %@ from Hugging Face and uses %@ on %@. Licence: %@. Free space: %@. The file is verified before use; dictation itself never uses the network." : {
       "localizations" : {
@@ -786,6 +832,9 @@
     "Finishing…" : {
 
     },
+    "For %@. Your voice is sent online to be written. Part of the subscription." : {
+      "comment" : "Setup guide: the cloud speech choice; the value lists languages, such as Telugu and Hindi"
+    },
     "Format" : {
       "comment" : "Noun: the shape of the text, such as email or bullet list"
     },
@@ -800,6 +849,9 @@
     },
     "General" : {
 
+    },
+    "Get Started" : {
+      "comment" : "First button of the setup guide"
     },
     "GitHub is limiting requests right now. Try again later." : {
 
@@ -821,6 +873,12 @@
     },
     "History is off. Nothing is being saved." : {
 
+    },
+    "How LemmeType listens" : {
+      "comment" : "Setup guide checklist line"
+    },
+    "How Should LemmeType Listen?" : {
+      "comment" : "Setup guide step title"
     },
     "If LemmeType ever crashes, macOS saves its own crash report on this Mac (Console › Crash Reports). LemmeType never reads or sends it. You can attach it to a bug report if you choose." : {
 
@@ -961,6 +1019,12 @@
     "LemmeType History" : {
 
     },
+    "LemmeType listens only while a recording is showing on screen." : {
+      "comment" : "Setup guide: why the microphone is needed, after the system prompt"
+    },
+    "LemmeType listens only while a recording is showing on screen. Next, iOS asks for your permission." : {
+      "comment" : "Setup guide: why the microphone is needed, before the system prompt"
+    },
     "LemmeType listens only while you are on this screen and the recording is showing. Modes that use Cloud speech send your voice online; others keep it on this device. Next, iOS asks for your permission." : {
       "comment" : "Shown before iOS asks for microphone permission, when cloud speech is on"
     },
@@ -1048,6 +1112,9 @@
     "Microphone access is off. Allow it in the Permissions pane." : {
 
     },
+    "Microphone allowed" : {
+      "comment" : "Setup guide status"
+    },
     "Mode" : {
       "comment" : "Noun: a dictation mode, such as Exact or Clean"
     },
@@ -1133,11 +1200,17 @@
     "New Word" : {
 
     },
+    "Next" : {
+      "comment" : "Moves to the next setup step"
+    },
     "No active subscription was found for this Apple Account." : {
       "comment" : "Shown after restoring purchases found nothing"
     },
     "No download" : {
 
+    },
+    "No download. iOS asks you to allow Speech Recognition." : {
+      "comment" : "Setup guide: the Apple Speech choice"
     },
     "no final period" : {
 
@@ -1236,6 +1309,9 @@
     "Not rewritten: the text is too long for the on-device model. Your original text is shown." : {
 
     },
+    "Not set up yet. You can do it in Settings." : {
+      "comment" : "Setup guide checklist"
+    },
     "Not subscribed." : {
       "comment" : "Subscription status when there is none"
     },
@@ -1277,6 +1353,9 @@
     },
     "One day left in your free trial." : {
       "comment" : "Shown in Settings when a day or less is left of the free trial"
+    },
+    "Only on iPhone models with an Action Button." : {
+      "comment" : "Shown under the Action Button setup step"
     },
     "Only the audio of those recordings is sent. Your vocabulary, your other modes, and anything else on this device are not. LemmeType does not keep your audio or the text. It keeps only how many minutes you use, under a code that does not identify you, and deletes that 35 days after your billing period ends." : {
       "comment" : "Second paragraph of the cloud speech agreement"
@@ -1334,6 +1413,9 @@
     },
     "Pause" : {
       "comment" : "Button label (verb): pause a download"
+    },
+    "Paused" : {
+      "comment" : "Setup guide: model download paused"
     },
     "Paused at %@ of %@" : {
       "localizations" : {
@@ -1405,6 +1487,9 @@
     "Privacy Policy" : {
       "comment" : "Link to the privacy policy"
     },
+    "Private, on %@" : {
+      "comment" : "Setup guide choice: a speech model on this device"
+    },
     "Processing…" : {
 
     },
@@ -1442,7 +1527,7 @@
 
     },
     "Ready" : {
-      "comment" : "State: the engine or model can be used now"
+      "comment" : "Setup guide: a way to listen is ready\nState: the engine or model can be used now"
     },
     "Ready · %@ on %@" : {
       "localizations" : {
@@ -1616,6 +1701,9 @@
     "Send text to" : {
 
     },
+    "Set it up in Settings when you are ready." : {
+      "comment" : "Setup guide: the decide later choice"
+    },
     "Settings" : {
 
     },
@@ -1658,6 +1746,9 @@
     "Show Rewrite" : {
 
     },
+    "Show Setup Guide" : {
+      "comment" : "Opens the first-run setup guide again"
+    },
     "Show:" : {
 
     },
@@ -1694,6 +1785,9 @@
     "Speak naturally and LemmeType writes the text into whatever app you're using. Setup takes two permissions. You'll see why each is needed before macOS asks." : {
 
     },
+    "Speak, and LemmeType writes it for you. Setup takes about a minute." : {
+      "comment" : "Setup guide welcome text"
+    },
     "Speak, then read the text. It is copied only when you choose Copy, and never sent." : {
 
     },
@@ -1702,6 +1796,9 @@
     },
     "Speech Recognition" : {
 
+    },
+    "Speech Recognition is off. Turn it on in Settings." : {
+      "comment" : "Setup guide: Speech Recognition was not allowed"
     },
     "Spoken phrase" : {
 
@@ -1715,8 +1812,14 @@
     "Start Dictating" : {
 
     },
+    "Start dictating without opening LemmeType: from the keyboard, the Action Button, or a tap on the back of your iPhone." : {
+      "comment" : "Setup guide: under the Dictate in Any App title"
+    },
     "Start Test Recording" : {
 
+    },
+    "Start the free trial, then choose Cloud speech again." : {
+      "comment" : "Setup guide: cloud speech needs the subscription first"
     },
     "Started" : {
       "comment" : "Past tense: a download or recording began"
@@ -1726,6 +1829,17 @@
     },
     "Starting microphone…" : {
 
+    },
+    "Step %lld of %lld" : {
+      "comment" : "Where the user is in the setup guide",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Step %1$lld of %2$lld"
+          }
+        }
+      }
     },
     "Stop" : {
       "comment" : "Button label (verb): stop the test recording"
@@ -1770,6 +1884,9 @@
     },
     "System Default" : {
 
+    },
+    "Tap Start Dictating, speak, then copy the text into any app." : {
+      "comment" : "Last setup guide step text"
     },
     "Terms of Use" : {
 
@@ -1848,6 +1965,9 @@
     },
     "The microphone didn’t pick up any sound. Check that it isn’t muted or in use by a call or another app, then try again." : {
 
+    },
+    "The microphone is off for LemmeType. You can turn it on in Settings." : {
+      "comment" : "Setup guide: the microphone was not allowed"
     },
     "The microphone was disconnected. Choose another input and try again." : {
 
@@ -2215,7 +2335,7 @@
       "comment" : "One week, as in 'price per week'"
     },
     "Welcome to LemmeType" : {
-
+      "comment" : "Setup guide title"
     },
     "What LemmeType keeps" : {
 
@@ -2280,6 +2400,9 @@
     },
     "You turned off context for this app in Settings › Context." : {
 
+    },
+    "You’re All Set" : {
+      "comment" : "Last setup guide step title"
     },
     "You’ve used this period’s Cloud speech allowance. It starts again when your subscription renews. Your recording is kept." : {
       "comment" : "Shown when the cloud speech allowance for the billing period is used up"

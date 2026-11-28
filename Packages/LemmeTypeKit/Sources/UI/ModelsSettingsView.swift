@@ -48,7 +48,15 @@ struct ModelsSettingsView: View {
         }
         .formStyle(.grouped)
         .task { await model.refresh() }
-        .alert(
+        .modelDownloadConfirmation(model)
+    }
+}
+
+extension View {
+    /// The confirmation shown before any model download, in Settings and in the setup guide (E5-S2, E8-S10):
+    /// size, licence, fit, and free space.
+    func modelDownloadConfirmation(_ model: ModelsSettingsModel) -> some View {
+        alert(
             String(localized: "Download \(model.downloadOffer?.asset.displayName ?? "")?", bundle: .module),
             isPresented: Binding(get: { model.downloadOffer != nil }, set: { if !$0 { model.downloadOffer = nil } }),
             presenting: model.downloadOffer
@@ -57,9 +65,7 @@ struct ModelsSettingsView: View {
                 .disabled(!offer.hasEnoughSpace)
             Button(String(localized: "Cancel", bundle: .module), role: .cancel) { model.downloadOffer = nil }
         } message: { offer in
-            Text(
-                offer.confirmationMessage + "\n\n"
-                    + offer.asset.fitMessage(model.rows.first { $0.id == offer.asset.id }?.fit))
+            Text(offer.confirmationMessage + "\n\n" + offer.asset.fitMessage(model.row(offer.asset.id)?.fit))
         }
     }
 }

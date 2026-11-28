@@ -20,6 +20,8 @@
             static let recognitionArgument = "-LemmeTypeRecognition"
             static let launchRequestArgument = "-LemmeTypeLaunchRequest"
             static let localOnlyArgument = "-LemmeTypeLocalOnly"
+            /// Starts as a fresh install that has not seen the setup guide (E8-S10).
+            static let setupGuideArgument = "-LemmeTypeSetupGuide"
             /// The words the fake engine "hears" (App Store screenshots), from the environment so
             /// punctuation survives; otherwise a fixed phrase.
             static let recognizedTextVariable = "LEMMETYPE_RECOGNIZED_TEXT"
@@ -41,6 +43,8 @@
             /// `-LemmeTypeLocalOnly`: the build offers no Cloud speech, like a Release build in the `local`
             /// scope (App Store screenshots of version 1.0).
             var offersCloudSpeech = true
+            /// `-LemmeTypeSetupGuide`: the setup guide has not been finished. Every other test starts past it.
+            var showsSetupGuide = false
             var recognizedText = "hello from lemmetype"
 
             init() {}
@@ -67,6 +71,7 @@
                 startsFromShortcut = arguments.contains(Self.launchRequestArgument)
                 isSubscribed = !arguments.contains("-LemmeTypeNotSubscribed")
                 offersCloudSpeech = !arguments.contains(Self.localOnlyArgument)
+                showsSetupGuide = arguments.contains(Self.setupGuideArgument)
                 if let text = ProcessInfo.processInfo.environment[Self.recognizedTextVariable] { recognizedText = text }
             }
         }
@@ -87,7 +92,7 @@
             let permissions = FakePermissions(
                 statuses: [.microphone: scenario.microphone], microphoneAnswer: scenario.microphoneAnswer,
                 grantsAccessibilityOnRequest: false)
-            let preferences = FakePreferences(hasCompletedOnboarding: true)
+            let preferences = FakePreferences(hasCompletedOnboarding: !scenario.showsSetupGuide)
             // Subscribed, so the paywall does not cover the screens the UI tests are about, unless a test asks.
             let subscription = FakeSubscriptionService(
                 state: scenario.isSubscribed

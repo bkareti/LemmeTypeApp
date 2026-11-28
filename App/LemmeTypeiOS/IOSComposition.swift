@@ -60,6 +60,8 @@ struct IOSComposition {
     let conditions: any SystemConditionsMonitoring
     let audioCapture: any AudioCapturing
     let actionDictation: ActionDictationController
+    /// The first-run setup guide (E8-S10).
+    let setupGuide: SetupGuideModel
     private let prepare: @MainActor () async -> Void
 
     /// The services that differ between the real app and UI tests.
@@ -268,13 +270,26 @@ struct IOSComposition {
             recorder: recorder, handoff: services.actionDictation.handoff,
             presenter: services.actionDictation.presenter, backgroundTime: services.actionDictation.backgroundTime,
             gate: services.actionDictation.gate, prepare: prepare)
+        // Apple Speech is offered only where the build registers it.
+        let offersAppleSpeech = services.engines.contains { $0.descriptor.id == .appleSpeech }
+        let setupGuide = SetupGuideModel(
+            preferences: preferences, deviceClass: services.hardware.deviceClass, models: models,
+            cloudSpeech: cloudSpeech, subscription: subscription,
+            microphoneStatus: { checker.status(for: .microphone) },
+            requestMicrophone: { await requester.requestMicrophoneAccess() },
+            openMicrophoneSettings: { requester.openSystemSettings(for: .microphone) },
+            speechAuthorizer: offersAppleSpeech ? services.speechAuthorizer : nil,
+            onEnginesChanged: { [weak dictation] in await dictation?.refresh() })
+        // Before the subscription starts, so the one-time paywall waits for the guide instead of covering it.
+        setupGuide.begin()
         return IOSComposition(
             mode: mode, subscription: subscription, cloudSpeech: cloudSpeech, launchRequests: launchRequests,
             recorder: recorder, quick: quick,
             dictation: dictation,
             models: models, personalization: personalization, modes: modes, privacy: privacy,
             permissions: permissions, residency: residency, conditions: conditions,
-            audioCapture: services.audioCapture, actionDictation: actionDictation, prepare: prepare)
+            audioCapture: services.audioCapture, actionDictation: actionDictation, setupGuide: setupGuide,
+            prepare: prepare)
     }
 
     // MARK: Running
@@ -284,8 +299,9 @@ struct IOSComposition {
             quick: quick, dictation: dictation,
             settings: MobileSettingsView(
                 dictation: dictation, models: models, personalization: personalization, modes: modes,
-                privacy: privacy, permissions: permissions, cloudSpeech: cloudSpeech, subscription: subscription),
-            actionDictation: actionDictation, subscription: subscription)
+                privacy: privacy, permissions: permissions, cloudSpeech: cloudSpeech, subscription: subscription,
+                setupGuide: setupGuide),
+            actionDictation: actionDictation, subscription: subscription, setupGuide: setupGuide)
     }
 
     /// Cleans up after a crash, loads saved data, and follows the system's memory

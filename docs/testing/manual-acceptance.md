@@ -872,3 +872,17 @@ Use a physical iPhone with a Debug build against staging and cloud speech on. Re
 3. Choose Hindi with a Cloud mode and dictate a Hindi sentence mixed with English: the text arrives. With English output chosen, the translation review offers *Show in Hindi*.
 4. Quit and relaunch in Airplane Mode: the Language menu still offers Hindi and Tamil (the last list is remembered).
 5. Remove the Tamil route and redeploy; open Settings › Cloud speech. A mode set to Tamil now says Tamil is not available and does not record with another engine.
+
+**MA-80 The first-run setup guide (E8-S10)**
+Use a physical iPhone and an iPad (or the Simulator for steps 1–6), each from a clean install. Record the device, iOS version, build, and result for each step.
+1. Open the app: the guide covers the screen at Welcome. The sound bars move, then lines of "text" appear, and it loops.
+2. Tap Get Started. On Allow the Microphone the rings pulse, and there is no Back or Close until iOS has asked; the only button is Continue. Tap it: the system prompt appears. Allow: the microphone turns into a check and "Microphone allowed" shows. Repeat on a second clean install and choose Don't Allow: the microphone is crossed out, Open Settings opens the app's page in Settings, and Next still works.
+3. On How Should LemmeType Listen?, choose the on-device model: the same download confirmation as Settings › Models appears (size, licence, free space). Download: the ring fills with the percentage and the guide can go on while it downloads. Settings › Models shows the same download.
+4. On another install, choose Apple Speech: the Speech Recognition prompt appears once; after allowing, the row says Ready.
+5. In a `cloud` build without a subscription, choose Cloud speech: the paywall appears over the guide and Cloud stays off. Start the trial (Sandbox), close the paywall, choose Cloud speech again: the agreement appears; Agree turns Cloud on and the row says Ready.
+6. On Dictate in Any App (iPhone only), the keyboard's globe key presses and a microphone key appears; the Action Button picture presses its side button; the Back Tap picture taps twice. Open Shortcuts opens Shortcuts. On the iPad the step is not shown.
+7. On You're All Set the checklist matches what was done (Ready, Downloading, or Not set up yet). Start Dictating closes the guide on the Dictate screen; in a build with a subscription and no trial, the paywall appears once, now.
+8. Relaunch: the guide does not appear. Settings › About › Show Setup Guide opens it at Welcome, and closing it changes nothing.
+9. Turn on Settings › Accessibility › Motion › Reduce Motion and replay the guide: every picture is still and pages change with a fade.
+10. With VoiceOver, swipe through every step: the pictures are skipped, the title, text, choices, and their states are read, and the progress reads "Step N of 5" (4 on iPad).
+11. Install the previous App Store build, dictate once, then update to this build: the guide does not appear.

@@ -7,6 +7,8 @@
     /// app must ship (MIT, whisper.cpp and the Whisper weights).
     struct MobileAboutSection: View {
         private let buildInfo = BuildInfo(infoDictionary: Bundle.main.infoDictionary)
+        /// Opens the setup guide again (E8-S10); `nil` hides the row.
+        var showSetupGuide: (@MainActor () -> Void)?
 
         var body: some View {
             Section(String(localized: "About", bundle: .module, comment: "Settings section: version and legal")) {
@@ -15,6 +17,15 @@
                     value: buildInfo.displayString
                 )
                 .accessibilityIdentifier("settings.version")
+                if let showSetupGuide {
+                    Button(
+                        String(
+                            localized: "Show Setup Guide", bundle: .module,
+                            comment: "Opens the first-run setup guide again"),
+                        action: showSetupGuide
+                    )
+                    .accessibilityIdentifier("settings.setupGuide")
+                }
                 Link(
                     String(localized: "Privacy Policy", bundle: .module, comment: "Link to the privacy policy"),
                     destination: PublicLinks.privacyPolicy

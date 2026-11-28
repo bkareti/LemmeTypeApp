@@ -103,14 +103,41 @@ public final class SubscriptionModel {
     }
 
     /// Shown once on its own, to someone who has no subscription and has not seen it yet. It can be closed.
+    /// While the setup guide is showing it waits, and appears when the guide ends (E8-S10).
     private func offerThePaywallOnce() {
         guard !seen.hasSeenPaywall, state == .notSubscribed || state.isLapsed else { return }
+        guard !isHoldingOffer else {
+            hasOfferWaiting = true
+            return
+        }
         seen.hasSeenPaywall = true
         isShowingPaywall = true
     }
 
+    /// The one-time offer waits while this is set (the setup guide is on screen).
+    public private(set) var isHoldingOffer = false
+    private var hasOfferWaiting = false
+
+    /// Keeps the one-time offer from appearing over the setup guide.
+    public func holdOneTimeOffer() {
+        isHoldingOffer = true
+    }
+
+    /// Lets the one-time offer appear, now, if it would have while it was held.
+    public func releaseOneTimeOffer() {
+        isHoldingOffer = false
+        guard hasOfferWaiting else { return }
+        hasOfferWaiting = false
+        offerThePaywallOnce()
+    }
+
     public func showPaywall() {
         message = nil
+        // Opened on purpose (for example from the guide's Cloud choice): that counts as the one time.
+        if hasOfferWaiting {
+            hasOfferWaiting = false
+            seen.hasSeenPaywall = true
+        }
         isShowingPaywall = true
     }
 
