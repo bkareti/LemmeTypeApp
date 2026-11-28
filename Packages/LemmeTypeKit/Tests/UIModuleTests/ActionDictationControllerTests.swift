@@ -22,15 +22,21 @@ private final class PresenterSpy: ActionDictationPresenting {
     var began = 0
     var shown: [ActionDictationStatus] = []
     var ended = 0
+    /// A banner is on screen, as one left by an earlier run would be.
+    var isShowing = false
     var onBegin: () -> Void = {}
 
     func begin() throws {
         if refuses { throw Refused() }
         began += 1
+        isShowing = true
         onBegin()
     }
     func show(_ status: ActionDictationStatus) async { shown.append(status) }
-    func end() async { ended += 1 }
+    func end() async {
+        ended += 1
+        isShowing = false
+    }
 }
 
 @MainActor
@@ -296,5 +302,70 @@ final class ActionDictationControllerTests {
 
         #expect(finishedText() == "English text")
         #expect(backgroundTime.begun >= 1)
+    }
+}
+
+/// A banner left behind when the app was closed or ended mid-dictation: Stop and the next press clear it.
+extension ActionDictationControllerTests {
+    @Test func aPressOnALeftoverBannerClearsItInsteadOfRecordingAgain() async {
+        presenter.isShowing = true
+        let recorder = makeRecorder()
+        let controller = makeController(recorder)
+
+        await controller.toggle()
+
+        #expect(!presenter.isShowing, "the banner is gone")
+        #expect(presenter.began == 0, "nothing new starts")
+        #expect(!source.isRunning)
+        #expect(recorder.state != .recording)
+        #expect(handoff.cleared >= 1)
+
+        await controller.toggle()
+        #expect(presenter.began == 1, "the next press dictates as usual")
+        recorder.requestCancel()
+        await recorder.settle()
+    }
+
+    @Test func theStopButtonClearsABannerWithNothingBehindIt() async {
+        presenter.isShowing = true
+        let recorder = makeRecorder()
+        let controller = makeController(recorder)
+
+        await controller.stopFromLiveActivity()
+
+        #expect(!presenter.isShowing)
+        #expect(presenter.began == 0)
+        #expect(!source.isRunning)
+    }
+
+    @Test func theStopButtonStopsTheMicAndHandsOverTheText() async {
+        processor.script([Self.review])
+        let recorder = makeRecorder()
+        let controller = makeController(recorder)
+        await controller.toggle()
+        source.emitTone(seconds: 0.2)
+
+        await controller.stopFromLiveActivity()
+        await waitUntil { finishedText() != nil }
+
+        #expect(!source.isRunning)
+        #expect(finishedText() == "English text")
+        #expect(!presenter.isShowing)
+    }
+
+    @Test func theStopButtonLeavesTextThatIsBeingWritten() async {
+        processor.script([Self.review], delay: .milliseconds(100))
+        let recorder = makeRecorder()
+        let controller = makeController(recorder)
+        await controller.toggle()
+        source.emitTone(seconds: 0.2)
+        await controller.toggle()
+        await waitUntil { recorder.state == .processing }
+
+        await controller.stopFromLiveActivity()
+
+        #expect(presenter.isShowing, "the banner stays until the text is written")
+        await waitUntil { finishedText() != nil }
+        #expect(finishedText() == "English text")
     }
 }

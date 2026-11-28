@@ -25,35 +25,43 @@ private typealias Status = ActionDictationActivityStatus
 struct ActionDictationLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: ActionDictationAttributes.self) { context in
+            let status = shown(context)
             HStack {
-                Label(title(context.state.status), systemImage: symbol(context.state.status))
+                Label(title(status), systemImage: symbol(status))
                 Spacer()
-                stopButton(context.state.status)
+                stopButton(status)
             }
             .padding()
         } dynamicIsland: { context in
-            DynamicIsland {
+            let status = shown(context)
+            return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Label(title(context.state.status), systemImage: symbol(context.state.status))
+                    Label(title(status), systemImage: symbol(status))
                 }
-                DynamicIslandExpandedRegion(.trailing) { stopButton(context.state.status) }
+                DynamicIslandExpandedRegion(.trailing) { stopButton(status) }
             } compactLeading: {
-                statusIcon(context.state.status)
+                statusIcon(status)
             } compactTrailing: {
-                compactDetail(context.state)
+                compactDetail(status, startedAt: context.state.startedAt)
             } minimal: {
-                statusIcon(context.state.status)
+                statusIcon(status)
             }
         }
     }
 
+    /// A stale banner belongs to a run that ended without saying so: it must not claim to be listening.
+    private func shown(_ context: ActivityViewContext<ActionDictationAttributes>) -> Status {
+        context.isStale ? .ended : context.state.status
+    }
+
     /// A running timer means "recording", so it never shows after Stop.
     @ViewBuilder
-    private func compactDetail(_ state: ActionDictationAttributes.ContentState) -> some View {
-        switch state.status {
-        case .listening: Text(state.startedAt, style: .timer).monospacedDigit().frame(width: 40)
+    private func compactDetail(_ status: Status, startedAt: Date) -> some View {
+        switch status {
+        case .listening: Text(startedAt, style: .timer).monospacedDigit().frame(width: 40)
         case .writing: Text("Writing").font(.caption2).foregroundStyle(.secondary)
         case .failed: Text("Failed").font(.caption2).foregroundStyle(.secondary)
+        case .ended: Text("Ended").font(.caption2).foregroundStyle(.secondary)
         }
     }
 
@@ -62,6 +70,7 @@ struct ActionDictationLiveActivity: Widget {
         case .listening: "Listening"
         case .writing: "Writing your text"
         case .failed: "Dictation didn't work"
+        case .ended: "Dictation ended"
         }
     }
 
@@ -70,6 +79,7 @@ struct ActionDictationLiveActivity: Widget {
         case .listening: "waveform"
         case .writing: "text.cursor"
         case .failed: "exclamationmark.triangle"
+        case .ended: "mic.slash"
         }
     }
 

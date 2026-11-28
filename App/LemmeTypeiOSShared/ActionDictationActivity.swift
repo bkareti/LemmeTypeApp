@@ -15,6 +15,9 @@ enum ActionDictationActivityStatus: String, Codable, Hashable {
     case listening
     case writing
     case failed
+    /// Never sent by the app: the widget shows it once iOS marks the banner stale, which happens when the
+    /// app was closed or ended mid-dictation and could not end the banner itself.
+    case ended
 }
 
 /// The Stop button in the Live Activity. Compiled into the app and the widget;
