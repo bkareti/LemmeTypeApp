@@ -349,8 +349,8 @@
     "Back" : {
       "comment" : "Button label: go to the previous setup step"
     },
-    "Back Tap lists only your own shortcuts, so make one first: in the Shortcuts app, tap +, add the “Dictate Anywhere” action from LemmeType, and tap Done. Then choose it in Settings › Accessibility › Touch › Back Tap › Double Tap." : {
-      "comment" : "How to run Dictate Anywhere from Back Tap"
+    "Back Tap can run only shortcuts from your own library, so LemmeType is not listed there until you add one." : {
+      "comment" : "Why Back Tap needs a shortcut made in the Shortcuts app first"
     },
     "Balanced" : {
 
@@ -880,6 +880,9 @@
     "How Should LemmeType Listen?" : {
       "comment" : "Setup guide step title"
     },
+    "If it asks you to describe a shortcut, tap Edit. Otherwise tap + to make a new shortcut." : {
+      "comment" : "Back Tap setup, step 2"
+    },
     "If LemmeType ever crashes, macOS saves its own crash report on this Mac (Console › Crash Reports). LemmeType never reads or sends it. You can attach it to a bug report if you choose." : {
 
     },
@@ -900,6 +903,9 @@
     },
     "In effect now: %@." : {
 
+    },
+    "In Settings › Accessibility › Touch › Back Tap › Double Tap, scroll to the bottom and choose “Dictate Anywhere” under Shortcuts." : {
+      "comment" : "Back Tap setup, step 5"
     },
     "Include ⌘, ⌥, or ⌃ so the shortcut doesn’t interfere with typing." : {
 
@@ -1384,6 +1390,9 @@
     "Open System Settings…" : {
 
     },
+    "Open the Shortcuts app." : {
+      "comment" : "Back Tap setup, step 1"
+    },
     "Optional. LemmeType rewrites on %@ and shows you the result before anything is used. Neutral, Plain text, and Original change nothing." : {
 
     },
@@ -1680,6 +1689,9 @@
     "Say only the trigger, and the saved text is inserted exactly as written. A trigger inside a longer sentence never expands." : {
 
     },
+    "Search for “Dictate Anywhere” and tap it." : {
+      "comment" : "Back Tap setup, step 3"
+    },
     "See Subscription Options" : {
       "comment" : "Button that opens the subscription offer when dictation needs one\nButton that opens the subscription offer when its price is not loaded"
     },
@@ -1884,6 +1896,9 @@
     },
     "System Default" : {
 
+    },
+    "Tap ‹ or Done to save it. It is named “Dictate Anywhere”." : {
+      "comment" : "Back Tap setup, step 4"
     },
     "Tap Start Dictating, speak, then copy the text into any app." : {
       "comment" : "Last setup guide step text"
